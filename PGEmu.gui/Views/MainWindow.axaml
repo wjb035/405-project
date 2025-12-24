@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PGEmu.gui.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="PGEmu.gui.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="PGEmu.gui">
+
+    <!-- DataContext for design-time preview only -->
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="260,*" Margin="16" RowSpacing="12" ColumnSpacing="12">
+        <!-- Header -->
+        <StackPanel Grid.ColumnSpan="2" Spacing="6">
+            <TextBlock FontSize="22"
+                       FontWeight="SemiBold"
+                       Text="PGEmu" />
+            <TextBlock Opacity="0.8"
+                       Text="{Binding Status}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Left pane: list of platforms -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Padding="10"
+                CornerRadius="8">
+            <StackPanel Spacing="8">
+                <TextBlock FontSize="14"
+                           FontWeight="SemiBold"
+                           Text="Platforms" />
+                <ListBox ItemsSource="{Binding Platforms}"
+                         SelectedItem="{Binding SelectedPlatform}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <!-- Right pane: list of games and a Play button -->
+        <Border Grid.Row="1"
+                Grid.Column="1"
+                Padding="10"
+                CornerRadius="8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            Margin="0,10,0,0">
+                    <Button Content="Play"
+                            Command="{Binding PlayCommand}" />
+                    <TextBlock VerticalAlignment="Center"
+                               Opacity="0.8"
+                               Text="{Binding SelectedGame.Title}" />
+                </StackPanel>
+                <StackPanel Spacing="8">
+                    <TextBlock FontSize="14"
+                               FontWeight="SemiBold"
+                               Text="Games" />
+                    <ListBox ItemsSource="{Binding Games}"
+                             SelectedItem="{Binding SelectedGame}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

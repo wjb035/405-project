@@ -1,0 +1,27 @@
+{
+  "libraryRoot": "/Volumes/HARD DRIVE/PGEmu",
+  "platforms": [
+    {
+      "id": "gc",
+      "name": "Nintendo GameCube",
+      "romPath": "games/GameCube",
+      "extensions": [".iso",".gcm",".gcz",".ciso",".rvz",".wia",".wbfs"],
+      "defaultEmulatorId": "dolphin"
+    },
+    {
+      "id": "wii",
+      "name": "Nintendo Wii",
+      "romPath": "games/Wii",
+      "extensions": [".iso",".gcz",".ciso",".rvz",".wia",".wbfs",".nfs"],
+      "defaultEmulatorId": "dolphin"
+    }
+  ],
+  "emulators": [
+    {
+      "id": "dolphin",
+      "name": "Dolphin",
+      "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
+      "argsTemplate": "--exec \"{ROM}\" --batch"
+    }
+  ]
+}
