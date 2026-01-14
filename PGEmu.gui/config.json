@@ -1,10 +1,11 @@
+
 {
-  "libraryRoot": "/Volumes/HARD DRIVE/PGEmu",
+  "libraryRoot": "~/",
   "platforms": [
     {
       "id": "gc",
       "name": "Nintendo GameCube",
-      "romPath": "games/GameCube",
+      "romPath": "C:/Fun Stuff/Dolphin Games",
       "extensions": [".iso",".gcm",".gcz",".ciso",".rvz",".wia",".wbfs"],
       "defaultEmulatorId": "dolphin"
     },
@@ -20,7 +21,7 @@
     {
       "id": "dolphin",
       "name": "Dolphin",
-      "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
+      "exePath": "C:/Fun Stuff/Dolphin Emulator/dolphin-2509-x64/Dolphin-x64",
       "argsTemplate": "--exec \"{ROM}\" --batch"
     }
   ]
