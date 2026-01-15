@@ -36,5 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase
         
         ContentViewModel = vm;
     }
+
+   
     
 }

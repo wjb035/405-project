@@ -9,4 +9,6 @@ public abstract class ViewModelBase : ObservableObject
     public MainWindowViewModel mainWindowViewModel { get; set; }
     public ViewModelBase homeScreenViewModel { get; set; }
     public ViewModelBase loginViewModel { get; set; }
+    
+    public ViewModelBase GameScreenViewModel { get; set; }
 }

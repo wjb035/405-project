@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,22 +8,27 @@ using PGEmu.gui.Views;
 
 namespace PGEmu.gui.ViewModels;
 
-public partial class HomeScreenViewModel : ViewModelBase
+public partial class GameScreenViewModel : ViewModelBase
 {
-    public HomeScreenViewModel()
+    
+    public GameScreenViewModel()
     {
+       
+        
         LoadConfigAndPlatforms();
+        
     }
+
+    
     
     public ObservableCollection<PlatformConfig> Platforms { get; } = new();
     public ObservableCollection<GameEntry> Games { get; } = new();
 
     [ObservableProperty] private PlatformConfig? selectedPlatform;
 
-   
 
     [ObservableProperty] private GameEntry? selectedGame;
-
+    
     [ObservableProperty] private string status = "";
 
     private AppConfig? _config;
@@ -48,7 +53,7 @@ public partial class HomeScreenViewModel : ViewModelBase
                 Platforms.Add(p);
 
             SelectedPlatform = Platforms.FirstOrDefault();
-           
+            
         }
         catch (Exception ex)
         {
@@ -59,7 +64,6 @@ public partial class HomeScreenViewModel : ViewModelBase
     partial void OnSelectedPlatformChanged(PlatformConfig? value)
     {
         LoadGames();
-        
     }
 
     partial void OnSelectedGameChanged(GameEntry? value)
@@ -109,11 +113,9 @@ public partial class HomeScreenViewModel : ViewModelBase
     
     public void SwitchScreens(ViewModelBase vm)
     {
-           
+  
             mainWindowViewModel.SwitchScreens(vm);
-            
-
+        
     }
    
-
 }

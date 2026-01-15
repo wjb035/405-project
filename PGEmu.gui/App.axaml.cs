@@ -38,7 +38,16 @@ public partial class App : Application
             var loginViewModel = new LoginViewModel();
             loginViewModel.homeScreenViewModel = homeScreenViewModel;
             loginViewModel.mainWindowViewModel = mainWindowViewModel;
+
+
+            var gameScreenViewModel = new GameScreenViewModel();
+            gameScreenViewModel.homeScreenViewModel = homeScreenViewModel;
+            gameScreenViewModel.mainWindowViewModel = mainWindowViewModel;
+            gameScreenViewModel.loginViewModel = loginViewModel;
             
+            
+            
+            homeScreenViewModel.GameScreenViewModel = gameScreenViewModel;
             homeScreenViewModel.loginViewModel = loginViewModel;
 
             var mainWindow = new MainWindow
@@ -49,7 +58,7 @@ public partial class App : Application
             desktop.MainWindow = mainWindow;
             desktop.MainWindow.Show();
             
-            await Task.Delay(3000);
+            //await Task.Delay(3000);
             
             mainWindowViewModel.SwitchScreens(homeScreenViewModel);
 

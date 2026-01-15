@@ -15,7 +15,7 @@ public partial class HomeScreenView : UserControl
     public void navigateLogin(object? sender, RoutedEventArgs e)
     {
         if (DataContext is HomeScreenViewModel vm) {
-            vm.SwitchScreens(vm.loginViewModel);
+            vm.SwitchScreens(vm.GameScreenViewModel);
         }
     }
 
