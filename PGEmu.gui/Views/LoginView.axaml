@@ -2,7 +2,52 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PGEmu.gui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="PGEmu.gui.Views.LoginView">
-    Welcome to Avalonia!
+             x:Class="PGEmu.gui.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+    
+    <Design.DataContext>
+        <vm:LoginViewModel />
+    </Design.DataContext>
+        
+    <Border HorizontalAlignment="Center" VerticalAlignment="Center">
+
+        <Grid RowDefinitions="Auto,*,*,*,*,*,*,*,*,*" ColumnDefinitions="Auto,*" Margin="16" RowSpacing="12" ColumnSpacing="12" ShowGridLines="False">
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="18" Grid.ColumnSpan="2">Login</TextBlock>
+        
+
+        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right">UserName</TextBlock>
+        <TextBox Grid.Row="1" Grid.Column="1"></TextBox>
+        
+        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right">Password</TextBlock>
+        <TextBox Grid.Row="2" Grid.Column="1"></TextBox>
+        
+        <Button Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Command="{Binding VerifyLogin }">Login</Button>
+                    
+        <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto,*" ColumnSpacing="5">
+            
+            <Line Grid.Row="0" StartPoint="0,8" EndPoint="130,8" Stroke="Black"></Line>
+            <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">Or</TextBlock>
+            <Line Grid.Row="0" Grid.Column="2" StartPoint="0,8" EndPoint="130,8" Stroke="Black"></Line>
+            
+        </Grid>
+        
+        <TextBlock Grid.Row="5" HorizontalAlignment="Center" FontWeight="Bold" FontSize="18" Grid.ColumnSpan="2">Sign Up</TextBlock>
+
+        
+        <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right">UserName</TextBlock>
+        <TextBox Grid.Row="6" Grid.Column="1"></TextBox>
+        
+        <TextBlock Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right">Password</TextBlock>
+        <TextBox Grid.Row="7" Grid.Column="1"></TextBox>
+                    
+        <TextBlock Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="End">Re-Enter<LineBreak/>Password</TextBlock>
+        <TextBox Grid.Row="8" Grid.Column="1"></TextBox>
+
+        <Button Grid.Row="9" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Command="{ Binding CreateAccount }">Sign Up</Button>
+
+        
+    </Grid>
+    </Border>
 </UserControl>

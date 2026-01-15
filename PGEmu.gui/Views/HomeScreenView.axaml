@@ -2,7 +2,136 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PGEmu.gui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="PGEmu.gui.Views.HomeScreenView">
-    Welcome to Avalonia!
+             x:Class="PGEmu.gui.Views.HomeScreenView"
+             x:DataType="vm:HomeScreenViewModel">
+    
+    
+        <!--<Grid RowDefinitions="Auto,*" ColumnDefinitions="260,*,*" Margin="16" RowSpacing="12" ColumnSpacing="12">
+        ~1~ Header @1@
+        <StackPanel Grid.ColumnSpan="2" Spacing="6">
+            <TextBlock FontSize="22"
+                       FontWeight="SemiBold"
+                       Text="PGEmu" />
+            <TextBlock Opacity="0.8"
+                       Text="{Binding Status}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Grid.ColumnSpan="1" Spacing="6" HorizontalAlignment="Right">
+            <Button Command="{Binding SwitchScreens}" CommandParameter="{ Binding loginViewModel }" Content="Login/Sign Up">
+            </Button>
+            <Button Content="Settings" />
+        </StackPanel>
+
+        ~1~ Left pane: list of platforms @1@
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Padding="10"
+                CornerRadius="8">
+            <StackPanel Spacing="8">
+                <TextBlock FontSize="14"
+                           FontWeight="SemiBold"
+                           Text="Platforms" />
+                <ListBox ItemsSource="{Binding Platforms}"
+                         SelectedItem="{Binding SelectedPlatform}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        ~1~ Right pane: list of games and a Play button @1@
+        <Border Grid.Row="1"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Padding="10"
+                CornerRadius="8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            Margin="0,10,0,0">
+                    <Button Content="Play"
+                            Command="{Binding PlayCommand}" />
+                    <TextBlock VerticalAlignment="Center"
+                               Opacity="0.8"
+                               Text="{Binding SelectedGame.Title}" />
+                </StackPanel>
+                <StackPanel Spacing="8">
+                    <TextBlock FontSize="14"
+                               FontWeight="SemiBold"
+                               Text="Games" />
+                    <ListBox ItemsSource="{Binding Games}"
+                             SelectedItem="{Binding SelectedGame}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>-->
+
+    
+    <Grid RowDefinitions="Auto,*,*,*" ColumnDefinitions="240,*,*,*,*,*,*,*,*" Margin="16" RowSpacing="12" ColumnSpacing="12">
+        <Button Grid.Row="0" Grid.Column="0"
+                Content="Back" 
+                Width="50" Height="30" />
+        <Button Grid.Row="0" Grid.Column="5"
+                Content="Friends" 
+                Width="80" Height="30" />
+        <Button Grid.Row="0" Grid.Column="6"
+                Content="Search" 
+                Width="80" Height="30" />
+        <Button Grid.Row="0" Grid.Column="7"
+                Content="Settings" 
+                Width="80" Height="30" />
+        <Button Grid.Row="0" Grid.Column="8"
+                Content="Profile" 
+                Width="80" Height="30" 
+                Command="{ Binding SwitchScreens }" 
+                CommandParameter="{ Binding loginViewModel }"/>
+        <!-- Header -->
+        
+
+        <!-- Left pane: list of platforms -->
+        <Border Grid.Row="1"
+                Grid.Column="3"
+                Grid.ColumnSpan="2"
+                Padding="10"
+                CornerRadius="8"
+        >
+            
+            <StackPanel Spacing="8">
+                <TextBlock FontSize="22"
+                           FontWeight="SemiBold"
+                           Text="PGEmu" />
+                <TextBlock Opacity="0.8"
+                           Text="{Binding Status}"
+                           TextWrapping="Wrap" />
+                <TextBlock FontSize="14"
+                           FontWeight="SemiBold"
+                           Text="Platforms" />
+                
+                <ListBox ItemsSource="{Binding Platforms}"
+                         SelectedItem="{Binding SelectedPlatform}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        
+    </Grid>
+    
+    
 </UserControl>

@@ -4,13 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        x:Class="PGEmu.gui.Views.SplashScreen"
+        x:Class="PGEmu.gui.Views.SplashScreenView"
         x:DataType="vm:SplashScreenViewModel">
     
         <Panel>
-                <Rectangle Height="300" Width="400" Fill="LightGray"/>
-                <Image Margin="20" Height="200" Width="300" Stretch="Fill"
-                       Source="/Assets/gettyimages-80077658-612x612.jpg"/>
+                <Image Margin="20" Stretch="Fill"
+                       Source="/Assets/souljaboytellem.jpg"/>
         </Panel>
     
 </UserControl>

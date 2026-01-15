@@ -3,6 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using PGEmu.gui.ViewModels;
 using PGEmu.gui.Views;
@@ -16,18 +18,44 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
+            
+            
+            var mainWindowViewModel = new MainWindowViewModel();
+            mainWindowViewModel.mainWindowViewModel = mainWindowViewModel;
+            
+            
+            var homeScreenViewModel = new HomeScreenViewModel();
+            
+            homeScreenViewModel.mainWindowViewModel = mainWindowViewModel;
+            
+            var loginViewModel = new LoginViewModel();
+            loginViewModel.homeScreenViewModel = homeScreenViewModel;
+            loginViewModel.mainWindowViewModel = mainWindowViewModel;
+            
+            homeScreenViewModel.loginViewModel = loginViewModel;
+
+            var mainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = mainWindowViewModel,
             };
+            
+            desktop.MainWindow = mainWindow;
+            desktop.MainWindow.Show();
+            
+            await Task.Delay(3000);
+            
+            mainWindowViewModel.SwitchScreens(homeScreenViewModel);
+
+
         }
+        
 
         base.OnFrameworkInitializationCompleted();
     }

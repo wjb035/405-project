@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace PGEmu.gui.Views;
 
-public partial class SplashScreen : UserControl
+public partial class SplashScreenView : UserControl
 {
-    public SplashScreen()
+    public SplashScreenView()
     {
         InitializeComponent();
     }
