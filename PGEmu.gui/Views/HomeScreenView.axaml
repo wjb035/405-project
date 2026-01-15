@@ -82,7 +82,8 @@
     <Grid RowDefinitions="Auto,*,*,*" ColumnDefinitions="240,*,*,*,*,*,*,*,*" Margin="16" RowSpacing="12" ColumnSpacing="12">
         <Button Grid.Row="0" Grid.Column="0"
                 Content="Back" 
-                Width="50" Height="30" />
+                Width="50" Height="30"
+                Click="navigateLogin"/>
         <Button Grid.Row="0" Grid.Column="5"
                 Content="Friends" 
                 Width="80" Height="30" />
@@ -95,8 +96,7 @@
         <Button Grid.Row="0" Grid.Column="8"
                 Content="Profile" 
                 Width="80" Height="30" 
-                Command="{ Binding SwitchScreens }" 
-                CommandParameter="{ Binding loginViewModel }"/>
+               />
         <!-- Header -->
         
 
