@@ -47,6 +47,11 @@ public partial class App : Application
             
             
             
+            var profileScreenViewModel = new ProfileScreenViewModel();
+            profileScreenViewModel.mainWindowViewModel = mainWindowViewModel;
+            profileScreenViewModel.homeScreenViewModel = homeScreenViewModel;
+            
+            homeScreenViewModel.ProfileScreenViewModel = profileScreenViewModel;
             homeScreenViewModel.GameScreenViewModel = gameScreenViewModel;
             homeScreenViewModel.loginViewModel = loginViewModel;
 

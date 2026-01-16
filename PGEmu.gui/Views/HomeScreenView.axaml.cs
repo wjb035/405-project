@@ -16,6 +16,15 @@ public partial class HomeScreenView : UserControl
     {
         if (DataContext is HomeScreenViewModel vm) {
             vm.SwitchScreens(vm.GameScreenViewModel);
+            
+        }
+    }
+    
+    public void navigateProfile(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is HomeScreenViewModel vm) {
+            vm.SwitchScreens(vm.ProfileScreenViewModel);
+            
         }
     }
 
