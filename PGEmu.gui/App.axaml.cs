@@ -26,7 +26,7 @@ public partial class App : Application
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
             
-            
+            // create view model for each screen
             var mainWindowViewModel = new MainWindowViewModel();
             mainWindowViewModel.mainWindowViewModel = mainWindowViewModel;
             
@@ -54,6 +54,13 @@ public partial class App : Application
             homeScreenViewModel.ProfileScreenViewModel = profileScreenViewModel;
             homeScreenViewModel.GameScreenViewModel = gameScreenViewModel;
             homeScreenViewModel.loginViewModel = loginViewModel;
+
+            var userSettingsViewModel = new UserSettingsViewModel();
+            userSettingsViewModel.mainWindowViewModel = mainWindowViewModel;
+            userSettingsViewModel.homeScreenViewModel = homeScreenViewModel;
+            
+            homeScreenViewModel.userSettingsViewModel = userSettingsViewModel;
+            
 
             var mainWindow = new MainWindow
             {

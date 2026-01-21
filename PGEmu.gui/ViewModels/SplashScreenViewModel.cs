@@ -1,20 +1,23 @@
 
-
-using Avalonia.Media;
+using System;
+using System.IO;
+using Avalonia.Threading;
+using LibVLCSharp.Shared;
 
 namespace PGEmu.gui.ViewModels;
 
 public class SplashScreenViewModel : ViewModelBase
 {
-    public static async void playSplashAudio()
-    {
-        /*var player = new MediaPlayer();
-        await player.InitializeAsync();
+    
+    
+    
 
-        player.Volume = .8;
-        player.LoadedBehavior = MediaPlayerLoadedBehavior.AutoPlay;
-        player.Source = new UriSource("/assets/splash.mp3");
-        await player.PrepareAsync();
-        await player.PlayAsync();*/
-    }
+    
+    /*private void MediaPlayer_TimeChanged(object sender, MediaPlayerTimeChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            PlaybackStatus.Text = $"{MainMediaPlayer.Time / 1000.0} / {MainMediaPlayer.Length / 1000.0}";
+        });
+    }*/
 }

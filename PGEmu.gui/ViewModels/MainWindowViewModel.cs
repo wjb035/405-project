@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using PGEmu.app;
 using PGEmu.gui.Views;
 using ReactiveUI;
+using LibVLCSharp.Shared;
 
 namespace PGEmu.gui.ViewModels;
 
@@ -18,9 +19,12 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public MainWindowViewModel()
     {
-        _contentViewModel = new SplashScreenViewModel();
+        ViewModelBase splashScreenViewModel = new SplashScreenViewModel();
+        _contentViewModel = splashScreenViewModel;
         
     }
+
+
     
     public bool loggedIn = false;
     private ViewModelBase _contentViewModel;

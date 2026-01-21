@@ -15,6 +15,8 @@ public partial class HomeScreenViewModel : ViewModelBase
         LoadConfigAndPlatforms();
     }
     
+    public ViewModelBase userSettingsViewModel { get; set; }
+    
     public ObservableCollection<PlatformConfig> Platforms { get; } = new();
     public ObservableCollection<GameEntry> Games { get; } = new();
 
