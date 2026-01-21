@@ -7,6 +7,7 @@ PGEmu provides a small core library (`PGEmu.app`) for config loading, library sc
 
 ## Prerequisites
 - .NET SDK 9 (or newer)
+- MYSQL 8 (or newer - temp)
 
 ## Configuration
 PGEmu reads `config.json` from the current working directory or next to the built app.
