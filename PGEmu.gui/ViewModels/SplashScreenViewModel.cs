@@ -1,6 +1,7 @@
 
 using System;
 using System.IO;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using LibVLCSharp.Shared;
 
@@ -8,8 +9,7 @@ namespace PGEmu.gui.ViewModels;
 
 public class SplashScreenViewModel : ViewModelBase
 {
-    
-    
+   
     
 
     

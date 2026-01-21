@@ -70,7 +70,7 @@ public partial class App : Application
             desktop.MainWindow = mainWindow;
             desktop.MainWindow.Show();
             
-            //await Task.Delay(3000);
+            await Task.Delay(1000);
             
             mainWindowViewModel.SwitchScreens(homeScreenViewModel);
 
