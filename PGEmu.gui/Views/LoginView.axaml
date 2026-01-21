@@ -12,10 +12,10 @@
     </Design.DataContext>
         
     <Border HorizontalAlignment="Center" VerticalAlignment="Center">
-
+        
         <Grid RowDefinitions="Auto,*,*,*,*,*,*,*,*,*" ColumnDefinitions="Auto,*" Margin="16" RowSpacing="12" ColumnSpacing="12" ShowGridLines="False">
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="18" Grid.ColumnSpan="2">Login</TextBlock>
-        
+        <Button Grid.Column="0" Grid.Row="0" Content="Back" Click="navigateHome"></Button>
 
         <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right">UserName</TextBlock>
         <TextBox Grid.Row="1" Grid.Column="1"></TextBox>

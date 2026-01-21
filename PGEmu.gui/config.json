@@ -12,7 +12,7 @@
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "games/Wii",
+      "romPath": "C:/Fun Stuff/Wii",
       "extensions": [".iso",".gcz",".ciso",".rvz",".wia",".wbfs",".nfs"],
       "defaultEmulatorId": "dolphin"
     }
