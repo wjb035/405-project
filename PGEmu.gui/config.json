@@ -15,14 +15,40 @@
       "romPath": "C:/Fun Stuff/Wii",
       "extensions": [".iso",".gcz",".ciso",".rvz",".wia",".wbfs",".nfs"],
       "defaultEmulatorId": "dolphin"
+    },
+    {
+      "id": "ps2",
+      "name": "Playstation 2",
+      "romPath": "D:/Fun Stuff/PS2 Emulation/Games",
+      "extensions": [".iso",".chd"],
+      "defaultEmulatorId": "pcsx2"
+    },
+    {
+      "id": "psp",
+      "name": "Playstation Portable",
+      "romPath": "D:/Fun Stuff/PSP Emulation/Games",
+      "extensions": [".iso",".chd"],
+      "defaultEmulatorId": "psp"
     }
   ],
   "emulators": [
     {
       "id": "dolphin",
       "name": "Dolphin",
-      "exePath": "C:/Fun Stuff/Dolphin Emulator/dolphin-2509-x64/Dolphin-x64",
+      "exePath": "C:/Fun Stuff/Dolphin Emulator/dolphin-2509-x64/Dolphin-x64/Dolphin.exe",
       "argsTemplate": "--exec \"{ROM}\" --batch"
+    },
+    {
+      "id": "pcsx2",
+      "name": "PCSX2",
+      "exePath": "C:/Program Files/PCSX2/pcsx2-qt.exe",
+      "argsTemplate": "\"{ROM}\""
+    },
+    {
+      "id": "psp",
+      "name": "PPSSPP",
+      "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
+      "argsTemplate": "\"{ROM}\""
     }
   ]
 }
