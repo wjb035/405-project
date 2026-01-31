@@ -1,10 +1,15 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PGEmu.app;
+using RetroAchievements.Api;
 using PGEmu.gui.Views;
+using RetroAchievements.Api.Requests.Users;
+using RetroAchievements.Api.Response.Users;
+
 
 namespace PGEmu.gui.ViewModels;
 
@@ -13,7 +18,16 @@ public partial class HomeScreenViewModel : ViewModelBase
     public HomeScreenViewModel()
     {
         LoadConfigAndPlatforms();
+        
+        // these belong to me, keeping these a secret
+        string username = "";
+        string apiKey = "";
+        RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
+        retro(client);
+        
     }
+
+
     
     public ViewModelBase userSettingsViewModel { get; set; }
     
@@ -29,8 +43,48 @@ public partial class HomeScreenViewModel : ViewModelBase
     [ObservableProperty] private string status = "";
 
     private AppConfig? _config;
-    
-    
+
+    async Task retro(RetroAchievementsHttpClient client)
+    {  
+        
+        
+        //var response = await client.GetAchievementsEarnedOnDayAsync("badacctname", DateTime.Now);
+        //var response = await client.GetConsoleIdsAsync();
+        //var response = await client.GetGamesListAsync(21, true);
+        var response = await client.GetGameDataAndUserProgressAsync(2689, "badacctname");
+        //foreach (var achievement in response.)
+        //{
+        //Console.WriteLine($"[{achievement.Id}] {achievement.Name}");
+            
+        Console.WriteLine(response.EarnedAchievementsCount);
+        Console.WriteLine(response.Title);
+        subStrHelp(client, response);
+        foreach (var p in Platforms)
+        {
+            var list = LibraryScanner.Scan(p, _config.LibraryRoot);
+            foreach (var g in list)
+            {
+                if (g.Title.Contains(response.Title))
+                {
+                    Console.WriteLine(response.Title + " is part of " + g.Title);
+                    Console.WriteLine("User has " + response.EarnedAchievementsCount + " achievements unlocked out of " + response.AchievementsCount);
+                }
+                else
+                {
+                    Console.WriteLine(response.Title + " is not part of " + g.Title);
+                }
+                //Console.WriteLine(g.Title);
+            }
+            
+        }
+        //}
+
+    }
+
+    private void subStrHelp(RetroAchievementsHttpClient client, GetGameDataAndUserProgressResponse response)
+    {
+        
+    }
     private void LoadConfigAndPlatforms()
     {
         try
