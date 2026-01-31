@@ -179,6 +179,33 @@
             </DockPanel>
         </Border>
         
+        
+        <Border Grid.Row="3"
+                Grid.Column="7"
+                Grid.ColumnSpan="2"
+                Padding="10"
+                CornerRadius="8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            Margin="0,10,0,0">
+                    
+                </StackPanel>
+                <StackPanel Spacing="8">
+                    
+                    <ListBox ItemsSource="{Binding Games }"
+                             >
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding AchievementNum}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    
+                </StackPanel>
+            </DockPanel>
+        </Border>
     </Grid>
     
     

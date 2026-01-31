@@ -7,7 +7,8 @@
       "name": "Nintendo GameCube",
       "romPath": "C:/Fun Stuff/Dolphin Games",
       "extensions": [".iso",".gcm",".gcz",".ciso",".rvz",".wia",".wbfs"],
-      "defaultEmulatorId": "dolphin"
+      "defaultEmulatorId": "dolphin",
+      "retroAchievementsPlatformID": 16
     },
     {
       "id": "wii",
@@ -21,14 +22,16 @@
       "name": "Playstation 2",
       "romPath": "D:/Fun Stuff/PS2 Emulation/Games",
       "extensions": [".iso",".chd"],
-      "defaultEmulatorId": "pcsx2"
+      "defaultEmulatorId": "pcsx2",
+      "retroAchievementsPlatformID": 21
     },
     {
       "id": "psp",
       "name": "Playstation Portable",
       "romPath": "D:/Fun Stuff/PSP Emulation/Games",
       "extensions": [".iso",".chd"],
-      "defaultEmulatorId": "psp"
+      "defaultEmulatorId": "psp",
+      "retroAchievementsPlatformID": 41
     }
   ],
   "emulators": [

@@ -10,4 +10,6 @@ public class PlatformConfig
     public string RomPath { get; set; } = string.Empty;
     public List<string> Extensions { get; set; } = new();
     public string? DefaultEmulatorId { get; set; }
+
+    public int retroachievementsPlatformID { get; set; } = -1;
 }

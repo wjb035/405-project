@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,14 +16,16 @@ namespace PGEmu.gui.ViewModels;
 
 public partial class HomeScreenViewModel : ViewModelBase
 {
+    // retroachievements api requires a username and api key to access the client
+    public static string username = "";
+    static string apiKey = "";
+    public RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
     public HomeScreenViewModel()
     {
         LoadConfigAndPlatforms();
         
         // these belong to me, keeping these a secret
-        string username = "";
-        string apiKey = "";
-        RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
+        
         retro(client);
         
     }
@@ -33,7 +36,7 @@ public partial class HomeScreenViewModel : ViewModelBase
     
     public ObservableCollection<PlatformConfig> Platforms { get; } = new();
     public ObservableCollection<GameEntry> Games { get; } = new();
-
+   
     [ObservableProperty] private PlatformConfig? selectedPlatform;
 
    
@@ -44,47 +47,77 @@ public partial class HomeScreenViewModel : ViewModelBase
 
     private AppConfig? _config;
 
+    //requires the use of an async task function that we call when the platform is changed
+    // NOTE! IF YOU ARE HAVING ISSUES WITH ANY OF THIS, IT'S LIKELY YOUR CONFIG.JSON FILE ISN'T LAID OUT PROPERLY. PLEASE LET ME KNOW
+    // IF YOU NEED HELP WITH THIS!!!!!!!!!!!!!!!!!!!!!!
     async Task retro(RetroAchievementsHttpClient client)
     {  
         
         
-        //var response = await client.GetAchievementsEarnedOnDayAsync("badacctname", DateTime.Now);
-        //var response = await client.GetConsoleIdsAsync();
-        //var response = await client.GetGamesListAsync(21, true);
-        var response = await client.GetGameDataAndUserProgressAsync(2689, "badacctname");
-        //foreach (var achievement in response.)
-        //{
-        //Console.WriteLine($"[{achievement.Id}] {achievement.Name}");
-            
-        Console.WriteLine(response.EarnedAchievementsCount);
-        Console.WriteLine(response.Title);
-        subStrHelp(client, response);
-        foreach (var p in Platforms)
-        {
-            var list = LibraryScanner.Scan(p, _config.LibraryRoot);
-            foreach (var g in list)
-            {
-                if (g.Title.Contains(response.Title))
-                {
-                    Console.WriteLine(response.Title + " is part of " + g.Title);
-                    Console.WriteLine("User has " + response.EarnedAchievementsCount + " achievements unlocked out of " + response.AchievementsCount);
-                }
-                else
-                {
-                    Console.WriteLine(response.Title + " is not part of " + g.Title);
-                }
-                //Console.WriteLine(g.Title);
-            }
-            
+        Console.WriteLine(selectedPlatform.retroachievementsPlatformID);
+       // load the list of games for the selected platform
+       if (SelectedPlatform.retroachievementsPlatformID != -1)
+       {
+           var gameList = await client.GetGamesListAsync(SelectedPlatform.retroachievementsPlatformID, true);
+           string pattern = @"[\s:-]";
+           string pattern2 =  @"\([^)]*\)";
+
+           // This loop looks nasty, but all it does is iterate through every single game in the retroachievements database 
+           // for the given platform, and checks if we have that game. If we do have it, we will display the information given by 
+           // retroachievements about that game next to it.
+           foreach (var g in Games)
+           {
+
+               // Sanitizing the name of the game given in the files so that we can match it to a retroachievements title
+               string userGameFileName = g.Title;
+               userGameFileName = Regex.Replace(userGameFileName, pattern, String.Empty);
+               userGameFileName = Regex.Replace(userGameFileName, pattern2, String.Empty);
+               
+               Console.WriteLine(userGameFileName);
+
+
+               foreach (var games in gameList.Items)
+               {
+
+                   // sanitizing the name of the retroachievements game so that it can be matched to by a user game file name
+                   string retroAchievementGameName = games.Title;
+                   retroAchievementGameName = Regex.Replace(games.Title, pattern, String.Empty);
+
+                   // if the name of the user's game file contains the shorter and more concise retroachievements game name, then we have a match
+                   if (userGameFileName == retroAchievementGameName)
+                   {
+
+                       var disposableGame = await client.GetGameDataAndUserProgressAsync(games.Id, "");
+                       g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
+                                          disposableGame.AchievementsCount;
+                       //Console.WriteLine(g.AchievementNum);
+
+                       break;
+                   }
+                   else
+                   {
+                       // if it can't detect that we have a game, just display a 0/0
+                       g.AchievementNum = "0/0";
+                   }
+                   //Console.WriteLine(g.Title);
+
+               }
+           }
+
+           //}
+
         }
-        //}
-
+       else
+       {
+           foreach (var g in Games)
+           {
+               g.AchievementNum = "0/0";
+           }
+       }
+      
     }
 
-    private void subStrHelp(RetroAchievementsHttpClient client, GetGameDataAndUserProgressResponse response)
-    {
-        
-    }
+    
     private void LoadConfigAndPlatforms()
     {
         try
@@ -115,6 +148,8 @@ public partial class HomeScreenViewModel : ViewModelBase
     partial void OnSelectedPlatformChanged(PlatformConfig? value)
     {
         LoadGames();
+       _ = retro(client);
+        
         
     }
 
