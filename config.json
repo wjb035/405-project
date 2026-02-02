@@ -1,4 +1,3 @@
-
 {
   "libraryRoot": "~/",
   "platforms": [
@@ -6,7 +5,7 @@
       "id": "gc",
       "name": "Nintendo GameCube",
       "romPath": "C:/Fun Stuff/Dolphin Games",
-      "extensions": [".iso",".gcm",".gcz",".ciso",".rvz",".wia",".wbfs"],
+      "extensions": [".iso", ".gcm", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs"],
       "defaultEmulatorId": "dolphin",
       "retroAchievementsPlatformID": 16
     },
@@ -14,14 +13,14 @@
       "id": "wii",
       "name": "Nintendo Wii",
       "romPath": "C:/Fun Stuff/Wii",
-      "extensions": [".iso",".gcz",".ciso",".rvz",".wia",".wbfs",".nfs"],
+      "extensions": [".iso", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs", ".nfs"],
       "defaultEmulatorId": "dolphin"
     },
     {
       "id": "ps2",
       "name": "Playstation 2",
       "romPath": "D:/Fun Stuff/PS2 Emulation/Games",
-      "extensions": [".iso",".chd"],
+      "extensions": [".iso", ".chd"],
       "defaultEmulatorId": "pcsx2",
       "retroAchievementsPlatformID": 21
     },
@@ -29,9 +28,17 @@
       "id": "psp",
       "name": "Playstation Portable",
       "romPath": "D:/Fun Stuff/PSP Emulation/Games",
-      "extensions": [".iso",".chd"],
+      "extensions": [".iso", ".chd"],
       "defaultEmulatorId": "psp",
       "retroAchievementsPlatformID": 41
+    },
+    {
+      "id": "snes",
+      "name": "Super Nintendo (SNES)",
+      "romPath": "D:/Fun Stuff/SNES Emulation/Games",
+      "extensions": [".sfc", ".smc", ".fig", ".swc"],
+      "defaultEmulatorId": "snes9x",
+      "retroAchievementsPlatformID": 3
     }
   ],
   "emulators": [
@@ -51,6 +58,18 @@
       "id": "psp",
       "name": "PPSSPP",
       "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
+      "argsTemplate": "\"{ROM}\""
+    },
+    {
+      "id": "snes9x",
+      "name": "Snes9x",
+      "exePath": "C:/Program Files/Snes9x/snes9x-x64.exe",
+      "argsTemplate": "\"{ROM}\""
+    },
+    {
+      "id": "bsnes",
+      "name": "bsnes",
+      "exePath": "C:/Program Files/bsnes/bsnes.exe",
       "argsTemplate": "\"{ROM}\""
     }
   ]

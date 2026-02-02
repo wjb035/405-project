@@ -9,204 +9,336 @@
     <Design.DataContext>
         <vm:HomeScreenViewModel />
     </Design.DataContext>
-    
-        <!--<Grid RowDefinitions="Auto,*" ColumnDefinitions="260,*,*" Margin="16" RowSpacing="12" ColumnSpacing="12">
-        ~1~ Header @1@
-        <StackPanel Grid.ColumnSpan="2" Spacing="6">
-            <TextBlock FontSize="22"
-                       FontWeight="SemiBold"
-                       Text="PGEmu" />
-            <TextBlock Opacity="0.8"
-                       Text="{Binding Status}"
-                       TextWrapping="Wrap" />
+
+  <UserControl.Styles>
+    <!-- Background + basic text defaults -->
+    <Style Selector="UserControl">
+      <Setter Property="Background" Value="#E6D3EA" />
+    </Style>
+
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="40" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.subtitle">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <!-- Carousel styling -->
+    <Style Selector="ListBox#ConsoleCarousel">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+
+      <!-- Default state: parked and invisible (styles will move it) -->
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="ZIndex" Value="0" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="IsVisible" Value="True" />
+
+      <Setter Property="Canvas.Top" Value="70" />
+      <Setter Property="Width" Value="680" />
+      <Setter Property="Height" Value="380" />
+
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+
+      <Setter Property="Transitions">
+        <Setter.Value>
+          <Transitions>
+            <DoubleTransition Property="Opacity" Duration="0:0:0.24" Easing="CubicEaseOut" />
+            <DoubleTransition Property="(Canvas.Left)" Duration="0:0:0.24" Easing="CubicEaseOut" />
+            <DoubleTransition Property="(Canvas.Top)" Duration="0:0:0.24" Easing="CubicEaseOut" />
+            <!-- BackEaseOut gives a subtle overshoot on scale/transform -->
+            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="BackEaseOut" />
+          </Transitions>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem:selected">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="ZIndex" Value="3" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="1.00" ScaleY="1.00" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.slot-left">
+      <Setter Property="IsVisible" Value="True" />
+      <Setter Property="Canvas.Left" Value="0" />
+      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.slot-center">
+      <Setter Property="IsVisible" Value="True" />
+      <Setter Property="Canvas.Left" Value="180" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+    </Style>
+
+    <Style Selector="ListBoxItem.slot-right">
+      <Setter Property="IsVisible" Value="True" />
+      <Setter Property="Canvas.Left" Value="520" />
+      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Offscreen parking so items can slide in/out instead of popping -->
+    <Style Selector="ListBoxItem.off-left">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Canvas.Left" Value="-900" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.off-right">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Canvas.Left" Value="1300" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+            <TranslateTransform X="0" Y="0" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- <Style Selector="ListBoxItem.slot-left:pointerover:not(:selected)">
+      <Setter Property="ZIndex" Value="1" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.82" ScaleY="0.82" />
+            <TranslateTransform X="-36" Y="-26" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.slot-right:pointerover:not(:selected)">
+      <Setter Property="ZIndex" Value="1" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <TransformGroup>
+            <ScaleTransform ScaleX="0.82" ScaleY="0.82" />
+            <TranslateTransform X="36" Y="-26" />
+          </TransformGroup>
+        </Setter.Value>
+      </Setter>
+    </Style> -->
+
+    <!-- removing selection highlights -->
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBoxItem:focus /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Defensive: wipe pointerover chrome too -->
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBoxItem:pointerover /template/ Border">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBoxItem:selected Border.consoleCard">
+      <Setter Property="BorderBrush" Value="#B05AA6" />
+      <Setter Property="BorderThickness" Value="5" />
+    </Style>
+
+    <Style Selector="Border.consoleCard">
+      <Setter Property="CornerRadius" Value="26" />
+      <Setter Property="BorderThickness" Value="4" />
+      <Setter Property="BorderBrush" Value="#55000000" />
+      <Setter Property="Background" Value="#F0E3F2" />
+    </Style>
+
+    <Style Selector="Button.iconBtn">
+      <Setter Property="Width" Value="44" />
+      <Setter Property="Height" Value="36" />
+      <Setter Property="Padding" Value="8,0" />
+    </Style>
+
+    <Style Selector="Button.navArrow">
+      <Setter Property="Width" Value="64" />
+      <Setter Property="Height" Value="64" />
+      <Setter Property="FontSize" Value="28" />
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="18" RowSpacing="10">
+
+    <!-- Top bar: back left, icons right -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Top">
+      <Button Content="←" Width="56" Height="40" Click="navigateLogin" />
+
+      <Border Grid.Column="2" Background="#00000000">
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+
+          <!-- Friends icon with red badge (mockup style) -->
+          <Grid>
+            <Button Classes="iconBtn" Content="👥" />
+            <Border Width="16" Height="16" CornerRadius="8" Background="#E53935"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0">
+              <TextBlock Text="4" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+          </Grid>
+
+          <Button Classes="iconBtn" Content="💬" />
+          <Button Classes="iconBtn" Content="⚙" Click="navigateSettings" />
+          <Button Classes="iconBtn" Content="?" />
         </StackPanel>
-        <StackPanel Grid.Column="2" Grid.ColumnSpan="1" Spacing="6" HorizontalAlignment="Right">
-            <Button Command="{Binding SwitchScreens}" CommandParameter="{ Binding loginViewModel }" Content="Login/Sign Up">
-            </Button>
-            <Button Content="Settings" />
-        </StackPanel>
-
-        ~1~ Left pane: list of platforms @1@
-        <Border Grid.Row="1"
-                Grid.Column="0"
-                Padding="10"
-                CornerRadius="8">
-            <StackPanel Spacing="8">
-                <TextBlock FontSize="14"
-                           FontWeight="SemiBold"
-                           Text="Platforms" />
-                <ListBox ItemsSource="{Binding Platforms}"
-                         SelectedItem="{Binding SelectedPlatform}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
-        </Border>
-
-        ~1~ Right pane: list of games and a Play button @1@
-        <Border Grid.Row="1"
-                Grid.Column="1"
-                Grid.ColumnSpan="2"
-                Padding="10"
-                CornerRadius="8">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Bottom"
-                            Orientation="Horizontal"
-                            Spacing="10"
-                            Margin="0,10,0,0">
-                    <Button Content="Play"
-                            Command="{Binding PlayCommand}" />
-                    <TextBlock VerticalAlignment="Center"
-                               Opacity="0.8"
-                               Text="{Binding SelectedGame.Title}" />
-                </StackPanel>
-                <StackPanel Spacing="8">
-                    <TextBlock FontSize="14"
-                               FontWeight="SemiBold"
-                               Text="Games" />
-                    <ListBox ItemsSource="{Binding Games}"
-                             SelectedItem="{Binding SelectedGame}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Title}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-    </Grid>-->
-
-    
-    <Grid RowDefinitions="Auto,*,*,*,*,*,*,*" ColumnDefinitions="240,*,*,*,*,*,*,*,*" Margin="16" RowSpacing="12" ColumnSpacing="12" ShowGridLines="False">
-        <Button Grid.Row="0" Grid.Column="4"
-                Content="Login" 
-                Width="60" Height="30"
-                Click="navigateLogin"/>
-        <Button Grid.Row="0" Grid.Column="5"
-                Content="Friends" 
-                Width="80" Height="30" />
-        <Button Grid.Row="0" Grid.Column="6"
-                Content="Search" 
-                Width="80" Height="30" />
-        <Button Grid.Row="0" Grid.Column="7"
-                Content="Settings" 
-                Width="80" Height="30" 
-                Command="{ Binding SwitchScreens }" 
-                CommandParameter="{ Binding userSettingsViewModel }"/>
-        <Button Grid.Row="0" Grid.Column="8"
-                Content="Profile" 
-                Width="80" Height="30" 
-                Click="navigateProfile"
-               />
-        <!-- Header -->
-        
-
-        <!-- Left pane: list of platforms -->
-        <Border Grid.Row="1"
-                Grid.Column="3"
-               Grid.ColumnSpan="2"
-                Padding="10"
-                CornerRadius="8"
-        >
-            
-            <StackPanel Spacing="8">
-                
-                <TextBlock Opacity="0.8"
-                           Text="{Binding Status}"
-                           TextWrapping="Wrap" />
-                
-                
-                
-            </StackPanel>
-            
-            
-        </Border>
-        
-        <Border Grid.Row="3"
-                Grid.Column="3"
-                Grid.ColumnSpan="2"
-                Padding="10"
-                CornerRadius="8"
-        >
-            
-            
-            <StackPanel Spacing="8">
-                <ListBox x:Name="MainListBox"
-                         
-                    
-                         ItemsSource="{Binding Platforms}"
-                         SelectedItem="{Binding SelectedPlatform}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
-        </Border>
-        <Border Grid.Row="3"
-                Grid.Column="5"
-                Grid.ColumnSpan="2"
-                Padding="10"
-                CornerRadius="8">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Bottom"
-                            Orientation="Horizontal"
-                            Spacing="10"
-                            Margin="0,10,0,0">
-                    
-                </StackPanel>
-                <StackPanel Spacing="8">
-                    
-                    <ListBox ItemsSource="{Binding Games}"
-                             SelectedItem="{Binding SelectedGame}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Title}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <Button Content="Play"
-                            Command="{Binding PlayCommand}" />
-                    <TextBlock VerticalAlignment="Center"
-                               Opacity="0.8"
-                               Text="{Binding SelectedGame.Title}" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-        
-        
-        <Border Grid.Row="3"
-                Grid.Column="7"
-                Grid.ColumnSpan="2"
-                Padding="10"
-                CornerRadius="8">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Bottom"
-                            Orientation="Horizontal"
-                            Spacing="10"
-                            Margin="0,10,0,0">
-                    
-                </StackPanel>
-                <StackPanel Spacing="8">
-                    
-                    <ListBox ItemsSource="{Binding Games }"
-                             >
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding AchievementNum}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    
-                </StackPanel>
-            </DockPanel>
-        </Border>
+      </Border>
     </Grid>
-    
-    
+
+    <!-- Main content area -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="False">
+
+      <!-- Friend bubbles + +2 more over the card -->
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,10">
+        <Ellipse Width="26" Height="26" Fill="#303030" />
+        <Ellipse Width="26" Height="26" Fill="#B05AA6" />
+        <Ellipse Width="26" Height="26" Fill="#55B6E8" />
+        <TextBlock Text="+2 more" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" />
+      </StackPanel>
+
+      <!-- Carousel + nav arrows in the corners (like mockup) -->
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ClipToBounds="False">
+
+        <Border Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="220,0"
+                Background="#00000000"
+                ClipToBounds="False">
+          <Grid Width="1040" Height="460" ClipToBounds="False">
+            <ListBox x:Name="ConsoleCarousel"
+                     ItemsSource="{Binding WindowPlatforms}"
+                     SelectedItem="{Binding SelectedWindowPlatform}"
+                     SelectionChanged="CarouselSelectionChanged"
+                     ContainerPrepared="CarouselContainerPrepared"
+                     ContainerClearing="CarouselContainerClearing"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     ClipToBounds="False"
+                     >
+
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <Canvas Width="1040" Height="460" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid>
+                    <!-- Card -->
+                    <Border Classes="consoleCard" Width="680" Height="380">
+                      <Grid>
+                        <TextBlock Classes="h1" Text="{Binding Platform.Name}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
+
+                    <!-- Mockup-like alert marks on the left side of the selected card (purely visual for now) -->
+                    <StackPanel Orientation="Vertical" Spacing="-6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-18,64,0,0"
+                                IsVisible="{Binding $parent[ListBoxItem].IsSelected}">
+                      <TextBlock Text="!" FontSize="40" FontWeight="Black" Foreground="#D32F2F" />
+                      <TextBlock Text="!" FontSize="40" FontWeight="Black" Foreground="#D32F2F" Margin="8,-10,0,0" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+
+            </ListBox>
+          </Grid>
+        </Border>
+
+        <!-- Bottom left/right arrows (like the sketch) -->
+        <Button Grid.Column="0" Classes="navArrow" Content="◀" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,0,0,0" Click="PrevConsole" />
+        <Button Grid.Column="2" Classes="navArrow" Content="▶" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,0" Click="NextConsole" />
+
+      </Grid>
+
+      <!-- Console name under the card -->
+      <TextBlock Grid.Row="2" Classes="subtitle"
+                 Text="{Binding SelectedPlatform.Name}"
+                 HorizontalAlignment="Center"
+                 Margin="0,12,0,0" />
+    </Grid>
+
+    <!-- Optional tiny status line (kept subtle) -->
+    <TextBlock Grid.Row="2" Text="{Binding Status}" Opacity="1" HorizontalAlignment="Center" />
+
+  </Grid>
+
 </UserControl>

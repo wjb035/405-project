@@ -35,9 +35,11 @@ public partial class HomeScreenViewModel : ViewModelBase
     public ViewModelBase userSettingsViewModel { get; set; }
     
     public ObservableCollection<PlatformConfig> Platforms { get; } = new();
+    public ObservableCollection<WindowPlatformItem> WindowPlatforms { get; } = new();
     public ObservableCollection<GameEntry> Games { get; } = new();
    
     [ObservableProperty] private PlatformConfig? selectedPlatform;
+    [ObservableProperty] private WindowPlatformItem? selectedWindowPlatform;
 
    
 
@@ -137,6 +139,7 @@ public partial class HomeScreenViewModel : ViewModelBase
                 Platforms.Add(p);
 
             SelectedPlatform = Platforms.FirstOrDefault();
+            BuildWindowPlatforms();
            
         }
         catch (Exception ex)
@@ -149,6 +152,7 @@ public partial class HomeScreenViewModel : ViewModelBase
     {
         LoadGames();
        _ = retro(client);
+       BuildWindowPlatforms();
         
         
     }
@@ -156,6 +160,24 @@ public partial class HomeScreenViewModel : ViewModelBase
     partial void OnSelectedGameChanged(GameEntry? value)
     {
         PlayCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedWindowPlatformChanged(WindowPlatformItem? value)
+    {
+        if (value?.Platform == null) return;
+        if (SelectedPlatform == value.Platform && value.Slot == 1) return;
+
+        if (value.Slot == 1)
+            return;
+
+        var currentIndex = Platforms.IndexOf(SelectedPlatform);
+        if (currentIndex < 0) return;
+
+        var nextIndex = value.Slot == 2
+            ? (currentIndex + 1) % Platforms.Count
+            : (currentIndex - 1 + Platforms.Count) % Platforms.Count;
+
+        SelectedPlatform = Platforms[nextIndex];
     }
 
     private void LoadGames()
@@ -205,6 +227,73 @@ public partial class HomeScreenViewModel : ViewModelBase
             
 
     }
+
+    public void MoveWindow(int delta)
+    {
+        if (Platforms.Count == 0) return;
+
+        var current = SelectedPlatform ?? Platforms.FirstOrDefault();
+        if (current == null) return;
+
+        var currentIndex = Platforms.IndexOf(current);
+        if (currentIndex < 0) currentIndex = 0;
+
+        var nextIndex = (currentIndex + delta) % Platforms.Count;
+        if (nextIndex < 0) nextIndex += Platforms.Count;
+
+        SelectedPlatform = Platforms[nextIndex];
+    }
    
+
+    private void BuildWindowPlatforms()
+    {
+        if (Platforms.Count == 0)
+        {
+            WindowPlatforms.Clear();
+            SelectedWindowPlatform = null;
+            return;
+        }
+
+        var current = SelectedPlatform ?? Platforms.FirstOrDefault();
+        if (current == null) return;
+
+        var currentIndex = Platforms.IndexOf(current);
+        if (currentIndex < 0) currentIndex = 0;
+
+        var prevIndex = (currentIndex - 1 + Platforms.Count) % Platforms.Count;
+        var nextIndex = (currentIndex + 1) % Platforms.Count;
+
+        var prevItem = new WindowPlatformItem(Platforms[prevIndex], 0);
+        var currentItem = new WindowPlatformItem(Platforms[currentIndex], 1);
+        var nextItem = new WindowPlatformItem(Platforms[nextIndex], 2);
+
+        if (WindowPlatforms.Count == 3)
+        {
+            WindowPlatforms[0] = prevItem;
+            WindowPlatforms[1] = currentItem;
+            WindowPlatforms[2] = nextItem;
+        }
+        else
+        {
+            WindowPlatforms.Clear();
+            WindowPlatforms.Add(prevItem);
+            WindowPlatforms.Add(currentItem);
+            WindowPlatforms.Add(nextItem);
+        }
+
+        SelectedWindowPlatform = WindowPlatforms[1];
+    }
+
+    public sealed class WindowPlatformItem
+    {
+        public WindowPlatformItem(PlatformConfig platform, int slot)
+        {
+            Platform = platform;
+            Slot = slot;
+        }
+
+        public PlatformConfig Platform { get; }
+        public int Slot { get; }
+    }
 
 }
