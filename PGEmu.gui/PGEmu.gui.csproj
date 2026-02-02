@@ -10,6 +10,17 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+    <None Update="config.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- macOS AppleDouble files ("._*") can appear when copying files, treat them as junk -->
+    <Compile Remove="**/._*.cs" />
+    <AvaloniaXaml Remove="**/._*.axaml" />
+    <None Remove="**/._*.axaml" />
+    <None Remove="**/._*.cs" />
+    <Content Remove="**/._*" />
+    <EmbeddedResource Remove="**/._*" />
+
   </ItemGroup>
 
   <ItemGroup>
