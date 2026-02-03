@@ -169,6 +169,8 @@ public partial class HomeScreenViewModel : ViewModelBase
 
         if (value.Slot == 1)
             return;
+        if (value.Slot != 0 && value.Slot != 2)
+            return;
 
         var currentIndex = Platforms.IndexOf(SelectedPlatform);
         if (currentIndex < 0) return;
@@ -260,25 +262,62 @@ public partial class HomeScreenViewModel : ViewModelBase
         var currentIndex = Platforms.IndexOf(current);
         if (currentIndex < 0) currentIndex = 0;
 
-        var prevIndex = (currentIndex - 1 + Platforms.Count) % Platforms.Count;
-        var nextIndex = (currentIndex + 1) % Platforms.Count;
+        var count = Platforms.Count;
 
-        var prevItem = new WindowPlatformItem(Platforms[prevIndex], 0);
-        var currentItem = new WindowPlatformItem(Platforms[currentIndex], 1);
-        var nextItem = new WindowPlatformItem(Platforms[nextIndex], 2);
+        if (count >= 3)
+        {
+            var prevIndex = (currentIndex - 1 + count) % count;
+            var nextIndex = (currentIndex + 1) % count;
+            var farPrevIndex = (currentIndex - 2 + count) % count;
+            var farNextIndex = (currentIndex + 2) % count;
+
+            var farPrevItem = new WindowPlatformItem(Platforms[farPrevIndex], -1);
+            var prevItem = new WindowPlatformItem(Platforms[prevIndex], 0);
+            var currentItem = new WindowPlatformItem(Platforms[currentIndex], 1);
+            var nextItem = new WindowPlatformItem(Platforms[nextIndex], 2);
+            var farNextItem = new WindowPlatformItem(Platforms[farNextIndex], 3);
+
+            if (WindowPlatforms.Count == 5)
+            {
+                WindowPlatforms[0] = farPrevItem;
+                WindowPlatforms[1] = prevItem;
+                WindowPlatforms[2] = currentItem;
+                WindowPlatforms[3] = nextItem;
+                WindowPlatforms[4] = farNextItem;
+            }
+            else
+            {
+                WindowPlatforms.Clear();
+                WindowPlatforms.Add(farPrevItem);
+                WindowPlatforms.Add(prevItem);
+                WindowPlatforms.Add(currentItem);
+                WindowPlatforms.Add(nextItem);
+                WindowPlatforms.Add(farNextItem);
+            }
+
+            SelectedWindowPlatform = WindowPlatforms[2];
+            return;
+        }
+
+        var prevIndexFallback = (currentIndex - 1 + count) % count;
+        var nextIndexFallback = (currentIndex + 1) % count;
+
+        var prevItemFallback = new WindowPlatformItem(Platforms[prevIndexFallback], 0);
+        var currentItemFallback = new WindowPlatformItem(Platforms[currentIndex], 1);
+        var nextItemFallback = new WindowPlatformItem(Platforms[nextIndexFallback], 2);
 
         if (WindowPlatforms.Count == 3)
         {
-            WindowPlatforms[0] = prevItem;
-            WindowPlatforms[1] = currentItem;
-            WindowPlatforms[2] = nextItem;
+            WindowPlatforms[0] = prevItemFallback;
+            WindowPlatforms[1] = currentItemFallback;
+            WindowPlatforms[2] = nextItemFallback;
         }
         else
         {
             WindowPlatforms.Clear();
-            WindowPlatforms.Add(prevItem);
-            WindowPlatforms.Add(currentItem);
-            WindowPlatforms.Add(nextItem);
+            WindowPlatforms.Add(prevItemFallback);
+            WindowPlatforms.Add(currentItemFallback);
+            WindowPlatforms.Add(nextItemFallback);
         }
 
         SelectedWindowPlatform = WindowPlatforms[1];

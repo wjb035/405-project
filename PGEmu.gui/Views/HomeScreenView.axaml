@@ -61,17 +61,7 @@
         </Setter.Value>
       </Setter>
 
-      <Setter Property="Transitions">
-        <Setter.Value>
-          <Transitions>
-            <DoubleTransition Property="Opacity" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <DoubleTransition Property="(Canvas.Left)" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <DoubleTransition Property="(Canvas.Top)" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <!-- BackEaseOut gives a subtle overshoot on scale/transform -->
-            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="BackEaseOut" />
-          </Transitions>
-        </Setter.Value>
-      </Setter>
+      <!-- Transforms are driven continuously in code for smooth revolve -->
     </Style>
 
     <Style Selector="ListBoxItem:selected">

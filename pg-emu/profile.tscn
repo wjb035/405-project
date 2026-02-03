@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Profile.cs" id="1"]
+
+[node name="Profile" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9019608, 0.827451, 0.91764706, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+separation = 12
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar"]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "←"
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0, 0, 0, 0.9)
+text = "Profile"
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+separation = 10
+
+[node name="Hint" type="Label" parent="Margin/Root/Body"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+text = "User profile placeholder page"
+
+[node name="PlaceholderCard" type="Panel" parent="Margin/Root/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(520, 240)
+
+[node name="PlaceholderText" type="Label" parent="Margin/Root/Body/PlaceholderCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -20.0
+offset_right = 200.0
+offset_bottom = 20.0
+horizontal_alignment = 1
+text = "Profile details go here"
+
