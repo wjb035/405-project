@@ -8,8 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using PGEmu.app;
 using RetroAchievements.Api;
 using PGEmu.gui.Views;
-using RetroAchievements.Api.Requests.Users;
-using RetroAchievements.Api.Response.Users;
 
 
 namespace PGEmu.gui.ViewModels;
