@@ -22,4 +22,3 @@ public partial class Profile : Control
 		tree.ChangeSceneToFile(returnScene);
 	}
 }
-
