@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using RetroAchievements.Api;
-
+using Godot;
 namespace PGEmu.app;
 
 public static class RetroAchievementsService
@@ -21,15 +22,27 @@ public static class RetroAchievementsService
 
         Console.WriteLine(selectedPlatform?.retroachievementsPlatformID);
        // load the list of games for the selected platform
-       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
+       //if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
+       if (selectedPlatform != null)
        {
-           var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
+           //var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
+           var gameList = await client.GetGamesListAsync(16, true);
            string pattern = @"[\s:-]";
            string pattern2 =  @"\([^)]*\)";
 
+
+           foreach (var gamesItem in gameList.Items)
+           {
+               //GD.Print(gamesItem.Title);
+           }
            // This loop looks nasty, but all it does is iterate through every single game in the retroachievements database 
            // for the given platform, and checks if we have that game. If we do have it, we will display the information given by 
            // retroachievements about that game next to it.
+
+           foreach (var g in games)
+           {
+               //GD.Print(g.Title);
+           }
            foreach (var g in games)
            {
 
@@ -39,7 +52,7 @@ public static class RetroAchievementsService
                userGameFileName = Regex.Replace(userGameFileName, pattern2, String.Empty);
                
                Console.WriteLine(userGameFileName);
-
+               GD.Print("test!");
 
                foreach (var gamesItem in gameList.Items)
                {
@@ -51,12 +64,13 @@ public static class RetroAchievementsService
                    // if the name of the user's game file contains the shorter and more concise retroachievements game name, then we have a match
                    if (userGameFileName == retroAchievementGameName)
                    {
-
-                       var disposableGame = await client.GetGameDataAndUserProgressAsync(gamesItem.Id, "");
+                       GD.Print(userGameFileName);
+                       GD.Print(retroAchievementGameName);
+                       var disposableGame = await client.GetGameDataAndUserProgressAsync(gamesItem.Id, "badacctname");
                        g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
                                           disposableGame.AchievementsCount;
                        //Console.WriteLine(g.AchievementNum);
-
+                       GD.Print("aaron can you smell this");
                        break;
                    }
                    else
