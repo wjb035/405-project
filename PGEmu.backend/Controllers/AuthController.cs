@@ -5,6 +5,8 @@ using PGEmuBackend.Models;
 using LoginRequest = PGEmuBackend.DTOs.Authorization.LoginRequest;
 using PGEmuBackend.DTOs.Authorization;
 using Microsoft.EntityFrameworkCore;
+using PGEmuBackend.Services;
+
 
 namespace PGEmuBackend.Controllers;
 
@@ -15,14 +17,20 @@ public class AuthController : ControllerBase
     // Dependency injection for my database context and for microsofts built in hasher
     private readonly AppDbContext _db;
     private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly JwtService _jwtService;
+    private readonly IConfiguration _config;
     
     // Constructor injection
     public AuthController(
         AppDbContext db,
-        IPasswordHasher<User> passwordHasher)
+        IPasswordHasher<User> passwordHasher,
+        JwtService jwtService,
+        IConfiguration config)
     {
         _db = db;
         _passwordHasher = passwordHasher;
+        _jwtService = jwtService;
+        _config = config;
     }
     
     // Registration endpoint
@@ -46,8 +54,8 @@ public class AuthController : ControllerBase
         
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
         
-        _db.Users.Add(user);
-        _db.SaveChanges();
+        await _db.Users.AddAsync(user);
+        await _db.SaveChangesAsync();
 
         return Ok(new
         {
@@ -74,17 +82,45 @@ public class AuthController : ControllerBase
             user.PasswordHash,
             request.Password
         );
-
-        // If password verification fails, return invalid
+        
         if (result != PasswordVerificationResult.Success)
             return Unauthorized("Invalid username or password");
         
-        // If password verifciation succeeds, return success
+        // Generate tokens
+        var accessToken = _jwtService.GenerateAccessToken(user);
+        var refreshTokenRaw = _jwtService.GenerateRefreshToken();
+        var refreshTokenHash = _jwtService.HashToken(refreshTokenRaw);
+        
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_config["JwtSettings:RefreshTokenExpirationDays"]))
+        };
+        
+        await _db.RefreshTokens.AddAsync(refreshToken);
+        await _db.SaveChangesAsync();
+        
+        // If password verifciation succeeds, return access token
         return Ok(new
         {
-            message = "Login successful",
-            userId = user.Id,
-            username = user.Username
+            accessToken,
+            refreshToken = refreshTokenRaw
         });
+    }
+    
+    // Logout endpoint
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
+    {
+        var hash = _jwtService.HashToken(request.RefreshToken);
+        var token = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.TokenHash == hash);
+        if (token != null)
+        {
+            token.RevokedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+        }
+
+        return Ok(new { message = "Logged out successfully" });
     }
 }

@@ -21,4 +21,5 @@ public class User
     public UserProfile? Profile { get; set; }
     public UserSettings? Settings { get; set; }
     public UserStatus? Status { get; set; }
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

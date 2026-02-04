@@ -18,7 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<UserCollection> UserCollections => Set<UserCollection>();
     public DbSet<CollectionGame> CollectionGames => Set<CollectionGame>();
     public DbSet<UserGame> UserGames => Set<UserGame>();
-
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -140,5 +141,23 @@ public class AppDbContext : DbContext
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        
+        // Refresh Tokens
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+
+            entity.HasIndex(rt => rt.TokenHash).IsUnique();
+            entity.HasIndex(rt => rt.UserId);
+
+            entity.Property(rt => rt.TokenHash)
+                .IsRequired()
+                .HasMaxLength(64);
+
+            entity.HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
