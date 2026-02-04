@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PGEmu.app;
+using RetroAchievements.Api;
+
 
 public partial class GameSelect : Control
 {
@@ -38,6 +40,7 @@ public partial class GameSelect : Control
 	private readonly List<Control> _cards = new();
 	private readonly List<GameEntry> _games = new();
 
+	
 	// Loaded app context.
 	private AppConfig? _config;
 	private string? _configPath;
@@ -55,6 +58,7 @@ public partial class GameSelect : Control
 
 	public override void _Ready()
 	{
+		
 		// Resolve exported node paths into actual nodes.
 		_cardsRoot = GetNode<Control>(CardsPath);
 		_prev = GetNode<Button>(PrevPath);
@@ -193,7 +197,27 @@ public partial class GameSelect : Control
 
 			// Keep ordering stable and predictable.
 			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
-
+			
+			
+			// Debug stuff, removing later
+			GD.Print("Before:");
+			foreach (var g in _games){
+				//GD.Print(g.Title + g.AchievementNum);
+			}
+			
+			
+			
+			string username = "badacctname";
+			string apiKey = "";
+			
+			RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
+			RetroAchievementsService.Retro(client, _platform, _games);
+			GD.Print("After:");
+			foreach (var g in _games){
+				//GD.Print(g.Title + g.AchievementNum);
+			}
+			
+			
 			if (_games.Count == 0)
 			{
 				SetStatus(
