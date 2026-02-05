@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cwnetad1wffaa"]
 
-[ext_resource type="Script" path="res://GameSelect.cs" id="1"]
+[ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 
 [node name="GameSelect" type="Control" unique_id=1241405706]
@@ -48,7 +48,6 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=332360183]
 layout_mode = 2
@@ -67,7 +66,6 @@ size_flags_vertical = 0
 
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=2023052200]
 layout_mode = 2
-separation = 10
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
 custom_minimum_size = Vector2(44, 36)
@@ -94,7 +92,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 1
-separation = 12
 
 [node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea" unique_id=1530909692]
 custom_minimum_size = Vector2(1040, 460)
@@ -132,14 +129,13 @@ text = "▶"
 
 [node name="Title" type="Label" parent="Margin/Root/CenterArea" unique_id=777097425]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0, 0, 0, 0.92)
+theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 
 [node name="MetaRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=2104703426]
 layout_mode = 2
 alignment = 1
-separation = 30
 
 [node name="MetaLeft" type="Label" parent="Margin/Root/CenterArea/MetaRow" unique_id=813034884]
 layout_mode = 2
@@ -159,7 +155,6 @@ text = "Achievements"
 [node name="ActionRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=1247217525]
 layout_mode = 2
 alignment = 1
-separation = 12
 
 [node name="BtnPlay" type="Button" parent="Margin/Root/CenterArea/ActionRow" unique_id=242986329]
 custom_minimum_size = Vector2(160, 44)

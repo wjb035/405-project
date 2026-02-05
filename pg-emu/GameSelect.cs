@@ -53,6 +53,12 @@ public partial class GameSelect : Control
 	private float _dragStartCarouselPos;  // Carousel position at mouse-down.
 	private bool _dragging;
 
+	// Gamepad navigation (left stick + d-pad)
+	private const float AxisDeadzone = 0.55f;
+	private const int AxisRepeatMs = 180;
+	private int _leftAxisDir;
+	private long _leftAxisNextMs;
+
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
 
@@ -100,6 +106,22 @@ public partial class GameSelect : Control
 			tree.SetMeta("pgemu_config_path", _configPath);
 
 		tree.ChangeSceneToFile("res://vault.tscn");
+	}
+
+	private void OpenProfile()
+	{
+		// Store return context so Profile can route back to this scene.
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
+		if (_configPath != null)
+			tree.SetMeta("pgemu_config_path", _configPath);
+
+		tree.ChangeSceneToFile("res://profile.tscn");
+	}
+
+	private void GoHome()
+	{
+		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
 
 	private void PlaySelected()
@@ -365,6 +387,89 @@ public partial class GameSelect : Control
 			if (wheel.ButtonIndex == MouseButton.WheelUp) Step(-1);
 			if (wheel.ButtonIndex == MouseButton.WheelDown) Step(1);
 		}
+	}
+
+	public override void _UnhandledInput(InputEvent e)
+	{
+		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+		{
+			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
+				GetViewport().SetInputAsHandled();
+			return;
+		}
+
+		switch (jb.ButtonIndex)
+		{
+			case JoyButton.LeftShoulder:
+			case JoyButton.DpadLeft:
+				if (Count > 1)
+				{
+					Step(-1);
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.RightShoulder:
+			case JoyButton.DpadRight:
+				if (Count > 1)
+				{
+					Step(1);
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.A:
+			case JoyButton.X:
+				PlaySelected();
+				GetViewport().SetInputAsHandled();
+				break;
+			case JoyButton.B:
+				GoBack();
+				GetViewport().SetInputAsHandled();
+				break;
+			case JoyButton.Start:
+				OpenVault();
+				GetViewport().SetInputAsHandled();
+				break;
+			case JoyButton.Touchpad:
+				OpenProfile();
+				GetViewport().SetInputAsHandled();
+				break;
+			case JoyButton.Guide:
+				GoHome();
+				GetViewport().SetInputAsHandled();
+				break;
+		}
+	}
+
+	private bool HandleAxisNav(InputEventJoypadMotion jm)
+	{
+		if (jm.Axis == JoyAxis.LeftX)
+			return HandleAxis(jm.AxisValue, ref _leftAxisDir, ref _leftAxisNextMs);
+
+		return false;
+	}
+
+	private bool HandleAxis(float value, ref int heldDir, ref long nextMs)
+	{
+		var dir = 0;
+		if (value <= -AxisDeadzone) dir = -1;
+		else if (value >= AxisDeadzone) dir = 1;
+
+		if (dir == 0)
+		{
+			heldDir = 0;
+			return false;
+		}
+
+		var now = (long)Time.GetTicksMsec();
+		if (dir != heldDir || now >= nextMs)
+		{
+			Step(dir);
+			heldDir = dir;
+			nextMs = now + AxisRepeatMs;
+			return true;
+		}
+
+		return false;
 	}
 
 	private void LayoutCards()

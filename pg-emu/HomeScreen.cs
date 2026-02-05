@@ -47,6 +47,12 @@ public partial class HomeScreen : Control
 	private float _dragStartCarouselPos;
 	private bool _dragging;
 
+	// Gamepad navigation (left stick + d-pad)
+	private const float AxisDeadzone = 0.55f;
+	private const int AxisRepeatMs = 180;
+	private int _leftAxisDir;
+	private long _leftAxisNextMs;
+
 	private Tween _tween;
 
 	public override void _Ready()
@@ -272,6 +278,98 @@ public partial class HomeScreen : Control
 			if (wheel.ButtonIndex == MouseButton.WheelUp) Step(-1);
 			if (wheel.ButtonIndex == MouseButton.WheelDown) Step(1);
 		}
+	}
+
+	public override void _UnhandledInput(InputEvent e)
+	{
+		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+		{
+			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
+				GetViewport().SetInputAsHandled();
+			return;
+		}
+
+		switch (jb.ButtonIndex)
+		{
+			case JoyButton.LeftShoulder:
+			case JoyButton.DpadLeft:
+				if (Count > 1)
+				{
+					Step(-1);
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.RightShoulder:
+			case JoyButton.DpadRight:
+				if (Count > 1)
+				{
+					Step(1);
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.A:
+			case JoyButton.X:
+				OpenSelectedPlatform();
+				GetViewport().SetInputAsHandled();
+				break;
+			case JoyButton.B:
+				if (_back != null)
+				{
+					OnBackPressed();
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.Start:
+				if (_settings != null)
+				{
+					OnSettingsPressed();
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.Touchpad:
+				if (_friends != null)
+				{
+					OnFriendsPressed();
+					GetViewport().SetInputAsHandled();
+				}
+				break;
+			case JoyButton.Guide:
+				GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+				GetViewport().SetInputAsHandled();
+				break;
+		}
+	}
+
+	private bool HandleAxisNav(InputEventJoypadMotion jm)
+	{
+		if (jm.Axis == JoyAxis.LeftX)
+			return HandleAxis(jm.AxisValue, ref _leftAxisDir, ref _leftAxisNextMs);
+
+		return false;
+	}
+
+	private bool HandleAxis(float value, ref int heldDir, ref long nextMs)
+	{
+		var dir = 0;
+		if (value <= -AxisDeadzone) dir = -1;
+		else if (value >= AxisDeadzone) dir = 1;
+
+		if (dir == 0)
+		{
+			heldDir = 0;
+			return false;
+		}
+
+		var now = (long)Time.GetTicksMsec();
+		if (dir != heldDir || now >= nextMs)
+		{
+			Step(dir);
+			heldDir = dir;
+			nextMs = now + AxisRepeatMs;
+			return true;
+		}
+
+		return false;
 	}
 
 	private void LayoutCards()
