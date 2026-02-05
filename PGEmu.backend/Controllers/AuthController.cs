@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using PGEmuBackend.Data;
 using PGEmuBackend.Models;
 using LoginRequest = PGEmuBackend.DTOs.Authorization.LoginRequest;
@@ -32,6 +34,10 @@ public class AuthController : ControllerBase
         _jwtService = jwtService;
         _config = config;
     }
+    
+    
+    protected string CurrentUserId => User.FindFirst("sub")?.Value ?? "";
+    protected string CurrentUsername => User.FindFirst("unique_name")?.Value ?? "";
     
     // Registration endpoint
     [HttpPost("register")]
@@ -122,5 +128,60 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = "Logged out successfully" });
+    }
+    
+    // Refresh endpoint
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    {
+        // Hash the token
+        var tokenHash = _jwtService.HashToken(request.RefreshToken);
+        
+        // Lookup in DB
+        var existingToken = await _db.RefreshTokens
+            .Include(rt => rt.User)
+            .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
+        
+        if (existingToken == null || existingToken.RevokedAt != null || existingToken.ExpiresAt < DateTime.UtcNow)
+            return Unauthorized("Invalid or expired refresh token");
+
+        var user = existingToken.User;
+
+        // Revoke old token
+        existingToken.RevokedAt = DateTime.UtcNow;
+        
+        // Generate new tokens
+        var newAccessToken = _jwtService.GenerateAccessToken(user);
+        var newRefreshTokenRaw = _jwtService.GenerateRefreshToken();
+        var newRefreshTokenHash = _jwtService.HashToken(newRefreshTokenRaw);
+
+        var newRefreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = newRefreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_config["JwtSettings:RefreshTokenExpirationDays"]))
+        };
+        
+        await _db.RefreshTokens.AddAsync(newRefreshToken);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            accessToken = newAccessToken,
+            refreshToken = newRefreshToken,
+        });
+
+    }
+
+    // Check if user is logged in and debug auth issue
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        return Ok(new
+        {
+            userId = CurrentUserId,
+            username = CurrentUsername
+        });
     }
 }
