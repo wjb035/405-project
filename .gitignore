@@ -24,11 +24,16 @@
 ## OS files
 .DS_Store
 config.local.json
-PGEmu/games/GameCube/._WWE Day of Reckoning (USA) (Rev 1)
-PGEmu/games/GameCube/WWE Day of Reckoning (USA) (Rev 1)/._Vimm's Lair.txt
-PGEmu/games/GameCube/WWE Day of Reckoning (USA) (Rev 1)/._WWE Day of Reckoning (USA) (Rev 1).ciso
-PGEmu/games/GameCube/WWE Day of Reckoning (USA) (Rev 1)/Vimm's Lair.txt
-PGEmu/games/GameCube/WWE Day of Reckoning (USA) (Rev 1)/WWE Day of Reckoning (USA) (Rev 1).ciso
+
+## Local emulators + ROMs
+PGEmu/Dolphin.app/
+PGEmu/games/*
+!PGEmu/games/GameCube/
+!PGEmu/games/Wii/
+PGEmu/games/GameCube/*
+PGEmu/games/Wii/*
+!PGEmu/games/GameCube/.gitkeep
+!PGEmu/games/Wii/.gitkeep
 
 #idk what this is
 ._*

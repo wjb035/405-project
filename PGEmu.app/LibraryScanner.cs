@@ -21,7 +21,9 @@ public static class LibraryScanner
 
         var exts = platform.Extensions.Select(e => e.StartsWith('.') ? e : "." + e).ToArray();
         var files = Directory.EnumerateFiles(resolvedDir, "*", SearchOption.AllDirectories)
-            .Where(f => exts.Contains(Path.GetExtension(f).ToLower()));
+            .Where(f => exts.Contains(Path.GetExtension(f).ToLower()))
+            // Ignore macOS AppleDouble sidecar files (e.g. "._MyGame.rvz").
+            .Where(f => !Path.GetFileName(f).StartsWith("._", StringComparison.Ordinal));
 
         foreach (var f in files)
         {
