@@ -24,6 +24,14 @@
       "extensions": [".iso"],
       "defaultEmulatorId": "pcsx2",
      "retroachievementsPlatformID": 21
+    },
+    {
+      "id": "psp",
+      "name": "Playstation Portable",
+      "romPath": "games/PSP",
+      "extensions": [".iso"],
+      "defaultEmulatorId": "ppsspp",
+     "retroachievementsPlatformID": 41
     }
   ],
   "emulators": [
@@ -38,6 +46,12 @@
       "id": "pcsx2",
       "name": "PCSX2",
       "exePath": "C:/Program Files/PCSX2/pcsx2-qt.exe",
+      "argsTemplate": "  \"{ROM}\""
+    },
+    {
+      "id": "ppsspp",
+      "name": "PPSSPP",
+      "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
       "argsTemplate": "  \"{ROM}\""
     }
   ]

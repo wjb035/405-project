@@ -61,8 +61,7 @@ public static class RetroAchievementsService
                    // if the name of the user's game file contains the shorter and more concise retroachievements game name, then we have a match
                    if (userGameFileName == retroAchievementGameName)
                    {
-                       GD.Print(userGameFileName);
-                       GD.Print(retroAchievementGameName);
+                       
                        var disposableGame = await client.GetGameDataAndUserProgressAsync(gamesItem.Id, username);
                        g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
                                           disposableGame.AchievementsCount;
