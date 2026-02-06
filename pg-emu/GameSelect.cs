@@ -221,23 +221,14 @@ public partial class GameSelect : Control
 			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
 			
 			
-			// Debug stuff, removing later
-			GD.Print("Before:");
-			foreach (var g in _games){
-				//GD.Print(g.Title + g.AchievementNum);
-			}
 			
 			
 			
-			string username = "badacctname";
-			string apiKey = "";
 			
-			RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
-			RetroAchievementsService.Retro(client, _platform, _games);
-			GD.Print("After:");
-			foreach (var g in _games){
-				//GD.Print(g.Title + g.AchievementNum);
-			}
+			
+			
+			RetroAchievementsService.Retro(_platform, _games);
+			
 			
 			
 			if (_games.Count == 0)
@@ -535,7 +526,7 @@ public partial class GameSelect : Control
 		var platformName = _platform?.Name ?? "Unknown Platform";
 		_metaLeft.Text = $"{platformName} • {_games.Count} game(s)";
 		_metaRight.Text = game != null ? $"Achievements: {game.AchievementNum}" : "";
-
+		GD.Print(game.AchievementNum);	
 		// Disable Play if we cannot launch or if the selected entry has no path.
 		_play.Disabled = _config == null || _platform == null || game == null || string.IsNullOrEmpty(game.Path);
 	}
