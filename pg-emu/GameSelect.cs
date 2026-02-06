@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PGEmu.app;
+using System.Threading.Tasks;
 using RetroAchievements.Api;
 
 
@@ -62,7 +63,7 @@ public partial class GameSelect : Control
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
 
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		
 		// Resolve exported node paths into actual nodes.
@@ -85,7 +86,7 @@ public partial class GameSelect : Control
 		_settings.Pressed += OpenVault;
 
 		// Load data and build UI.
-		LoadContextAndGames();
+		await LoadContextAndGames();
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectionUI();
@@ -154,7 +155,7 @@ public partial class GameSelect : Control
 		}
 	}
 
-	private void LoadContextAndGames()
+	private async Task LoadContextAndGames()
 	{
 		try
 		{
@@ -227,7 +228,7 @@ public partial class GameSelect : Control
 			
 			
 			
-			RetroAchievementsService.Retro(_platform, _games);
+			await RetroAchievementsService.Retro(_platform, _games);
 			
 			
 			

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using RetroAchievements.Api;
 using Godot;
+
 namespace PGEmu.app;
 
 public static class RetroAchievementsService
@@ -12,8 +13,8 @@ public static class RetroAchievementsService
     //requires the use of an async task function that we call when the platform is changed
     // NOTE! IF YOU ARE HAVING ISSUES WITH ANY OF THIS, IT'S LIKELY YOUR CONFIG.JSON FILE ISN'T LAID OUT PROPERLY. PLEASE LET ME KNOW
     // IF YOU NEED HELP WITH THIS!!!!!!!!!!!!!!!!!!!!!!
-    static string username = "";
-    static string apiKey = "";
+    static string username = "badacctname";
+    static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYtktA4pK";
 			
     static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
     public static async Task Retro(
@@ -35,18 +36,12 @@ public static class RetroAchievementsService
            string pattern2 =  @"\([^)]*\)";
 
 
-           foreach (var gamesItem in gameList.Items)
-           {
-               //GD.Print(gamesItem.Title);
-           }
+           
            // This loop looks nasty, but all it does is iterate through every single game in the retroachievements database 
            // for the given platform, and checks if we have that game. If we do have it, we will display the information given by 
            // retroachievements about that game next to it.
 
-           foreach (var g in games)
-           {
-               //GD.Print(g.Title);
-           }
+           
            foreach (var g in games)
            {
 
@@ -55,9 +50,7 @@ public static class RetroAchievementsService
                userGameFileName = Regex.Replace(userGameFileName, pattern, String.Empty);
                userGameFileName = Regex.Replace(userGameFileName, pattern2, String.Empty);
                
-               Console.WriteLine(userGameFileName);
-               GD.Print("test!");
-
+               g.AchievementNum = "0/0";
                foreach (var gamesItem in gameList.Items)
                {
 
@@ -74,22 +67,17 @@ public static class RetroAchievementsService
                        g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
                                           disposableGame.AchievementsCount;
                        //Console.WriteLine(g.AchievementNum);
-                       GD.Print("aaron can you smell this");
+                       
                        break;
                    }
-                   else
-                   {
-                       // if it can't detect that we have a game, just display a 0/0
-                       g.AchievementNum = "0/0";
-                   }
-                   //Console.WriteLine(g.Title);
-
                }
            }
 
-           //}
+   
+    
+    //}
 
-        }
+}
        else
        {
            foreach (var g in games)
@@ -97,5 +85,6 @@ public static class RetroAchievementsService
                g.AchievementNum = "0/0";
            }
        }
+        
     }
 }
