@@ -6,14 +6,24 @@
       "name": "Nintendo GameCube",
       "romPath": "games/GameCube",
       "extensions": [".iso", ".gcm", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs"],
-      "defaultEmulatorId": "dolphin"
+      "defaultEmulatorId": "dolphin",
+     "retroachievementsPlatformID": 16
     },
     {
       "id": "wii",
       "name": "Nintendo Wii",
       "romPath": "games/Wii",
       "extensions": [".iso", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs", ".nfs"],
-      "defaultEmulatorId": "dolphin"
+      "defaultEmulatorId": "dolphin",
+     "retroachievementsPlatformID": -1
+    },
+    {
+      "id": "ps2",
+      "name": "Playstation 2",
+      "romPath": "games/PS2",
+      "extensions": [".iso"],
+      "defaultEmulatorId": "pcsx2",
+     "retroachievementsPlatformID": 21
     }
   ],
   "emulators": [
@@ -22,6 +32,13 @@
       "name": "Dolphin",
       "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
       "argsTemplate": "--exec \"{ROM}\" --batch"
+    },
+    
+    {
+      "id": "pcsx2",
+      "name": "PCSX2",
+      "exePath": "C:/Program Files/PCSX2/pcsx2-qt.exe",
+      "argsTemplate": "  \"{ROM}\""
     }
   ]
 }

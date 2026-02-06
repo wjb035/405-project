@@ -28,10 +28,10 @@ public static class RetroAchievementsService
         Console.WriteLine(selectedPlatform?.retroachievementsPlatformID);
        // load the list of games for the selected platform
        //if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
-       if (selectedPlatform != null)
+       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
        {
-           //var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
-           var gameList = await client.GetGamesListAsync(16, true);
+           var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
+           //var gameList = await client.GetGamesListAsync(16, true);
            string pattern = @"[\s:-]";
            string pattern2 =  @"\([^)]*\)";
 
