@@ -61,17 +61,7 @@
         </Setter.Value>
       </Setter>
 
-      <Setter Property="Transitions">
-        <Setter.Value>
-          <Transitions>
-            <DoubleTransition Property="Opacity" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <DoubleTransition Property="(Canvas.Left)" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <DoubleTransition Property="(Canvas.Top)" Duration="0:0:0.24" Easing="CubicEaseOut" />
-            <!-- BackEaseOut gives a subtle overshoot on scale/transform -->
-            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="BackEaseOut" />
-          </Transitions>
-        </Setter.Value>
-      </Setter>
+      <!-- Transforms are driven continuously in code for smooth revolve -->
     </Style>
 
     <Style Selector="ListBoxItem:selected">
@@ -245,7 +235,7 @@
       <Border Grid.Column="2" Background="#00000000">
         <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
 
-          <!-- Friends icon with red badge (mockup style) -->
+          <!-- Friends icon with dummy notif badge -->
           <Grid>
             <Button Classes="iconBtn" Content="👥" />
             <Border Width="16" Height="16" CornerRadius="8" Background="#E53935"
@@ -264,7 +254,7 @@
     <!-- Main content area -->
     <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="False">
 
-      <!-- Friend bubbles + +2 more over the card -->
+      <!-- Temp Friend bubbles + +2 more over the card -->
       <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,10">
         <Ellipse Width="26" Height="26" Fill="#303030" />
         <Ellipse Width="26" Height="26" Fill="#B05AA6" />
@@ -272,7 +262,7 @@
         <TextBlock Text="+2 more" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" />
       </StackPanel>
 
-      <!-- Carousel + nav arrows in the corners (like mockup) -->
+      <!-- Carousel + nav arrows in the corners -->
       <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ClipToBounds="False">
 
         <Border Grid.Column="1"
@@ -309,7 +299,7 @@
                       </Grid>
                     </Border>
 
-                    <!-- Mockup-like alert marks on the left side of the selected card (purely visual for now) -->
+                    <!-- alert marks on the left side of the selected card (purely visual for now) -->
                     <StackPanel Orientation="Vertical" Spacing="-6" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-18,64,0,0"
                                 IsVisible="{Binding $parent[ListBoxItem].IsSelected}">
                       <TextBlock Text="!" FontSize="40" FontWeight="Black" Foreground="#D32F2F" />
@@ -323,7 +313,7 @@
           </Grid>
         </Border>
 
-        <!-- Bottom left/right arrows (like the sketch) -->
+        <!-- Bottom left/right arrows -->
         <Button Grid.Column="0" Classes="navArrow" Content="◀" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,0,0,0" Click="PrevConsole" />
         <Button Grid.Column="2" Classes="navArrow" Content="▶" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,0" Click="NextConsole" />
 

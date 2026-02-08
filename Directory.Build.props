@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <Compile Remove="**/._*" />
+    <None Remove="**/._*" />
+    <Content Remove="**/._*" />
+    <EmbeddedResource Remove="**/._*" />
+    <AdditionalFiles Remove="**/._*" />
+  </ItemGroup>
+</Project>
