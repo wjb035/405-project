@@ -216,7 +216,8 @@ public partial class GameSelect : Control
 			SetStatus($"Scanning: {scanDir}");
 			
 			// if we have already loaded the games before, load them from the hash table they're stored in.
-			// this cuts down the loading time, but it basically means that if a game is added when you're in a different screen,
+			// this cuts down the loading time (and is considerably nicer to the RA API, since it only gets the massive list once per platform)
+			// but it basically means that if a game is added when you're in a different screen,
 			// but have already loaded the games, it won't be detected till the next launch of the program.
 			// this can be fixed, but at this point it's a little niche to spend time on such a minor inconvenience-- definitely can be fixed later though
 			if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){

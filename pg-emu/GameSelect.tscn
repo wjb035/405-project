@@ -67,6 +67,10 @@ size_flags_vertical = 0
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=2023052200]
 layout_mode = 2
 
+[node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=514724767]
+layout_mode = 2
+text = "Ach"
+
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2

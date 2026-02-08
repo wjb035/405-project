@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://d4nir8xtcs6rk"]
+
+[ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
+
+[node name="Achievements" type="Control" unique_id=1415120403]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dpmwc")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=465082784]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="Bg" unique_id=2134684232]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Bg/Margin" unique_id=833965304]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Bg/Margin/Root" unique_id=602062154]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Bg/Margin/Root/TopBar" unique_id=581318012]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "←"
+
+[node name="Title" type="Label" parent="Bg/Margin/Root/TopBar" unique_id=749932390]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 28
+text = "Profile"
+horizontal_alignment = 1
+
+[node name="Body" type="VBoxContainer" parent="Bg/Margin/Root" unique_id=1369656815]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Hint" type="Label" parent="Bg/Margin/Root/Body" unique_id=829972290]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+text = "User profile placeholder page"
+horizontal_alignment = 1
+
+[node name="PlaceholderCard" type="Panel" parent="Bg/Margin/Root/Body" unique_id=755340091]
+custom_minimum_size = Vector2(520, 240)
+layout_mode = 2
+
+[node name="PlaceholderText" type="Label" parent="Bg/Margin/Root/Body/PlaceholderCard" unique_id=726780901]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -20.0
+offset_right = 200.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Profile details go here"
+horizontal_alignment = 1

@@ -3,3 +3,7 @@ res://Vault.cs
 res://GameSelect.cs
 res://HomeScreen.cs
 res://GameSelect.tscn
+res://Achievements.tscn
+res://HomeScreen.tscn
+res://AchievementScreen.cs
+res://Login.cs
