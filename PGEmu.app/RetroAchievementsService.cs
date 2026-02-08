@@ -28,7 +28,8 @@ public static class RetroAchievementsService
         Console.WriteLine(selectedPlatform?.retroachievementsPlatformID);
        // load the list of games for the selected platform
        //if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
-       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
+       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1 && 
+           !AchievementStorage.gameToString.ContainsKey(selectedPlatform.retroachievementsPlatformID))
        {
            var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
            //var gameList = await client.GetGamesListAsync(16, true);
@@ -65,6 +66,8 @@ public static class RetroAchievementsService
                        var disposableGame = await client.GetGameDataAndUserProgressAsync(gamesItem.Id, username);
                        g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
                                           disposableGame.AchievementsCount;
+                       g.retroAchievementsGameId = gamesItem.Id;
+                       GD.Print(g.Title + " has a game ID as " + g.retroAchievementsGameId);
                        //Console.WriteLine(g.AchievementNum);
                        
                        break;
@@ -72,11 +75,24 @@ public static class RetroAchievementsService
                }
            }
 
+           if (AchievementStorage.gameToString.ContainsKey(selectedPlatform.retroachievementsPlatformID))
+           {
+               GD.Print(selectedPlatform.retroachievementsPlatformID + " is in the table already as " +selectedPlatform.Name);
+           }
+           else
+           {
+               AchievementStorage.gameToString.Add(selectedPlatform.retroachievementsPlatformID, games);
+               GD.Print(selectedPlatform.Name + " has been added to the table as " +selectedPlatform.retroachievementsPlatformID);
+           }
    
     
     //}
 
 }
+       else if (AchievementStorage.gameToString.ContainsKey(selectedPlatform.retroachievementsPlatformID))
+       {
+           GD.Print("Already loaded this platform before- no need to now!");
+       }
        else
        {
            foreach (var g in games)

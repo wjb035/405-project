@@ -1,4 +1,5 @@
-res://GameSelect.cs
 res://Profile.cs
 res://Vault.cs
+res://GameSelect.cs
 res://HomeScreen.cs
+res://GameSelect.tscn

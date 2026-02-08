@@ -12,5 +12,7 @@ public partial class GameEntry : ObservableObject
     [ObservableProperty]
     public string achievementNum = "Loading...";
 
+    public int retroAchievementsGameId = -1;
+
     public override string ToString() => Title;
 }

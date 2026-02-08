@@ -214,9 +214,23 @@ public partial class GameSelect : Control
 			}
 
 			SetStatus($"Scanning: {scanDir}");
-
-			foreach (var g in scanned)
-				_games.Add(g);
+			
+			// if we have already loaded the games before, load them from the hash table they're stored in.
+			// this cuts down the loading time, but it basically means that if a game is added when you're in a different screen,
+			// but have already loaded the games, it won't be detected till the next launch of the program.
+			// this can be fixed, but at this point it's a little niche to spend time on such a minor inconvenience-- definitely can be fixed later though
+			if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){
+				var prevGames = (IEnumerable<GameEntry>)AchievementStorage.gameToString[_platform.retroachievementsPlatformID];
+				
+				foreach (var g in prevGames){
+					_games.Add(g);
+				}
+			}
+			else{
+				foreach (var g in scanned)
+					_games.Add(g);
+			}
+			
 
 			// Keep ordering stable and predictable.
 			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
