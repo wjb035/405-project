@@ -109,7 +109,7 @@ public partial class HomeScreen : Control
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://profile.tscn");
+		tree.ChangeSceneToFile("res://Profile.tscn");
 	}
 
 	private void OnChatPressed()

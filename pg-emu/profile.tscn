@@ -1,8 +1,48 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://frquweeaisn8"]
 
-[ext_resource type="Script" path="res://Profile.cs" id="1"]
+[ext_resource type="Script" uid="uid://dkjal8rw8w85r" path="res://Profile.cs" id="1"]
+[ext_resource type="Texture2D" uid="uid://dhwqlqt8712qy" path="res://souljaboytellem.jpg" id="2_wi0ei"]
 
-[node name="Profile" type="Control"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4dpx"]
+bg_color = Color(1, 1, 1, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yghs0"]
+bg_color = Color(0, 0, 0, 0.47843137)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k2f8d"]
+bg_color = Color(0, 0, 0, 0.47843137)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="Theme" id="Theme_yghs0"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_wi0ei"]
+font_size = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r2xaa"]
+bg_color = Color(0, 0, 0, 0.47843137)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wi0ei"]
+bg_color = Color(0, 0, 0, 0.47843137)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wi0ei"]
+load_path = "res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex"
+
+[node name="Profile" type="Control" unique_id=1840598143]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,18 +50,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
-BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+BackPath = NodePath("")
 
-[node name="Bg" type="ColorRect" parent="."]
+[node name="Bg" type="ColorRect" parent="." unique_id=2146068837]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.9019608, 0.827451, 0.91764706, 1)
+color = Color(0.06666667, 0.047058824, 0.12156863, 1)
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=266663920]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,58 +73,331 @@ theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1101820704]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-separation = 12
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=292217511]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="BtnBack" type="Button" parent="Margin/Root/TopBar"]
-custom_minimum_size = Vector2(56, 40)
+[node name="Panel" type="Panel" parent="Margin/Root/TopBar" unique_id=514369697]
+clip_contents = true
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_o4dpx")
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar/Panel" unique_id=1235366535]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 40.0
 text = "←"
 
-[node name="Title" type="Label" parent="Margin/Root/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 28
-theme_override_colors/font_color = Color(0, 0, 0, 0.9)
-text = "Profile"
-
-[node name="Body" type="VBoxContainer" parent="Margin/Root"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-alignment = 1
-separation = 10
-
-[node name="Hint" type="Label" parent="Margin/Root/Body"]
-layout_mode = 2
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(0, 0, 0, 0.82)
-text = "User profile placeholder page"
-
-[node name="PlaceholderCard" type="Panel" parent="Margin/Root/Body"]
-layout_mode = 2
-custom_minimum_size = Vector2(520, 240)
-
-[node name="PlaceholderText" type="Label" parent="Margin/Root/Body/PlaceholderCard"]
+[node name="Label" type="Label" parent="Margin/Root/TopBar/Panel" unique_id=1273007195]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -20.0
-offset_right = 200.0
-offset_bottom = 20.0
+offset_left = -57.0
+offset_top = -22.5
+offset_right = 57.0
+offset_bottom = 22.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "Profile"
 horizontal_alignment = 1
-text = "Profile details go here"
 
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=579993899]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body" unique_id=1835965909]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="GridContainer" type="GridContainer" parent="Margin/Root/Body/MarginContainer" unique_id=1289219954]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 5
+columns = 2
+
+[node name="PanelContainer2" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer" unique_id=1650978064]
+clip_contents = true
+custom_minimum_size = Vector2(175, 175)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_yghs0")
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2" unique_id=1618703419]
+clip_contents = true
+custom_minimum_size = Vector2(175, 175)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer" unique_id=430130487]
+layout_mode = 2
+texture = ExtResource("2_wi0ei")
+expand_mode = 4
+stretch_mode = 6
+
+[node name="PanelContainer" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer" unique_id=1230511267]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_k2f8d")
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer" unique_id=1939126699]
+layout_mode = 2
+theme = SubResource("Theme_yghs0")
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer" unique_id=876607360]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="GamerTag" type="Label" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=469702970]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+label_settings = SubResource("LabelSettings_wi0ei")
+vertical_alignment = 1
+
+[node name="OptionButton" type="OptionButton" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1946915475]
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 0
+item_count = 2
+popup/item_0/text = "Appear Online"
+popup/item_0/id = 0
+popup/item_1/text = "Appear Offline"
+popup/item_1/id = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1530366435]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_r2xaa")
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer" unique_id=1485718439]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ProfileNote" type="Label" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer" unique_id=1488111209]
+layout_mode = 2
+size_flags_vertical = 1
+vertical_alignment = 1
+
+[node name="RecentGamesAndFriends" type="HBoxContainer" parent="Margin/Root/Body" unique_id=1817153426]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShowcaseSection" type="PanelContainer" parent="Margin/Root/Body/RecentGamesAndFriends" unique_id=1865530727]
+custom_minimum_size = Vector2(175, 0)
+layout_direction = 4
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_wi0ei")
+
+[node name="ShowcaseMargin" type="MarginContainer" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection" unique_id=660699787]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin" unique_id=984902949]
+layout_mode = 2
+
+[node name="Showcase" type="Label" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=164281954]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Showcase"
+
+[node name="HSeparator" type="HSeparator" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=241487974]
+layout_mode = 2
+
+[node name="Button2" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=1539136719]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game X"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button3" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=1226833484]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Achievement"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button4" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=347694673]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend X"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button5" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=1534170227]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game X"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="GamesAndFriendsSeparator2" type="VSeparator" parent="Margin/Root/Body/RecentGamesAndFriends" unique_id=17158126]
+custom_minimum_size = Vector2(25, 0)
+layout_mode = 2
+
+[node name="RecentGames2" type="PanelContainer" parent="Margin/Root/Body/RecentGamesAndFriends" unique_id=860206557]
+layout_direction = 4
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_wi0ei")
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2" unique_id=930421307]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer" unique_id=1357263490]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=2105177374]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Recent Games"
+
+[node name="HSeparator" type="HSeparator" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=1521774163]
+layout_mode = 2
+
+[node name="Button2" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=835964241]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game 1 | 5959 Hours Played"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button3" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=1420798484]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game 2 | 5959 Hours Played"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button4" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=78922775]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game 3 | 5959 Hours Played"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button5" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=1884460053]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Game 4 | 5959 Hours Played"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=949190295]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+text = "See All >>"
+flat = true
+alignment = 2
+
+[node name="GamesAndFriendsSeparator" type="VSeparator" parent="Margin/Root/Body/RecentGamesAndFriends" unique_id=831130746]
+custom_minimum_size = Vector2(25, 0)
+layout_mode = 2
+
+[node name="Friends" type="PanelContainer" parent="Margin/Root/Body/RecentGamesAndFriends" unique_id=1183626179]
+custom_minimum_size = Vector2(250, 0)
+layout_direction = 4
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_wi0ei")
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/RecentGamesAndFriends/Friends" unique_id=2092628891]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer" unique_id=1689404201]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=1733711019]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Friends"
+
+[node name="HSeparator" type="HSeparator" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=161421426]
+layout_mode = 2
+
+[node name="Button2" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=1325354282]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 1"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button5" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=443483398]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 2"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button6" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=358166348]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 3"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button3" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=1848878672]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 1"
+icon = SubResource("CompressedTexture2D_wi0ei")
+alignment = 0
+expand_icon = true
+
+[node name="Button" type="Button" parent="Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=2126505171]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+action_mode = 0
+text = "See All >>"
+alignment = 2

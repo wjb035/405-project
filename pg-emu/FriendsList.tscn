@@ -1,0 +1,134 @@
+[gd_scene format=3 uid="uid://1o5jd8p0jhve"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d4x60"]
+bg_color = Color(1, 1, 1, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b8nuo"]
+bg_color = Color(0, 0, 0, 0.47843137)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wy7j8"]
+load_path = "res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex"
+
+[node name="FriendsList" type="Control" unique_id=1371409992]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1053093090]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06666667, 0.047058824, 0.12156863, 1)
+
+[node name="Margin" type="MarginContainer" parent="Bg" unique_id=1783035880]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Bg/Margin" unique_id=172967832]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Bg/Margin/Root" unique_id=614637894]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="Panel" type="Panel" parent="Bg/Margin/Root/TopBar" unique_id=891709625]
+clip_contents = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_d4x60")
+
+[node name="BtnBack" type="Button" parent="Bg/Margin/Root/TopBar/Panel" unique_id=1052113077]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 40.0
+text = "←"
+
+[node name="Label" type="Label" parent="Bg/Margin/Root/TopBar/Panel" unique_id=559036715]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -57.0
+offset_top = -22.5
+offset_right = 57.0
+offset_bottom = 22.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "Friends"
+horizontal_alignment = 1
+
+[node name="PanelContainer2" type="PanelContainer" parent="Bg/Margin/Root" unique_id=679833764]
+clip_contents = true
+custom_minimum_size = Vector2(175, 175)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_b8nuo")
+
+[node name="MarginContainer" type="MarginContainer" parent="Bg/Margin/Root/PanelContainer2" unique_id=1528755694]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Bg/Margin/Root/PanelContainer2/MarginContainer" unique_id=541507784]
+visible = false
+layout_mode = 2
+
+[node name="Button5" type="Button" parent="Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer" unique_id=1778214814]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 2"
+icon = SubResource("CompressedTexture2D_wy7j8")
+alignment = 0
+expand_icon = true
+
+[node name="Button2" type="Button" parent="Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer" unique_id=2119773244]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 1"
+icon = SubResource("CompressedTexture2D_wy7j8")
+alignment = 0
+expand_icon = true
+
+[node name="Button6" type="Button" parent="Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer" unique_id=652790483]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 3"
+icon = SubResource("CompressedTexture2D_wy7j8")
+alignment = 0
+expand_icon = true
+
+[node name="Button3" type="Button" parent="Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer" unique_id=762456452]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Friend 1"
+icon = SubResource("CompressedTexture2D_wy7j8")
+alignment = 0
+expand_icon = true
