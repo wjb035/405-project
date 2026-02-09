@@ -66,6 +66,10 @@ size_flags_vertical = 0
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=1808037778]
 layout_mode = 2
 
+[node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=164096444]
+layout_mode = 2
+text = "Ach"
+
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=794538155]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
@@ -168,3 +172,5 @@ text = "Select"
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.8)
 horizontal_alignment = 1
+
+[connection signal="pressed" from="Margin/Root/TopBar/TopIcons/BtnAch" to="." method="OnAchPressed"]

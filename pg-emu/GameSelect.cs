@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PGEmu.app;
+using System.Threading.Tasks;
 using RetroAchievements.Api;
 
 
@@ -62,7 +63,7 @@ public partial class GameSelect : Control
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
 
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		
 		// Resolve exported node paths into actual nodes.
@@ -85,7 +86,7 @@ public partial class GameSelect : Control
 		_settings.Pressed += OpenVault;
 
 		// Load data and build UI.
-		LoadContextAndGames();
+		await LoadContextAndGames();
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectionUI();
@@ -154,7 +155,7 @@ public partial class GameSelect : Control
 		}
 	}
 
-	private void LoadContextAndGames()
+	private async Task LoadContextAndGames()
 	{
 		try
 		{
@@ -213,31 +214,37 @@ public partial class GameSelect : Control
 			}
 
 			SetStatus($"Scanning: {scanDir}");
-
-			foreach (var g in scanned)
-				_games.Add(g);
+			
+			// if we have already loaded the games before, load them from the hash table they're stored in.
+			// this cuts down the loading time (and is considerably nicer to the RA API, since it only gets the massive list once per platform)
+			// but it basically means that if a game is added when you're in a different screen,
+			// but have already loaded the games, it won't be detected till the next launch of the program.
+			// this can be fixed, but at this point it's a little niche to spend time on such a minor inconvenience-- definitely can be fixed later though
+			if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){
+				var prevGames = (IEnumerable<GameEntry>)AchievementStorage.gameToString[_platform.retroachievementsPlatformID];
+				
+				foreach (var g in prevGames){
+					_games.Add(g);
+				}
+			}
+			else{
+				foreach (var g in scanned)
+					_games.Add(g);
+			}
+			
 
 			// Keep ordering stable and predictable.
 			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
 			
 			
-			// Debug stuff, removing later
-			GD.Print("Before:");
-			foreach (var g in _games){
-				//GD.Print(g.Title + g.AchievementNum);
-			}
 			
 			
 			
-			string username = "badacctname";
-			string apiKey = "";
 			
-			RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
-			RetroAchievementsService.Retro(client, _platform, _games);
-			GD.Print("After:");
-			foreach (var g in _games){
-				//GD.Print(g.Title + g.AchievementNum);
-			}
+			
+			
+			await RetroAchievementsService.Retro(_platform, _games);
+			
 			
 			
 			if (_games.Count == 0)
@@ -535,7 +542,7 @@ public partial class GameSelect : Control
 		var platformName = _platform?.Name ?? "Unknown Platform";
 		_metaLeft.Text = $"{platformName} • {_games.Count} game(s)";
 		_metaRight.Text = game != null ? $"Achievements: {game.AchievementNum}" : "";
-
+		GD.Print(game.AchievementNum);	
 		// Disable Play if we cannot launch or if the selected entry has no path.
 		_play.Disabled = _config == null || _platform == null || game == null || string.IsNullOrEmpty(game.Path);
 	}

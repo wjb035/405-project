@@ -111,6 +111,14 @@ public partial class HomeScreen : Control
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://Profile.tscn");
 	}
+	
+	private void OnAchPressed(){
+		
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+		tree.ChangeSceneToFile("res://Achievements.tscn");
+	
+	}
 
 	private void OnChatPressed()
 	{

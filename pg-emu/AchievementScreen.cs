@@ -1,16 +1,11 @@
 using Godot;
-using System;
 
-public partial class Login : Control
+public partial class AchievementScreen : Control
 {
-	[Export] public NodePath BackPath;
-
-	private Button _back = null!;
-
 	public override void _Ready()
 	{
-		_back = GetNode<Button>(BackPath);
-		_back.Pressed += GoBack;
+		Button back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
+		back.Pressed += GoBack;
 	}
 
 	private void GoBack()
