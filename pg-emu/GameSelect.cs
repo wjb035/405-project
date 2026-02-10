@@ -124,6 +124,11 @@ public partial class GameSelect : Control
 	{
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
+	
+	private void GoAch()
+	{
+		GetTree().ChangeSceneToFile("res://Achievements.tscn");
+	}
 
 	private void PlaySelected()
 	{

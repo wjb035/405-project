@@ -1,2 +1,2 @@
-﻿65248
-C:/Users/jonah/Downloads/Godot_v4.6-stable_mono_win64/Godot_v4.6-stable_mono_win64/Godot_v4.6-stable_mono_win64.exe
+﻿50142
+C:/Users/howto/Downloads/Godot_v4.6-stable_mono_win64/Godot_v4.6-stable_mono_win64/Godot_v4.6-stable_mono_win64.exe
