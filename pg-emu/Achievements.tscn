@@ -50,7 +50,6 @@ text = "←"
 [node name="Title" type="Label" parent="Bg/Margin/Root/TopBar" unique_id=749932390]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 0.9)
 theme_override_font_sizes/font_size = 28
 text = "Profile"
 horizontal_alignment = 1

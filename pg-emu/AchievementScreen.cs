@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using PGEmu.app;
+using System.Collections.Generic;
 
 
 public partial class AchievementScreen : Control
@@ -14,17 +16,23 @@ public partial class AchievementScreen : Control
 		
 		// Get the container
 		VBoxContainer container = GetNode<VBoxContainer>("ScrollContainer/ButtonContainer");
+		RetroAchievementsService.achievementGet(2689);
+		
+		
+		var icons = new List<String>();
+		if (AchievementStorage.achievementData != null){
+			foreach (var g in AchievementStorage.achievementData)
+			{
+				//GD.Print(g.Value.Title + " has an id of " + g.Key + " with a badge url of " + g.Value.BadgeName + " unlocked on " + g.Value.EarnedDate);
+				icons.Add("https://media.retroachievements.org/Badge/"+g.Value.BadgeName+".png");
+			}
+		}
+		for (int i = 0; i < AchievementStorage.achievementData.Count; i++){
+			GD.Print(AchievementStorage.achievementData[i].Value.Title);
+		}
+		
 
-		// Example URLs (replace with real URLs)
-		string[] iconUrls = {
-			"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD21JqcIbkZomTjisCvLrwPCbTZQKMFeCL-Q&s",
-			"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD21JqcIbkZomTjisCvLrwPCbTZQKMFeCL-Q&s",
-			"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD21JqcIbkZomTjisCvLrwPCbTZQKMFeCL-Q&s",
-			"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD21JqcIbkZomTjisCvLrwPCbTZQKMFeCL-Q&s",
-			"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD21JqcIbkZomTjisCvLrwPCbTZQKMFeCL-Q&s",
-		};
-
-		for (int i = 0; i < iconUrls.Length; i++)
+		for (int i = 0; i < icons.Count; i++)
 {
 	// Create main button
 	Button btn = new Button();
@@ -54,19 +62,37 @@ public partial class AchievementScreen : Control
 	spacer.CustomMinimumSize = new Vector2(10, 0);
 	hbox.AddChild(spacer);
 
-	// Label
-	Label label = new Label();
-	label.Text = $"Achievement {i + 1}";
-	label.SizeFlagsHorizontal = SizeFlags.Fill;
-	label.SizeFlagsVertical = SizeFlags.Fill;
-	label.HorizontalAlignment = HorizontalAlignment.Left;
-	hbox.AddChild(label);
+	// VBox for text (title + subtitle)
+VBoxContainer textBox = new VBoxContainer();
+textBox.SizeFlagsHorizontal = SizeFlags.Fill;
+textBox.SizeFlagsVertical = SizeFlags.Fill;
+hbox.AddChild(textBox);
+
+// First Label (Title)
+Label titleLabel = new Label();
+titleLabel.Text = AchievementStorage.achievementData[i].Value.Title;
+titleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
+titleLabel.HorizontalAlignment = HorizontalAlignment.Left;
+textBox.AddChild(titleLabel);
+
+// Second Label (Subtitle / Description)
+Label subtitleLabel = new Label();
+subtitleLabel.Text = AchievementStorage.achievementData[i].Value.Title; // or whatever field you use
+subtitleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
+subtitleLabel.HorizontalAlignment = HorizontalAlignment.Left;
+
+// Optional: make it visually secondary
+//subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f); // slightly dimmer
+//subtitleLabel.AddThemeFontSizeOverride("font_size", 12); // smaller font
+
+textBox.AddChild(subtitleLabel);
+
 
 	// Add button to container
 	container.AddChild(btn);
 
 	// Load icon asynchronously
-	LoadIconFromUrl(icon, iconUrls[i]);
+	LoadIconFromUrl(icon, icons[i]);
 }
 
 
@@ -100,7 +126,7 @@ public partial class AchievementScreen : Control
 
 		
 		Image img = new Image();
-		Error err = img.LoadJpgFromBuffer(body); 
+		Error err = img.LoadPngFromBuffer(body); 
 		if (err != Error.Ok)
 		{
 			GD.PrintErr($"Failed to load image from buffer: {url}");

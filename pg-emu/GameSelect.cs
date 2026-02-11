@@ -36,6 +36,8 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	
+	private Button _achievement = null!;
 
 	// UI instances and data backing the carousel.
 	private readonly List<Control> _cards = new();
@@ -77,7 +79,9 @@ public partial class GameSelect : Control
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
-
+		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+		
+		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
 		_next.Pressed += () => Step(1);
@@ -90,6 +94,7 @@ public partial class GameSelect : Control
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectionUI();
+		_achievement.Show();
 	}
 
 	private void GoBack()

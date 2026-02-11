@@ -1,10 +1,9 @@
-res://HomeScreen.tscn
-res://GameSelect.tscn
-res://GameSelect.cs
 res://AchievementScreen.cs
-res://FriendsList.cs
-res://Profile.cs
 res://Vault.cs
+res://Profile.cs
+res://GameSelect.cs
+res://FriendsList.cs
 res://HomeScreen.cs
 res://Achievements.tscn
-res://achievement_card.tscn
+res://HomeScreen.tscn
+res://GameSelect.tscn
