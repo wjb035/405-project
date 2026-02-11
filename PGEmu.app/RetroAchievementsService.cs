@@ -113,8 +113,9 @@ public static class RetroAchievementsService
         foreach (var g in achievementList.Achievements)
         {
             achievementListParse.Add(g);
+            
         }
-        GD.Print("entered the thing");
+        //GD.Print("entered the thing");
         AchievementStorage.achievementData = achievementListParse;
     }
 }

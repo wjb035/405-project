@@ -132,6 +132,8 @@ public partial class GameSelect : Control
 	
 	private void GoAch()
 	{
+		AchievementStorage.gameName = GetSelectedGame().Name;
+		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
 		GetTree().ChangeSceneToFile("res://Achievements.tscn");
 	}
 
@@ -238,8 +240,14 @@ public partial class GameSelect : Control
 				}
 			}
 			else{
-				foreach (var g in scanned)
+				foreach (var g in scanned){
 					_games.Add(g);
+				}
+				//GameEntry? temp = _games[0];
+				//_games.Remove(temp);
+				//_games.Add(temp);
+				
+				
 			}
 			
 

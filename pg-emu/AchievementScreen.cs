@@ -2,37 +2,59 @@ using Godot;
 using System;
 using PGEmu.app;
 using System.Collections.Generic;
+using RetroAchievements.Api.Response.Users.Records;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 
 public partial class AchievementScreen : Control
 {
 	
 	
-	public override void _Ready()
+	public override async void _Ready()
 	{
-		
+		Label _topText = GetNode<Label>("Bg/Margin/Root/TopBar/Title");
 		Button back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
+		string splashText = "Achievements for " + AchievementStorage.gameName;
+		
+		string regexPattern =  @"\([^)]*\)";
+		splashText = Regex.Replace(splashText, regexPattern, String.Empty);
+		
+		
+		_topText.Text = splashText;
 		back.Pressed += GoBack;
 		
 		// Get the container
 		VBoxContainer container = GetNode<VBoxContainer>("ScrollContainer/ButtonContainer");
-		RetroAchievementsService.achievementGet(2689);
+		
+		
+		
+		if (AchievementStorage.gameId != -1){
+			await RetroAchievementsService.achievementGet(AchievementStorage.gameId);
+		}
+		else{
+			await RetroAchievementsService.achievementGet(2689);
+		}
+		
 		
 		
 		var icons = new List<String>();
+		var iconsAndAchData = new List<KeyValuePair<string, UserProgressAchievement>>();
 		if (AchievementStorage.achievementData != null){
 			foreach (var g in AchievementStorage.achievementData)
 			{
+			
+				iconsAndAchData.Add(
+				new KeyValuePair<string, UserProgressAchievement>
+				("https://media.retroachievements.org/Badge/"+g.Value.BadgeName+".png", g.Value));
 				//GD.Print(g.Value.Title + " has an id of " + g.Key + " with a badge url of " + g.Value.BadgeName + " unlocked on " + g.Value.EarnedDate);
-				icons.Add("https://media.retroachievements.org/Badge/"+g.Value.BadgeName+".png");
+				//icons.Add("https://media.retroachievements.org/Badge/"+g.Value.BadgeName+".png");
 			}
 		}
-		for (int i = 0; i < AchievementStorage.achievementData.Count; i++){
-			GD.Print(AchievementStorage.achievementData[i].Value.Title);
-		}
+		iconsAndAchData = iconsAndAchData.OrderByDescending(x => x.Value.EarnedDate).ToList();
 		
 
-		for (int i = 0; i < icons.Count; i++)
+		for (int i = 0; i < iconsAndAchData.Count; i++)
 {
 	// Create main button
 	Button btn = new Button();
@@ -70,29 +92,44 @@ hbox.AddChild(textBox);
 
 // First Label (Title)
 Label titleLabel = new Label();
-titleLabel.Text = AchievementStorage.achievementData[i].Value.Title;
+titleLabel.Text = iconsAndAchData[i].Value.Title;
 titleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
 titleLabel.HorizontalAlignment = HorizontalAlignment.Left;
 textBox.AddChild(titleLabel);
 
 // Second Label (Subtitle / Description)
 Label subtitleLabel = new Label();
-subtitleLabel.Text = AchievementStorage.achievementData[i].Value.Title; // or whatever field you use
+subtitleLabel.Text = iconsAndAchData[i].Value.Description; // or whatever field you use
 subtitleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
 subtitleLabel.HorizontalAlignment = HorizontalAlignment.Left;
+textBox.AddChild(subtitleLabel);
+
+
+Label dateLabel = new Label();
+dateLabel.Text = iconsAndAchData[i].Value.EarnedDate.ToString(); // or whatever field you use
+bool unlocked = true;
+if (dateLabel.Text == "1/1/0001 12:00:00 AM"){
+	dateLabel.Text = "Not unlocked!";
+	unlocked = false;
+}
+
+dateLabel.SizeFlagsHorizontal = SizeFlags.Fill;
+dateLabel.HorizontalAlignment = HorizontalAlignment.Left;
+textBox.AddChild(dateLabel);
 
 // Optional: make it visually secondary
 //subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f); // slightly dimmer
-//subtitleLabel.AddThemeFontSizeOverride("font_size", 12); // smaller font
+subtitleLabel.AddThemeFontSizeOverride("font_size", 12); // smaller font
+dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 
-textBox.AddChild(subtitleLabel);
+
 
 
 	// Add button to container
 	container.AddChild(btn);
 
 	// Load icon asynchronously
-	LoadIconFromUrl(icon, icons[i]);
+	LoadIconFromUrl(icon, iconsAndAchData[i].Key, unlocked);
 }
 
 
@@ -109,7 +146,8 @@ textBox.AddChild(subtitleLabel);
 	}
 	
 	// fix this later
-	private void LoadIconFromUrl(TextureRect textureRect, string url)
+	private void LoadIconFromUrl(TextureRect textureRect, string url,
+	bool unlocked)
 {
 	HttpRequest request = new HttpRequest();
 	AddChild(request);
@@ -135,6 +173,19 @@ textBox.AddChild(subtitleLabel);
 		}
 
 		
+		if (!unlocked)
+		{
+			for (int y = 0; y < img.GetHeight(); y++)
+			{
+				for (int x = 0; x < img.GetWidth(); x++)
+				{
+					Color color = img.GetPixel(x, y);
+					float gray = color.R * 0.299f + color.G * 0.587f + color.B * 0.114f;
+					img.SetPixel(x, y, new Color(gray, gray, gray, color.A));
+				}
+			}
+		}
+			
 		ImageTexture tex = ImageTexture.CreateFromImage(img);
 		textureRect.Texture = tex;
 
