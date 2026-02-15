@@ -59,7 +59,20 @@ public class FriendsController : ControllerBase
         if (!success) return BadRequest("Cannot block user.");
         return Ok(new { message = "User blocked." });
     }
+
+    [Authorize]
+    [HttpPost("unblock/{targetUserId}")]
+
+    public async Task<IActionResult> UnblockUser(Guid targetUserId)
+    {
+        var result = await _friendService.UnblockUserAsync(CurrentUserId, targetUserId);
+        if (!result)
+            return BadRequest("User is not blocked or does not exist.");
+
+        return Ok(new { message = "User unblocked successfully." });
+    }
     
+
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetFriends()
