@@ -57,12 +57,7 @@ namespace PGEmuBackend.Migrations
 
                     b.HasIndex("ReceiverId");
 
-                    b.ToTable("Friends", t =>
-                        {
-                            t.HasCheckConstraint("chk_not_self_friend", "UserId <> FriendId");
-
-                            t.HasCheckConstraint("chk_ordered_ids", "UserId < FriendId");
-                        });
+                    b.ToTable("Friends");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.RefreshToken", b =>

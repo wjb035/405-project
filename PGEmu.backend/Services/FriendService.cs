@@ -131,6 +131,30 @@ public class FriendService
         return true;
     }
     
+    //UNblock a user
+    public async Task<bool> UnblockUserAsync(Guid unblockerId, Guid blockedId)
+    {
+        // Check if a record exists in either direction
+        var friend = await _context.Friends
+            .FirstOrDefaultAsync(f =>
+                (f.SenderId == unblockerId && f.ReceiverId == blockedId) ||
+                (f.SenderId == blockedId && f.ReceiverId == unblockerId));
+
+        // If not friends, nothing to unblock
+        if (friend == null)
+            return false;
+        
+        // Not blocked, cant unlblock
+        if (friend.Status != FriendStatus.Blocked)
+            return false; 
+        
+        // Remove all friend record, which means you can now re friend etc
+        _context.Friends.Remove(friend);
+        
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    
     // Get all friends of user
     public async Task<List<FriendDTO>> GetFriendsAsync(Guid userId)
     {

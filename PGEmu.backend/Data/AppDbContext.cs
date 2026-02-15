@@ -63,16 +63,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(f => f.ReceiverId)
             .OnDelete(DeleteBehavior.Restrict);
         
-        modelBuilder.Entity<Friend>(entity =>
-        {
-            entity.ToTable(tb =>
-            {
-                tb.HasCheckConstraint("chk_not_self_friend", "UserId <> FriendId");
-                tb.HasCheckConstraint("chk_ordered_ids", "UserId < FriendId");
-            });
-            
-        });
-        
 
         // User games
         modelBuilder.Entity<UserGame>()
