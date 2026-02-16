@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using RetroAchievements.Api;
 using Godot;
+using RetroAchievements.Api.Response.Users.Records;
+using System.Collections.Generic;
 
 namespace PGEmu.app;
 
@@ -101,5 +103,19 @@ public static class RetroAchievementsService
            }
        }
         
+    }
+
+
+    public static async Task achievementGet(int GameID)
+    {
+        var achievementList = await client.GetGameDataAndUserProgressAsync(GameID, username);
+        var achievementListParse = new List<KeyValuePair<string, UserProgressAchievement>>();
+        foreach (var g in achievementList.Achievements)
+        {
+            achievementListParse.Add(g);
+            
+        }
+        //GD.Print("entered the thing");
+        AchievementStorage.achievementData = achievementListParse;
     }
 }

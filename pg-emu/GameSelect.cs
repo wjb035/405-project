@@ -36,6 +36,8 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	
+	private Button _achievement = null!;
 
 	// UI instances and data backing the carousel.
 	private readonly List<Control> _cards = new();
@@ -77,7 +79,9 @@ public partial class GameSelect : Control
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
-
+		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+		
+		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
 		_next.Pressed += () => Step(1);
@@ -90,6 +94,7 @@ public partial class GameSelect : Control
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectionUI();
+		_achievement.Show();
 	}
 
 	private void GoBack()
@@ -123,6 +128,13 @@ public partial class GameSelect : Control
 	private void GoHome()
 	{
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+	}
+	
+	private void GoAch()
+	{
+		AchievementStorage.gameName = GetSelectedGame().Name;
+		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
+		GetTree().ChangeSceneToFile("res://Achievements.tscn");
 	}
 
 	private void PlaySelected()
@@ -228,8 +240,14 @@ public partial class GameSelect : Control
 				}
 			}
 			else{
-				foreach (var g in scanned)
+				foreach (var g in scanned){
 					_games.Add(g);
+				}
+				//GameEntry? temp = _games[0];
+				//_games.Remove(temp);
+				//_games.Add(temp);
+				
+				
 			}
 			
 
