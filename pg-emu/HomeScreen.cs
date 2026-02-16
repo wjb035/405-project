@@ -448,7 +448,6 @@ public partial class HomeScreen : Control
 	{
 		try
 		{
-			// 1) Shared heuristic (also used by the Avalonia app).
 			_configPath = ConfigFinder.FindConfigPath();
 
 			// 2) Godot-friendly fallback: look relative to the project root.

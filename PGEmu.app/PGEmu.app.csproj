@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!--
-      Shared core library: target both net8 (Godot desktop) and net9 (existing Avalonia app).
-      Godot's csproj switches to net9 for Android builds, so this stays compatible.
+      Shared core library: target net8 for Godot desktop builds and net9 for Godot Android builds.
+      Godot's csproj switches to net9 on Android, so this stays compatible.
     -->
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>

@@ -3,7 +3,7 @@
 Simple emulator launcher for a local ROM library.
 
 ## Overview
-PGEmu provides a small core library (`PGEmu.app`) for config loading, library scanning, and launching, plus an Avalonia UI (`PGEmu.gui`) that lets you pick a platform and game and then launch it.
+PGEmu provides a small core library (`PGEmu.app`) for config loading, library scanning, and launching, plus a Godot 4.6 C# UI found in `pg-emu` that lets you pick a platform and game and launch it.
 
 ## Prerequisites
 - .NET SDK 9 (or newer)
@@ -41,19 +41,13 @@ Notes:
 - `romPath` is relative to `libraryRoot` (or absolute).
 - `exePath` can be absolute or relative to `libraryRoot`.
 
-## Run the GUI
-From the solution folder:
-```bash
-dotnet run --project PGEmu.gui/PGEmu.gui.csproj
-```
-
-Or:
-```bash
-cd PGEmu.gui
-dotnet run
-```
+## Run the GUI (Godot)
+- Install Godot 4.6 with .NET support.
+- From the repo root, launch the project: `godot4 --path pg-emu`
+- If you prefer the editor, open `pg-emu/project.godot` in Godot and press Play.
 
 ## Project layout
 - `PGEmu.app`: core library (config models, scanner, launcher)
-- `PGEmu.gui`: Avalonia UI (uses `PGEmu.app`)
+- `PGEmu.backend`: API/server bits
+- `pg-emu`: Godot 4.6 C# front-end (uses `PGEmu.app`)
 - `config.json`: sample config for local paths
