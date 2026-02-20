@@ -49,29 +49,19 @@ public class AppDbContext : DbContext
         
         // Friends
         modelBuilder.Entity<Friend>()
-            .HasKey(f => new { f.UserId, f.FriendId });
+            .HasKey(f => new { f.SenderId, f.ReceiverId });
         
         modelBuilder.Entity<Friend>()
-            .HasOne(f => f.User)
+            .HasOne(f => f.Sender)
             .WithMany()
-            .HasForeignKey(f => f.UserId)
+            .HasForeignKey(f => f.SenderId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Friend>()
-            .HasOne(f => f.FriendUser)
+            .HasOne(f => f.Receiver)
             .WithMany()
-            .HasForeignKey(f => f.FriendId)
+            .HasForeignKey(f => f.ReceiverId)
             .OnDelete(DeleteBehavior.Restrict);
-        
-        modelBuilder.Entity<Friend>(entity =>
-        {
-            entity.ToTable(tb =>
-            {
-                tb.HasCheckConstraint("chk_not_self_friend", "UserId <> FriendId");
-                tb.HasCheckConstraint("chk_ordered_ids", "UserId < FriendId");
-            });
-            
-        });
         
 
         // User games
