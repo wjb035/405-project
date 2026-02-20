@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://cq2r088enxgnq"]
+
+[ext_resource type="Script" uid="uid://dj1d84fq58e7p" path="res://UI/FriendRequestItem.cs" id="1_1ip1e"]
+
+[sub_resource type="Theme" id="Theme_1ip1e"]
+
+[node name="FriendRequestItem" type="Panel" unique_id=1623128844]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_1ip1e")
+script = ExtResource("1_1ip1e")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1386711342]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Username Label" type="Label" parent="HBoxContainer" unique_id=1073063703]
+layout_mode = 2
+text = "Username"
+
+[node name="Accept Button" type="Button" parent="HBoxContainer" unique_id=1929210884]
+layout_mode = 2
+text = "Accept"
+
+[node name="Decline Button" type="Button" parent="HBoxContainer" unique_id=1804425905]
+layout_mode = 2
+text = "Decline"
