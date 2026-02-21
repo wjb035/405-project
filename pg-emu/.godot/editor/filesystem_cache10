@@ -1,11 +1,11 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1771569516
+::res://::1771702425
 Achievements.tscn::PackedScene::9222093291491280280::1771554555::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs
 AchievementScreen.cs::CSharpScript::6693889573278468072::1771554555::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1771554555::0::1::::<><><>0<>0<><>::
 FriendsList.cs::CSharpScript::6371099269646437739::1771554555::0::1::::<>Node<><>0<>0<><>::
 FriendsList.tscn::PackedScene::1855649014337715298::1771554555::0::1::::<><><>0<>0<><>::
-friend_request_item.tscn::PackedScene::5952679683128112426::1771569200::0::1::::<><><>0<>0<><>::res://FriendRequestItem.cs
+friend_request_item.tscn::PackedScene::5952679683128112426::1771569537::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
 GameSelect.cs::CSharpScript::6550570635931546279::1771554555::0::1::::<>Control<><>0<>0<><>::
 GameSelect.tscn::PackedScene::6344109642126286492::1771554555::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://platform_card.tscn
 HomeScreen.cs::CSharpScript::3450512667325572821::1771554555::0::1::::<>Control<><>0<>0<><>::
@@ -48,7 +48,7 @@ spanning_table_container_scene_example_1.png::CompressedTexture2D::2828543684477
 ::res://Services/::1771566280
 AuthService.cs::CSharpScript::994187413389896066::1771566208::0::1::::<>Node<><>0<>0<><>::
 FriendService.cs::CSharpScript::638228935682986426::1771566272::0::1::::<>Node<><>0<>0<><>::
-::res://UI/::1771569435
-FriendInbox.cs::CSharpScript::4117037499602220883::1771569435::0::1::::<>Panel<><>0<>0<><>::
+::res://UI/::1771569598
+FriendInbox.cs::CSharpScript::4117037499602220883::1771569598::0::1::::<>Panel<><>0<>0<><>::
 FriendRequestItem.cs::CSharpScript::7844878079273845639::1771567898::0::1::::<>Panel<><>0<>0<><>::
 InboxItem.cs::CSharpScript::5619153750257441564::1771567593::0::1::::<>Panel<><>0<>0<><>::

@@ -2,8 +2,9 @@
 
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
 
-[node name="HomeScreen" type="Control" unique_id=1782667529]
+[node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,10 +20,14 @@ StatusPath = NodePath("Margin/Root/Status")
 SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 FriendsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnFriends")
+InboxPath = NodePath("Margin/Root/TopBar/TopIcons/BtnInbox")
 ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
+FriendInboxPopup = NodePath("Inbox")
 CardScene = ExtResource("2")
+
+[node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
 
 [node name="Bg" type="ColorRect" parent="." unique_id=581845523]
 layout_mode = 1
@@ -65,6 +70,11 @@ size_flags_vertical = 0
 
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=1808037778]
 layout_mode = 2
+
+[node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=401324041]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+text = "📥"
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=794538155]
 custom_minimum_size = Vector2(44, 36)

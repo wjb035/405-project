@@ -15,9 +15,13 @@ public partial class HomeScreen : Control
 	[Export] public NodePath SelectPlatformPath;
 	[Export] public NodePath BackPath;
 	[Export] public NodePath FriendsPath;
+	[Export] public NodePath InboxPath;
 	[Export] public NodePath ChatPath;
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath HelpPath;
+	
+	// Friend Inbox popup
+	[Export] public FriendInbox FriendInboxPopup;
 
 	// Card prefab spawned into the carousel.
 	[Export] public PackedScene CardScene;
@@ -30,6 +34,7 @@ public partial class HomeScreen : Control
 	private Button _selectPlatform;
 	private Button _back;
 	private Button _friends;
+	private Button _inbox;
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
@@ -66,6 +71,7 @@ public partial class HomeScreen : Control
 		_selectPlatform = GetNode<Button>(SelectPlatformPath);
 
 		_back = GetNodeOrNull<Button>(BackPath);
+		_inbox = GetNodeOrNull<Button>(InboxPath);
 		_friends = GetNodeOrNull<Button>(FriendsPath);
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
@@ -80,6 +86,7 @@ public partial class HomeScreen : Control
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
+		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 
 		// Load platforms from config, then build the carousel visuals.
 		LoadConfigAndPlatforms();
@@ -118,6 +125,10 @@ public partial class HomeScreen : Control
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://Achievements.tscn");
 	
+	}
+	private void OnInboxPressed()
+	{
+		FriendInboxPopup.ShowPopup();
 	}
 
 	private void OnChatPressed()
