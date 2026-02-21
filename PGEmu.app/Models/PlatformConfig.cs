@@ -12,4 +12,5 @@ public class PlatformConfig
     public string? DefaultEmulatorId { get; set; }
 
     public int retroachievementsPlatformID { get; set; } = -1;
+    public LibretroConfig? Libretro { get; set; }
 }

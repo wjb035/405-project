@@ -14,7 +14,7 @@ config/name="PGEmu"
 run/main_scene="uid://brh20eurum1p6"
 config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 boot_splash/bg_color=Color(0.06666667, 0.047058824, 0.12156863, 1)
-boot_splash/image="uid://bi5urskmfdbrf"
+boot_splash/image="uid://dhwqlqt8712qy"
 config/icon="res://icon.svg"
 
 [display]

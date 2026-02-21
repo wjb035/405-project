@@ -293,7 +293,7 @@ public partial class HomeScreen : Control
 		if (e is not InputEventJoypadButton jb || !jb.Pressed)
 		{
 			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
-				GetViewport().SetInputAsHandled();
+				MarkInputHandled();
 			return;
 		}
 
@@ -304,7 +304,7 @@ public partial class HomeScreen : Control
 				if (Count > 1)
 				{
 					Step(-1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.RightShoulder:
@@ -312,40 +312,45 @@ public partial class HomeScreen : Control
 				if (Count > 1)
 				{
 					Step(1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.A:
 			case JoyButton.X:
+				MarkInputHandled();
 				OpenSelectedPlatform();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.B:
 				if (_back != null)
 				{
+					MarkInputHandled();
 					OnBackPressed();
-					GetViewport().SetInputAsHandled();
 				}
 				break;
 			case JoyButton.Start:
 				if (_settings != null)
 				{
+					MarkInputHandled();
 					OnSettingsPressed();
-					GetViewport().SetInputAsHandled();
 				}
 				break;
 			case JoyButton.Touchpad:
 				if (_friends != null)
 				{
+					MarkInputHandled();
 					OnFriendsPressed();
-					GetViewport().SetInputAsHandled();
 				}
 				break;
 			case JoyButton.Guide:
+				MarkInputHandled();
 				GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
-				GetViewport().SetInputAsHandled();
 				break;
 		}
+	}
+
+	private void MarkInputHandled()
+	{
+		GetViewport()?.SetInputAsHandled();
 	}
 
 	private bool HandleAxisNav(InputEventJoypadMotion jm)

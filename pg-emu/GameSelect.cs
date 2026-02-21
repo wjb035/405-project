@@ -156,6 +156,12 @@ public partial class GameSelect : Control
 
 		try
 		{
+			if (_platform.Libretro != null)
+			{
+				LaunchViaLibretro(game);
+				return;
+			}
+
 			// Delegate launching to app layer.
 			Launcher.LaunchFromConfig(_config, _platform, game);
 			SetStatus($"Launching: {game.Title}");
@@ -165,6 +171,18 @@ public partial class GameSelect : Control
 			// Surface launch errors to UI instead of crashing.
 			SetStatus($"Launch failed: {ex.Message}");
 		}
+	}
+
+	private void LaunchViaLibretro(GameEntry game)
+	{
+		var tree = GetTree();
+		tree.SetMeta("pgemu_libretro_game_path", game.Path);
+		tree.SetMeta("pgemu_libretro_platform_id", _platform?.Id ?? string.Empty);
+		if (_configPath != null)
+			tree.SetMeta("pgemu_config_path", _configPath);
+
+		SetStatus($"Starting Libretro: {game.Title}");
+		tree.ChangeSceneToFile("res://LibretroPlayer.tscn");
 	}
 
 	private async Task LoadContextAndGames()
@@ -419,7 +437,7 @@ public partial class GameSelect : Control
 		if (e is not InputEventJoypadButton jb || !jb.Pressed)
 		{
 			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
-				GetViewport().SetInputAsHandled();
+				MarkInputHandled();
 			return;
 		}
 
@@ -430,7 +448,7 @@ public partial class GameSelect : Control
 				if (Count > 1)
 				{
 					Step(-1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.RightShoulder:
@@ -438,31 +456,36 @@ public partial class GameSelect : Control
 				if (Count > 1)
 				{
 					Step(1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.A:
 			case JoyButton.X:
+				MarkInputHandled();
 				PlaySelected();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.B:
+				MarkInputHandled();
 				GoBack();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Start:
+				MarkInputHandled();
 				OpenVault();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Touchpad:
+				MarkInputHandled();
 				OpenProfile();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Guide:
+				MarkInputHandled();
 				GoHome();
-				GetViewport().SetInputAsHandled();
 				break;
 		}
+	}
+
+	private void MarkInputHandled()
+	{
+		GetViewport()?.SetInputAsHandled();
 	}
 
 	private bool HandleAxisNav(InputEventJoypadMotion jm)

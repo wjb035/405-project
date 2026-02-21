@@ -7,7 +7,25 @@
       "romPath": "games/GameCube",
       "extensions": [".iso", ".gcm", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs"],
       "defaultEmulatorId": "dolphin",
-     "retroachievementsPlatformID": 16
+      "retroachievementsPlatformID": 16,
+      "libretro": {
+        "corePath": "cores/dolphin_libretro.dylib",
+        "libraryName": "Dolphin Libretro",
+        "libraryVersion": "1.0",
+        "validExtensions": "iso|gcm|gcz|rvz|wbfs",
+        "needFullPath": true,
+        "blockExtract": true,
+        "targetWidth": 640,
+        "targetHeight": 528,
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "aspectRatio": 1.3333333,
+        "targetFps": 60,
+        "sampleRate": 48000,
+        "options": {
+          "aspect_ratio": "4:3"
+        }
+      }
     },
     {
       "id": "wii",
@@ -15,7 +33,25 @@
       "romPath": "games/Wii",
       "extensions": [".iso", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs", ".nfs"],
       "defaultEmulatorId": "dolphin",
-     "retroachievementsPlatformID": -1
+      "retroachievementsPlatformID": -1,
+      "libretro": {
+        "corePath": "cores/dolphin_libretro.dylib",
+        "libraryName": "Dolphin Libretro",
+        "libraryVersion": "1.0",
+        "validExtensions": "iso|gcz|ciso|rvz|wbfs|nfs",
+        "needFullPath": true,
+        "blockExtract": true,
+        "targetWidth": 640,
+        "targetHeight": 528,
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "aspectRatio": 1.3333333,
+        "targetFps": 60,
+        "sampleRate": 48000,
+        "options": {
+          "aspect_ratio": "16:9"
+        }
+      }
     },
     {
       "id": "ps2",
@@ -23,7 +59,7 @@
       "romPath": "games/PS2",
       "extensions": [".iso"],
       "defaultEmulatorId": "pcsx2",
-     "retroachievementsPlatformID": 21
+      "retroachievementsPlatformID": 21
     },
     {
       "id": "psp",
@@ -31,7 +67,7 @@
       "romPath": "games/PSP",
       "extensions": [".iso"],
       "defaultEmulatorId": "ppsspp",
-     "retroachievementsPlatformID": 41
+      "retroachievementsPlatformID": 41
     }
   ],
   "emulators": [
