@@ -1,1 +1,13 @@
+res://UI/InboxItem.cs
+res://UI/FriendRequestItem.cs
+res://UI/FriendInbox.cs
+res://GameSelect.cs
+res://AchievementScreen.cs
 res://HomeScreen.cs
+res://Services/AuthService.cs
+res://Services/FriendService.cs
+res://inbox.tscn
+res://friend_request_item.tscn
+res://HomeScreen.tscn
+res://GameSelect.tscn
+res://inbox_style_flat.tres

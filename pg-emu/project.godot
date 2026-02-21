@@ -1,0 +1,40 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="PGEmu"
+run/main_scene="uid://brh20eurum1p6"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+boot_splash/bg_color=Color(0.06666667, 0.047058824, 0.12156863, 1)
+boot_splash/image="uid://bi5urskmfdbrf"
+config/icon="res://icon.svg"
+
+[autoload]
+
+FriendService="*uid://jdfsje81xhmo"
+AuthService="*uid://ofueenktpcny"
+
+[display]
+
+window/size/mode=3
+window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="PGEmu"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

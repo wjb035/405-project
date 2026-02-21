@@ -1,16 +1,16 @@
 using System;
 using System.Linq;
 using Avalonia.Threading;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using PGEmu.gui.ViewModels;
 using Avalonia.Input;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Media;
-using Avalonia.Styling;
 
 namespace PGEmu.gui.Views;
 
@@ -21,8 +21,11 @@ public partial class HomeScreenView : UserControl
     private bool _internalChange;
     private bool _isDragging;
     private bool _isAnimating;
+    private bool _isAnimatingScroll;
     private Point _dragStartPoint;
-    private const double SlideStep = 360;
+    private Vector _dragStartOffset;
+    private bool _isPanning;
+    private bool _hasAppliedInitialTransforms;
 
     public HomeScreenView()
     {
@@ -79,9 +82,14 @@ public partial class HomeScreenView : UserControl
         item.Classes.Remove("slot-left");
         item.Classes.Remove("slot-center");
         item.Classes.Remove("slot-right");
+        item.Classes.Remove("off-left");
+        item.Classes.Remove("off-right");
 
         switch (wp.Slot)
         {
+            case -1:
+                item.Classes.Add("off-left");
+                break;
             case 0:
                 item.Classes.Add("slot-left");
                 break;
@@ -91,7 +99,13 @@ public partial class HomeScreenView : UserControl
             case 2:
                 item.Classes.Add("slot-right");
                 break;
+            case 3:
+                item.Classes.Add("off-right");
+                break;
         }
+
+        if (_hasAppliedInitialTransforms)
+            Dispatcher.UIThread.Post(UpdateCarouselTransforms, DispatcherPriority.Background);
     }
 
     public void CarouselContainerClearing(object? sender, ContainerClearingEventArgs e)
@@ -100,6 +114,8 @@ public partial class HomeScreenView : UserControl
         item.Classes.Remove("slot-left");
         item.Classes.Remove("slot-center");
         item.Classes.Remove("slot-right");
+        item.Classes.Remove("off-left");
+        item.Classes.Remove("off-right");
     }
 
     // IMPORTANT: ListBox.SelectionChanged expects Avalonia.Controls.SelectionChangedEventArgs
@@ -108,7 +124,7 @@ public partial class HomeScreenView : UserControl
         if (ConsoleCarousel is null) return;
 
         if (_internalChange) return;
-        if (_isAnimating) return;
+        if (_isAnimating || _isAnimatingScroll) return;
 
         // When selection changes (via arrows or click), center it.
         _internalChange = true;
@@ -155,6 +171,8 @@ public partial class HomeScreenView : UserControl
                 ConsoleCarousel.SelectedIndex = 0;
 
             SnapSelectionToCenter();
+            UpdateCarouselTransforms();
+            _hasAppliedInitialTransforms = true;
         }, DispatcherPriority.Background);
     }
 
@@ -183,9 +201,11 @@ public partial class HomeScreenView : UserControl
     {
         if (ConsoleCarousel is null) return;
 
+        UpdateCarouselTransforms();
+
         // Ignore programmatic scroll changes (centering).
         if (_internalChange) return;
-        if (_isAnimating) return;
+        if (_isAnimating || _isAnimatingScroll) return;
 
         UpdateSelectionByCenter();
 
@@ -256,30 +276,184 @@ public partial class HomeScreenView : UserControl
 
     private void CenterSelectedItem()
     {
-        if (ConsoleCarousel is null) return;
-        if (_carouselScrollViewer is null) return;
-
-        var idx = ConsoleCarousel.SelectedIndex;
-        if (idx < 0) return;
-
-        if (ConsoleCarousel.ContainerFromIndex(idx) is not Control container)
+        if (!TryGetCenteredOffsetForIndex(ConsoleCarousel?.SelectedIndex ?? -1, out var newX))
             return;
 
-        // Compute container center in ScrollViewer viewport space
+        AnimateScrollTo(newX);
+    }
+
+    private void CenterSelectedItemImmediate()
+    {
+        if (!TryGetCenteredOffsetForIndex(ConsoleCarousel?.SelectedIndex ?? -1, out var newX))
+            return;
+
+        if (_carouselScrollViewer is null) return;
+        _carouselScrollViewer.Offset = new Vector(newX, _carouselScrollViewer.Offset.Y);
+    }
+
+    private bool TryGetCenteredOffsetForIndex(int index, out double newX)
+    {
+        newX = 0;
+        if (ConsoleCarousel is null) return false;
+        if (_carouselScrollViewer is null) return false;
+        if (index < 0) return false;
+
+        if (ConsoleCarousel.ContainerFromIndex(index) is not Control container)
+            return false;
+
         var pt = container.TranslatePoint(new Point(container.Bounds.Width / 2.0, container.Bounds.Height / 2.0), _carouselScrollViewer);
-        if (pt is null) return;
+        if (pt is null) return false;
 
         var viewportCenterX = _carouselScrollViewer.Viewport.Width / 2.0;
         var delta = pt.Value.X - viewportCenterX;
 
-        // Adjust horizontal offset so selected item center moves to viewport center.
-        var newX = _carouselScrollViewer.Offset.X + delta;
+        newX = _carouselScrollViewer.Offset.X + delta;
         var maxX = Math.Max(0, _carouselScrollViewer.Extent.Width - _carouselScrollViewer.Viewport.Width);
 
         if (newX < 0) newX = 0;
         if (newX > maxX) newX = maxX;
 
-        _carouselScrollViewer.Offset = new Vector(newX, _carouselScrollViewer.Offset.Y);
+        return true;
+    }
+
+    private void UpdateCarouselTransforms()
+    {
+        if (ConsoleCarousel is null) return;
+        if (_carouselScrollViewer is null) return;
+        if (_carouselScrollViewer.Viewport.Width <= 0.0) return;
+
+        var viewportCenterX = _carouselScrollViewer.Viewport.Width / 2.0;
+
+        foreach (var item in ConsoleCarousel.GetVisualDescendants().OfType<ListBoxItem>())
+        {
+            var pt = item.TranslatePoint(new Point(item.Bounds.Width / 2.0, item.Bounds.Height / 2.0), _carouselScrollViewer);
+            if (pt is null) continue;
+
+            var dist = (pt.Value.X - viewportCenterX) / viewportCenterX;
+            dist = Math.Max(-1.2, Math.Min(1.2, dist));
+            var abs = Math.Abs(dist);
+
+            var t = Math.Min(1.0, abs);
+            var scale = Lerp(1.0, 0.08, t);
+            var opacity = Lerp(1.0, 0.25, t);
+            var translateY = t * 26.0;
+            var translateX = dist * 18.0;
+            var skewY = dist * 10.0;
+
+            var group = EnsureTransformGroup(item);
+            var scaleTransform = (ScaleTransform)group.Children[0];
+            var skewTransform = (SkewTransform)group.Children[1];
+            var translateTransform = (TranslateTransform)group.Children[2];
+
+            scaleTransform.ScaleX = scale;
+            scaleTransform.ScaleY = scale;
+            skewTransform.AngleY = skewY;
+            translateTransform.X = translateX;
+            translateTransform.Y = translateY;
+
+            item.Opacity = opacity;
+            item.ZIndex = (int)(1000 - (abs * 1000.0));
+            item.IsHitTestVisible = abs < 0.75;
+        }
+    }
+
+    private static TransformGroup EnsureTransformGroup(Control item)
+    {
+        if (item.RenderTransform is TransformGroup existing &&
+            existing.Children.Count == 3 &&
+            existing.Children[0] is ScaleTransform &&
+            existing.Children[1] is SkewTransform &&
+            existing.Children[2] is TranslateTransform)
+        {
+            return existing;
+        }
+
+        var group = new TransformGroup
+        {
+            Children =
+            {
+                new ScaleTransform(1.0, 1.0),
+                new SkewTransform(0.0, 0.0),
+                new TranslateTransform(0.0, 0.0)
+            }
+        };
+
+        item.RenderTransform = group;
+        return group;
+    }
+
+    private static double Lerp(double from, double to, double t)
+    {
+        return from + ((to - from) * t);
+    }
+
+    private void AnimateScrollTo(double newX)
+    {
+        _ = AnimateScrollToAsync(newX);
+    }
+
+    private async System.Threading.Tasks.Task AnimateScrollToAsync(double newX)
+    {
+        if (_carouselScrollViewer is null) return;
+
+        var current = _carouselScrollViewer.Offset;
+
+        // Remove tiny-move snap, always animate.
+
+        if (_isAnimatingScroll) return;
+        _isAnimatingScroll = true;
+
+        var animation = new Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(320),
+            Easing = new CubicEaseOut(),
+            FillMode = FillMode.Forward
+        };
+
+        var maxX = Math.Max(0, _carouselScrollViewer.Extent.Width - _carouselScrollViewer.Viewport.Width);
+        var delta = newX - current.X;
+        var dir = Math.Sign(delta);
+
+        // Small overshoot in the travel direction, then settle.
+        var overshootX = newX + (dir * 18.0);
+        if (overshootX < 0) overshootX = 0;
+        if (overshootX > maxX) overshootX = maxX;
+
+        animation.Children.Add(new KeyFrame
+        {
+            Cue = new Cue(0d),
+            Setters =
+            {
+                new Setter(ScrollViewer.OffsetProperty, current)
+            }
+        });
+
+        animation.Children.Add(new KeyFrame
+        {
+            Cue = new Cue(0.85d),
+            Setters =
+            {
+                new Setter(ScrollViewer.OffsetProperty, new Vector(overshootX, current.Y))
+            }
+        });
+
+        animation.Children.Add(new KeyFrame
+        {
+            Cue = new Cue(1d),
+            Setters =
+            {
+                new Setter(ScrollViewer.OffsetProperty, new Vector(newX, current.Y))
+            }
+        });
+
+        try
+        {
+            await animation.RunAsync(_carouselScrollViewer);
+        }
+        finally
+        {
+            _isAnimatingScroll = false;
+        }
     }
     private void CarouselPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -289,7 +463,9 @@ public partial class HomeScreenView : UserControl
         if (e.GetCurrentPoint(_carouselScrollViewer).Properties.IsLeftButtonPressed)
         {
             _isDragging = true;
+            _isPanning = true;
             _dragStartPoint = e.GetPosition(_carouselScrollViewer);
+            _dragStartOffset = _carouselScrollViewer.Offset;
 
             _snapTimer?.Stop();
             e.Pointer.Capture(_carouselScrollViewer);
@@ -305,11 +481,37 @@ public partial class HomeScreenView : UserControl
         var pos = e.GetPosition(_carouselScrollViewer);
         var dx = pos.X - _dragStartPoint.X;
 
-        if (Math.Abs(dx) >= 80)
+        // Continuous pan
+        if (_isPanning)
         {
+            var maxX = Math.Max(0, _carouselScrollViewer.Extent.Width - _carouselScrollViewer.Viewport.Width);
+            var newX = _dragStartOffset.X - dx;
+            if (newX < 0) newX = 0;
+            if (newX > maxX) newX = maxX;
+
+            _internalChange = true;
+            try
+            {
+                _carouselScrollViewer.Offset = new Vector(newX, _carouselScrollViewer.Offset.Y);
+            }
+            finally
+            {
+                _internalChange = false;
+            }
+
+            UpdateCarouselTransforms();
+        }
+
+        // If the user drags far enough, treat it like a discrete carousel step.
+        if (Math.Abs(dx) >= 140)
+        {
+            _isPanning = false;
             _ = SlideAndMove(dx > 0 ? -1 : 1);
 
+            // Reset the drag baseline so they can keep dragging without jumps.
             _dragStartPoint = pos;
+            _dragStartOffset = _carouselScrollViewer.Offset;
+            _isPanning = true;
         }
 
         e.Handled = true;
@@ -321,6 +523,7 @@ public partial class HomeScreenView : UserControl
         if (!_isDragging) return;
 
         _isDragging = false;
+        _isPanning = false;
         if (e.Pointer.Captured == _carouselScrollViewer)
             e.Pointer.Capture(null);
 
@@ -335,6 +538,7 @@ public partial class HomeScreenView : UserControl
     {
         if (!_isDragging) return;
         _isDragging = false;
+        _isPanning = false;
 
         _snapTimer?.Stop();
         _snapTimer?.Start();
@@ -352,7 +556,26 @@ public partial class HomeScreenView : UserControl
 
         if (Math.Abs(dx) < 0.01) return;
 
-        _ = SlideAndMove(dx > 0 ? -1 : 1);
+        // Tune this to taste. Higher = faster scroll.
+        var scrollAmount = -dx * 80.0;
+
+        var maxX = Math.Max(0, _carouselScrollViewer.Extent.Width - _carouselScrollViewer.Viewport.Width);
+        var newX = _carouselScrollViewer.Offset.X + scrollAmount;
+        if (newX < 0) newX = 0;
+        if (newX > maxX) newX = maxX;
+
+        _internalChange = true;
+        try
+        {
+            _carouselScrollViewer.Offset = new Vector(newX, _carouselScrollViewer.Offset.Y);
+        }
+        finally
+        {
+            _internalChange = false;
+        }
+
+        UpdateCarouselTransforms();
+        UpdateSelectionByCenter();
 
         // Debounce snap to center.
         _snapTimer?.Stop();
@@ -365,7 +588,7 @@ public partial class HomeScreenView : UserControl
     {
         if (ConsoleCarousel is null) return;
         if (_carouselScrollViewer is null) return;
-        if (_isAnimating) return;
+        if (_isAnimating || _isAnimatingScroll) return;
 
         var bestIdx = FindIndexClosestToCenter();
         if (bestIdx < 0) return;
@@ -382,48 +605,11 @@ public partial class HomeScreenView : UserControl
         }
     }
 
-    private async System.Threading.Tasks.Task AnimateSlide(int direction, bool forward)
-    {
-        if (ConsoleCarousel is null) return;
-
-        var translate = ConsoleCarousel.RenderTransform as TranslateTransform;
-        if (translate is null)
-        {
-            translate = new TranslateTransform();
-            ConsoleCarousel.RenderTransform = translate;
-        }
-
-        var from = forward ? (direction > 0 ? SlideStep : -SlideStep) : 0;
-        var to = forward ? 0 : (direction > 0 ? -SlideStep : SlideStep);
-        translate.X = from;
-
-        var animation = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(180),
-            Easing = new CubicEaseOut(),
-            Children =
-            {
-                new KeyFrame
-                {
-                    Cue = new Cue(0d),
-                    Setters = { new Setter(TranslateTransform.XProperty, from) }
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(1d),
-                    Setters = { new Setter(TranslateTransform.XProperty, to) }
-                }
-            }
-        };
-
-        await animation.RunAsync(translate, System.Threading.CancellationToken.None);
-    }
-
     private async System.Threading.Tasks.Task SlideAndMove(int direction)
     {
         if (ConsoleCarousel is null) return;
         if (DataContext is not HomeScreenViewModel vm) return;
-        if (_isAnimating) return;
+        if (_isAnimating || _isAnimatingScroll) return;
 
         _isAnimating = true;
         try
@@ -432,14 +618,13 @@ public partial class HomeScreenView : UserControl
             try
             {
                 vm.MoveWindow(direction);
-                CenterSelectedItemDeferred();
             }
             finally
             {
                 _internalChange = false;
             }
 
-            await AnimateSlide(direction, forward: false);
+            CenterSelectedItemDeferred();
         }
         finally
         {
