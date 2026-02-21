@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using PGEmu.app;
 
-public partial class HomeScreen : Control
+public partial class Collections : Control
 {
 	// Scene wiring (assigned in `HomeScreen.tscn`).
 	[Export] public NodePath CardsPath;
@@ -33,6 +33,7 @@ public partial class HomeScreen : Control
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
+	private LineEdit _lineEdit;
 
 	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
@@ -58,14 +59,16 @@ public partial class HomeScreen : Control
 	public override void _Ready()
 	{
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
-		_cardsRoot = GetNode<Control>(CardsPath);
-		_prev = GetNode<Button>(PrevPath);
-		_next = GetNode<Button>(NextPath);
-		_selectedTitle = GetNode<Label>(SelectedTitlePath);
-		_status = GetNode<Label>(StatusPath);
-		_selectPlatform = GetNode<Button>(SelectPlatformPath);
+		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/CarouselArea/Cards");
+		_prev = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnPrev");
+		_next = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnNext");
+		_selectedTitle = GetNode<Label>("Margin/Root/CenterArea/SelectedTitle");
+		_status = GetNode<Label>("Margin/Root/Status");
+		_selectPlatform = GetNode<Button>("Margin/Root/CenterArea/BottomRow/BtnSelect");
+		_lineEdit = GetNode<LineEdit>("Margin/Root/CenterArea/CarouselArea/LineEdit");
+		_lineEdit.Visible = false;
 
-		_back = GetNodeOrNull<Button>(BackPath);
+		_back = GetNodeOrNull<Button>("Margin/Root/TopBar/BtnBack");
 		_friends = GetNodeOrNull<Button>(FriendsPath);
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
@@ -87,6 +90,21 @@ public partial class HomeScreen : Control
 		LayoutCards();
 		UpdateSelectedLabel();
 	}
+
+	private void OnCollectionPressed()
+{
+	_lineEdit.Visible = true;
+
+	_cardsRoot.MouseFilter = Control.MouseFilterEnum.Ignore;
+
+	foreach (var c in _cards)
+	{
+		c.Visible = false;
+		c.MouseFilter = Control.MouseFilterEnum.Ignore;
+	}
+
+	_lineEdit.GrabFocus(); // important
+}
 
 	private void OnBackPressed()
 	{
@@ -166,14 +184,17 @@ public partial class HomeScreen : Control
 		_cards.Clear();
 		_platforms.Clear();
 
-		if (_config?.Platforms is { Count: > 0 } platforms)
+		if (CollectionStorage.collections.Count == 0)
 		{
-			_platforms.AddRange(platforms);
+			//_platforms.AddRange(platforms);
+			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "No Collections Yet!" });
+			_selectPlatform.Visible = false;
+			
 		}
 		else
 		{
 			// Keep the carousel usable even when config is missing/empty.
-			_platforms.Add(new PlatformConfig { Id = "missing", Name = "Missing config.json" });
+			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "Press the button above to startmaking collections!" });
 		}
 
 		foreach (var p in _platforms)
