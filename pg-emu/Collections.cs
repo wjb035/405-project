@@ -106,6 +106,27 @@ public partial class Collections : Control
 	_lineEdit.GrabFocus(); // important
 }
 
+	private void MakeNewCollection(String text){
+		//GD.Print(text);
+		CollectionStorage.collections.Add(new KeyValuePair<string, List<GameEntry>>(text, new List<GameEntry>()));
+		
+		GD.Print("Current Collections List:");
+		foreach (var e in CollectionStorage.collections){
+			GD.Print(e.Key);
+		}
+		_lineEdit.Visible = false;
+
+		_cardsRoot.MouseFilter = Control.MouseFilterEnum.Stop;
+		foreach (var c in _cards)
+		{
+			c.Visible = true;
+			c.MouseFilter = Control.MouseFilterEnum.Stop;
+	}
+		_lineEdit.Clear();
+		SpawnCards();
+		
+	}
+
 	private void OnBackPressed()
 	{
 		var tree = GetTree();
@@ -183,30 +204,41 @@ public partial class Collections : Control
 			c.QueueFree();
 		_cards.Clear();
 		_platforms.Clear();
-
+			
+			
+		// THIS IS VERY VERY IFFY RIGHT NOW. FIX THIS LATER!
 		if (CollectionStorage.collections.Count == 0)
 		{
 			//_platforms.AddRange(platforms);
 			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "No Collections Yet!" });
 			_selectPlatform.Visible = false;
-			
+			var card = (Control)CardScene.Instantiate();
+				_cardsRoot.AddChild(card);
+				_cards.Add(card);
+
+				// `platform_card.tscn` includes a `Panel/Name` label.
+				var label = card.GetNodeOrNull<Label>("Panel/Name");
+				if (label != null) label.Text = "No collections yet!";
 		}
 		else
 		{
 			// Keep the carousel usable even when config is missing/empty.
-			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "Press the button above to startmaking collections!" });
+			_platforms.Add(new PlatformConfig { Id = "some collections", Name = "you have some number" });
+			foreach (var p in CollectionStorage.collections)
+			{
+				var card = (Control)CardScene.Instantiate();
+				_cardsRoot.AddChild(card);
+				_cards.Add(card);
+
+				// `platform_card.tscn` includes a `Panel/Name` label.
+				var label = card.GetNodeOrNull<Label>("Panel/Name");
+				if (label != null) label.Text = p.Key;
+		}
 		}
 
-		foreach (var p in _platforms)
-		{
-			var card = (Control)CardScene.Instantiate();
-			_cardsRoot.AddChild(card);
-			_cards.Add(card);
-
-			// `platform_card.tscn` includes a `Panel/Name` label.
-			var label = card.GetNodeOrNull<Label>("Panel/Name");
-			if (label != null) label.Text = p.Name;
-		}
+		//foreach (var p in _platforms)
+		
+		
 
 		UpdateSelectedLabel();
 		UpdateNavEnabled();

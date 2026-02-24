@@ -1,10 +1,10 @@
+HBoxContainer
+Button
 Panel
 PopupPanel
-Button
 MarginContainer
 ColorRect
 Label
-HBoxContainer
 Node
 HTTPRequest
 VBoxContainer

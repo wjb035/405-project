@@ -36,6 +36,7 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	OptionButton _optionButton = new OptionButton();
 	
 	private Button _achievement = null!;
 
@@ -80,7 +81,20 @@ public partial class GameSelect : Control
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+			
+			
 		
+		_optionButton.Name = "test";
+		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/CarouselArea/HBoxContainer");
+   		container.AddChild(_optionButton);
+		//_optionButton.AddItem("Option A", 0);
+		_optionButton.Hide();
+		int i = 0;
+		foreach (var c in CollectionStorage.collections){
+			_optionButton.AddItem(c.Key, i);
+			i++;
+		}
+		 _optionButton.ItemSelected += SelectedOption;
 		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
@@ -102,7 +116,36 @@ public partial class GameSelect : Control
 		// Navigate back to the home screen scene.
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
-
+	private void addToCollection(){
+		GD.Print("button has been pressed!!!!!!");
+		if (_optionButton.Visible){
+			_optionButton.Hide();
+		}else if (CollectionStorage.collections.Count > 0){
+			
+			_optionButton.Show();
+			_optionButton.Select(-1);
+		}
+		
+		
+	}
+	
+	private void SelectedOption(long index){
+		 GD.Print("User selected: " + _optionButton.GetItemText((int)index));
+		foreach (var c in CollectionStorage.collections){
+			if (c.Key == _optionButton.GetItemText((int)index)){
+				//GD.Print("found it!");
+				c.Value.Add(GetSelectedGame());
+				foreach (var g in c.Value){
+					GD.Print(g.Name);
+				}
+			}
+		}
+		GD.Print(GetSelectedGame().Name);
+		
+		
+		_optionButton.Hide();
+		
+	}
 	private void OpenVault()
 	{
 		// Store return context in SceneTree meta so Vault can return here with the same config.
