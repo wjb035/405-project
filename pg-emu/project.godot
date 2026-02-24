@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 
 FriendService="*uid://jdfsje81xhmo"
 AuthService="*uid://ofueenktpcny"
+QuitService="*res://Services/QuitService.cs"
 
 [display]
 
