@@ -286,6 +286,14 @@ public partial class GameSelect : Control
 				foreach (var g in scanned){
 					_games.Add(g);
 				}
+				
+			//if (CollectionStorage.currentCollection != null){
+				//_games.Clear();
+				//_games = CollectionStorage.currentCollection;
+				//foreach (var g in CollectionStorage.currentCollection){
+					//_games.Add(g);
+				//}
+			//}
 				//GameEntry? temp = _games[0];
 				//_games.Remove(temp);
 				//_games.Add(temp);

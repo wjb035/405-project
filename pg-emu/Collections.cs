@@ -58,6 +58,7 @@ public partial class Collections : Control
 
 	public override void _Ready()
 	{
+		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
 		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/CarouselArea/Cards");
 		_prev = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnPrev");
@@ -84,6 +85,8 @@ public partial class Collections : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 
+		// reset the value if we were in a collection before
+		CollectionStorage.currentCollection = null;
 		// Load platforms from config, then build the carousel visuals.
 		LoadConfigAndPlatforms();
 		SpawnCards();
@@ -123,6 +126,7 @@ public partial class Collections : Control
 			c.MouseFilter = Control.MouseFilterEnum.Stop;
 	}
 		_lineEdit.Clear();
+		_selectPlatform.Show();
 		SpawnCards();
 		
 	}
@@ -179,7 +183,8 @@ public partial class Collections : Control
 	}
 
 	private void OpenSelectedPlatform()
-	{
+	{ 
+		GD.Print("selection pressed!");
 		if (Count == 0) return;
 
 		var idx = Mathf.RoundToInt(_carouselPos);
@@ -187,7 +192,17 @@ public partial class Collections : Control
 
 		if (idx < 0 || idx >= _platforms.Count) return;
 		var platform = _platforms[idx];
-
+		GD.Print(platform.Name);
+		
+		// we have to navigate to the games screen, but we have to make sure we're using the right list
+		foreach (var c in CollectionStorage.collections){
+			if (platform.Name == c.Key){
+				CollectionStorage.currentCollection = c.Value;
+				break;
+			}
+		}
+		
+		
 		// Pass selection to the next screen without needing a singleton.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_selected_platform_id", platform.Id);
@@ -222,9 +237,16 @@ public partial class Collections : Control
 		}
 		else
 		{
+			
 			// Keep the carousel usable even when config is missing/empty.
-			_platforms.Add(new PlatformConfig { Id = "some collections", Name = "you have some number" });
-			foreach (var p in CollectionStorage.collections)
+			
+			//_platforms.Add(new PlatformConfig { Id = "some collections", Name = "you have some number" });
+			foreach (var g in CollectionStorage.collections){
+				_platforms.Add(new PlatformConfig { Id = "test", Name = g.Key });
+			}
+			
+			//foreach (var p in CollectionStorage.collections)
+			foreach (var p in _platforms)
 			{
 				var card = (Control)CardScene.Instantiate();
 				_cardsRoot.AddChild(card);
@@ -232,7 +254,7 @@ public partial class Collections : Control
 
 				// `platform_card.tscn` includes a `Panel/Name` label.
 				var label = card.GetNodeOrNull<Label>("Panel/Name");
-				if (label != null) label.Text = p.Key;
+				if (label != null) label.Text = p.Name;
 		}
 		}
 
