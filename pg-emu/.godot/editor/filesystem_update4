@@ -5,3 +5,5 @@ res://UI/FriendInbox.cs
 res://HomeScreen.cs
 res://UI/InboxItem.cs
 res://HomeScreen.tscn
+res://friend_request_item.tscn
+res://inbox_style_flat.tres

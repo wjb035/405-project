@@ -30,6 +30,9 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 // JWT Service
 builder.Services.AddScoped<JwtService>();
 
+// Friends Service
+builder.Services.AddScoped<FriendService>();
+
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);
 builder.Services.AddAuthentication(options =>

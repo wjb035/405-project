@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://b42oilcjbun0c"]
+[gd_scene format=3 uid="uid://bmbmtxgib04m"]
 
-[ext_resource type="Script" path="res://UI/FriendInbox.cs" id="1_4apmy"]
-[ext_resource type="PackedScene" path="res://friend_request_item.tscn" id="2_0rwom"]
-[ext_resource type="StyleBox" path="res://inbox_style_flat.tres" id="3_4rxl2"]
+[ext_resource type="Script" uid="uid://bywlahchlucp4" path="res://UI/FriendInbox.cs" id="1_4apmy"]
+[ext_resource type="PackedScene" uid="uid://cq2r088enxgnq" path="res://friend_request_item.tscn" id="2_0rwom"]
+[ext_resource type="StyleBox" uid="uid://bu2co241aj1r8" path="res://inbox_style_flat.tres" id="3_4rxl2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mcc5q"]
 bg_color = Color(0.6, 0.6, 0.6, 0)

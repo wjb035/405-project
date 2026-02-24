@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://cq6cr6a23vrvb"]
+[gd_scene format=3 uid="uid://cq2r088enxgnq"]
 
-[ext_resource type="Script" path="res://UI/FriendRequestItem.cs" id="1_1ip1e"]
+[ext_resource type="Script" uid="uid://dj1d84fq58e7p" path="res://UI/FriendRequestItem.cs" id="1_1ip1e"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ip1e"]
 content_margin_left = 5.0

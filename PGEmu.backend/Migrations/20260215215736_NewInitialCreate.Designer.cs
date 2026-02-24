@@ -12,8 +12,8 @@ using PGEmuBackend.Data;
 namespace PGEmuBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260204001809_AddRefreshTokens")]
-    partial class AddRefreshTokens
+    [Migration("20260215215736_NewInitialCreate")]
+    partial class NewInitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,10 +44,10 @@ namespace PGEmuBackend.Migrations
 
             modelBuilder.Entity("PGEmuBackend.Models.Friend", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("SenderId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("FriendId")
+                    b.Property<Guid>("ReceiverId")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -56,16 +56,11 @@ namespace PGEmuBackend.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "FriendId");
+                    b.HasKey("SenderId", "ReceiverId");
 
-                    b.HasIndex("FriendId");
+                    b.HasIndex("ReceiverId");
 
-                    b.ToTable("Friends", t =>
-                        {
-                            t.HasCheckConstraint("chk_not_self_friend", "UserId <> FriendId");
-
-                            t.HasCheckConstraint("chk_ordered_ids", "UserId < FriendId");
-                        });
+                    b.ToTable("Friends");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.RefreshToken", b =>
@@ -322,21 +317,21 @@ namespace PGEmuBackend.Migrations
 
             modelBuilder.Entity("PGEmuBackend.Models.Friend", b =>
                 {
-                    b.HasOne("PGEmuBackend.Models.User", "FriendUser")
+                    b.HasOne("PGEmuBackend.Models.User", "Receiver")
                         .WithMany()
-                        .HasForeignKey("FriendId")
+                        .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("PGEmuBackend.Models.User", "User")
+                    b.HasOne("PGEmuBackend.Models.User", "Sender")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("FriendUser");
+                    b.Navigation("Receiver");
 
-                    b.Navigation("User");
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.RefreshToken", b =>
