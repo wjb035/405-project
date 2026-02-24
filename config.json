@@ -12,7 +12,7 @@
         "corePath": "cores/dolphin_libretro.dylib",
         "libraryName": "Dolphin Libretro",
         "libraryVersion": "1.0",
-        "validExtensions": "iso|gcm|gcz|rvz|wbfs",
+        "validExtensions": "iso|gcm|gcz|ciso|cisos|rvz|wbfs",
         "needFullPath": true,
         "blockExtract": true,
         "targetWidth": 640,
