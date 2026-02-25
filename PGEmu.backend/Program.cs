@@ -57,6 +57,18 @@ builder.Services.AddAuthentication(options =>
         options.MapInboundClaims = false;
     });
 
+// CORS for godot
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // Apply migrations at startup
@@ -73,6 +85,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 

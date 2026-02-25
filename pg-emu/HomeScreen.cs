@@ -99,7 +99,7 @@ public partial class HomeScreen : Control
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://login.tscn");
+		tree.ChangeSceneToFile("res://WelcomeScreen.tscn");
 	}
 
 	private void OnSettingsPressed()
