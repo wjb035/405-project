@@ -17,6 +17,11 @@ boot_splash/bg_color=Color(0.06666667, 0.047058824, 0.12156863, 1)
 boot_splash/image="uid://bi5urskmfdbrf"
 config/icon="res://icon.svg"
 
+[autoload]
+
+FriendService="*uid://jdfsje81xhmo"
+AuthService="*uid://ofueenktpcny"
+
 [display]
 
 window/size/mode=3

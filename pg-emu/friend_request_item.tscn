@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://cq2r088enxgnq"]
+
+[ext_resource type="Script" uid="uid://dj1d84fq58e7p" path="res://UI/FriendRequestItem.cs" id="1_1ip1e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ip1e"]
+content_margin_left = 5.0
+bg_color = Color(0.6032466, 0.3198, 0.82, 0.83137256)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_color = Color(0, 0, 0.16, 0.13725491)
+shadow_size = 3
+
+[node name="Panel" type="Panel" unique_id=158150431 node_paths=PackedStringArray("UsernameLabel", "AcceptButton", "DeclineButton")]
+custom_minimum_size = Vector2(300, 40)
+offset_right = 300.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1ip1e")
+script = ExtResource("1_1ip1e")
+UsernameLabel = NodePath("HBoxContainer/Username Label")
+AcceptButton = NodePath("HBoxContainer/Accept Button")
+DeclineButton = NodePath("HBoxContainer/Decline Button")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1386711342]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.015
+anchor_right = 0.765
+offset_right = 66.5
+offset_bottom = 40.0
+theme_override_constants/separation = 5
+
+[node name="Username Label" type="Label" parent="HBoxContainer" unique_id=1073063703]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Username"
+
+[node name="Accept Button" type="Button" parent="HBoxContainer" unique_id=1929210884]
+layout_mode = 2
+size_flags_vertical = 4
+size_flags_stretch_ratio = 0.0
+text = "Accept"
+
+[node name="Decline Button" type="Button" parent="HBoxContainer" unique_id=1804425905]
+layout_mode = 2
+size_flags_vertical = 4
+text = "Decline"

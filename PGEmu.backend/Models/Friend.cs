@@ -4,8 +4,8 @@ namespace PGEmuBackend.Models;
 
 public class Friend
 {
-    public Guid UserId { get; set; }
-    public Guid FriendId { get; set; }
+    public Guid SenderId { get; set; }
+    public Guid ReceiverId { get; set; }
 
     [Required]
     [EnumDataType(typeof(FriendStatus))]
@@ -14,8 +14,8 @@ public class Friend
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation
-    public User User { get; set; } = null!;
-    public User FriendUser { get; set; } = null!;
+    public User Sender { get; set; } = null!;
+    public User Receiver { get; set; } = null!;
 }
 
 public enum FriendStatus

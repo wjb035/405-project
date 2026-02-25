@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://bmbmtxgib04m"]
+
+[ext_resource type="Script" uid="uid://bywlahchlucp4" path="res://UI/FriendInbox.cs" id="1_4apmy"]
+[ext_resource type="PackedScene" uid="uid://cq2r088enxgnq" path="res://friend_request_item.tscn" id="2_0rwom"]
+[ext_resource type="StyleBox" uid="uid://bu2co241aj1r8" path="res://inbox_style_flat.tres" id="3_4rxl2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mcc5q"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[node name="Inbox" type="PopupPanel" unique_id=873650772 node_paths=PackedStringArray("InboxList", "StatusLabel", "PopupContent")]
+oversampling_override = 1.0
+position = Vector2i(740, 0)
+size = Vector2i(380, 530)
+visible = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_mcc5q")
+script = ExtResource("1_4apmy")
+InboxList = NodePath("Panel/ScrollContainer/RequestsList")
+StatusLabel = NodePath("Panel/StatusLabel")
+FriendRequestItemScene = ExtResource("2_0rwom")
+PopupContent = NodePath("Panel")
+
+[node name="Panel" type="Panel" parent="." unique_id=147445522]
+offset_right = 380.0
+offset_bottom = 530.0
+theme_override_styles/panel = ExtResource("3_4rxl2")
+
+[node name="StatusLabel" type="Label" parent="Panel" unique_id=752227004]
+layout_mode = 0
+offset_right = 380.0
+offset_bottom = 530.0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel" unique_id=561193358]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+scroll_hint_mode = 1
+
+[node name="RequestsList" type="VBoxContainer" parent="Panel/ScrollContainer" unique_id=327345785]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 5
