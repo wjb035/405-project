@@ -1,0 +1,133 @@
+[gd_scene format=3 uid="uid://8g3qdgpudmbv"]
+
+[ext_resource type="Script" uid="uid://dx6v201kx0ckj" path="res://Register.cs" id="1_jjghk"]
+
+[node name="Register" type="Control" unique_id=921608592]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jjghk")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+UsernamePath = NodePath("Margin/Root/Body/GridContainer/UserInput")
+EmailPath = NodePath("Margin/Root/Body/GridContainer/EmailInput")
+PasswordPath = NodePath("Margin/Root/Body/GridContainer/PassInput2")
+ConfirmPasswordPath = NodePath("Margin/Root/Body/GridContainer/ConfirmPassInput")
+RegisterButtonPath = NodePath("Margin/Root/Body/BtnRegister")
+ErrorLabelPath = NodePath("Margin/Root/Body/BtnRegister/ErrorLabel")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=2037898412]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.6947542, 0.53904533, 0.8092825, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=10877749]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1912626495]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=87707324]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=77279881]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "←"
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=1669941617]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 28
+text = "Register
+"
+horizontal_alignment = 1
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=1256802913]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Hint" type="Label" parent="Margin/Root/Body" unique_id=362895523]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+text = "THIS SHOULD WORK TOO."
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="Margin/Root/Body" unique_id=888061499]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+
+[node name="UserLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=255736130]
+layout_mode = 2
+text = "Username"
+horizontal_alignment = 1
+
+[node name="UserInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=1863158598]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+
+[node name="EmailLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=950562551]
+layout_mode = 2
+text = "Email"
+horizontal_alignment = 1
+
+[node name="EmailInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=1488306133]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+
+[node name="PassLabel2" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=506431730]
+layout_mode = 2
+text = "Password"
+horizontal_alignment = 1
+
+[node name="PassInput2" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=3879859]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+secret = true
+
+[node name="ConfirmPassLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=70998702]
+layout_mode = 2
+text = "Confirm Password"
+horizontal_alignment = 1
+
+[node name="ConfirmPassInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=984736141]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+secret = true
+
+[node name="BtnRegister" type="Button" parent="Margin/Root/Body" unique_id=708691846]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+text = "Register"
+
+[node name="ErrorLabel" type="Label" parent="Margin/Root/Body/BtnRegister" unique_id=938134003]
+layout_mode = 0
+offset_left = 478.0
+offset_top = 103.0
+offset_right = 658.0
+offset_bottom = 126.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+horizontal_alignment = 1
