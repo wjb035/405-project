@@ -1,0 +1,116 @@
+[gd_scene format=3 uid="uid://c3ga1lnpr85ea"]
+
+[ext_resource type="Script" uid="uid://5meg1c2i140w" path="res://Login.cs" id="1_aidc3"]
+
+[node name="Login" type="Control" unique_id=1908899228]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_aidc3")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+UsernamePath = NodePath("Margin/Root/Body/GridContainer/UserInput")
+PasswordPath = NodePath("Margin/Root/Body/GridContainer/PassInput")
+LoginButtonPath = NodePath("Margin/Root/Body/BtnLogin")
+RegisterButtonPath = NodePath("Margin/Root/Body/BtnRegister")
+ErrorLabelPath = NodePath("Margin/Root/Body/BtnLogin/ErrorLabel")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1927231088]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.69411767, 0.5372549, 0.80784315, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1643159499]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=220703090]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=715589336]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=720151728]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "←"
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=1720474629]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 28
+text = "Login"
+horizontal_alignment = 1
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=661313359]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Hint" type="Label" parent="Margin/Root/Body" unique_id=1781619461]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+text = "This should work now?"
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="Margin/Root/Body" unique_id=231883455]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+
+[node name="UserLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=724619951]
+layout_mode = 2
+text = "Username"
+
+[node name="UserInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=1633678252]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+
+[node name="PassLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=336427156]
+layout_mode = 2
+text = "Password"
+horizontal_alignment = 1
+
+[node name="PassInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=1452451822]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+secret = true
+
+[node name="BtnLogin" type="Button" parent="Margin/Root/Body" unique_id=1842008510]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+text = "Login"
+
+[node name="ErrorLabel" type="Label" parent="Margin/Root/Body/BtnLogin" unique_id=12644869]
+layout_mode = 0
+offset_left = 478.0
+offset_top = 103.0
+offset_right = 658.0
+offset_bottom = 126.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+horizontal_alignment = 1
+
+[node name="BtnRegister" type="Button" parent="Margin/Root/Body" unique_id=938845958]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+text = "Register"

@@ -56,8 +56,9 @@ public partial class Collections : Control
 
 	private Tween _tween;
 
-	public override void _Ready()
+	public override async void _Ready()
 	{
+		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
 		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/CarouselArea/Cards");
 		_prev = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnPrev");
@@ -84,13 +85,42 @@ public partial class Collections : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 
+		// reset the value if we were in a collection before
+		CollectionStorage.currentCollection = null;
+		ConnectAllButtons(this);
 		// Load platforms from config, then build the carousel visuals.
+		await CollectionStorage.LoadFromJson();
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectedLabel();
 	}
 
+
+
+private void ConnectAllButtons(Node node)
+{
+	foreach (Node child in node.GetChildren())
+	{
+		if (child is Button button)
+		{
+			// Correct way to connect in Godot 4 C#
+			button.Pressed += () =>
+			{
+				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+			};
+		}
+
+		// Recurse into children
+		ConnectAllButtons(child);
+	}
+}
+
+private void OnAnyButtonPressed()
+{
+	var audio = GetNode<AudioManager>("/root/AudioManager");
+	audio.PlaySfx("res://audio/click.wav");
+}
 	private void OnCollectionPressed()
 {
 	_lineEdit.Visible = true;
@@ -106,11 +136,33 @@ public partial class Collections : Control
 	_lineEdit.GrabFocus(); // important
 }
 
+	private void MakeNewCollection(String text){
+		//GD.Print(text);
+		CollectionStorage.collections.Add(new KeyValuePair<string, List<GameEntry>>(text, new List<GameEntry>()));
+		
+		GD.Print("Current Collections List:");
+		foreach (var e in CollectionStorage.collections){
+			GD.Print(e.Key);
+		}
+		_lineEdit.Visible = false;
+
+		_cardsRoot.MouseFilter = Control.MouseFilterEnum.Stop;
+		foreach (var c in _cards)
+		{
+			c.Visible = true;
+			c.MouseFilter = Control.MouseFilterEnum.Stop;
+	}
+		_lineEdit.Clear();
+		_selectPlatform.Show();
+		SpawnCards();
+		
+	}
+
 	private void OnBackPressed()
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://login.tscn");
+		tree.ChangeSceneToFile("res://HomeScreen.tscn");
 	}
 
 	private void OnSettingsPressed()
@@ -158,7 +210,8 @@ public partial class Collections : Control
 	}
 
 	private void OpenSelectedPlatform()
-	{
+	{ 
+		GD.Print("selection pressed!");
 		if (Count == 0) return;
 
 		var idx = Mathf.RoundToInt(_carouselPos);
@@ -166,7 +219,17 @@ public partial class Collections : Control
 
 		if (idx < 0 || idx >= _platforms.Count) return;
 		var platform = _platforms[idx];
-
+		GD.Print(platform.Name);
+		
+		// we have to navigate to the games screen, but we have to make sure we're using the right list
+		foreach (var c in CollectionStorage.collections){
+			if (platform.Name == c.Key){
+				CollectionStorage.currentCollection = c.Value;
+				break;
+			}
+		}
+		
+		
 		// Pass selection to the next screen without needing a singleton.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_selected_platform_id", platform.Id);
@@ -183,30 +246,48 @@ public partial class Collections : Control
 			c.QueueFree();
 		_cards.Clear();
 		_platforms.Clear();
-
+			
+			
+		// THIS IS VERY VERY IFFY RIGHT NOW. FIX THIS LATER!
 		if (CollectionStorage.collections.Count == 0)
 		{
 			//_platforms.AddRange(platforms);
 			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "No Collections Yet!" });
 			_selectPlatform.Visible = false;
-			
+			var card = (Control)CardScene.Instantiate();
+				_cardsRoot.AddChild(card);
+				_cards.Add(card);
+
+				// `platform_card.tscn` includes a `Panel/Name` label.
+				var label = card.GetNodeOrNull<Label>("Panel/Name");
+				if (label != null) label.Text = "No collections yet!";
 		}
 		else
 		{
+			
 			// Keep the carousel usable even when config is missing/empty.
-			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "Press the button above to startmaking collections!" });
+			
+			//_platforms.Add(new PlatformConfig { Id = "some collections", Name = "you have some number" });
+			foreach (var g in CollectionStorage.collections){
+				_platforms.Add(new PlatformConfig { Id = "test", Name = g.Key });
+			}
+			
+			//foreach (var p in CollectionStorage.collections)
+			foreach (var p in _platforms)
+			{
+				var card = (Control)CardScene.Instantiate();
+				_cardsRoot.AddChild(card);
+				_cards.Add(card);
+
+				// `platform_card.tscn` includes a `Panel/Name` label.
+				var label = card.GetNodeOrNull<Label>("Panel/Name");
+				if (label != null) label.Text = p.Name;
+		}
 		}
 
-		foreach (var p in _platforms)
-		{
-			var card = (Control)CardScene.Instantiate();
-			_cardsRoot.AddChild(card);
-			_cards.Add(card);
-
-			// `platform_card.tscn` includes a `Panel/Name` label.
-			var label = card.GetNodeOrNull<Label>("Panel/Name");
-			if (label != null) label.Text = p.Name;
-		}
+		//foreach (var p in _platforms)
+		
+		
 
 		UpdateSelectedLabel();
 		UpdateNavEnabled();

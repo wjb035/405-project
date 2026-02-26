@@ -36,6 +36,7 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	OptionButton _optionButton = new OptionButton();
 	
 	private Button _achievement = null!;
 
@@ -80,7 +81,20 @@ public partial class GameSelect : Control
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+			
+			
 		
+		_optionButton.Name = "test";
+		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/CarouselArea/HBoxContainer");
+   		container.AddChild(_optionButton);
+		//_optionButton.AddItem("Option A", 0);
+		_optionButton.Hide();
+		int i = 0;
+		foreach (var c in CollectionStorage.collections){
+			_optionButton.AddItem(c.Key, i);
+			i++;
+		}
+		 _optionButton.ItemSelected += SelectedOption;
 		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
@@ -88,21 +102,83 @@ public partial class GameSelect : Control
 		_back.Pressed += GoBack;
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
-
+		
+		ConnectAllButtons(this);
+		GD.Print("IN GAME SELECT");
 		// Load data and build UI.
 		await LoadContextAndGames();
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
+		
+		
 	}
+
+private void ConnectAllButtons(Node node)
+{
+	foreach (Node child in node.GetChildren())
+	{
+		if (child is Button button)
+		{
+			// Correct way to connect in Godot 4 C#
+			button.Pressed += () =>
+			{
+				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+			};
+		}
+
+		// Recurse into children
+		ConnectAllButtons(child);
+	}
+}
+
+private void OnAnyButtonPressed()
+{
+	var audio = GetNode<AudioManager>("/root/AudioManager");
+	audio.PlaySfx("res://audio/click.wav");
+}
+
 
 	private void GoBack()
 	{
+		CollectionStorage.currentCollection = null;
 		// Navigate back to the home screen scene.
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
-
+	private void addToCollection(){
+		GD.Print("button has been pressed!!!!!!");
+		if (_optionButton.Visible){
+			_optionButton.Hide();
+		}else if (CollectionStorage.collections.Count > 0){
+			
+			_optionButton.Show();
+			_optionButton.Select(-1);
+		}
+		
+		
+	}
+	
+	private void SelectedOption(long index){
+		 GD.Print("User selected: " + _optionButton.GetItemText((int)index));
+		foreach (var c in CollectionStorage.collections){
+			if (c.Key == _optionButton.GetItemText((int)index)){
+				//GD.Print("found it!");
+				GetSelectedGame().platform = _platform;
+				c.Value.Add(GetSelectedGame());
+				foreach (var g in c.Value){
+					GD.Print(g.Name);
+				}
+				
+				CollectionStorage.saveToJson();
+			}
+		}
+		GD.Print(GetSelectedGame().Name);
+		
+		
+		_optionButton.Hide();
+		
+	}
 	private void OpenVault()
 	{
 		// Store return context in SceneTree meta so Vault can return here with the same config.
@@ -117,6 +193,7 @@ public partial class GameSelect : Control
 	private void OpenProfile()
 	{
 		// Store return context so Profile can route back to this scene.
+		CollectionStorage.currentCollection = null;
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
 		if (_configPath != null)
@@ -127,6 +204,7 @@ public partial class GameSelect : Control
 
 	private void GoHome()
 	{
+		CollectionStorage.currentCollection = null;
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
 	
@@ -139,6 +217,8 @@ public partial class GameSelect : Control
 
 	private void PlaySelected()
 	{
+		GD.Print(GetSelectedGame().Name);
+		if (CollectionStorage.currentCollection == null){
 		// Can't launch without a loaded config + platform context.
 		if (_config == null || _platform == null)
 		{
@@ -153,7 +233,7 @@ public partial class GameSelect : Control
 			SetStatus("No game selected.");
 			return;
 		}
-
+		
 		try
 		{
 			if (_platform.Libretro != null)
@@ -163,13 +243,46 @@ public partial class GameSelect : Control
 			}
 
 			// Delegate launching to app layer.
+			if (CollectionStorage.currentCollection == null){
 			Launcher.LaunchFromConfig(_config, _platform, game);
 			SetStatus($"Launching: {game.Title}");
+			}
+			else{
+				Launcher.LaunchFromConfig(_config, game.platform, game);
+			SetStatus($"Launching: {game.Title}");
+			}
 		}
 		catch (Exception ex)
 		{
 			// Surface launch errors to UI instead of crashing.
 			SetStatus($"Launch failed: {ex.Message}");
+		}
+		}
+		
+		else{
+			
+			var game = GetSelectedGame();
+			if (game == null)
+			{
+				SetStatus("No game selected.");
+				return;
+			}
+			try
+				{
+					// Delegate launching to app layer.
+					
+					Launcher.LaunchFromConfig(_config, game.platform, game);
+					SetStatus($"Launching: {game.Title}");
+					
+				}
+				catch (Exception ex)
+				{
+					
+					GD.Print(game.platform.Name);
+					GD.Print(ex);
+					// Surface launch errors to UI instead of crashing.
+					SetStatus($"Launch failed: {ex.Message}");
+				}
 		}
 	}
 
@@ -187,8 +300,16 @@ public partial class GameSelect : Control
 
 	private async Task LoadContextAndGames()
 	{
+		GD.Print("in load context");
 		try
 		{
+			if (CollectionStorage.currentCollection == null){
+				GD.Print("IN TRY CATCH");
+				if (CollectionStorage.currentCollection !=null){
+				foreach (var g in CollectionStorage.currentCollection){
+					GD.Print(g.Name);
+				}
+				}
 			var tree = GetTree();
 
 			// Prefer config path passed from a previous scene, fall back to heuristics.
@@ -223,12 +344,16 @@ public partial class GameSelect : Control
 				? _config.Platforms.FirstOrDefault(p =>
 					string.Equals(p.Id, platformId, StringComparison.OrdinalIgnoreCase))
 				: _config.Platforms.FirstOrDefault();
-
-			if (_platform == null)
+			GD.Print("ABOVE PLATFORM NULL");
+			
+			// if the platform is null AND we're not coming from collections
+			if (_platform == null && CollectionStorage.currentCollection == null)
 			{
 				SetStatus("No platform selected.");
+				GD.Print("ABOVE RETURN");
 				return;
 			}
+			GD.Print("BELOW PLATFORM NULL!");
 
 			// Scan the platform's library directory for compatible ROM files.
 			_games.Clear();
@@ -250,6 +375,8 @@ public partial class GameSelect : Control
 			// but it basically means that if a game is added when you're in a different screen,
 			// but have already loaded the games, it won't be detected till the next launch of the program.
 			// this can be fixed, but at this point it's a little niche to spend time on such a minor inconvenience-- definitely can be fixed later though
+			
+			// UNCOMMENT LATER
 			if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){
 				var prevGames = (IEnumerable<GameEntry>)AchievementStorage.gameToString[_platform.retroachievementsPlatformID];
 				
@@ -261,12 +388,26 @@ public partial class GameSelect : Control
 				foreach (var g in scanned){
 					_games.Add(g);
 				}
+				}
+			
+			GD.Print("above if else");
+			if (CollectionStorage.currentCollection != null){
+				_games.Clear();
+				//_games = CollectionStorage.currentCollection;
+				foreach (var g in CollectionStorage.currentCollection){
+					_games.Add(g);
+					GD.Print(g.Name);
+				}
+			}
+			else{
+				GD.Print("NULL NULL NULL");
+			}
 				//GameEntry? temp = _games[0];
 				//_games.Remove(temp);
 				//_games.Add(temp);
 				
 				
-			}
+			
 			
 
 			// Keep ordering stable and predictable.
@@ -290,6 +431,40 @@ public partial class GameSelect : Control
 					$"Dir='{scanDir}', Extensions=[{string.Join(", ", _platform.Extensions)}].");
 			}
 		}
+		else{
+			GD.Print("hi in else");
+			var tree = GetTree();
+
+			// Prefer config path passed from a previous scene, fall back to heuristics.
+			_configPath = tree.HasMeta("pgemu_config_path")
+				? tree.GetMeta("pgemu_config_path").AsString()
+				: null;
+
+			_configPath = string.IsNullOrWhiteSpace(_configPath) ? null : _configPath;
+			_configPath ??= ConfigFinder.FindConfigPath();
+			_configPath ??= TryFindConfigNearGodotProject();
+
+			if (_configPath == null)
+			{
+				_config = null;
+				_platform = null;
+				SetStatus("config.json not found.");
+				return;
+			}
+
+			// Load config and normalize LibraryRoot so "~" works cross-machine.
+			_config = AppConfig.Load(_configPath);
+			_config.LibraryRoot = ExpandHomePath(_config.LibraryRoot);
+		
+			foreach (var g in CollectionStorage.currentCollection){
+					_games.Add(g);
+					GD.Print(g.Name + "belongs to the ");
+					GD.Print(g.platform.Name	);
+				}
+		}
+		}
+		
+		
 		catch (Exception ex)
 		{
 			// Reset state so the rest of the screen doesn't operate on half-initialized data.
@@ -586,6 +761,10 @@ public partial class GameSelect : Control
 		GD.Print(game.AchievementNum);	
 		// Disable Play if we cannot launch or if the selected entry has no path.
 		_play.Disabled = _config == null || _platform == null || game == null || string.IsNullOrEmpty(game.Path);
+		//enable play if we came from collections
+		if (CollectionStorage.currentCollection != null){
+			_play.Disabled = false;
+		}
 	}
 
 	private void UpdateNavEnabled()

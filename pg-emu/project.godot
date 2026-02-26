@@ -11,17 +11,17 @@ config_version=5
 [application]
 
 config/name="PGEmu"
-run/main_scene="uid://brh20eurum1p6"
+run/main_scene="uid://cwnetad1wffaa"
 config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 boot_splash/bg_color=Color(0.06666667, 0.047058824, 0.12156863, 1)
-boot_splash/image="uid://dhwqlqt8712qy"
-config/icon="res://icon.svg"
+boot_splash/image="uid://cd75mhcan8akx"
+config/icon="uid://cejuhmeuqr1a8"
 
 [autoload]
 
 FriendService="*uid://jdfsje81xhmo"
 AuthService="*uid://ofueenktpcny"
-QuitService="*res://Services/QuitService.cs"
+AudioManager="*uid://cyx0115kxhh2x"
 
 [display]
 

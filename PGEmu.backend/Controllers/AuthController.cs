@@ -63,12 +63,30 @@ public class AuthController : ControllerBase
         await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
 
+        // Generate tokens immediately
+        var accessToken = _jwtService.GenerateAccessToken(user);
+        var refreshTokenRaw = _jwtService.GenerateRefreshToken();
+        var refreshTokenHash = _jwtService.HashToken(refreshTokenRaw);
+        
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_config["JwtSettings:RefreshTokenExpirationDays"]))
+        };
+
+        await _db.RefreshTokens.AddAsync(refreshToken);
+        await _db.SaveChangesAsync();
+        
         return Ok(new
         {
+            accessToken,
+            refreshToken = refreshTokenRaw,
             message = "User registered successfully",
             userId = user.Id,
             username = user.Username
         });
+        
     }
 
     
@@ -111,7 +129,8 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             accessToken,
-            refreshToken = refreshTokenRaw
+            refreshToken = refreshTokenRaw,
+            username = user.Username 
         });
     }
     
@@ -168,7 +187,7 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             accessToken = newAccessToken,
-            refreshToken = newRefreshToken,
+            refreshToken = newRefreshTokenRaw,
         });
 
     }

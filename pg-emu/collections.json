@@ -1,0 +1,47 @@
+[
+  {
+    "Key": "col",
+    "Value": [
+      {
+        "Name": "Metroid Prime 2 - Echoes (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Metroid Prime 2 - Echoes (USA).rvz",
+        "Title": "Metroid Prime 2 - Echoes (USA)",
+        "retroAchievementsGameId": 7683,
+        "platform": {
+          "Id": "gc",
+          "Name": "Nintendo GameCube",
+          "RomPath": "games/GameCube",
+          "Extensions": [
+            ".iso",
+            ".gcm",
+            ".gcz",
+            ".ciso",
+            ".rvz",
+            ".wia",
+            ".wbfs"
+          ],
+          "DefaultEmulatorId": "dolphin",
+          "retroachievementsPlatformID": 16
+        },
+        "AchievementNum": "7/68"
+      },
+      {
+        "Name": "Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It)",
+        "Path": "D:/PGEmu Games\\games\\PSP\\Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It).iso",
+        "Title": "Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It)",
+        "retroAchievementsGameId": 18080,
+        "platform": {
+          "Id": "psp",
+          "Name": "Playstation Portable",
+          "RomPath": "games/PSP",
+          "Extensions": [
+            ".iso"
+          ],
+          "DefaultEmulatorId": "ppsspp",
+          "retroachievementsPlatformID": 41
+        },
+        "AchievementNum": "14/88"
+      }
+    ]
+  }
+]
