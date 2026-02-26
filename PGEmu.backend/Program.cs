@@ -29,8 +29,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Pasword hasher
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
 // JWT Service
 builder.Services.AddScoped<JwtService>();
+
 
 // Friends Service
 builder.Services.AddScoped<FriendService>();
