@@ -16,6 +16,10 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 // EFCORE
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
@@ -25,13 +29,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Pasword hasher
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
 // JWT Service
 builder.Services.AddScoped<JwtService>();
 
 // Friends Service
 builder.Services.AddScoped<FriendService>();
+
+// Profile customization service
+
+builder.Services.AddScoped<ProfileCustomizationService>();
 
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);
@@ -71,6 +77,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
