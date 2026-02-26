@@ -135,7 +135,7 @@ public partial class Collections : Control
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://login.tscn");
+		tree.ChangeSceneToFile("res://HomeScreen.tscn");
 	}
 
 	private void OnSettingsPressed()

@@ -15,4 +15,5 @@ public partial class GameEntry : ObservableObject
     public int retroAchievementsGameId = -1;
 
     public override string ToString() => Title;
+    public PlatformConfig? platform = null;
 }

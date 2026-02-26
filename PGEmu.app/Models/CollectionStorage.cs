@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using RetroAchievements.Api;
 using RetroAchievements.Api.Response.Users.Records;
+using System.Text.Json;
 
 using System.Collections;
 public static class CollectionStorage

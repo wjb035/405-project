@@ -1,5 +1,3 @@
-res://Login.cs
-res://Services/AuthService.cs
 res://Collections.cs
 res://GameSelect.cs
 res://AchievementScreen.cs
@@ -7,11 +5,7 @@ res://UI/InboxItem.cs
 res://UI/FriendRequestItem.cs
 res://UI/FriendInbox.cs
 res://HomeScreen.cs
+res://Services/AuthService.cs
 res://Services/FriendService.cs
-res://login.tscn
-res://register.tscn
-res://Register.cs
-res://RegisterScreen.tscn
-res://LoginScreen.tscn
-res://WelcomeScreen.cs
-res://WelcomeScreen.tscn
+res://GameSelect.tscn
+res://Collections.tscn
