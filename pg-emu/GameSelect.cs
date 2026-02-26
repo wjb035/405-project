@@ -144,6 +144,8 @@ public partial class GameSelect : Control
 				foreach (var g in c.Value){
 					GD.Print(g.Name);
 				}
+				
+				CollectionStorage.saveToJson();
 			}
 		}
 		GD.Print(GetSelectedGame().Name);

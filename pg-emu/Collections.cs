@@ -56,7 +56,7 @@ public partial class Collections : Control
 
 	private Tween _tween;
 
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
@@ -88,6 +88,7 @@ public partial class Collections : Control
 		// reset the value if we were in a collection before
 		CollectionStorage.currentCollection = null;
 		// Load platforms from config, then build the carousel visuals.
+		await CollectionStorage.LoadFromJson();
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		LayoutCards();
