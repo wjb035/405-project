@@ -87,6 +87,7 @@ public partial class Collections : Control
 
 		// reset the value if we were in a collection before
 		CollectionStorage.currentCollection = null;
+		ConnectAllButtons(this);
 		// Load platforms from config, then build the carousel visuals.
 		await CollectionStorage.LoadFromJson();
 		LoadConfigAndPlatforms();
@@ -95,6 +96,31 @@ public partial class Collections : Control
 		UpdateSelectedLabel();
 	}
 
+
+
+private void ConnectAllButtons(Node node)
+{
+	foreach (Node child in node.GetChildren())
+	{
+		if (child is Button button)
+		{
+			// Correct way to connect in Godot 4 C#
+			button.Pressed += () =>
+			{
+				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+			};
+		}
+
+		// Recurse into children
+		ConnectAllButtons(child);
+	}
+}
+
+private void OnAnyButtonPressed()
+{
+	var audio = GetNode<AudioManager>("/root/AudioManager");
+	audio.PlaySfx("res://audio/click.wav");
+}
 	private void OnCollectionPressed()
 {
 	_lineEdit.Visible = true;

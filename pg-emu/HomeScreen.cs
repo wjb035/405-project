@@ -89,6 +89,7 @@ public partial class HomeScreen : Control
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 
 		// Load platforms from config, then build the carousel visuals.
+		ConnectAllButtons(this);
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		LayoutCards();
@@ -101,6 +102,32 @@ public partial class HomeScreen : Control
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://WelcomeScreen.tscn");
 	}
+
+private void ConnectAllButtons(Node node)
+{
+	foreach (Node child in node.GetChildren())
+	{
+		if (child is Button button)
+		{
+			// Correct way to connect in Godot 4 C#
+			button.Pressed += () =>
+			{
+				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+			};
+		}
+
+		// Recurse into children
+		ConnectAllButtons(child);
+	}
+}
+
+private void OnAnyButtonPressed()
+{
+	var audio = GetNode<AudioManager>("/root/AudioManager");
+	audio.PlaySfx("res://audio/click.wav");
+}
+
+
 
 	private void OnSettingsPressed()
 	{

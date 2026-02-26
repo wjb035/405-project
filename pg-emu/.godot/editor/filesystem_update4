@@ -1,11 +1,11 @@
+res://AudioManager.cs
+res://HomeScreen.cs
 res://Collections.cs
 res://GameSelect.cs
 res://AchievementScreen.cs
 res://UI/InboxItem.cs
 res://UI/FriendRequestItem.cs
 res://UI/FriendInbox.cs
-res://HomeScreen.cs
 res://Services/AuthService.cs
 res://Services/FriendService.cs
-res://GameSelect.tscn
-res://Collections.tscn
+res://Achievements.tscn
