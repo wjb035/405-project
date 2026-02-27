@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PGEmu.app;
+using PGEmu.Services;
 
 public partial class HomeScreen : Control
 {
@@ -76,6 +77,7 @@ public partial class HomeScreen : Control
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
 		_help = GetNodeOrNull<Button>(HelpPath);
+		ApplyAesthetic();
 
 		_prev.Pressed += () => Step(-1);
 		_next.Pressed += () => Step(1);
@@ -90,6 +92,7 @@ public partial class HomeScreen : Control
 
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
+		InputRoutingService.Instance?.UnlockUiInput();
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		LayoutCards();
@@ -294,6 +297,7 @@ private void OnAnyButtonPressed()
 
 	public override void _GuiInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
 		if (Count == 0) return;
 		if (Count == 1) return;
 
@@ -337,12 +341,22 @@ private void OnAnyButtonPressed()
 
 	public override void _UnhandledInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
+
 		if (e is not InputEventJoypadButton jb || !jb.Pressed)
 		{
-			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
+			if (Count > 1 &&
+				e is InputEventJoypadMotion jm &&
+				ShouldHandleControllerInput(jm.Device) &&
+				HandleAxisNav(jm))
+			{
 				MarkInputHandled();
+			}
 			return;
 		}
+
+		if (!ShouldHandleControllerInput(jb.Device))
+			return;
 
 		switch (jb.ButtonIndex)
 		{
@@ -571,5 +585,31 @@ private void OnAnyButtonPressed()
 			_status.Text = text;
 		else
 			GD.Print(text);
+	}
+
+	private bool ShouldIgnoreUiInput()
+	{
+		return InputRoutingService.Instance?.IsUiInputBlocked == true;
+	}
+
+	private static bool ShouldHandleControllerInput(int device)
+	{
+		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
+	}
+
+	private void ApplyAesthetic()
+	{
+		// Keep all home controls on the same visual language as the dark launcher theme.
+		UiStyle.StyleNavButton(_prev);
+		UiStyle.StyleNavButton(_next);
+		UiStyle.StylePrimaryButton(_selectPlatform);
+		UiStyle.StyleTopBarButton(_back);
+		UiStyle.StyleTopBarButton(_inbox);
+		UiStyle.StyleTopBarButton(_friends);
+		UiStyle.StyleTopBarButton(_chat);
+		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.StyleTopBarButton(_help);
+		UiStyle.StyleTitleLabel(_selectedTitle);
+		UiStyle.StyleStatusLabel(_status);
 	}
 }

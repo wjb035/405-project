@@ -6,6 +6,7 @@ using System.Linq;
 using PGEmu.app;
 using System.Threading.Tasks;
 using RetroAchievements.Api;
+using PGEmu.Services;
 
 
 public partial class GameSelect : Control
@@ -95,6 +96,7 @@ public partial class GameSelect : Control
 			i++;
 		}
 		 _optionButton.ItemSelected += SelectedOption;
+		UiStyle.StyleOptionButton(_optionButton);
 		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
@@ -102,9 +104,11 @@ public partial class GameSelect : Control
 		_back.Pressed += GoBack;
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
+		ApplyAesthetic();
 		
 		ConnectAllButtons(this);
 		GD.Print("IN GAME SELECT");
+		InputRoutingService.Instance?.UnlockUiInput();
 		// Load data and build UI.
 		await LoadContextAndGames();
 		SpawnCards();
@@ -217,6 +221,9 @@ private void OnAnyButtonPressed()
 
 	private void PlaySelected()
 	{
+		if (ShouldIgnoreUiInput())
+			return;
+
 		GD.Print(GetSelectedGame().Name);
 		if (CollectionStorage.currentCollection == null){
 		// Can't launch without a loaded config + platform context.
@@ -236,24 +243,21 @@ private void OnAnyButtonPressed()
 		
 		try
 		{
-			if (_platform.Libretro != null)
-			{
-				LaunchViaLibretro(game);
-				return;
-			}
-
 			// Delegate launching to app layer.
 			if (CollectionStorage.currentCollection == null){
 			Launcher.LaunchFromConfig(_config, _platform, game);
+			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 			SetStatus($"Launching: {game.Title}");
 			}
 			else{
 				Launcher.LaunchFromConfig(_config, game.platform, game);
+			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 			SetStatus($"Launching: {game.Title}");
 			}
 		}
 		catch (Exception ex)
 		{
+			InputRoutingService.Instance?.UnlockUiInput();
 			// Surface launch errors to UI instead of crashing.
 			SetStatus($"Launch failed: {ex.Message}");
 		}
@@ -272,11 +276,13 @@ private void OnAnyButtonPressed()
 					// Delegate launching to app layer.
 					
 					Launcher.LaunchFromConfig(_config, game.platform, game);
+					InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 					SetStatus($"Launching: {game.Title}");
 					
 				}
 				catch (Exception ex)
 				{
+					InputRoutingService.Instance?.UnlockUiInput();
 					
 					GD.Print(game.platform.Name);
 					GD.Print(ex);
@@ -284,18 +290,6 @@ private void OnAnyButtonPressed()
 					SetStatus($"Launch failed: {ex.Message}");
 				}
 		}
-	}
-
-	private void LaunchViaLibretro(GameEntry game)
-	{
-		var tree = GetTree();
-		tree.SetMeta("pgemu_libretro_game_path", game.Path);
-		tree.SetMeta("pgemu_libretro_platform_id", _platform?.Id ?? string.Empty);
-		if (_configPath != null)
-			tree.SetMeta("pgemu_config_path", _configPath);
-
-		SetStatus($"Starting Libretro: {game.Title}");
-		tree.ChangeSceneToFile("res://LibretroPlayer.tscn");
 	}
 
 	private async Task LoadContextAndGames()
@@ -564,6 +558,7 @@ private void OnAnyButtonPressed()
 
 	public override void _GuiInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
 		if (Count <= 1) return;
 
 		// Drag handling.
@@ -609,12 +604,22 @@ private void OnAnyButtonPressed()
 
 	public override void _UnhandledInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
+
 		if (e is not InputEventJoypadButton jb || !jb.Pressed)
 		{
-			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
+			if (Count > 1 &&
+				e is InputEventJoypadMotion jm &&
+				ShouldHandleControllerInput(jm.Device) &&
+				HandleAxisNav(jm))
+			{
 				MarkInputHandled();
+			}
 			return;
 		}
+
+		if (!ShouldHandleControllerInput(jb.Device))
+			return;
 
 		switch (jb.ButtonIndex)
 		{
@@ -818,5 +823,33 @@ private void OnAnyButtonPressed()
 		}
 
 		return path;
+	}
+
+	private bool ShouldIgnoreUiInput()
+	{
+		return InputRoutingService.Instance?.IsUiInputBlocked == true;
+	}
+
+	private static bool ShouldHandleControllerInput(int device)
+	{
+		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
+	}
+
+	private void ApplyAesthetic()
+	{
+		// Match game selection controls to the same launcher palette and contrast rules.
+		UiStyle.StyleNavButton(_prev);
+		UiStyle.StyleNavButton(_next);
+		UiStyle.StylePrimaryButton(_play);
+		UiStyle.StyleTopBarButton(_back);
+		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.StyleTopBarButton(_achievement);
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnFriends"));
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnChat"));
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnHelp"));
+		UiStyle.StyleTitleLabel(_title);
+		UiStyle.StyleMetaLabel(_metaLeft);
+		UiStyle.StyleMetaLabel(_metaRight);
+		UiStyle.StyleStatusLabel(_status);
 	}
 }

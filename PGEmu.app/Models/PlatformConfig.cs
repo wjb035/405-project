@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
 namespace PGEmu.app;
@@ -12,5 +11,4 @@ public class PlatformConfig
     public string? DefaultEmulatorId { get; set; }
 
     public int retroachievementsPlatformID { get; set; } = -1;
-    public LibretroConfig? Libretro { get; set; }
 }

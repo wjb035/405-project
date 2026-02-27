@@ -22,6 +22,9 @@ config/icon="uid://cejuhmeuqr1a8"
 FriendService="*uid://jdfsje81xhmo"
 AuthService="*uid://ofueenktpcny"
 AudioManager="*uid://cyx0115kxhh2x"
+QuitService="*res://Services/QuitService.cs"
+InputRoutingService="*res://Services/InputRoutingService.cs"
+ControllerService="*res://Services/ControllerService.cs"
 
 [display]
 
