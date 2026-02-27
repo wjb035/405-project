@@ -26,6 +26,8 @@ public partial class LibretroGame : Control
 		_back = GetNode<Button>(BackPath);
 		_title = GetNode<Label>(TitlePath);
 
+		ConfigureVideoPresentation();
+
 		_back.Pressed += ExitToLibrary;
 
 		_player = new LibretroPlayer();
@@ -59,6 +61,13 @@ public partial class LibretroGame : Control
 		_player.LoadGameWithCore(request.RomPath, request.CorePath, request.CoreId);
 		InputRoutingService.Instance?.UnlockUiInput();
 		SetStatus("Running in-app emulation. Press Esc to return.");
+	}
+
+	private void ConfigureVideoPresentation()
+	{
+		// Prevent stretching: preserve core aspect ratio and center with black bars.
+		_video.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+		_video.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
 	}
 
 	public override void _UnhandledInput(InputEvent @event)

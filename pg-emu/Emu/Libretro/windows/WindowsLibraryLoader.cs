@@ -4,8 +4,13 @@ using Godot;
 
 public class WindowsLibraryLoader : ILibraryLoader
 {
-	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-	private static extern IntPtr LoadLibraryA(string dllToLoad);
+	private const uint LOAD_WITH_ALTERED_SEARCH_PATH = 0x00000008;
+
+	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "LoadLibraryW")]
+	private static extern IntPtr LoadLibraryW(string dllToLoad);
+
+	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "LoadLibraryExW")]
+	private static extern IntPtr LoadLibraryExW(string fileName, IntPtr fileHandle, uint flags);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	private static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
@@ -15,15 +20,22 @@ public class WindowsLibraryLoader : ILibraryLoader
 
 	public IntPtr LoadLibrary(string path)
 	{
-		FileLogger.Log($"[windows] trying to load: {path}");
-		FileLogger.Log($"[windows] file exists: {System.IO.File.Exists(path)}");
+		string fullPath = System.IO.Path.GetFullPath(path);
+		FileLogger.Log($"[windows] trying to load: {fullPath}");
+		FileLogger.Log($"[windows] file exists: {System.IO.File.Exists(fullPath)}");
 		FileLogger.Log($"[windows] cur dir: {System.IO.Directory.GetCurrentDirectory()}");
 		
-		IntPtr handle = LoadLibraryA(path);
+		// Prefer altered search path so adjacent dependency DLLs can be found.
+		IntPtr handle = LoadLibraryExW(fullPath, IntPtr.Zero, LOAD_WITH_ALTERED_SEARCH_PATH);
+		if (handle == IntPtr.Zero)
+		{
+			handle = LoadLibraryW(fullPath);
+		}
+
 		if (handle == IntPtr.Zero)
 		{
 			int error = Marshal.GetLastWin32Error();
-			FileLogger.Error($"[windows] failed to load lib: {path}");
+			FileLogger.Error($"[windows] failed to load lib: {fullPath}");
 			FileLogger.Error($"[windows] error code: {error}");
 			
 			if (error == 126)
@@ -34,7 +46,7 @@ public class WindowsLibraryLoader : ILibraryLoader
 		}
 		else
 		{
-			FileLogger.Log($"[windows] lib loaded: {path}");
+			FileLogger.Log($"[windows] lib loaded: {fullPath}");
 		}
 		return handle;
 	}
