@@ -1,3 +1,5 @@
+AudioStreamPlayer
+Node
 VBoxContainer
 TextureRect
 ColorRect
@@ -9,6 +11,5 @@ HBoxContainer
 Panel
 PopupPanel
 MarginContainer
-Node
 HTTPRequest
 ScrollContainer

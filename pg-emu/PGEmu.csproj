@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Reuse the existing shared app/core logic from the Avalonia solution. -->
+    <!-- Reuse the shared app/core logic. -->
     <ProjectReference Include="..\\PGEmu.app\\PGEmu.app.csproj" />
   </ItemGroup>
 
