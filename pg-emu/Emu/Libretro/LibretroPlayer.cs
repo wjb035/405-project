@@ -233,13 +233,13 @@ public partial class LibretroPlayer : Node
 
 	private IntPtr _romDataPtr = IntPtr.Zero;
 
-	private static void CacheValidActions()
+	private static void CacheValidActions(bool forceRefresh = false)
 	{
-		if (_actionsCached) return;
+		if (_actionsCached && !forceRefresh) return;
 		
 		_validActions.Clear();
-		var actions = Input.GetConnectedJoypads();
 		
+		// Snapshot existing action names so InputStateCallback can do cheap lookups.
 		foreach (var action in InputMap.GetActions())
 		{
 			_validActions.Add(action.ToString());
@@ -262,6 +262,11 @@ public partial class LibretroPlayer : Node
 			_audioCallback = new LibretroNative.RetroAudioSampleDelegate(AudioSampleCallback);
 			_audioBatchCallback = new LibretroNative.RetroAudioSampleBatchDelegate(AudioBatchCallback);
 
+			// Ensure CATui-style defaults (gba_a, gba_b, etc.) exist before the core polls input.
+			string coreIdForBindings = !string.IsNullOrWhiteSpace(LibretroNative.CurrentCoreId)
+				? LibretroNative.CurrentCoreId
+				: GetCoreFallbackId();
+			InputMapper.EnsureDefaultActions(coreIdForBindings);
 			CacheValidActions();
 
 			// FileLogger.Log("[LibretroPlayer] Setting callbacks to core...");
@@ -434,6 +439,7 @@ public partial class LibretroPlayer : Node
 			? LibretroNative.CurrentCoreId 
 			: GetCoreFallbackId();
 		
+		// Primary path: resolve to per-core action name and read from Godot InputMap.
 		string actionName = InputMapper.GetActionName(coreId, (LibretroInput)id);
 		if (!string.IsNullOrEmpty(actionName) &&
 			_validActions.Contains(actionName) &&
@@ -442,6 +448,7 @@ public partial class LibretroPlayer : Node
 			return 1;
 		}
 
+		// Safety net: keyboard/UI mappings still work if InputMap actions are missing.
 		return IsFallbackInputPressed((LibretroInput)id) ? (short)1 : (short)0;
 	}
 

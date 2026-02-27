@@ -3,8 +3,12 @@ using System.Collections.Generic;
 
 public partial class InputMapper : Node
 {
+	// Maps core IDs (gba, snes, ps1...) to per-button action suffixes.
 	private static Dictionary<string, Dictionary<LibretroInput, string>> _coreMappings = new Dictionary<string, Dictionary<LibretroInput, string>>();
+	// Generic mapping used when a core does not have a custom table.
 	private static Dictionary<LibretroInput, string> _genericMapping = new Dictionary<LibretroInput, string>();
+	// Tracks which cores already had default actions seeded this run.
+	private static HashSet<string> _initializedActionSets = new HashSet<string>();
 
 	public const int LAYOUT_XBOX = 0;
 	public const int LAYOUT_PLAYSTATION = 1;
@@ -136,6 +140,7 @@ public partial class InputMapper : Node
 	
 	private static string NormalizeCoreId(string coreId)
 	{
+		// Alias multiple core names to one logical input profile.
 		return coreId switch
 		{
 			"pcsx_rearmed" => "ps1",
@@ -151,6 +156,39 @@ public partial class InputMapper : Node
 			"genesis_plus_gx" => "megadrive",
 			_ => coreId
 		};
+	}
+
+	public static void EnsureDefaultActions(string coreId)
+	{
+		string normalizedId = NormalizeCoreId(coreId);
+		if (string.IsNullOrWhiteSpace(normalizedId))
+			return;
+
+		if (_initializedActionSets.Contains(normalizedId))
+			return;
+
+		var mapping = _coreMappings.TryGetValue(normalizedId, out var coreMapping)
+			? coreMapping
+			: _genericMapping;
+
+		// Build Godot InputMap actions like "gba_a", "gba_start", etc.
+		foreach (var pair in mapping)
+		{
+			string actionName = $"{normalizedId}_{pair.Value}";
+			EnsureActionExists(actionName);
+
+			// Keep user-customized bindings intact; only seed empty actions.
+			if (InputMap.ActionGetEvents(actionName).Count > 0)
+				continue;
+
+			// Seed CATui-style default pad bindings so cores are playable out of the box.
+			foreach (var ev in BuildDefaultEvents(pair.Key))
+			{
+				InputMap.ActionAddEvent(actionName, ev);
+			}
+		}
+
+		_initializedActionSets.Add(normalizedId);
 	}
 	
 	public static string GetActionName(string coreId, LibretroInput button)
@@ -181,5 +219,67 @@ public partial class InputMapper : Node
 	public static bool HasMapping(string coreId)
 	{
 		return _coreMappings.ContainsKey(coreId);
+	}
+
+	private static void EnsureActionExists(string actionName)
+	{
+		if (!InputMap.HasAction(actionName))
+			InputMap.AddAction(actionName, 0.2f);
+	}
+
+	private static IEnumerable<InputEvent> BuildDefaultEvents(LibretroInput input)
+	{
+		// Defaults mirror CATui's logical gamepad mapping.
+		switch (input)
+		{
+			case LibretroInput.A:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.A };
+				break;
+			case LibretroInput.B:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.B };
+				break;
+			case LibretroInput.X:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.X };
+				break;
+			case LibretroInput.Y:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.Y };
+				break;
+			case LibretroInput.START:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.Start };
+				break;
+			case LibretroInput.SELECT:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.Back };
+				break;
+			case LibretroInput.UP:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadUp };
+				break;
+			case LibretroInput.DOWN:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadDown };
+				break;
+			case LibretroInput.LEFT:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadLeft };
+				break;
+			case LibretroInput.RIGHT:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadRight };
+				break;
+			case LibretroInput.L:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.LeftShoulder };
+				break;
+			case LibretroInput.R:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.RightShoulder };
+				break;
+			case LibretroInput.L2:
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.TriggerLeft, AxisValue = 1.0f };
+				break;
+			case LibretroInput.R2:
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.TriggerRight, AxisValue = 1.0f };
+				break;
+			case LibretroInput.L3:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.LeftStick };
+				break;
+			case LibretroInput.R3:
+				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.RightStick };
+				break;
+		}
 	}
 }
