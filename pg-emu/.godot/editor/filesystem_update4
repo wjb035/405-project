@@ -12,3 +12,4 @@ res://AudioManager.cs
 res://Services/AuthService.cs
 res://Services/FriendService.cs
 res://platform_card.tscn
+res://GameSelect.tscn

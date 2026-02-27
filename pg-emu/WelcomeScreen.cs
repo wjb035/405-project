@@ -13,6 +13,7 @@ public partial class WelcomeScreen : Control
 	private Label _welcomeLabel = null!;
 	private Label _continue = null!;
 	private ColorRect _fadeRect = null!;
+	private string _defaultContinuePrompt = string.Empty;
 	
 	public override void _Ready()
 	{
@@ -20,16 +21,39 @@ public partial class WelcomeScreen : Control
 		_welcomeLabel = GetNode<Label>(WelcomeLabelPath);
 		_continue = GetNode<Label>(ContinueLabelPath);
 		_fadeRect = GetNode<ColorRect>(FadeRectPath);
+		_defaultContinuePrompt = _continue.Text;
 		
 		_continueButton.Pressed += OnContinuePressed;
+		Input.JoyConnectionChanged += OnJoyConnectionChanged;
+		UpdateContinuePrompt();
 
 		// Initially transparent
 		_fadeRect.Modulate = new Color(0, 0, 0, 0);
 		_welcomeLabel.Modulate = new Color(1, 1, 1, 1);
 		_continue.Modulate = new Color(1, 1, 1, 1);
 
-		// Start the welcome lo,gic
+		// Start the welcome logic
 		CallDeferred(nameof(StartWelcomeFlow));
+	}
+
+	public override void _ExitTree()
+	{
+		Input.JoyConnectionChanged -= OnJoyConnectionChanged;
+	}
+
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (_continueButton.Disabled)
+			return;
+
+		// Let keyboard/controller users continue without mouse interaction.
+		var keyPressed = @event is InputEventKey key && key.Pressed && !key.Echo;
+		var padPressed = @event is InputEventJoypadButton joy && joy.Pressed;
+		if (!keyPressed && !padPressed)
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+		OnContinuePressed();
 	}
 	
 	// If already logged in, skip to homescreen
@@ -47,7 +71,23 @@ public partial class WelcomeScreen : Control
 		else
 		{
 			_welcomeLabel.Text = "Welcome to PGEmu!";
+			UpdateContinuePrompt();
 		}
+	}
+
+	private void OnJoyConnectionChanged(long device, bool connected)
+	{
+		UpdateContinuePrompt();
+	}
+
+	private void UpdateContinuePrompt()
+	{
+		// If any controller is connected, surface controller-friendly copy.
+		var hasController = (ControllerService.Instance?.HasActiveController ?? false) ||
+			Input.GetConnectedJoypads().Count > 0;
+		_continue.Text = hasController
+			? "press any button to continue"
+			: _defaultContinuePrompt;
 	}
 	
 	private async void OnContinuePressed()
