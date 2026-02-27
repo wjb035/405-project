@@ -1,15 +1,8 @@
 res://Collections.cs
 res://GameSelect.cs
-res://AchievementScreen.cs
-res://UI/InboxItem.cs
 res://UI/FriendRequestItem.cs
 res://UI/FriendInbox.cs
 res://HomeScreen.cs
-res://Services/ControllerService.cs
-res://Services/InputRoutingService.cs
-res://Services/QuitService.cs
+res://AchievementScreen.cs
 res://AudioManager.cs
-res://Services/AuthService.cs
-res://Services/FriendService.cs
-res://platform_card.tscn
-res://GameSelect.tscn
+res://UI/InboxItem.cs

@@ -1,0 +1,22 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.catui.launcher" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+5-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+6
+7    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+7-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:5:5-77
+7-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:5:22-74
+8
+9    <application>
+9-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:7:5-11:19
+10        <meta-data
+10-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:8:9-10:64
+11            android:name="org.godotengine.plugin.v2.CatUILauncher"
+11-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:9:13-67
+12            android:value="com.catui.launcher.CatUILauncher" />
+12-->C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:10:13-61
+13    </application>
+14
+15</manifest>

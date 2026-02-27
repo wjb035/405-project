@@ -1,0 +1,178 @@
+[gd_scene load_steps=6 format=3 uid="uid://hlpswrqxqtkx"]
+
+[ext_resource type="Texture2D" uid="uid://8ggsdr4od171" path="res://assets/images/catui/logoDEV.png" id="1_b37n4"]
+[ext_resource type="Texture2D" uid="uid://ccyiarufwuwyf" path="res://assets/icons/joystick/xbox/x.png" id="2_ciuvb"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3cfgd"]
+bg_color = Color(1, 1, 1, 0)
+draw_center = false
+border_width_left = 12
+border_width_top = 12
+border_width_right = 12
+border_width_bottom = 12
+border_color = Color(1, 1, 1, 0.31764707)
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_right = 70
+corner_radius_bottom_left = 70
+expand_margin_left = 12.0
+expand_margin_top = 12.0
+expand_margin_right = 12.0
+expand_margin_bottom = 12.0
+shadow_color = Color(0, 0, 0, 0.1254902)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gh0ne"]
+bg_color = Color(1, 1, 1, 0)
+draw_center = false
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_right = 70
+corner_radius_bottom_left = 70
+expand_margin_left = 12.0
+expand_margin_top = 12.0
+expand_margin_right = 12.0
+expand_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5q4o7"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0.8, 0.8, 0.8, 0)
+border_blend = true
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_right = 70
+corner_radius_bottom_left = 70
+
+[node name="User" type="Control"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 326.0
+offset_bottom = 160.0
+
+[node name="UserUtils" type="Control" parent="."]
+anchors_preset = 0
+offset_left = 57.0
+offset_top = 56.0
+offset_right = 136.0
+offset_bottom = 138.0
+
+[node name="style" type="Control" parent="UserUtils"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="UserUtils/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3cfgd")
+
+[node name="border" type="Panel" parent="UserUtils/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gh0ne")
+
+[node name="UserPic" type="Panel" parent="UserUtils"]
+clip_children = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 6.4556885
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5q4o7")
+
+[node name="TextureRect" type="TextureRect" parent="UserUtils/UserPic"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_b37n4")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="battery" type="Panel" parent="UserUtils"]
+clip_children = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 94.0
+offset_top = -29.0
+offset_right = 65.0
+offset_bottom = -59.101273
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5q4o7")
+
+[node name="TextureRect" type="TextureRect" parent="UserUtils/battery"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_b37n4")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="notifications" type="Panel" parent="UserUtils"]
+clip_children = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 154.0
+offset_top = -29.0
+offset_right = 125.0
+offset_bottom = -59.101273
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5q4o7")
+
+[node name="TextureRect" type="TextureRect" parent="UserUtils/notifications"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_b37n4")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Button" type="TextureRect" parent="UserUtils"]
+layout_mode = 0
+offset_left = 54.0
+offset_top = 68.0
+offset_right = 89.0
+offset_bottom = 96.0
+texture = ExtResource("2_ciuvb")
+expand_mode = 1
+stretch_mode = 5

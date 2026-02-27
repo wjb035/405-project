@@ -86,6 +86,14 @@ public class AppConfig
                 if (!string.IsNullOrWhiteSpace(e.Name)) existing.Name = e.Name;
                 if (!string.IsNullOrWhiteSpace(e.ExePath)) existing.ExePath = e.ExePath;
                 if (!string.IsNullOrWhiteSpace(e.ArgsTemplate)) existing.ArgsTemplate = e.ArgsTemplate;
+                if (!string.IsNullOrWhiteSpace(e.ExePathWindows)) existing.ExePathWindows = e.ExePathWindows;
+                if (!string.IsNullOrWhiteSpace(e.ExePathMac)) existing.ExePathMac = e.ExePathMac;
+                if (!string.IsNullOrWhiteSpace(e.ExePathLinux)) existing.ExePathLinux = e.ExePathLinux;
+
+                if (!string.IsNullOrWhiteSpace(e.CorePath)) existing.CorePath = e.CorePath;
+                if (!string.IsNullOrWhiteSpace(e.CorePathWindows)) existing.CorePathWindows = e.CorePathWindows;
+                if (!string.IsNullOrWhiteSpace(e.CorePathMac)) existing.CorePathMac = e.CorePathMac;
+                if (!string.IsNullOrWhiteSpace(e.CorePathLinux)) existing.CorePathLinux = e.CorePathLinux;
             }
         }
     }
@@ -97,4 +105,12 @@ public class EmulatorConfig
     public string Name { get; set; } = string.Empty;
     public string ExePath { get; set; } = string.Empty;
     public string? ArgsTemplate { get; set; }
+    public string? ExePathWindows { get; set; }
+    public string? ExePathMac { get; set; }
+    public string? ExePathLinux { get; set; }
+
+    public string? CorePath { get; set; }
+    public string? CorePathWindows { get; set; }
+    public string? CorePathMac { get; set; }
+    public string? CorePathLinux { get; set; }
 }

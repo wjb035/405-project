@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://LibretroGame.cs" id="1"]
+
+[node name="LibretroGame" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+VideoPath = NodePath("Video/TextureRect")
+AudioPath = NodePath("Audio")
+StatusPath = NodePath("Overlay/Status")
+BackPath = NodePath("Overlay/Top/BtnBack")
+TitlePath = NodePath("Overlay/Top/Title")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Video" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="Video"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Audio" type="AudioStreamPlayer" parent="."]
+
+[node name="Overlay" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="Top" type="HBoxContainer" parent="Overlay"]
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="Overlay/Top"]
+custom_minimum_size = Vector2(84, 36)
+layout_mode = 2
+text = "Back"
+
+[node name="Title" type="Label" parent="Overlay/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+text = "In-App Emulation"
+
+[node name="Spacer" type="Control" parent="Overlay"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Status" type="Label" parent="Overlay"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Initializing..."
