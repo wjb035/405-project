@@ -1,9 +1,9 @@
+ColorRect
+CanvasLayer
 AudioStreamPlayer
 Node
 VBoxContainer
 TextureRect
-ColorRect
-CanvasLayer
 Label
 Button
 GridContainer
@@ -12,4 +12,3 @@ Panel
 PopupPanel
 MarginContainer
 HTTPRequest
-ScrollContainer

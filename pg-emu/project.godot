@@ -25,6 +25,7 @@ AudioManager="*uid://cyx0115kxhh2x"
 QuitService="*res://Services/QuitService.cs"
 InputRoutingService="*res://Services/InputRoutingService.cs"
 ControllerService="*res://Services/ControllerService.cs"
+ScreenTransition="*uid://duhl1pwwacy2n"
 
 [display]
 

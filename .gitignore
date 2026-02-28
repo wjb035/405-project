@@ -29,6 +29,8 @@ config.local.json
 .godot/
 pg-emu/.godot/
 !pg-emu/.godot/
+pg-emu/.godot/*
+.godot/*
 
 
 ## Local emulators + ROMs
