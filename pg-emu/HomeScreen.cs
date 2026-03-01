@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PGEmu.app;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 public partial class HomeScreen : Control
@@ -60,6 +61,10 @@ public partial class HomeScreen : Control
 	private long _leftAxisNextMs;
 
 	private Tween _tween;
+	
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
+	
 
 	public override void _Ready()
 	{
@@ -107,9 +112,8 @@ public partial class HomeScreen : Control
 
 		dialog.Confirmed += async () =>
 		{
-			await ScreenTransition.FadeOut();			
 			AuthService.Instance.Logout();
-			GetTree().ChangeSceneToFile("res://WelcomeScreen.tscn");
+			await Transition.ChangeScene("res://WelcomeScreen.tscn");
 		};
 
 		dialog.PopupCentered();

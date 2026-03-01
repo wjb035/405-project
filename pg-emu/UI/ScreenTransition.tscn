@@ -1,14 +1,15 @@
 [gd_scene format=3 uid="uid://duhl1pwwacy2n"]
 
-[ext_resource type="Script" uid="uid://b8754jh3b5v8g" path="res://Helpers and Managers/ScreenTransition.cs" id="1_qp5wi"]
+[ext_resource type="Script" uid="uid://b8754jh3b5v8g" path="res://Helpers/ScreenTransition.cs" id="1_qp5wi"]
 
 [node name="Control" type="CanvasLayer" unique_id=124548126]
 script = ExtResource("1_qp5wi")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=349167853]
+[node name="FadeRect" type="ColorRect" parent="." unique_id=349167853]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0, 0, 0, 1)

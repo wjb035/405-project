@@ -1,6 +1,6 @@
 ﻿using Godot;
 using System.Threading.Tasks;
-namespace PGEmu.Helpers_and_Managers;
+namespace PGEmu.Helpers;
 
 
 public partial class ScreenTransition : CanvasLayer
@@ -25,5 +25,13 @@ public partial class ScreenTransition : CanvasLayer
         var tween = CreateTween();
         tween.TweenProperty(_fadeRect, "modulate:a", 0.0f, duration);
         await ToSignal(tween, "finished");
+    }
+    
+    public async Task ChangeScene(string path)
+    {
+        await FadeOut();
+        GetTree().ChangeSceneToFile(path);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await FadeIn();
     }
 }

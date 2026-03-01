@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://b5q1hxlb6srh4"]
 
 [ext_resource type="Script" uid="uid://crotbndk3td0j" path="res://WelcomeScreen.cs" id="1_tto14"]
-[ext_resource type="Texture2D" uid="uid://blpc3e4gxnhsd" path="res://Images/pgemu outline (green).png" id="2_qlnan"]
+[ext_resource type="VideoStream" uid="uid://cj02tm65wto52" path="res://Videos/sh2 background larger.ogv" id="2_7kx2i"]
+[ext_resource type="Texture2D" uid="uid://c2xn26rk444xl" path="res://Images/pgemu outline (pink).png" id="3_7kx2i"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qlnan"]
 font_size = 70
@@ -18,19 +19,48 @@ ContinueButtonPath = NodePath("ContinueButton")
 WelcomeLabelPath = NodePath("VBoxContainer/Welcome")
 ContinueLabelPath = NodePath("VBoxContainer/Continue")
 FadeRectPath = NodePath("CanvasLayer/ColorRect")
+LogoPath = NodePath("CanvasLayer/TextureRect")
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1711280579]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 768.0
+offset_bottom = 432.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+mouse_filter = 2
+stream = ExtResource("2_7kx2i")
+volume_db = -12.34
+autoplay = true
+expand = true
+loop = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2070983030]
+
+[node name="Shadow" type="TextureRect" parent="CanvasLayer" unique_id=289370850]
+self_modulate = Color(0, 0, 0, 1)
+offset_left = 201.0
+offset_top = -4.0
+offset_right = 1073.0
+offset_bottom = 476.0
+texture = ExtResource("3_7kx2i")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=595385632]
 offset_left = 176.0
 offset_top = -32.0
 offset_right = 1048.0
 offset_bottom = 448.0
-texture = ExtResource("2_qlnan")
+texture = ExtResource("3_7kx2i")
 expand_mode = 1
 stretch_mode = 4
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=525613543]
+visible = false
 offset_right = 1152.0
 offset_bottom = 656.0
 size_flags_horizontal = 3
@@ -39,6 +69,7 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=833691928]
+visible = false
 layout_mode = 0
 offset_right = 1152.0
 offset_bottom = 656.0
@@ -50,8 +81,10 @@ color = Color(0.2882, 0.23759998, 0.44, 1)
 top_level = true
 visibility_layer = 0
 layout_mode = 0
-offset_right = 1152.0
-offset_bottom = 640.0
+offset_left = -40.0
+offset_top = 40.0
+offset_right = 1112.0
+offset_bottom = 680.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=569787518]
 layout_mode = 1
