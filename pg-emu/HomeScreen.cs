@@ -159,7 +159,7 @@ private void OnAnyButtonPressed()
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Profile.tscn");
+		tree.ChangeSceneToFile("res://profile.tscn");
 	}
 	
 	private void OnAchPressed(){

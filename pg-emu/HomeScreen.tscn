@@ -4,6 +4,27 @@
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend1"]
+bg_color = Color(0.1882353, 0.1882353, 0.1882353, 1)
+corner_radius_top_left = 13
+corner_radius_top_right = 13
+corner_radius_bottom_right = 13
+corner_radius_bottom_left = 13
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend2"]
+bg_color = Color(0.6901961, 0.3529412, 0.6509804, 1)
+corner_radius_top_left = 13
+corner_radius_top_right = 13
+corner_radius_bottom_right = 13
+corner_radius_bottom_left = 13
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend3"]
+bg_color = Color(0.33333334, 0.7137255, 0.9098039, 1)
+corner_radius_top_left = 13
+corner_radius_top_right = 13
+corner_radius_bottom_right = 13
+corner_radius_bottom_left = 13
+
 [node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
 anchors_preset = 15
@@ -111,20 +132,20 @@ alignment = 1
 layout_mode = 2
 alignment = 1
 
-[node name="Friend1" type="ColorRect" parent="Margin/Root/CenterArea/FriendsRow" unique_id=2122993267]
+[node name="Friend1" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=2122993267]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-color = Color(0.1882353, 0.1882353, 0.1882353, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_friend1")
 
-[node name="Friend2" type="ColorRect" parent="Margin/Root/CenterArea/FriendsRow" unique_id=1126889066]
+[node name="Friend2" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=1126889066]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-color = Color(0.6901961, 0.3529412, 0.6509804, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_friend2")
 
-[node name="Friend3" type="ColorRect" parent="Margin/Root/CenterArea/FriendsRow" unique_id=726034347]
+[node name="Friend3" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=726034347]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-color = Color(0.33333334, 0.7137255, 0.9098039, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_friend3")
 
 [node name="MoreFriends" type="Label" parent="Margin/Root/CenterArea/FriendsRow" unique_id=962111946]
 layout_mode = 2

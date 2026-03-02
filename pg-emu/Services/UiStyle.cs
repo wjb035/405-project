@@ -48,6 +48,26 @@ public static class UiStyle
         button.AddThemeColorOverride("font_focus_color", TextColor);
     }
 
+    // Reduce internal text padding when layout spacing should come from containers.
+    public static void TightenButtonContentPadding(Button? button, float horizontal = 4f, float vertical = 4f)
+    {
+        if (button == null) return;
+
+        string[] states = { "normal", "hover", "pressed", "focus", "disabled" };
+        foreach (string state in states)
+        {
+            if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
+                continue;
+
+            var tuned = (StyleBoxFlat)flat.Duplicate();
+            tuned.ContentMarginLeft = horizontal;
+            tuned.ContentMarginRight = horizontal;
+            tuned.ContentMarginTop = vertical;
+            tuned.ContentMarginBottom = vertical;
+            button.AddThemeStyleboxOverride(state, tuned);
+        }
+    }
+
     public static void StyleTitleLabel(Label? label)
     {
         if (label == null) return;

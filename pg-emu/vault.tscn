@@ -24,7 +24,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.9019608, 0.827451, 0.91764706, 1)
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=1201706382]
 layout_mode = 1
@@ -42,6 +42,7 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=1380834176]
 visible = false
@@ -67,10 +68,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 1
+theme_override_constants/separation = 10
 
 [node name="Hint" type="Label" parent="Margin/Root/Body" unique_id=154472265]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 0.82)
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
 text = "Set your game library folder (LibraryRoot)"
 horizontal_alignment = 1
 
@@ -78,6 +80,7 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
+theme_override_constants/separation = 10
 
 [node name="LibraryPath" type="LineEdit" parent="Margin/Root/Body/Row" unique_id=2019490561]
 custom_minimum_size = Vector2(640, 40)
@@ -86,18 +89,19 @@ size_flags_horizontal = 3
 placeholder_text = "Choose a folder…"
 
 [node name="BtnBrowse" type="Button" parent="Margin/Root/Body/Row" unique_id=565412296]
-custom_minimum_size = Vector2(120, 40)
+custom_minimum_size = Vector2(112, 40)
 layout_mode = 2
 text = "Browse"
 
 [node name="BtnSave" type="Button" parent="Margin/Root/Body" unique_id=1905729318]
-custom_minimum_size = Vector2(200, 44)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Save"
+size_flags_horizontal = 4
+text = "Save Path"
 
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1144174125]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 0.75)
+theme_override_colors/font_color = Color(0.80, 0.88, 0.96, 0.95)
 horizontal_alignment = 1
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=216726068]

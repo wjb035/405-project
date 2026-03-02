@@ -35,14 +35,76 @@ public partial class Register : Control
 		_back = GetNode<Button>(BackPath);
 		_error = GetNode<Label>(ErrorLabelPath);
 
+		ApplyThemeAesthetic();
+		ConfigureInputBehavior();
+
 		_registerButton.Pressed += OnRegisterPressed;
 		_back.Pressed += GoBack;
+	}
+
+	private void ApplyThemeAesthetic()
+	{
+		// Match auth screens to the same launcher aesthetic used by the home screen.
+		var bg = GetNodeOrNull<ColorRect>("Bg");
+		if (bg != null)
+			bg.Color = new Color(0.068f, 0.048f, 0.121f, 1f);
+
+		var title = GetNodeOrNull<Label>("Margin/Root/TopBar/Title");
+		if (title != null)
+		{
+			title.Text = "Create Account";
+			UiStyle.StyleTitleLabel(title);
+		}
+
+		var hint = GetNodeOrNull<Label>("Margin/Root/Body/Hint");
+		if (hint != null)
+		{
+			hint.Text = "Set up your profile and start playing.";
+			UiStyle.StyleMetaLabel(hint);
+		}
+
+		UiStyle.StyleTopBarButton(_back);
+		UiStyle.StyleLineEdit(_username);
+		UiStyle.StyleLineEdit(_email);
+		UiStyle.StyleLineEdit(_password);
+		UiStyle.StyleLineEdit(_confirmPassword);
+		UiStyle.StylePrimaryButton(_registerButton);
+		UiStyle.TightenButtonContentPadding(_registerButton, horizontal: 6f, vertical: 2f);
+
+		_registerButton.Text = "Create Account";
+		_username.PlaceholderText = "Username";
+		_email.PlaceholderText = "Email";
+		_password.PlaceholderText = "Password";
+		_confirmPassword.PlaceholderText = "Confirm Password";
+
+		var userLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/UserLabel");
+		var emailLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/EmailLabel");
+		var passLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/PassLabel2");
+		var confirmLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/ConfirmPassLabel");
+		UiStyle.StyleMetaLabel(userLabel);
+		UiStyle.StyleMetaLabel(emailLabel);
+		UiStyle.StyleMetaLabel(passLabel);
+		UiStyle.StyleMetaLabel(confirmLabel);
+		if (userLabel != null) userLabel.HorizontalAlignment = HorizontalAlignment.Left;
+		if (emailLabel != null) emailLabel.HorizontalAlignment = HorizontalAlignment.Left;
+		if (passLabel != null) passLabel.HorizontalAlignment = HorizontalAlignment.Left;
+		if (confirmLabel != null) confirmLabel.HorizontalAlignment = HorizontalAlignment.Left;
+
+		_error.AddThemeColorOverride("font_color", new Color(1f, 0.53f, 0.62f, 0.95f));
+	}
+
+	private void ConfigureInputBehavior()
+	{
+		_confirmPassword.TextSubmitted += _ => OnRegisterPressed();
 	}
 
 
 	// Reigster chud
 	private async void OnRegisterPressed()
 	{
+		if (_registerButton.Disabled)
+			return;
+
 		_error.Text = "";
 
 		// Validate input
