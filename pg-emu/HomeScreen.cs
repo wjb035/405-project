@@ -136,7 +136,7 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		tree.ChangeSceneToFile("res://vault.tscn");
+		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
 
 	private void OnFriendsPressed()

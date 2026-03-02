@@ -1,3 +1,4 @@
+
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,17 +41,18 @@ builder.Services.AddScoped<FriendService>();
 
 // Profile customization service
 
-builder.Services.AddScoped<ProfileCustomizationService>();
+builder.Services.AddScoped<IProfileCustomizationService, ProfileCustomizationService>();
 
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);
 builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(options =>
     {
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -61,7 +63,7 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.Zero,
-            
+
         };
         options.MapInboundClaims = false;
     });
