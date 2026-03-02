@@ -1,0 +1,99 @@
+[gd_scene format=3 uid="uid://ht73q5hq63an"]
+
+[ext_resource type="Script" uid="uid://dt84s428syeu" path="res://ProfileSettings.cs" id="1_vlvp3"]
+
+[node name="ProfileSettings" type="Control" unique_id=1173785683]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vlvp3")
+UsernameEditPath = NodePath("Margin/Root/SetUsernameContainer/UsernameEditBox")
+UsernameSaveButtonPath = NodePath("Margin/Root/SetUsernameContainer/SaveNewUsername")
+BioEditPath = NodePath("Margin/Root/SetBioContainer/BioEditBox")
+BioSaveButtonPath = NodePath("Margin/Root/SetBioContainer/SaveNewBio")
+AvatarEditPath = NodePath("Margin/Root/SetAvatarBox/AvatarEditBox")
+AvatarSaveButtonPath = NodePath("Margin/Root/SetAvatarBox/SaveNewAvatar")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1350040471]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9019608, 0.827451, 0.91764706, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=577387793]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=831605332]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ChangeUsernameLabel" type="Label" parent="Margin/Root" unique_id=1212293978]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Change Username"
+
+[node name="SetUsernameContainer" type="HBoxContainer" parent="Margin/Root" unique_id=1749174258]
+layout_mode = 2
+
+[node name="UsernameEditBox" type="LineEdit" parent="Margin/Root/SetUsernameContainer" unique_id=771369260]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+max_length = 32
+
+[node name="SaveNewUsername" type="Button" parent="Margin/Root/SetUsernameContainer" unique_id=324563748]
+layout_mode = 2
+text = "Save"
+
+[node name="ChangeBioLabel3" type="Label" parent="Margin/Root" unique_id=1974151205]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Change Bio"
+
+[node name="SetBioContainer" type="HBoxContainer" parent="Margin/Root" unique_id=2059867360]
+layout_mode = 2
+
+[node name="BioEditBox" type="LineEdit" parent="Margin/Root/SetBioContainer" unique_id=1418994839]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+max_length = 250
+
+[node name="SaveNewBio" type="Button" parent="Margin/Root/SetBioContainer" unique_id=1292055418]
+layout_mode = 2
+text = "Save"
+
+[node name="ChangeAvatarLabel2" type="Label" parent="Margin/Root" unique_id=783123582]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Change Avatar"
+
+[node name="SetAvatarBox" type="HBoxContainer" parent="Margin/Root" unique_id=886303166]
+layout_mode = 2
+
+[node name="AvatarEditBox" type="LineEdit" parent="Margin/Root/SetAvatarBox" unique_id=1018190085]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="SaveNewAvatar" type="Button" parent="Margin/Root/SetAvatarBox" unique_id=957509475]
+layout_mode = 2
+text = "Save"
+
+[node name="Status" type="Label" parent="Margin/Root" unique_id=1264118236]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.75)
+horizontal_alignment = 1

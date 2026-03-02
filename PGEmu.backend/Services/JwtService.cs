@@ -21,9 +21,9 @@ public class JwtService
     {
         var secret = _config["JwtSettings:Secret"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-        
+
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        
+
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -39,16 +39,16 @@ public class JwtService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-        
+
     }
-    
+
     // Generate 32-byte secure random refresh token, lasts a long time
     public string GenerateRefreshToken()
     {
         var randomBytes = RandomNumberGenerator.GetBytes(32);
         return Convert.ToBase64String(randomBytes);
     }
-    
+
     // Hash the refresh token and store in database
     public string HashToken(string token)
     {

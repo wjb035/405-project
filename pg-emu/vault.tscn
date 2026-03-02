@@ -44,6 +44,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=1380834176]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
@@ -100,6 +101,6 @@ theme_override_colors/font_color = Color(0, 0, 0, 0.75)
 horizontal_alignment = 1
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=216726068]
-title = "Select Game Library Folder"
+title = "Open a Directory"
 file_mode = 2
 access = 2
