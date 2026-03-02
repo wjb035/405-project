@@ -150,7 +150,7 @@ public partial class WelcomeScreen : Control
 			.SetEase(Tween.EaseType.InOut);
 		await ToSignal(tween, "finished");
 		
-		await Task.Delay(2000);
+		await Task.Delay(1000);
 		
 		_continue.Modulate = new Color(1, 1, 1, 0);
 		tween = CreateTween();

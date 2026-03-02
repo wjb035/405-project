@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1772343409
+::res://::1772473614
 Achievements.tscn::PackedScene::9222093291491280280::1771554555::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs
 AchievementScreen.cs::CSharpScript::6693889573278468072::1771554555::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1771554555::0::1::::<><><>0<>0<><>::
@@ -12,7 +12,7 @@ FriendsList.tscn::PackedScene::1855649014337715298::1771554555::0::1::::<><><>0<
 friend_request_item.tscn::PackedScene::5952679683128112426::1771709302::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
 GameSelect.cs::CSharpScript::6550570635931546279::1772309992::0::1::::<>Control<><>0<>0<><>::
 GameSelect.tscn::PackedScene::6344109642126286492::1771988589::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://platform_card.tscn
-HomeScreen.cs::CSharpScript::3450512667325572821::1772313522::0::1::::<>Control<><>0<>0<><>::
+HomeScreen.cs::CSharpScript::3450512667325572821::1772473569::0::1::::<>Control<><>0<>0<><>::
 HomeScreen.tscn::PackedScene::3595765915259507013::1772312790::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn
 icon.svg::CompressedTexture2D::143724492836120447::1771554555::1771554555::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 inbox.tscn::PackedScene::95044556963901650::1771711453::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
@@ -22,14 +22,18 @@ LibretroGame.tscn::PackedScene::-1::1772309992::0::1::::<><><>0<>0<><>::res://Li
 Login.cs::CSharpScript::2130692794859400076::1772056636::0::1::::<>Control<><>0<>0<><>::
 LoginScreen.tscn::PackedScene::6750562284961884728::1772056343::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
 platform_card.tscn::PackedScene::-1::1772309992::0::1::::<><><>0<>0<><>::
-Profile.cs::CSharpScript::7879751291555930961::1771554555::0::1::::<>Control<><>0<>0<><>::
-profile.tscn::PackedScene::387046989646537699::1771554555::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg
+Profile.cs::CSharpScript::7879751291555930961::1772473569::0::1::::<>Control<><>0<>0<><>::
+profile.tscn::PackedScene::387046989646537699::1772473569::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg<>uid://dktg0p671tigo::::res://TextureRect.cs
+ProfileSettings.cs::CSharpScript::251846148516989756::1772473569::0::1::::<><><>0<>0<><>::
+ProfileSettings.tscn::PackedScene::532538915849641301::1772473569::0::1::::<><><>0<>0<><>::uid://dt84s428syeu::::res://ProfileSettings.cs
 README.md::TextFile::-1::1771554555::0::1::::<><><>0<>0<><>::
 Register.cs::CSharpScript::8838925792148172637::1772055576::0::1::::<>Control<><>0<>0<><>::
 RegisterScreen.tscn::PackedScene::2330346922626633503::1772056392::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
+Settings.cs::CSharpScript::3843929784724654196::1772473569::0::1::::<><><>0<>0<><>::
+Settings.tscn::PackedScene::2632010473024774744::1772473569::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn
 souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1771554555::1771554555::1::::<><><>0<>0<>342c1d92eb558274773f082c2d8a2cf3<>res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex::
 Vault.cs::CSharpScript::2866193499456904334::1771554555::0::1::::<>Control<><>0<>0<><>::
-vault.tscn::PackedScene::5361122654817674866::1771554555::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
+vault.tscn::PackedScene::5361122654817674866::1772473569::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
 WelcomeScreen.cs::CSharpScript::5996109094376545087::1772322354::0::1::::<>Control<><>0<>0<><>::
 WelcomeScreen.tscn::PackedScene::4526708404385782447::1772337103::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png
 ::res://addons/::1771554555
@@ -73,14 +77,17 @@ spanning_table_container_demo.png::CompressedTexture2D::7249265451959373567::177
 spanning_table_container_example_1.png::CompressedTexture2D::6678019456609695703::1771554555::1771554555::1::::<><><>0<>0<>3f412d98b111bf9ba84da8a0f59268cd<>res://.godot/imported/spanning_table_container_example_1.png-6c53ce5fde2b5fe679e9d52a631eb7ff.ctex::
 spanning_table_container_inspector_example_1.png::CompressedTexture2D::3578856315294686406::1771554555::1771554555::1::::<><><>0<>0<>750d565edee20af6b2055f930cc35117<>res://.godot/imported/spanning_table_container_inspector_example_1.png-f005c444577aa15d05da422f14286336.ctex::
 spanning_table_container_scene_example_1.png::CompressedTexture2D::282854368447783121::1771554555::1771554555::1::::<><><>0<>0<>e9b241fdaa28ef683ea32fbe72bf8499<>res://.godot/imported/spanning_table_container_scene_example_1.png-171f19710b7fc49886704611a324e38b.ctex::
-::res://Services/::1772320888
+::res://Services/::1772473569
 AuthService.cs::CSharpScript::994187413389896066::1772059781::0::1::::<>Node<><>0<>0<><>::
 ControllerService.cs::CSharpScript::6658850858433575865::1772309992::0::1::::<>Node<><>0<>0<><>::
 FriendService.cs::CSharpScript::638228935682986426::1772320888::0::1::::<>Node<><>0<>0<><>::
 InProcessLaunchState.cs::CSharpScript::4897426424976993013::1772309992::0::1::::<><><>0<>0<><>::
 InputRoutingService.cs::CSharpScript::3314707751854982747::1772309992::0::1::::<>Node<><>0<>0<><>::
+ProfileService.cs::CSharpScript::3517034232592957849::1772473569::0::1::::<><><>0<>0<><>::
 QuitService.cs::CSharpScript::4103234503971379844::1772309992::0::1::::<>CanvasLayer<><>0<>0<><>::
 UiStyle.cs::CSharpScript::4207572949793757131::1772309992::0::1::::<><><>0<>0<><>::
+::res://Services/Models/::1772473569
+ProfileResponse.cs::CSharpScript::3077731634420152775::1772473569::0::1::::<><><>0<>0<><>::
 ::res://UI/::1772319179
 FriendInbox.cs::CSharpScript::4117037499602220883::1772319179::0::1::::<>PopupPanel<><>0<>0<><>::
 FriendRequestItem.cs::CSharpScript::7844878079273845639::1771704343::0::1::::<>Panel<><>0<>0<><>::
