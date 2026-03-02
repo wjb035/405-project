@@ -2,6 +2,14 @@
 
 [ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_8s1q4"]
+[ext_resource type="Texture2D" uid="uid://bjj1k8ig6w0dr" path="res://Images/trophy icon.png" id="3_ju5ei"]
+[ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="5_1x65b"]
+[ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="6_cja7x"]
+[ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="7_scx6q"]
+[ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="8_xj10s"]
+[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="9_xsmlm"]
+[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="10_2kom7"]
 
 [node name="GameSelect" type="Control" unique_id=1241405706]
 layout_mode = 3
@@ -37,8 +45,11 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -10.0
+offset_bottom = 33.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(1, 0.95)
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
@@ -57,7 +68,11 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1193984394]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+text = "
+"
+icon = ExtResource("3_8s1q4")
+icon_alignment = 1
+expand_icon = true
 
 [node name="TopSpacer" type="Control" parent="Margin/Root/TopBar" unique_id=1933101760]
 layout_mode = 2
@@ -69,27 +84,39 @@ layout_mode = 2
 
 [node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=514724767]
 layout_mode = 2
-text = "Ach"
+text = "         "
+icon = ExtResource("3_ju5ei")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "👥"
+icon = ExtResource("5_1x65b")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1002384540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "💬"
+icon = ExtResource("6_cja7x")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2026026780]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "⚙"
+icon = ExtResource("7_scx6q")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2126903515]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "?"
+text = " "
+icon = ExtResource("8_xj10s")
+icon_alignment = 1
+expand_icon = true
 
 [node name="CenterArea" type="VBoxContainer" parent="Margin/Root" unique_id=1128862689]
 layout_mode = 2
@@ -121,7 +148,10 @@ offset_left = 38.0
 offset_top = 198.0
 offset_right = 102.0
 offset_bottom = 262.0
-text = "◀"
+text = " "
+icon = ExtResource("9_xsmlm")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=916294256]
 layout_mode = 0
@@ -129,7 +159,9 @@ offset_left = 1014.0
 offset_top = 198.0
 offset_right = 1078.0
 offset_bottom = 262.0
-text = "▶"
+icon = ExtResource("10_2kom7")
+icon_alignment = 1
+expand_icon = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/CenterArea/CarouselArea" unique_id=2006590248]
 layout_mode = 0

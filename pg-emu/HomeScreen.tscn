@@ -3,6 +3,15 @@
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
+[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="4_psypl"]
+[ext_resource type="Texture2D" uid="uid://bj5hphp8f2kgw" path="res://Images/inbox icon.png" id="5_3272g"]
+[ext_resource type="Texture2D" uid="uid://c4r8y1ivdhsq1" path="res://Images/folders icon.png" id="5_ksj1l"]
+[ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="7_5aen8"]
+[ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="8_00eno"]
+[ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="9_iw72c"]
+[ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="10_1lj82"]
+[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="11_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="12_3gr8a"]
 
 [node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
@@ -24,6 +33,7 @@ InboxPath = NodePath("Margin/Root/TopBar/TopIcons/BtnInbox")
 ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
+CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
 FriendInboxPopup = NodePath("Inbox")
 CardScene = ExtResource("2")
 
@@ -43,8 +53,11 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -10.0
+offset_bottom = 22.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(1, 0.95)
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
@@ -61,7 +74,9 @@ size_flags_vertical = 0
 [node name="BtnLogout" type="Button" parent="Margin/Root/TopBar" unique_id=1639146064]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+icon = ExtResource("4_psypl")
+icon_alignment = 1
+expand_icon = true
 
 [node name="TopSpacer" type="Control" parent="Margin/Root/TopBar" unique_id=969686858]
 layout_mode = 2
@@ -74,32 +89,44 @@ layout_mode = 2
 [node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=401324041]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "📥"
+icon = ExtResource("5_3272g")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnCollections" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1554411540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "Collections"
+icon = ExtResource("5_ksj1l")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=794538155]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "👥"
+icon = ExtResource("7_5aen8")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1562664367]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "💬"
+icon = ExtResource("8_00eno")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1055238928]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "⚙"
+icon = ExtResource("9_iw72c")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=804603786]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "?"
+icon = ExtResource("10_1lj82")
+icon_alignment = 1
+expand_icon = true
 
 [node name="CenterArea" type="VBoxContainer" parent="Margin/Root" unique_id=1584583215]
 layout_mode = 2
@@ -154,7 +181,9 @@ offset_left = 38.0
 offset_top = 198.0
 offset_right = 102.0
 offset_bottom = 262.0
-text = "◀"
+icon = ExtResource("11_oy6yd")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1687316739]
 layout_mode = 0
@@ -162,7 +191,9 @@ offset_left = 1014.0
 offset_top = 198.0
 offset_right = 1078.0
 offset_bottom = 262.0
-text = "▶"
+icon = ExtResource("12_3gr8a")
+icon_alignment = 1
+expand_icon = true
 
 [node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea" unique_id=153168735]
 layout_mode = 2

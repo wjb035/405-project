@@ -21,6 +21,7 @@ public partial class HomeScreen : Control
 	[Export] public NodePath ChatPath;
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath HelpPath;
+	[Export] public NodePath CollectionsPath;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -40,6 +41,7 @@ public partial class HomeScreen : Control
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
+	private Button _collections;
 
 	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
@@ -82,6 +84,7 @@ public partial class HomeScreen : Control
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
 		_help = GetNodeOrNull<Button>(HelpPath);
+		_collections = GetNodeOrNull<Button>(CollectionsPath);
 		ApplyAesthetic();
 
 		_prev.Pressed += () => Step(-1);
@@ -94,6 +97,7 @@ public partial class HomeScreen : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
+		if (_collections != null) _collections.Pressed += OnCollectionsPressed;
 
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
@@ -176,8 +180,9 @@ private void OnAnyButtonPressed()
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://Collections.tscn");
-	
+		
 	}
+	
 	private void OnInboxPressed()
 	{
 		FriendInboxPopup.ShowPopup();
