@@ -30,7 +30,7 @@ public static class FileLogger
 		}
 		catch (Exception e)
 		{
-			GD.PrintErr($"Failed to initialize FileLogger: {e.Message}");
+			Console.Error.WriteLine($"Failed to initialize FileLogger: {e.Message}");
 		}
 	}
 
@@ -40,8 +40,6 @@ public static class FileLogger
 		
 		string logMessage = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
 		
-		GD.Print(logMessage);
-		
 		try
 		{
 			lock (_lock)
@@ -51,7 +49,7 @@ public static class FileLogger
 		}
 		catch (Exception e)
 		{
-			GD.PrintErr($"Failed to write to log file: {e.Message}");
+			Console.Error.WriteLine($"Failed to write to log file: {e.Message}");
 		}
 	}
 
@@ -61,8 +59,6 @@ public static class FileLogger
 		
 		string logMessage = $"[{DateTime.Now:HH:mm:ss.fff}] error: {message}";
 		
-		GD.PrintErr(logMessage);
-		
 		try
 		{
 			lock (_lock)
@@ -72,7 +68,7 @@ public static class FileLogger
 		}
 		catch (Exception e)
 		{
-			GD.PrintErr($"Failed to write error to log file: {e.Message}");
+			Console.Error.WriteLine($"Failed to write error to log file: {e.Message}");
 		}
 	}
 

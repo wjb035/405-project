@@ -38,9 +38,44 @@ public partial class LibretroPlayer : Node
 	private static HashSet<string> _validActions = new HashSet<string>();
 	private static bool _actionsCached = false;
 
-	private static byte[]? _pixelBuffer;
-	private static short[]? _audioRawBuffer;
-	private static Vector2[]? _audioGodotBuffer;
+	private static readonly object _videoFrameLock = new object();
+	private static byte[]? _pendingVideoFrame;
+	private static int _pendingVideoWidth;
+	private static int _pendingVideoHeight;
+	private static int _pendingVideoFormat;
+	private static bool _hasPendingVideoFrame;
+	private static bool _loggedFirstVideoFrame;
+	private static bool _loggedHwVideoPointer;
+	private byte[]? _uploadVideoFrame;
+
+	private static readonly object _audioFrameLock = new object();
+	private static short[]? _pendingAudioRaw;
+	private static int _pendingAudioSamples;
+	private static bool _hasPendingAudioBatch;
+	private static bool _hasPendingAudioSample;
+	private static short _pendingAudioSampleLeft;
+	private static short _pendingAudioSampleRight;
+	private short[]? _audioUploadRaw;
+	private Vector2[]? _audioUploadFrames;
+
+	private static readonly short[] _inputStateCache = new short[16];
+	private static bool _isDolphinCore = false;
+	private static bool _isPpssppCore = false;
+	private static bool _forcePpssppSoftwareMode = false;
+	// Current frontend has no libretro GPU context bridge. Non-PPSSPP HW cores abort startup.
+	private static bool _frontendSupportsHardwareRender = false;
+	private static bool _coreRequestedHardwareRender = false;
+	private static bool _abortStartupDueToHardwareRender = false;
+	private static bool _loggedHwRenderUnsupported = false;
+	private static bool _loggedHwRenderUnsupportedGeneric = false;
+	private static bool _loggedHwRenderInterfaceUnsupported = false;
+	private static bool _loggedHwSharedContextUnsupported = false;
+	private static bool _loggedHwNegotiationUnsupported = false;
+	private static bool _loggedPpssppSoftwarePolicy = false;
+	private static bool _loggedPpssppBackendOverride = false;
+	private static bool _loggedPpssppHwRenderDenied = false;
+	private bool _loggedFirstRetroRun = false;
+	private bool _loggedFirstRetroRunComplete = false;
 	
 	[StructLayout(LayoutKind.Sequential)]
 	private struct retro_variable
@@ -48,8 +83,48 @@ public partial class LibretroPlayer : Node
 		public IntPtr key;
 		public IntPtr value;
 	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	private struct retro_log_callback
+	{
+		public IntPtr log;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	private struct retro_message
+	{
+		public IntPtr msg;
+		public uint frames;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	private struct retro_message_ext
+	{
+		public IntPtr msg;
+		public uint duration;
+		public uint priority;
+		public int level;
+		public uint target;
+		public uint type;
+		public int progress;
+	}
+
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	private delegate void RetroLogPrintfShimDelegate(int level, IntPtr format);
 	
+	// Stores unmanaged strings returned via RETRO_ENVIRONMENT_GET_VARIABLE.
 	private static Dictionary<string, IntPtr> _variableValuePtrs = new Dictionary<string, IntPtr>();
+	private static readonly object _variablePtrLock = new object();
+	private static readonly object _registeredVariablesLock = new object();
+	private static readonly Dictionary<string, string[]> _registeredCoreVariables = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+	private static readonly HashSet<string> _loggedDolphinResolvedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+	private static readonly HashSet<string> _loggedPpssppResolvedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+	private static readonly object _environmentLogLock = new object();
+	private static readonly HashSet<uint> _loggedUnhandledEnvironmentCommands = new HashSet<uint>();
+	private static RetroLogPrintfShimDelegate? _retroLogPrintfShim;
+	private static IntPtr _nativeRetroLogCallbackPtr = IntPtr.Zero;
+	private static IntPtr _nativeRetroLogLibraryHandle = IntPtr.Zero;
+	private static IntPtr _usernamePtr = IntPtr.Zero;
 
 	public override void _Ready()
 	{
@@ -161,10 +236,79 @@ public partial class LibretroPlayer : Node
 		}
 		
 		_isGameRunning = false;
-		_isPaused = false;
-		_coreInitialized = false;
-		_actionsCached = false;
+			_isPaused = false;
+			_coreInitialized = false;
+			_actionsCached = false;
 		// _gameTexture = null; // keeping the texture reference to avoid unnecessary GC churn
+		lock (_videoFrameLock)
+		{
+			_hasPendingVideoFrame = false;
+		}
+		lock (_audioFrameLock)
+		{
+			_hasPendingAudioBatch = false;
+			_hasPendingAudioSample = false;
+			_pendingAudioSamples = 0;
+		}
+			Array.Clear(_inputStateCache, 0, _inputStateCache.Length);
+			_isDolphinCore = false;
+			_isPpssppCore = false;
+			_forcePpssppSoftwareMode = false;
+			_loggedFirstVideoFrame = false;
+			_loggedHwVideoPointer = false;
+			_coreRequestedHardwareRender = false;
+			_abortStartupDueToHardwareRender = false;
+				_loggedHwRenderUnsupported = false;
+				_loggedHwRenderUnsupportedGeneric = false;
+				_loggedHwRenderInterfaceUnsupported = false;
+				_loggedHwSharedContextUnsupported = false;
+				_loggedHwNegotiationUnsupported = false;
+				_loggedPpssppSoftwarePolicy = false;
+				_loggedPpssppBackendOverride = false;
+				_loggedPpssppHwRenderDenied = false;
+				_loggedFirstRetroRun = false;
+				_loggedFirstRetroRunComplete = false;
+
+		if (_saveDirectoryPtr != IntPtr.Zero)
+		{
+			Marshal.FreeHGlobal(_saveDirectoryPtr);
+			_saveDirectoryPtr = IntPtr.Zero;
+			_resolvedSaveDirectory = string.Empty;
+		}
+		if (_systemDirectoryPtr != IntPtr.Zero)
+		{
+			Marshal.FreeHGlobal(_systemDirectoryPtr);
+			_systemDirectoryPtr = IntPtr.Zero;
+			_resolvedSystemDirectory = string.Empty;
+		}
+		if (_coreAssetsDirectoryPtr != IntPtr.Zero)
+		{
+			Marshal.FreeHGlobal(_coreAssetsDirectoryPtr);
+			_coreAssetsDirectoryPtr = IntPtr.Zero;
+			_resolvedAssetsDirectory = string.Empty;
+		}
+		// Free all unmanaged variable strings returned to the core.
+		lock (_variablePtrLock)
+		{
+			foreach (var pair in _variableValuePtrs)
+			{
+				if (pair.Value != IntPtr.Zero)
+					Marshal.FreeHGlobal(pair.Value);
+			}
+			_variableValuePtrs.Clear();
+		}
+		lock (_registeredVariablesLock)
+		{
+			_registeredCoreVariables.Clear();
+			_loggedDolphinResolvedKeys.Clear();
+			_loggedPpssppResolvedKeys.Clear();
+		}
+
+		if (_romPathPtr != IntPtr.Zero)
+		{
+			Marshal.FreeHGlobal(_romPathPtr);
+			_romPathPtr = IntPtr.Zero;
+		}
 		
 		if (_gameAudio != null)
 		{
@@ -209,6 +353,8 @@ public partial class LibretroPlayer : Node
 
 		if (_isGameRunning && !_isPaused && LibretroNative.retro_run != null)
 		{
+			UpdateInputStateCache();
+
 			_autoSaveTimer += delta;
 			if (_autoSaveTimer >= AutoSaveInterval)
 			{
@@ -218,20 +364,40 @@ public partial class LibretroPlayer : Node
 			
 			_timeAccumulator += delta;
 			
-			// optimization: limit frameskip to avoid spiraling out of control
-			if (_timeAccumulator > TargetFrameTime * 3) {
+			// Keep catch-up bounded so heavy cores don't lock the main thread.
+			if (_timeAccumulator > TargetFrameTime * 3)
+			{
 				_timeAccumulator = TargetFrameTime;
 			}
-			
-			while (_timeAccumulator >= TargetFrameTime)
-			{
-				LibretroNative.retro_run();
-				_timeAccumulator -= TargetFrameTime;
-			}
+
+				// Run at most one core step per Godot frame for responsiveness.
+				if (_timeAccumulator >= TargetFrameTime)
+				{
+					if (!_loggedFirstRetroRun)
+					{
+						_loggedFirstRetroRun = true;
+						FileLogger.Log("[libretroplayer] first retro_run begin");
+					}
+
+					LibretroNative.retro_run();
+
+					if (!_loggedFirstRetroRunComplete)
+					{
+						_loggedFirstRetroRunComplete = true;
+						FileLogger.Log("[libretroplayer] first retro_run end");
+					}
+
+					_timeAccumulator = 0.0;
+				}
 		}
+
+		FlushPendingVideoFrame();
+		FlushPendingAudioFrames();
 	}
 
 	private IntPtr _romDataPtr = IntPtr.Zero;
+	// Keep ROM path alive as unmanaged memory while the core may retain the pointer.
+	private IntPtr _romPathPtr = IntPtr.Zero;
 
 	private static void CacheValidActions(bool forceRefresh = false)
 	{
@@ -249,11 +415,170 @@ public partial class LibretroPlayer : Node
 		FileLogger.Log($"[LibretroPlayer] Cached {_validActions.Count} input actions");
 	}
 
+	private void UpdateInputStateCache()
+	{
+		string coreId = !string.IsNullOrEmpty(LibretroNative.CurrentCoreId)
+			? LibretroNative.CurrentCoreId
+			: GetCoreFallbackId();
+
+		for (int i = 0; i < _inputStateCache.Length; i++)
+		{
+			string actionName = InputMapper.GetActionName(coreId, (LibretroInput)i);
+			bool pressed = !string.IsNullOrEmpty(actionName) &&
+				_validActions.Contains(actionName) &&
+				Input.IsActionPressed(actionName);
+
+			if (!pressed)
+				pressed = IsFallbackInputPressed((LibretroInput)i);
+
+			_inputStateCache[i] = pressed ? (short)1 : (short)0;
+		}
+	}
+
+	private void PrepareEnvironmentDirectories()
+	{
+		string saveDir;
+		string systemDir;
+		string assetsDir;
+
+		if (_isDolphinCore)
+		{
+			// Mirror RetroArch directory semantics and let the core resolve its own subfolders.
+			saveDir = ProjectSettings.GlobalizePath("user://saves/");
+			systemDir = ProjectSettings.GlobalizePath("user://system/");
+			// Cores commonly append "Sys"/"User" beneath this root.
+			assetsDir = Path.Combine(systemDir, "dolphin-emu");
+		}
+		else
+		{
+			saveDir = ProjectSettings.GlobalizePath("user://saves/");
+			systemDir = ProjectSettings.GlobalizePath("user://system/");
+			assetsDir = systemDir;
+		}
+
+		Directory.CreateDirectory(saveDir);
+		Directory.CreateDirectory(systemDir);
+		Directory.CreateDirectory(assetsDir);
+
+		UpdateDirectoryPointer(ref _saveDirectoryPtr, ref _resolvedSaveDirectory, saveDir);
+		UpdateDirectoryPointer(ref _systemDirectoryPtr, ref _resolvedSystemDirectory, systemDir);
+		UpdateDirectoryPointer(ref _coreAssetsDirectoryPtr, ref _resolvedAssetsDirectory, assetsDir);
+
+		if (_isDolphinCore)
+		{
+			string sysPath = Path.Combine(systemDir, "dolphin-emu", "Sys");
+			string userPath = Path.Combine(saveDir, "User");
+			FileLogger.Log($"[dolphin] save_dir={saveDir}");
+			FileLogger.Log($"[dolphin] system_dir={systemDir}");
+			FileLogger.Log($"[dolphin] assets_dir={assetsDir}");
+			FileLogger.Log($"[dolphin] sys_exists={Directory.Exists(sysPath)} user_exists={Directory.Exists(userPath)}");
+		}
+	}
+
+	private static void UpdateDirectoryPointer(ref IntPtr ptr, ref string currentPath, string nextPath)
+	{
+		if (string.Equals(currentPath, nextPath, StringComparison.Ordinal) && ptr != IntPtr.Zero)
+			return;
+
+		if (ptr != IntPtr.Zero)
+			Marshal.FreeHGlobal(ptr);
+
+		ptr = Marshal.StringToHGlobalAnsi(nextPath);
+		currentPath = nextPath;
+	}
+
+	private void FlushPendingVideoFrame()
+	{
+		byte[]? frameToUpload = null;
+		int width = 0;
+		int height = 0;
+		int format = 0;
+
+		lock (_videoFrameLock)
+		{
+			if (!_hasPendingVideoFrame || _pendingVideoFrame == null)
+				return;
+
+			if (_uploadVideoFrame == null || _uploadVideoFrame.Length != _pendingVideoFrame.Length)
+				_uploadVideoFrame = new byte[_pendingVideoFrame.Length];
+
+			Buffer.BlockCopy(_pendingVideoFrame, 0, _uploadVideoFrame, 0, _pendingVideoFrame.Length);
+			frameToUpload = _uploadVideoFrame;
+			width = _pendingVideoWidth;
+			height = _pendingVideoHeight;
+			format = _pendingVideoFormat;
+			_hasPendingVideoFrame = false;
+		}
+
+		UpdateGameTexture(frameToUpload, width, height, format);
+	}
+
+	private void FlushPendingAudioFrames()
+	{
+		if (_audioPlayback == null) return;
+
+		int samples = 0;
+		bool hasBatch = false;
+		bool hasSample = false;
+		short left = 0;
+		short right = 0;
+
+		lock (_audioFrameLock)
+		{
+			if (_hasPendingAudioBatch && _pendingAudioRaw != null && _pendingAudioSamples > 0)
+			{
+				samples = _pendingAudioSamples;
+				if (_audioUploadRaw == null || _audioUploadRaw.Length < samples)
+					_audioUploadRaw = new short[samples];
+
+				Array.Copy(_pendingAudioRaw, _audioUploadRaw, samples);
+				_hasPendingAudioBatch = false;
+				_pendingAudioSamples = 0;
+				hasBatch = true;
+			}
+
+			if (_hasPendingAudioSample)
+			{
+				left = _pendingAudioSampleLeft;
+				right = _pendingAudioSampleRight;
+				_hasPendingAudioSample = false;
+				hasSample = true;
+			}
+		}
+
+		if (hasBatch && _audioUploadRaw != null)
+		{
+			int frames = samples / 2;
+			if (frames > 0 && _audioPlayback.GetFramesAvailable() >= frames)
+			{
+				if (_audioUploadFrames == null || _audioUploadFrames.Length != frames)
+					_audioUploadFrames = new Vector2[frames];
+
+				const float invShort = 0.00003051757f;
+				for (int i = 0; i < frames; i++)
+				{
+					_audioUploadFrames[i].X = _audioUploadRaw[i * 2] * invShort;
+					_audioUploadFrames[i].Y = _audioUploadRaw[i * 2 + 1] * invShort;
+				}
+
+				_audioPlayback.PushBuffer(_audioUploadFrames);
+			}
+		}
+		else if (hasSample && _audioPlayback.GetFramesAvailable() > 0)
+		{
+			_audioPlayback.PushFrame(new Vector2(left / 32768f, right / 32768f));
+		}
+	}
+
 	private void StartEmulator()
 	{
 		// FileLogger.Log("[LibretroPlayer] StartEmulator - BEGIN");
 		try
 		{
+			// Reset per-boot capability state before a core begins environment negotiation.
+			_coreRequestedHardwareRender = false;
+			_abortStartupDueToHardwareRender = false;
+
 			// FileLogger.Log("[LibretroPlayer] Creating callbacks...");
 			_envCallback = new LibretroNative.RetroEnvironmentDelegate(EnvironmentCallback);
 			_videoCallback = new LibretroNative.RetroVideoRefreshDelegate(VideoCallback);
@@ -263,11 +588,22 @@ public partial class LibretroPlayer : Node
 			_audioBatchCallback = new LibretroNative.RetroAudioSampleBatchDelegate(AudioBatchCallback);
 
 			// Ensure CATui-style defaults (gba_a, gba_b, etc.) exist before the core polls input.
-			string coreIdForBindings = !string.IsNullOrWhiteSpace(LibretroNative.CurrentCoreId)
-				? LibretroNative.CurrentCoreId
-				: GetCoreFallbackId();
-			InputMapper.EnsureDefaultActions(coreIdForBindings);
-			CacheValidActions();
+				string coreIdForBindings = !string.IsNullOrWhiteSpace(LibretroNative.CurrentCoreId)
+					? LibretroNative.CurrentCoreId
+					: GetCoreFallbackId();
+				_isDolphinCore = string.Equals(coreIdForBindings, "dolphin", StringComparison.OrdinalIgnoreCase);
+				_isPpssppCore = string.Equals(coreIdForBindings, "ppsspp", StringComparison.OrdinalIgnoreCase) ||
+					LibretroNative.CurrentCore == EmulatorCore.PSP_PPSSPP;
+				// PPSSPP software-only policy for macOS while no HW context bridge exists.
+				_forcePpssppSoftwareMode = _isPpssppCore && OS.GetName() == "macOS";
+				if (_forcePpssppSoftwareMode && !_loggedPpssppSoftwarePolicy)
+				{
+					_loggedPpssppSoftwarePolicy = true;
+					FileLogger.Log("[ppsspp] software-only policy active on macOS (forcing backend=none, denying HW context requests).");
+				}
+				InputMapper.EnsureDefaultActions(coreIdForBindings);
+				CacheValidActions();
+				PrepareEnvironmentDirectories();
 
 			// FileLogger.Log("[LibretroPlayer] Setting callbacks to core...");
 			LibretroNative.retro_set_environment(_envCallback);
@@ -277,18 +613,29 @@ public partial class LibretroPlayer : Node
 			LibretroNative.retro_set_audio_sample(_audioCallback);
 			LibretroNative.retro_set_audio_sample_batch(_audioBatchCallback);
 
-			// FileLogger.Log("[LibretroPlayer] Initializing core...");
+			FileLogger.Log("[libretroplayer] calling retro_init...");
 			LibretroNative.retro_init();
+			FileLogger.Log("[libretroplayer] retro_init complete.");
 			_coreInitialized = true;
 			// FileLogger.Log("[LibretroPlayer] Core initialized!");
 
 			// FileLogger.Log($"[libretroplayer] checking rom: {_currentRomPath}");
-			if (!System.IO.File.Exists(_currentRomPath))
-			{
-				FileLogger.Error($"[libretroplayer] rom not found: {_currentRomPath}");
-				return;
-			}
-			// FileLogger.Log("[LibretroPlayer] ROM file exists!");
+				if (!System.IO.File.Exists(_currentRomPath))
+				{
+					FileLogger.Error($"[libretroplayer] rom not found: {_currentRomPath}");
+					return;
+				}
+				FileLogger.Log($"[libretroplayer] rom path: {_currentRomPath}");
+				try
+				{
+					long romSize = new FileInfo(_currentRomPath).Length;
+					FileLogger.Log($"[libretroplayer] rom size bytes: {romSize}");
+				}
+				catch (Exception ex)
+				{
+					FileLogger.Error($"[libretroplayer] failed to stat rom: {ex.Message}");
+				}
+				// FileLogger.Log("[LibretroPlayer] ROM file exists!");
 
 			FileLogger.Log("[LibretroPlayer] Getting system info...");
 			retro_system_info sysInfo = new retro_system_info();
@@ -296,9 +643,13 @@ public partial class LibretroPlayer : Node
 			
 			bool needFullPath = sysInfo.need_fullpath;
 			
-			retro_game_info gameInfo = new retro_game_info();
-			gameInfo.path = _currentRomPath;
-			gameInfo.meta = null;
+				retro_game_info gameInfo = new retro_game_info();
+				// libretro receives a raw C-string pointer for gameInfo.path.
+				if (_romPathPtr != IntPtr.Zero)
+					Marshal.FreeHGlobal(_romPathPtr);
+				_romPathPtr = Marshal.StringToHGlobalAnsi(_currentRomPath);
+				gameInfo.path = _romPathPtr;
+				gameInfo.meta = IntPtr.Zero;
 
 			if (!needFullPath)
 			{
@@ -312,7 +663,7 @@ public partial class LibretroPlayer : Node
 				Marshal.Copy(romData, 0, _romDataPtr, romData.Length);
 				
 				gameInfo.data = _romDataPtr;
-				gameInfo.size = (uint)romData.Length;
+				gameInfo.size = (nuint)romData.LongLength;
 			}
 			else
 			{
@@ -324,6 +675,13 @@ public partial class LibretroPlayer : Node
 			FileLogger.Log("[libretroplayer] loading game...");
 			if (LibretroNative.retro_load_game(ref gameInfo))
 			{
+				if (_abortStartupDueToHardwareRender)
+				{
+					FileLogger.Error("[libretroplayer] startup aborted: core requires HW rendering but this frontend has no HW context bridge.");
+					StopGame();
+					return;
+				}
+
 				FileLogger.Log("[libretroplayer] game loaded!");
 				
 				retro_system_av_info avInfo = new retro_system_av_info();
@@ -340,6 +698,11 @@ public partial class LibretroPlayer : Node
 			else
 			{
 				FileLogger.Error("[libretroplayer] failed to load game :(");
+				if (_abortStartupDueToHardwareRender)
+				{
+					FileLogger.Error("[libretroplayer] core boot failed because RETRO_ENVIRONMENT_SET_HW_RENDER is unsupported by this frontend.");
+				}
+				StopGame();
 			}
 		}
 		catch (Exception e)
@@ -382,48 +745,37 @@ public partial class LibretroPlayer : Node
 	}
 
 	// optimization: audio processing with static buffers
-	private static void AudioBatchCallback(IntPtr data, uint frames)
+	private static nuint AudioBatchCallback(IntPtr data, nuint frames)
 	{
-		if (_instance == null || _instance._audioPlayback == null) return;
-		if (_instance._audioPlayback.GetFramesAvailable() < frames) return;
+		if (_instance == null || data == IntPtr.Zero) return 0;
+		if (frames == 0) return 0;
+		if (frames > (nuint)(int.MaxValue / 2)) return 0;
 
-		int samples = (int)frames * 2;
-		
-		if (_audioRawBuffer == null || _audioRawBuffer.Length < samples)
+		int samples = checked((int)frames * 2);
+		if (samples <= 0) return 0;
+
+		lock (_audioFrameLock)
 		{
-			_audioRawBuffer = new short[samples * 2];
-		}
-		
-		if (_audioGodotBuffer == null || _audioGodotBuffer.Length < frames)
-		{
-			_audioGodotBuffer = new Vector2[frames * 2];
+			if (_pendingAudioRaw == null || _pendingAudioRaw.Length < samples)
+				_pendingAudioRaw = new short[samples];
+
+			Marshal.Copy(data, _pendingAudioRaw, 0, samples);
+			_pendingAudioSamples = samples;
+			_hasPendingAudioBatch = true;
 		}
 
-		Marshal.Copy(data, _audioRawBuffer, 0, samples);
-
-		const float invShort = 0.00003051757f;
-		for (int i = 0; i < frames; i++)
-		{
-			_audioGodotBuffer[i].X = _audioRawBuffer[i*2] * invShort;
-			_audioGodotBuffer[i].Y = _audioRawBuffer[i*2+1] * invShort;
-		}
-		
-		if (_audioGodotBuffer != null && _audioGodotBuffer.Length == frames)
-		{
-			_instance._audioPlayback.PushBuffer(_audioGodotBuffer);
-		}
-		else
-		{
-			Vector2[] pushBuffer = new Vector2[frames];
-			Array.Copy(_audioGodotBuffer, pushBuffer, frames);
-			_instance._audioPlayback.PushBuffer(pushBuffer);
-		}
+		return frames;
 	}
 
 	private static void AudioSampleCallback(short left, short right)
 	{
-		if (_instance == null || _instance._audioPlayback == null) return;
-		_instance._audioPlayback.PushFrame(new Vector2(left / 32768f, right / 32768f));
+		if (_instance == null) return;
+		lock (_audioFrameLock)
+		{
+			_pendingAudioSampleLeft = left;
+			_pendingAudioSampleRight = right;
+			_hasPendingAudioSample = true;
+		}
 	}
 
 	private static void InputPollCallback() { }
@@ -434,22 +786,8 @@ public partial class LibretroPlayer : Node
 
 		if (port != 0) return 0;
 		if (device != 1) return 0;
-
-		string coreId = !string.IsNullOrEmpty(LibretroNative.CurrentCoreId) 
-			? LibretroNative.CurrentCoreId 
-			: GetCoreFallbackId();
-		
-		// Primary path: resolve to per-core action name and read from Godot InputMap.
-		string actionName = InputMapper.GetActionName(coreId, (LibretroInput)id);
-		if (!string.IsNullOrEmpty(actionName) &&
-			_validActions.Contains(actionName) &&
-			Input.IsActionPressed(actionName))
-		{
-			return 1;
-		}
-
-		// Safety net: keyboard/UI mappings still work if InputMap actions are missing.
-		return IsFallbackInputPressed((LibretroInput)id) ? (short)1 : (short)0;
+		if (id >= (uint)_inputStateCache.Length) return 0;
+		return _inputStateCache[(int)id];
 	}
 
 	private static string GetCoreFallbackId()
@@ -462,46 +800,42 @@ public partial class LibretroPlayer : Node
 			EmulatorCore.NES_FCEUMM => "nes",
 			EmulatorCore.GB_GAMBATTE => "gb",
 			EmulatorCore.GBC_GAMBATTE => "gbc",
+			EmulatorCore.PSP_PPSSPP => "ppsspp",
 			_ => "gba"
 		};
 	}
 
 	private static IntPtr _saveDirectoryPtr = IntPtr.Zero;
 	private static IntPtr _systemDirectoryPtr = IntPtr.Zero;
+	private static IntPtr _coreAssetsDirectoryPtr = IntPtr.Zero;
+	private static string _resolvedSaveDirectory = string.Empty;
+	private static string _resolvedSystemDirectory = string.Empty;
+	private static string _resolvedAssetsDirectory = string.Empty;
 
 	private static bool EnvironmentCallback(uint cmd, IntPtr data)
 	{
 		switch (cmd)
 		{
 			case LibretroNative.RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-				if (data != IntPtr.Zero)
+				if (data != IntPtr.Zero && _instance != null)
 				{
 					_instance._currentPixelFormat = (retro_pixel_format)Marshal.ReadInt32(data);
 				}
 				return true;
 
 			case LibretroNative.RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
-				if (data != IntPtr.Zero)
-				{
-					string saveDir = ProjectSettings.GlobalizePath("user://saves/");
-					if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
-					
-					if (_saveDirectoryPtr != IntPtr.Zero) Marshal.FreeHGlobal(_saveDirectoryPtr);
-					_saveDirectoryPtr = Marshal.StringToHGlobalAnsi(saveDir);
-					Marshal.WriteIntPtr(data, _saveDirectoryPtr);
-				}
+				if (data == IntPtr.Zero || _saveDirectoryPtr == IntPtr.Zero) return false;
+				Marshal.WriteIntPtr(data, _saveDirectoryPtr);
 				return true;
 
 			case LibretroNative.RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
-				if (data != IntPtr.Zero)
-				{
-					string systemDir = ProjectSettings.GlobalizePath("user://system/");
-					if (!Directory.Exists(systemDir)) Directory.CreateDirectory(systemDir);
-					
-					if (_systemDirectoryPtr != IntPtr.Zero) Marshal.FreeHGlobal(_systemDirectoryPtr);
-					_systemDirectoryPtr = Marshal.StringToHGlobalAnsi(systemDir);
-					Marshal.WriteIntPtr(data, _systemDirectoryPtr);
-				}
+				if (data == IntPtr.Zero || _systemDirectoryPtr == IntPtr.Zero) return false;
+				Marshal.WriteIntPtr(data, _systemDirectoryPtr);
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY:
+				if (data == IntPtr.Zero || _coreAssetsDirectoryPtr == IntPtr.Zero) return false;
+				Marshal.WriteIntPtr(data, _coreAssetsDirectoryPtr);
 				return true;
 
 			case LibretroNative.RETRO_ENVIRONMENT_GET_CAN_DUPE:
@@ -509,41 +843,215 @@ public partial class LibretroPlayer : Node
 				return true;
 
 			case LibretroNative.RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
+				if (data == IntPtr.Zero)
+					return false;
+
+				if (!TryGetRetroLogCallbackPointer(out IntPtr logPtr))
+					return false;
+
+				var logCb = new retro_log_callback { log = logPtr };
+				Marshal.StructureToPtr(logCb, data, false);
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_SET_MESSAGE:
+				return TryLogFrontendMessage(data, extended: false);
+
+			case LibretroNative.RETRO_ENVIRONMENT_SET_MESSAGE_EXT:
+				return TryLogFrontendMessage(data, extended: true);
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION:
+				if (data != IntPtr.Zero)
+				{
+					// We handle RETRO_ENVIRONMENT_SET_MESSAGE_EXT in this frontend.
+					Marshal.WriteInt32(data, 1);
+				}
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
+				if (data != IntPtr.Zero)
+				{
+					// Support modern core options negotiation path.
+					Marshal.WriteInt32(data, 2);
+				}
+				return true;
+
+				case LibretroNative.RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
+					// Optional frontend hint; safe to accept as a no-op.
+					return true;
+				
+				case LibretroNative.RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
+				case LibretroNative.RETRO_ENVIRONMENT_SET_GEOMETRY:
+					// Safe no-op for software-only mode; core can continue running.
+					return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+			case LibretroNative.RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION_LEGACY:
+				if (data != IntPtr.Zero)
+				{
+					Marshal.WriteInt32(data, 1);
+				}
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK_LEGACY:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_INPUT_BITMASKS_LEGACY:
+			case LibretroNative.RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
+				// We only poll per-button states today; still advertise bitmask support for compatibility.
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_USERNAME:
+				if (data == IntPtr.Zero)
+					return false;
+
+				IntPtr usernamePtr = GetOrCreateAnsiPointer(ref _usernamePtr, System.Environment.UserName);
+				Marshal.WriteIntPtr(data, usernamePtr);
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_LANGUAGE:
+				if (data != IntPtr.Zero)
+				{
+					// RETRO_LANGUAGE_ENGLISH = 0
+					Marshal.WriteInt32(data, 0);
+				}
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
+				// The frontend does not expose libretro VFS yet; cores should fall back to stdio.
+				return false;
+
+				case LibretroNative.RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+					if (_forcePpssppSoftwareMode)
+					{
+						// RETRO_HW_CONTEXT_NONE = 0
+						if (data != IntPtr.Zero)
+							Marshal.WriteInt32(data, 0);
+						return true;
+					}
+					if (_isDolphinCore)
+					{
+						// Tell Dolphin we don't have a preferred hardware API.
+						if (data != IntPtr.Zero)
+							Marshal.WriteInt32(data, 0);
+					return true;
+				}
+				return false;
+
+				case LibretroNative.RETRO_ENVIRONMENT_SET_HW_RENDER:
+					if (_forcePpssppSoftwareMode)
+					{
+						// Keep PPSSPP in software mode on macOS; do not trigger HW-abort paths.
+						if (!_loggedPpssppHwRenderDenied)
+						{
+							_loggedPpssppHwRenderDenied = true;
+							FileLogger.Error("[ppsspp] software-only policy denied RETRO_ENVIRONMENT_SET_HW_RENDER on macOS.");
+						}
+						return false;
+					}
+					_coreRequestedHardwareRender = true;
+					if (_frontendSupportsHardwareRender)
+					{
+						return true;
+					}
+					if (_isDolphinCore)
+					{
+						_abortStartupDueToHardwareRender = true;
+					if (!_loggedHwRenderUnsupported)
+					{
+						_loggedHwRenderUnsupported = true;
+						FileLogger.Error("[dolphin] core requested RETRO_ENVIRONMENT_SET_HW_RENDER, but this frontend has no HW context bridge.");
+					}
+				}
+				else if (!_loggedHwRenderUnsupportedGeneric)
+				{
+					_loggedHwRenderUnsupportedGeneric = true;
+					FileLogger.Error("[libretroplayer] core requested RETRO_ENVIRONMENT_SET_HW_RENDER, frontend has no HW context bridge; attempting fallback.");
+				}
+				return false;
+
+				case LibretroNative.RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+					if (_forcePpssppSoftwareMode)
+						return false;
+					if (_coreRequestedHardwareRender && !_frontendSupportsHardwareRender)
+						_abortStartupDueToHardwareRender = true;
+					if (_isDolphinCore && !_loggedHwRenderInterfaceUnsupported)
+				{
+					_loggedHwRenderInterfaceUnsupported = true;
+					FileLogger.Error("[dolphin] core requested RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE, unsupported.");
+				}
+				return false;
+
+				case LibretroNative.RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
+					if (_forcePpssppSoftwareMode)
+						return false;
+					if (_coreRequestedHardwareRender && !_frontendSupportsHardwareRender)
+						_abortStartupDueToHardwareRender = true;
+					if (_isDolphinCore && !_loggedHwSharedContextUnsupported)
+				{
+					_loggedHwSharedContextUnsupported = true;
+					FileLogger.Error("[dolphin] core requested RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT, unsupported.");
+				}
+				return false;
+
+				case LibretroNative.RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+					if (_forcePpssppSoftwareMode)
+						return false;
+					if (_coreRequestedHardwareRender && !_frontendSupportsHardwareRender)
+						_abortStartupDueToHardwareRender = true;
+					if (_isDolphinCore && !_loggedHwNegotiationUnsupported)
+				{
+					_loggedHwNegotiationUnsupported = true;
+					FileLogger.Error("[dolphin] core requested RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE, unsupported.");
+				}
 				return false;
 
 			case LibretroNative.RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
 				return true;
-			
+
 			case LibretroNative.RETRO_ENVIRONMENT_SET_VARIABLES:
+				RegisterCoreVariables(data);
 				return true;
-			
+
 			case LibretroNative.RETRO_ENVIRONMENT_GET_VARIABLE:
-				if (data != IntPtr.Zero)
+				if (data == IntPtr.Zero) return false;
+				retro_variable variable = Marshal.PtrToStructure<retro_variable>(data);
+				string key = Marshal.PtrToStringAnsi(variable.key);
+				if (string.IsNullOrEmpty(key)) return false;
+
+				if (_isDolphinCore)
 				{
-					retro_variable variable = Marshal.PtrToStructure<retro_variable>(data);
-					string key = Marshal.PtrToStringAnsi(variable.key);
-					
-					if (!string.IsNullOrEmpty(key))
-					{
-						string value = GetCoreVariableValue(key);
-						if (!string.IsNullOrEmpty(value))
-						{
-							if (_variableValuePtrs.ContainsKey(key))
-							{
-								Marshal.FreeHGlobal(_variableValuePtrs[key]);
-							}
-							
-							IntPtr valuePtr = Marshal.StringToHGlobalAnsi(value);
-							_variableValuePtrs[key] = valuePtr;
-							
-							variable.value = valuePtr;
-							Marshal.StructureToPtr(variable, data, false);
-							return true;
-						}
-					}
+					// Avoid touching Godot scene/config objects from core callback threads.
+					if (!TryGetDolphinVariableValue(key, out string dolphinValue))
+						return false;
+
+					SetVariableValuePointer(key, dolphinValue, ref variable, data);
+					LogDolphinResolvedVariable(key, dolphinValue);
+					return true;
 				}
-				return false;
-			
+
+				if (key.StartsWith("ppsspp_", StringComparison.OrdinalIgnoreCase))
+				{
+					if (!TryGetPpssppVariableValue(key, out string ppssppValue))
+						return false;
+
+					SetVariableValuePointer(key, ppssppValue, ref variable, data);
+					LogPpssppResolvedVariable(key, ppssppValue);
+					return true;
+				}
+
+				if (!TryGetRegisteredFallbackValue(key, out string fallbackValue))
+					return false;
+
+				// Returning only registered/default option values keeps this callback thread-safe.
+				SetVariableValuePointer(key, fallbackValue, ref variable, data);
+				return true;
+
 			case LibretroNative.RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
 				if (data != IntPtr.Zero)
 				{
@@ -552,8 +1060,450 @@ public partial class LibretroPlayer : Node
 				return true;
 
 			default:
+				LogUnhandledEnvironmentCommand(cmd);
 				return false;
 		}
+	}
+
+	private static bool TryGetRetroLogCallbackPointer(out IntPtr callbackPtr)
+	{
+		// Use a native variadic logger when available so cores that call log_cb(..., fmt, ...)
+		// during retro_init don't hit reverse P/Invoke varargs limitations.
+		if (TryGetNativeSyslogCallback(out callbackPtr))
+			return true;
+
+		_retroLogPrintfShim ??= RetroLogPrintfShim;
+		callbackPtr = Marshal.GetFunctionPointerForDelegate(_retroLogPrintfShim);
+		return callbackPtr != IntPtr.Zero;
+	}
+
+	private static bool TryGetNativeSyslogCallback(out IntPtr callbackPtr)
+	{
+		if (_nativeRetroLogCallbackPtr != IntPtr.Zero)
+		{
+			callbackPtr = _nativeRetroLogCallbackPtr;
+			return true;
+		}
+
+		string[] libraryCandidates = OS.GetName() switch
+		{
+			"macOS" => new[] { "/usr/lib/libSystem.B.dylib", "libSystem.B.dylib" },
+			"Linux" => new[] { "libc.so.6", "libc.so" },
+			_ => Array.Empty<string>()
+		};
+
+		foreach (string libraryPath in libraryCandidates)
+		{
+			try
+			{
+				if (!NativeLibrary.TryLoad(libraryPath, out IntPtr handle))
+					continue;
+
+				if (NativeLibrary.TryGetExport(handle, "syslog", out IntPtr syslogPtr) && syslogPtr != IntPtr.Zero)
+				{
+					_nativeRetroLogLibraryHandle = handle;
+					_nativeRetroLogCallbackPtr = syslogPtr;
+					callbackPtr = syslogPtr;
+					return true;
+				}
+
+				NativeLibrary.Free(handle);
+			}
+			catch
+			{
+				// Ignore and continue trying other system library names.
+			}
+		}
+
+		callbackPtr = IntPtr.Zero;
+		return false;
+	}
+
+	private static IntPtr GetOrCreateAnsiPointer(ref IntPtr ptr, string value)
+	{
+		if (ptr == IntPtr.Zero)
+			ptr = Marshal.StringToHGlobalAnsi(value ?? string.Empty);
+
+		return ptr;
+	}
+
+	private static bool TryLogFrontendMessage(IntPtr data, bool extended)
+	{
+		if (data == IntPtr.Zero)
+			return false;
+
+		IntPtr messagePtr = IntPtr.Zero;
+		if (extended)
+		{
+			retro_message_ext msg = Marshal.PtrToStructure<retro_message_ext>(data);
+			messagePtr = msg.msg;
+		}
+		else
+		{
+			retro_message msg = Marshal.PtrToStructure<retro_message>(data);
+			messagePtr = msg.msg;
+		}
+
+		if (messagePtr == IntPtr.Zero)
+			return true;
+
+		string message = Marshal.PtrToStringAnsi(messagePtr) ?? string.Empty;
+		if (!string.IsNullOrWhiteSpace(message))
+			FileLogger.Log($"[libretro-msg] {message.TrimEnd()}");
+
+		return true;
+	}
+
+	private static void LogUnhandledEnvironmentCommand(uint cmd)
+	{
+		lock (_environmentLogLock)
+		{
+			if (!_loggedUnhandledEnvironmentCommands.Add(cmd))
+				return;
+		}
+
+		FileLogger.Log($"[libretro-env] unhandled cmd: {cmd}");
+	}
+
+	private static void SetVariableValuePointer(string key, string value, ref retro_variable variable, IntPtr dataPtr)
+	{
+		lock (_variablePtrLock)
+		{
+			if (_variableValuePtrs.TryGetValue(key, out IntPtr existingPtr) && existingPtr != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(existingPtr);
+			}
+
+			// Core keeps this pointer after callback returns, so we allocate unmanaged memory.
+			IntPtr valuePtr = Marshal.StringToHGlobalAnsi(value);
+			_variableValuePtrs[key] = valuePtr;
+			variable.value = valuePtr;
+			Marshal.StructureToPtr(variable, dataPtr, false);
+		}
+	}
+
+	private static void RegisterCoreVariables(IntPtr data)
+	{
+		if (data == IntPtr.Zero)
+			return;
+
+		lock (_registeredVariablesLock)
+		{
+			_registeredCoreVariables.Clear();
+			_loggedDolphinResolvedKeys.Clear();
+
+			int structSize = Marshal.SizeOf<retro_variable>();
+			IntPtr current = data;
+
+			while (true)
+			{
+				retro_variable variable = Marshal.PtrToStructure<retro_variable>(current);
+				if (variable.key == IntPtr.Zero)
+					break;
+
+				string key = Marshal.PtrToStringAnsi(variable.key);
+				string definition = variable.value != IntPtr.Zero ? Marshal.PtrToStringAnsi(variable.value) : string.Empty;
+
+						if (!string.IsNullOrEmpty(key))
+						{
+							string[] options = ParseCoreVariableOptions(definition);
+							_registeredCoreVariables[key] = options;
+							if (key.StartsWith("dolphin_", StringComparison.OrdinalIgnoreCase) && options.Length > 0)
+							{
+								FileLogger.Log($"[dolphin] options {key} = {string.Join("|", options)}");
+								if (string.Equals(key, "dolphin_renderer", StringComparison.OrdinalIgnoreCase) &&
+									string.IsNullOrEmpty(SelectOptionByToken(options, "software")))
+								{
+									FileLogger.Error("[dolphin] renderer options are hardware-only in this core build.");
+								}
+							}
+							else if (key.StartsWith("ppsspp_", StringComparison.OrdinalIgnoreCase) && options.Length > 0)
+							{
+								FileLogger.Log($"[ppsspp] options {key} = {string.Join("|", options)}");
+							}
+						}
+
+				current = IntPtr.Add(current, structSize);
+			}
+		}
+	}
+
+	private static string[] ParseCoreVariableOptions(string definition)
+	{
+		if (string.IsNullOrWhiteSpace(definition))
+			return Array.Empty<string>();
+
+		string payload = definition;
+		int delimiter = definition.IndexOf(';');
+		if (delimiter >= 0 && delimiter + 1 < definition.Length)
+			payload = definition.Substring(delimiter + 1);
+
+		string[] split = payload.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		return split.Length == 0 ? Array.Empty<string>() : split;
+	}
+
+	private static bool TryGetRegisteredOption(string key, out string[] options)
+	{
+		lock (_registeredVariablesLock)
+		{
+			if (_registeredCoreVariables.TryGetValue(key, out var stored))
+			{
+				options = stored;
+				return true;
+			}
+		}
+
+		options = Array.Empty<string>();
+		return false;
+	}
+
+	private static bool TryGetRegisteredFallbackValue(string key, out string value)
+	{
+		if (TryGetRegisteredOption(key, out string[] options) && options.Length > 0)
+		{
+			value = options[0];
+			return true;
+		}
+
+		value = string.Empty;
+		return false;
+	}
+
+	private static string SelectOptionByToken(string[] options, params string[] tokens)
+	{
+		foreach (string option in options)
+		{
+			string normalized = option.ToLowerInvariant();
+			foreach (string token in tokens)
+			{
+				if (normalized.Contains(token, StringComparison.Ordinal))
+					return option;
+			}
+		}
+
+		return string.Empty;
+	}
+
+	private static bool TrySelectLowestNumericOption(string[] options, out string value)
+	{
+		int min = int.MaxValue;
+		string selected = string.Empty;
+
+		foreach (string option in options)
+		{
+			if (!int.TryParse(option, out int numeric))
+				continue;
+
+			if (numeric < min)
+			{
+				min = numeric;
+				selected = option;
+			}
+		}
+
+		value = selected;
+		return !string.IsNullOrEmpty(value);
+	}
+
+	private static void LogDolphinResolvedVariable(string key, string value)
+	{
+		lock (_registeredVariablesLock)
+		{
+			if (!_loggedDolphinResolvedKeys.Add(key))
+				return;
+		}
+
+		FileLogger.Log($"[dolphin] variable {key} = {value}");
+	}
+
+	private static void LogPpssppResolvedVariable(string key, string value)
+	{
+		lock (_registeredVariablesLock)
+		{
+			if (!_loggedPpssppResolvedKeys.Add(key))
+				return;
+		}
+
+		FileLogger.Log($"[ppsspp] variable {key} = {value}");
+	}
+
+	private static bool TryGetDolphinVariableValue(string key, out string value)
+	{
+		// Stable defaults for in-process Dolphin; avoids thread-unsafe config lookups.
+		string normalized = key.ToLowerInvariant();
+		if (!normalized.StartsWith("dolphin_", StringComparison.Ordinal))
+		{
+			value = string.Empty;
+			return false;
+		}
+
+		if (normalized.Contains("renderer"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				// Use only advertised option values; forcing hidden values (e.g. "Software")
+				// can crash some release Dolphin core builds during boot.
+				value = SelectOptionByToken(options, "hardware");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			// Let the core keep its internal default when no option table is available.
+			value = string.Empty;
+			return false;
+		}
+
+		if (normalized.Contains("cpu_thread"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				// Prefer dual-core scheduling; single-core startup can stall before video backend init.
+				value = SelectOptionByToken(options, "enabled", "on", "true", "dual");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "enabled";
+			return true;
+		}
+
+		if (normalized.Contains("fastmem"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				value = SelectOptionByToken(options, "disabled", "off", "false");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "disabled";
+			return true;
+		}
+
+		if (normalized.Contains("dsp_thread"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				value = SelectOptionByToken(options, "disabled", "off", "false");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "disabled";
+			return true;
+		}
+
+		if (normalized.Contains("skip_gc_bios") || normalized.Contains("skip_ipl"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				value = SelectOptionByToken(options, "enabled", "on", "true", "skip");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "enabled";
+			return true;
+		}
+
+		if (normalized.Contains("cpu_core"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				// Numeric enums are common here (e.g. 0 = Interpreter). Prefer lowest value for stability.
+				if (TrySelectLowestNumericOption(options, out value)) return true;
+
+				value = SelectOptionByToken(options, "cached interpreter", "interpreter");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "cached_interpreter";
+			return true;
+		}
+
+		value = string.Empty;
+		return false;
+	}
+
+	private static bool TryGetPpssppVariableValue(string key, out string value)
+	{
+		string normalized = key.ToLowerInvariant();
+		if (!normalized.StartsWith("ppsspp_", StringComparison.Ordinal))
+		{
+			value = string.Empty;
+			return false;
+		}
+
+		if (normalized.Contains("software_rendering"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				value = SelectOptionByToken(options, "enabled", "on", "true", "software");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "enabled";
+			return true;
+		}
+
+			if (normalized.Contains("backend"))
+			{
+				if (_forcePpssppSoftwareMode)
+				{
+					value = "none";
+					if (!_loggedPpssppBackendOverride)
+					{
+						_loggedPpssppBackendOverride = true;
+						FileLogger.Log("[ppsspp] software-only policy forcing ppsspp_backend=none.");
+					}
+					return true;
+				}
+
+				if (TryGetRegisteredOption(key, out var options))
+				{
+					value = SelectOptionByToken(options, "software");
+					if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = string.Empty;
+			return false;
+		}
+
+		if (normalized.Contains("cpu_core"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				if (TrySelectLowestNumericOption(options, out value)) return true;
+
+				value = SelectOptionByToken(options, "interpreter");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "0";
+			return true;
+		}
+
+		if (normalized.Contains("fast_memory") ||
+			normalized.Contains("gpu_hardware_transform") ||
+			normalized.Contains("hardware_tesselation"))
+		{
+			if (TryGetRegisteredOption(key, out var options))
+			{
+				value = SelectOptionByToken(options, "disabled", "off", "false");
+				if (!string.IsNullOrEmpty(value)) return true;
+				if (options.Length > 0) { value = options[0]; return true; }
+			}
+
+			value = "disabled";
+			return true;
+		}
+
+		value = string.Empty;
+		return false;
 	}
 	
 	private static string GetCoreVariableValue(string key)
@@ -635,29 +1585,56 @@ public partial class LibretroPlayer : Node
 		}
 	}
 
-	// optimization: video processing with static buffers
+	// Copy frame bytes in callback thread, then upload texture in _Process on the main thread.
 	private static void VideoCallback(IntPtr data, uint width, uint height, uint pitch)
 	{
-		if (data == IntPtr.Zero || _instance == null) return;
+		if (_instance == null || data == IntPtr.Zero) return;
+		if (width == 0 || height == 0 || pitch == 0) return;
+
+		// libretro signals GPU-backed frames with RETRO_HW_FRAME_BUFFER_VALID ((void*)-1).
+		// Without an HW context bridge, attempting to Marshal.Copy from this sentinel would crash.
+		if (data == new IntPtr(-1))
+		{
+			if (!_loggedHwVideoPointer)
+			{
+				_loggedHwVideoPointer = true;
+				FileLogger.Error("[libretroplayer] received RETRO_HW_FRAME_BUFFER_VALID in VideoCallback without HW bridge; dropping frame.");
+			}
+			return;
+		}
 
 		int bytesPerPixel = GetBytesPerPixel(_instance._currentPixelFormat);
-		int lineSize = (int)(width * bytesPerPixel);
-		int totalSize = lineSize * (int)height;
-		
-		if (_pixelBuffer == null || _pixelBuffer.Length < totalSize)
+		long lineSizeLong = (long)width * bytesPerPixel;
+		if (lineSizeLong <= 0 || lineSizeLong > int.MaxValue) return;
+		int lineSize = (int)lineSizeLong;
+		long totalSizeLong = lineSizeLong * height;
+		if (totalSizeLong <= 0 || totalSizeLong > int.MaxValue) return;
+		int totalSize = (int)totalSizeLong;
+		int rowCopyBytes = (int)Math.Min((uint)lineSize, pitch);
+		if (rowCopyBytes <= 0) return;
+
+		if (!_loggedFirstVideoFrame)
 		{
-			_pixelBuffer = new byte[totalSize];
+			_loggedFirstVideoFrame = true;
+			FileLogger.Log($"[libretroplayer] first video frame ptr=0x{data.ToInt64():X} w={width} h={height} pitch={pitch} bpp={bytesPerPixel}");
 		}
 		
-		for (int y = 0; y < height; y++)
+		lock (_videoFrameLock)
 		{
-			IntPtr src = IntPtr.Add(data, y * (int)pitch);
-			Marshal.Copy(src, _pixelBuffer, y * lineSize, lineSize);
+			if (_pendingVideoFrame == null || _pendingVideoFrame.Length != totalSize)
+				_pendingVideoFrame = new byte[totalSize];
+
+			for (int y = 0; y < height; y++)
+			{
+				IntPtr src = IntPtr.Add(data, y * (int)pitch);
+				Marshal.Copy(src, _pendingVideoFrame, y * lineSize, rowCopyBytes);
+			}
+
+			_pendingVideoWidth = (int)width;
+			_pendingVideoHeight = (int)height;
+			_pendingVideoFormat = (int)_instance._currentPixelFormat;
+			_hasPendingVideoFrame = true;
 		}
-		
-		// optimization: calling this directly instead of using CallDeferred for better performance
-		// since retro_run is called from _Process, we are on the main thread.
-		_instance.UpdateGameTexture(_pixelBuffer, (int)width, (int)height, (int)_instance._currentPixelFormat);
 	}
 
 	private static int GetBytesPerPixel(retro_pixel_format format)
@@ -686,13 +1663,13 @@ public partial class LibretroPlayer : Node
 	{
 		if (!_coreInitialized || LibretroNative.retro_get_memory_data == null) return;
 
-		uint size = LibretroNative.retro_get_memory_size(LibretroNative.RETRO_MEMORY_SAVE_RAM);
-		if (size == 0) return;
+		nuint size = LibretroNative.retro_get_memory_size(LibretroNative.RETRO_MEMORY_SAVE_RAM);
+		if (size == 0 || size > (nuint)int.MaxValue) return;
 
 		IntPtr ptr = LibretroNative.retro_get_memory_data(LibretroNative.RETRO_MEMORY_SAVE_RAM);
 		if (ptr == IntPtr.Zero) return;
 
-		byte[] data = new byte[size];
+		byte[] data = new byte[(int)size];
 		Marshal.Copy(ptr, data, 0, (int)size);
 
 		string saveName = Path.GetFileNameWithoutExtension(_currentRomPath);
@@ -715,14 +1692,14 @@ public partial class LibretroPlayer : Node
 	public void SaveState(string path)
 	{
 		if (!_coreInitialized || LibretroNative.retro_serialize_size == null) return;
-		uint size = LibretroNative.retro_serialize_size();
-		if (size == 0) return;
+		nuint size = LibretroNative.retro_serialize_size();
+		if (size == 0 || size > (nuint)int.MaxValue) return;
 		IntPtr ptr = Marshal.AllocHGlobal((int)size);
 		try
 		{
 			if (LibretroNative.retro_serialize(ptr, size))
 			{
-				byte[] data = new byte[size];
+				byte[] data = new byte[(int)size];
 				Marshal.Copy(ptr, data, 0, (int)size);
 				string dir = Path.GetDirectoryName(path);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
@@ -737,7 +1714,7 @@ public partial class LibretroPlayer : Node
 		if (!_coreInitialized || LibretroNative.retro_unserialize == null) return;
 		if (!File.Exists(path)) return;
 		byte[] data = File.ReadAllBytes(path);
-		uint size = (uint)data.Length;
+		nuint size = (nuint)data.LongLength;
 		IntPtr ptr = Marshal.AllocHGlobal((int)size);
 		try
 		{
@@ -762,8 +1739,8 @@ public partial class LibretroPlayer : Node
 	private void LoadSRAM()
 	{
 		if (!_coreInitialized || LibretroNative.retro_get_memory_data == null) return;
-		uint size = LibretroNative.retro_get_memory_size(LibretroNative.RETRO_MEMORY_SAVE_RAM);
-		if (size == 0) return;
+		nuint size = LibretroNative.retro_get_memory_size(LibretroNative.RETRO_MEMORY_SAVE_RAM);
+		if (size == 0 || size > (nuint)int.MaxValue) return;
 
 		string saveName = Path.GetFileNameWithoutExtension(_currentRomPath);
 		string saveDir = ProjectSettings.GlobalizePath("user://saves/");
@@ -825,5 +1802,19 @@ public partial class LibretroPlayer : Node
 			LibretroInput.R2 => Input.IsKeyPressed(Key.R),
 			_ => false,
 		};
+	}
+
+	private static void RetroLogPrintfShim(int level, IntPtr format)
+	{
+		if (format == IntPtr.Zero)
+			return;
+
+		// retro_log_printf_t is variadic in C; this shim intentionally ignores extra arguments
+		// and logs the format string itself so cores with mandatory log interface won't crash.
+		string text = Marshal.PtrToStringAnsi(format) ?? string.Empty;
+		if (string.IsNullOrWhiteSpace(text))
+			return;
+
+		FileLogger.Log($"[libretro-log:{level}] {text.TrimEnd()}");
 	}
 }

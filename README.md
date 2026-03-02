@@ -30,7 +30,10 @@ Example:
       "id": "dolphin",
       "name": "Dolphin",
       "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
-      "argsTemplate": "--exec \"{ROM}\" --batch"
+      "argsTemplate": "--exec \"{ROM}\" --batch",
+      "corePathMac": "cores/dolphin_libretro.dylib",
+      "corePathWindows": "cores/dolphin_libretro.dll",
+      "corePathLinux": "cores/dolphin_libretro.so"
     }
   ]
 }
@@ -40,6 +43,7 @@ Notes:
 - `libraryRoot` can be an absolute path or `~/...`.
 - `romPath` is relative to `libraryRoot` (or absolute).
 - `exePath` can be absolute or relative to `libraryRoot`.
+- If `corePath*` is provided, PGEmu will use in-process libretro launch for that emulator.
 
 ## Run the GUI (Godot)
 - Install Godot 4.6 with .NET support.

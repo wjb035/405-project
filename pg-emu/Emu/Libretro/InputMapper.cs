@@ -136,6 +136,23 @@ public partial class InputMapper : Node
 		_coreMappings["swanstation"] = _coreMappings["ps1"];
 		_coreMappings["mednafen_psx"] = _coreMappings["ps1"];
 		_coreMappings["mednafen_psx_hw"] = _coreMappings["ps1"];
+
+		// PPSSPP uses PSP face-button semantics but still maps through RETRO_DEVICE_JOYPAD ids.
+		_coreMappings["psp"] = new Dictionary<LibretroInput, string>
+		{
+			{ LibretroInput.A, "cross" },
+			{ LibretroInput.B, "circle" },
+			{ LibretroInput.X, "square" },
+			{ LibretroInput.Y, "triangle" },
+			{ LibretroInput.START, "start" },
+			{ LibretroInput.SELECT, "select" },
+			{ LibretroInput.UP, "up" },
+			{ LibretroInput.DOWN, "down" },
+			{ LibretroInput.LEFT, "left" },
+			{ LibretroInput.RIGHT, "right" },
+			{ LibretroInput.L, "l" },
+			{ LibretroInput.R, "r" }
+		};
 	}
 	
 	private static string NormalizeCoreId(string coreId)
@@ -154,6 +171,7 @@ public partial class InputMapper : Node
 			"gambatte" => "gb",
 			"picodrive" => "megadrive",
 			"genesis_plus_gx" => "megadrive",
+			"ppsspp" => "psp",
 			_ => coreId
 		};
 	}

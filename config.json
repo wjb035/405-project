@@ -59,7 +59,10 @@
       "id": "dolphin",
       "name": "Dolphin",
       "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
-      "argsTemplate": "--exec \"{ROM}\" --batch"
+      "argsTemplate": "--exec \"{ROM}\" --batch",
+      "corePathWindows": "cores/dolphin_libretro.dll",
+      "corePathMac": "cores/dolphin_libretro.dylib",
+      "corePathLinux": "cores/dolphin_libretro.so"
     },
     {
       "id": "pcsx2",

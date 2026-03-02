@@ -284,6 +284,11 @@ private void OnAnyButtonPressed()
 		if (fullCorePath == null || !File.Exists(fullCorePath))
 			throw new FileNotFoundException($"Libretro core not found. corePath='{configuredCorePath}'.");
 
+		if (string.Equals(emulator.Id, "dolphin", StringComparison.OrdinalIgnoreCase))
+		{
+			PrepareDolphinCoreAssets(cfg, emulator, fullCorePath);
+		}
+
 		InProcessLaunchState.SetPending(new InProcessLaunchRequest
 		{
 			RomPath = game.Path,
@@ -297,6 +302,273 @@ private void OnAnyButtonPressed()
 		GetTree().ChangeSceneToFile("res://LibretroGame.tscn");
 		status = $"Launching in-app core: {Path.GetFileName(fullCorePath)}";
 		return true;
+	}
+
+	private static readonly string[] DolphinRequiredSysFiles =
+	{
+		Path.Combine("GC", "dsp_coef.bin"),
+		Path.Combine("GC", "dsp_rom.bin"),
+		Path.Combine("GC", "font_japanese.bin"),
+		Path.Combine("GC", "font_western.bin"),
+	};
+
+	private void PrepareDolphinCoreAssets(AppConfig cfg, EmulatorConfig emulator, string fullCorePath)
+	{
+		var systemRoot = ProjectSettings.GlobalizePath("user://system/");
+		var saveRoot = ProjectSettings.GlobalizePath("user://saves/");
+		var coreDir = Path.GetDirectoryName(fullCorePath) ?? string.Empty;
+		var cwd = System.Environment.CurrentDirectory;
+
+		var sysTargets = new[]
+		{
+			// Seed every common lookup location used by libretro Dolphin builds.
+			Path.Combine(systemRoot, "dolphin-emu", "Sys"),
+			Path.Combine(systemRoot, "Sys"),
+			!string.IsNullOrWhiteSpace(coreDir) ? Path.Combine(coreDir, "dolphin-emu", "Sys") : null,
+			!string.IsNullOrWhiteSpace(coreDir) ? Path.Combine(coreDir, "Sys") : null,
+			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "dolphin-emu", "Sys") : null,
+			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "Sys") : null,
+		}
+		
+		.Where(p => !string.IsNullOrWhiteSpace(p))
+		.Cast<string>()
+		.Distinct(StringComparer.OrdinalIgnoreCase)
+		.ToArray();
+
+		var missingSysTargets = sysTargets.Where(target => !HasDolphinSysAssets(target)).ToArray();
+			if (missingSysTargets.Length > 0)
+			{
+				var sourceSys = FindDolphinSysSource(cfg, emulator, fullCorePath);
+				if (!string.IsNullOrWhiteSpace(sourceSys))
+			{
+				foreach (var target in missingSysTargets)
+				{
+					CopyDirectoryIfMissing(sourceSys!, target);
+				}
+			}
+			else
+			{
+					GD.PrintErr("[DolphinSetup] Could not find a Dolphin Sys source directory.");
+				}
+			}
+
+			// Some Dolphin builds look for ansi/sjis font names, others use western/japanese.
+			foreach (var target in sysTargets)
+			{
+				EnsureDolphinFontAliases(target);
+			}
+
+		var userTemplate = Path.Combine(coreDir, "User");
+		var userTargets = new[]
+		{
+			// Mirror user profile layout in app data and core-relative fallbacks.
+			Path.Combine(saveRoot, "User"),
+			Path.Combine(saveRoot, "dolphin-emu", "User"),
+			!string.IsNullOrWhiteSpace(coreDir) ? Path.Combine(coreDir, "User") : null,
+			!string.IsNullOrWhiteSpace(coreDir) ? Path.Combine(coreDir, "dolphin-emu", "User") : null,
+			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "User") : null,
+			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "dolphin-emu", "User") : null,
+		}
+		.Where(p => !string.IsNullOrWhiteSpace(p))
+		.Cast<string>()
+		.Distinct(StringComparer.OrdinalIgnoreCase)
+		.ToArray();
+
+		if (Directory.Exists(userTemplate))
+		{
+			foreach (var target in userTargets)
+			{
+				CopyDirectoryIfMissing(userTemplate, target);
+				PatchDolphinUserConfig(target);
+			}
+		}
+	}
+
+	private static void PatchDolphinUserConfig(string userRoot)
+	{
+		if (string.IsNullOrWhiteSpace(userRoot))
+			return;
+
+		var configDir = Path.Combine(userRoot, "Config");
+		Directory.CreateDirectory(configDir);
+		var dolphinIniPath = Path.Combine(configDir, "Dolphin.ini");
+
+		var lines = File.Exists(dolphinIniPath)
+			? File.ReadAllLines(dolphinIniPath).ToList()
+			: new List<string>();
+
+		// Conservative settings for embedded Dolphin core stability.
+		UpsertIniValue(lines, "Core", "CPUThread", "True");
+		UpsertIniValue(lines, "Core", "Fastmem", "False");
+		UpsertIniValue(lines, "Core", "FastmemArena", "False");
+		UpsertIniValue(lines, "Core", "SkipIPL", "True");
+		UpsertIniValue(lines, "DSP", "DSPThread", "False");
+
+		File.WriteAllLines(dolphinIniPath, lines);
+	}
+
+	private static void UpsertIniValue(List<string> lines, string section, string key, string value)
+	{
+		string sectionHeader = $"[{section}]";
+		int sectionStart = -1;
+		int sectionEnd = lines.Count;
+
+		for (int i = 0; i < lines.Count; i++)
+		{
+			var trimmed = lines[i].Trim();
+			if (sectionStart < 0)
+			{
+				if (string.Equals(trimmed, sectionHeader, StringComparison.OrdinalIgnoreCase))
+				{
+					sectionStart = i;
+				}
+				continue;
+			}
+
+			if (trimmed.StartsWith("[", StringComparison.Ordinal) && trimmed.EndsWith("]", StringComparison.Ordinal))
+			{
+				sectionEnd = i;
+				break;
+			}
+		}
+
+		if (sectionStart < 0)
+		{
+			if (lines.Count > 0 && !string.IsNullOrWhiteSpace(lines[^1]))
+				lines.Add(string.Empty);
+			lines.Add(sectionHeader);
+			lines.Add($"{key} = {value}");
+			return;
+		}
+
+		for (int i = sectionStart + 1; i < sectionEnd; i++)
+		{
+			var trimmed = lines[i].TrimStart();
+			if (!trimmed.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			int equalsIndex = trimmed.IndexOf('=');
+			if (equalsIndex < 0)
+				continue;
+
+			lines[i] = $"{key} = {value}";
+			return;
+		}
+
+		lines.Insert(sectionEnd, $"{key} = {value}");
+	}
+
+	private static string? FindDolphinSysSource(AppConfig cfg, EmulatorConfig emulator, string fullCorePath)
+	{
+		var coreDir = Path.GetDirectoryName(fullCorePath);
+		var configuredExePath = SelectPlatformPath(
+			emulator.ExePath,
+			emulator.ExePathWindows,
+			emulator.ExePathMac,
+			emulator.ExePathLinux);
+		var resolvedExePath = !string.IsNullOrWhiteSpace(configuredExePath)
+			? ResolveConfigPath(cfg, configuredExePath!, allowDirectory: true)
+			: null;
+
+		var candidates = new List<string>();
+
+		if (!string.IsNullOrWhiteSpace(coreDir))
+		{
+			candidates.Add(Path.Combine(coreDir!, "Sys"));
+			candidates.Add(Path.Combine(coreDir!, "dolphin-emu", "Sys"));
+		}
+
+		if (!string.IsNullOrWhiteSpace(resolvedExePath))
+		{
+			var appBundle = TryGetMacAppBundlePath(resolvedExePath!);
+			if (!string.IsNullOrWhiteSpace(appBundle))
+				candidates.Add(Path.Combine(appBundle!, "Contents", "Resources", "Sys"));
+		}
+
+		if (!string.IsNullOrWhiteSpace(cfg.LibraryRoot))
+			candidates.Add(Path.Combine(ExpandHomePath(cfg.LibraryRoot), "Dolphin.app", "Contents", "Resources", "Sys"));
+
+		candidates.Add("/Applications/Dolphin.app/Contents/Resources/Sys");
+
+		foreach (var candidate in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
+		{
+			if (HasDolphinSysAssets(candidate))
+				return candidate;
+		}
+
+		return null;
+	}
+
+	private static string? TryGetMacAppBundlePath(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+			return null;
+
+		if (path.EndsWith(".app", StringComparison.OrdinalIgnoreCase))
+			return path;
+
+		var idx = path.LastIndexOf(".app", StringComparison.OrdinalIgnoreCase);
+		if (idx < 0)
+			return null;
+
+		return path.Substring(0, idx + 4);
+	}
+
+	private static bool HasDolphinSysAssets(string sysDir)
+	{
+		if (string.IsNullOrWhiteSpace(sysDir) || !Directory.Exists(sysDir))
+			return false;
+
+		foreach (var relative in DolphinRequiredSysFiles)
+		{
+			var candidate = Path.Combine(sysDir, relative);
+			if (!File.Exists(candidate))
+				return false;
+		}
+
+		return true;
+	}
+
+	private static void CopyDirectoryIfMissing(string sourceDir, string destinationDir)
+	{
+		Directory.CreateDirectory(destinationDir);
+
+		foreach (var file in Directory.GetFiles(sourceDir))
+		{
+			var destinationFile = Path.Combine(destinationDir, Path.GetFileName(file));
+			if (!File.Exists(destinationFile))
+				File.Copy(file, destinationFile, overwrite: false);
+		}
+
+		foreach (var childDir in Directory.GetDirectories(sourceDir))
+		{
+			var destinationChild = Path.Combine(destinationDir, Path.GetFileName(childDir));
+			CopyDirectoryIfMissing(childDir, destinationChild);
+		}
+	}
+
+	private static void EnsureDolphinFontAliases(string sysDir)
+	{
+		if (string.IsNullOrWhiteSpace(sysDir))
+			return;
+
+		var gcDir = Path.Combine(sysDir, "GC");
+		if (!Directory.Exists(gcDir))
+			return;
+
+		// Accept either canonical Dolphin names or libretro alias names.
+		CopyIfMissing(Path.Combine(gcDir, "font_western.bin"), Path.Combine(gcDir, "font_ansi.bin"));
+		CopyIfMissing(Path.Combine(gcDir, "font_japanese.bin"), Path.Combine(gcDir, "font_sjis.bin"));
+		CopyIfMissing(Path.Combine(gcDir, "font_ansi.bin"), Path.Combine(gcDir, "font_western.bin"));
+		CopyIfMissing(Path.Combine(gcDir, "font_sjis.bin"), Path.Combine(gcDir, "font_japanese.bin"));
+	}
+
+	private static void CopyIfMissing(string source, string destination)
+	{
+		if (File.Exists(destination) || !File.Exists(source))
+			return;
+
+		File.Copy(source, destination, overwrite: false);
 	}
 
 	private async Task LoadContextAndGames()

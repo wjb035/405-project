@@ -11,10 +11,12 @@ using System.Collections.Generic;
 [StructLayout(LayoutKind.Sequential)]
 public struct retro_game_info
 {
-	public string path;
+	// libretro expects C strings (char*), not managed C# strings.
+	public IntPtr path;
 	public IntPtr data;
-	public uint size;
-	public string meta;
+	// libretro uses size_t here, which is pointer-sized on each platform.
+	public nuint size;
+	public IntPtr meta;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -23,7 +25,10 @@ public struct retro_system_info
 	public IntPtr library_name;
 	public IntPtr library_version;
 	public IntPtr valid_extensions;
+	// libretro booleans are 1 byte; default .NET bool marshaling can differ by platform/ABI.
+	[MarshalAs(UnmanagedType.I1)]
 	public bool need_fullpath;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool block_extract;
 }
 
@@ -73,7 +78,8 @@ public enum EmulatorCore
 	SNES_SNES9X,
 	NES_FCEUMM,
 	GB_GAMBATTE,
-	GBC_GAMBATTE
+	GBC_GAMBATTE,
+	PSP_PPSSPP
 }
 
 public partial class LibretroNative : Node
@@ -87,7 +93,10 @@ public partial class LibretroNative : Node
 		{ ".smc", EmulatorCore.SNES_SNES9X },
 		{ ".nes", EmulatorCore.NES_FCEUMM },
 		{ ".gb", EmulatorCore.GB_GAMBATTE },
-		{ ".gbc", EmulatorCore.GBC_GAMBATTE }
+		{ ".gbc", EmulatorCore.GBC_GAMBATTE },
+		{ ".iso", EmulatorCore.PSP_PPSSPP },
+		{ ".cso", EmulatorCore.PSP_PPSSPP },
+		{ ".pbp", EmulatorCore.PSP_PPSSPP }
 	};
 
 	public static EmulatorCore CurrentCore { get; private set; } = EmulatorCore.GBA_MGBA;
@@ -102,14 +111,43 @@ public partial class LibretroNative : Node
 	}
 
 	public const uint RETRO_ENVIRONMENT_SET_PIXEL_FORMAT = 10;
+	public const uint RETRO_ENVIRONMENT_SET_MESSAGE = 6;
+	public const uint RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS = 11;
 	public const uint RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY = 9;
 	public const uint RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY = 31;
+	public const uint RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO = 32;
 	public const uint RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME = 18;
+	public const uint RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL = 23;
 	public const uint RETRO_ENVIRONMENT_GET_LOG_INTERFACE = 27;
 	public const uint RETRO_ENVIRONMENT_GET_CAN_DUPE = 3;
 	public const uint RETRO_ENVIRONMENT_SET_VARIABLES = 16;
 	public const uint RETRO_ENVIRONMENT_GET_VARIABLE = 15;
 	public const uint RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE = 17;
+	// Needed by some cores (including Dolphin) to locate runtime assets.
+	public const uint RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY = 30;
+	public const uint RETRO_ENVIRONMENT_SET_CONTROLLER_INFO = 35;
+	public const uint RETRO_ENVIRONMENT_SET_GEOMETRY = 37;
+	public const uint RETRO_ENVIRONMENT_GET_USERNAME = 38;
+	public const uint RETRO_ENVIRONMENT_GET_LANGUAGE = 39;
+	public const uint RETRO_ENVIRONMENT_SET_HW_RENDER = 14;
+	public const uint RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER = 56;
+	public const uint RETRO_ENVIRONMENT_GET_INPUT_BITMASKS_LEGACY = 51;
+	public const uint RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY = 55;
+	public const uint RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION = 52;
+	public const uint RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION = 57;
+	public const uint RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION_LEGACY = 58;
+	public const uint RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION = 59;
+	public const uint RETRO_ENVIRONMENT_SET_MESSAGE_EXT = 60;
+	public const uint RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK_LEGACY = 62;
+	public const uint RETRO_ENVIRONMENT_EXPERIMENTAL = 0x10000;
+	public const uint RETRO_ENVIRONMENT_GET_INPUT_BITMASKS = 51 | RETRO_ENVIRONMENT_EXPERIMENTAL;
+	public const uint RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2 = 67;
+	public const uint RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL = 68;
+	public const uint RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK = 69;
+	public const uint RETRO_ENVIRONMENT_GET_VFS_INTERFACE = 45 | RETRO_ENVIRONMENT_EXPERIMENTAL;
+	public const uint RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE = 41 | RETRO_ENVIRONMENT_EXPERIMENTAL;
+	public const uint RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE = 43 | RETRO_ENVIRONMENT_EXPERIMENTAL;
+	public const uint RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT = 44 | RETRO_ENVIRONMENT_EXPERIMENTAL;
 
 	public static bool SetCoreFromRomPath(string romPath)
 	{
@@ -250,6 +288,8 @@ public partial class LibretroNative : Node
 	public static RetroGetSystemAvInfoDelegate retro_get_system_av_info;
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	// libretro returns bool as a C bool; force 1-byte marshalling.
+	[return: MarshalAs(UnmanagedType.I1)]
 	public delegate bool RetroLoadGameDelegate(ref retro_game_info game);
 	public static RetroLoadGameDelegate retro_load_game;
 
@@ -264,7 +304,8 @@ public partial class LibretroNative : Node
 	public delegate void RetroAudioSampleDelegate(short left, short right);
 	
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate void RetroAudioSampleBatchDelegate(IntPtr data, uint frames);
+	// Callback returns number of frames consumed (size_t).
+	public delegate nuint RetroAudioSampleBatchDelegate(IntPtr data, nuint frames);
 	
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	public delegate void RetroInputPollDelegate();
@@ -273,6 +314,8 @@ public partial class LibretroNative : Node
 	public delegate short RetroInputStateDelegate(uint port, uint device, uint index, uint id);
 	
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	// Environment callback returns C bool.
+	[return: MarshalAs(UnmanagedType.I1)]
 	public delegate bool RetroEnvironmentDelegate(uint cmd, IntPtr data);
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -306,18 +349,21 @@ public partial class LibretroNative : Node
 	public static RetroGetMemoryDataDelegate retro_get_memory_data;
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate uint RetroGetMemorySizeDelegate(uint id);
+	public delegate nuint RetroGetMemorySizeDelegate(uint id);
 	public static RetroGetMemorySizeDelegate retro_get_memory_size;
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate uint RetroSerializeSizeDelegate();
+	public delegate nuint RetroSerializeSizeDelegate();
 	public static RetroSerializeSizeDelegate retro_serialize_size;
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate bool RetroSerializeDelegate(IntPtr data, uint size);
+	// Serialization APIs also use C bool returns.
+	[return: MarshalAs(UnmanagedType.I1)]
+	public delegate bool RetroSerializeDelegate(IntPtr data, nuint size);
 	public static RetroSerializeDelegate retro_serialize;
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	public delegate bool RetroUnserializeDelegate(IntPtr data, uint size);
+	[return: MarshalAs(UnmanagedType.I1)]
+	public delegate bool RetroUnserializeDelegate(IntPtr data, nuint size);
 	public static RetroUnserializeDelegate retro_unserialize;
 }
