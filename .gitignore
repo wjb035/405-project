@@ -29,10 +29,12 @@ config.local.json
 .godot/
 pg-emu/.godot/
 pg-emu/.godot/imported/
-pg-emu/.godot/editor/
-pg-emu/.godot/mono/
+
 pg-emu/.godot/uid_cache.bin
 pg-emu/.godot/export_credentials.cfg
+!pg-emu/.godot/
+pg-emu/.godot/*
+.godot/*
 
 
 ## Local emulators + ROMs

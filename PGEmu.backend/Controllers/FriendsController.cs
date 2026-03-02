@@ -86,7 +86,9 @@ public class FriendsController : ControllerBase
     public async Task<IActionResult> GetPendingRequests()
     {
         // Get all friend requests where the current user is the recipient and status is Pending
+        Console.WriteLine($"CurrentUserId: {CurrentUserId}");
         List<FriendDTO> pendingRequests = await _friendService.GetPendingRequestsAsync(CurrentUserId);
+        Console.WriteLine($"Pending requests count: {pendingRequests.Count}");
 
         return Ok(pendingRequests);
     }

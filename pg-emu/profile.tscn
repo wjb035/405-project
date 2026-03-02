@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dkjal8rw8w85r" path="res://Profile.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://dhwqlqt8712qy" path="res://souljaboytellem.jpg" id="2_wi0ei"]
+[ext_resource type="Script" uid="uid://dktg0p671tigo" path="res://TextureRect.cs" id="3_k2f8d"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4dpx"]
 bg_color = Color(1, 1, 1, 0)
@@ -50,7 +51,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
-BackPath = NodePath("")
+BackPath = NodePath("Margin/Root/TopBar/Panel/BtnBack")
+AvatarPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer/TextureRect")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2146068837]
 layout_mode = 1
@@ -150,6 +152,10 @@ layout_mode = 2
 texture = ExtResource("2_wi0ei")
 expand_mode = 4
 stretch_mode = 6
+script = ExtResource("3_k2f8d")
+
+[node name="Sprite2D" type="Sprite2D" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer" unique_id=300521412]
+visible = false
 
 [node name="PanelContainer" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer" unique_id=1230511267]
 layout_mode = 2

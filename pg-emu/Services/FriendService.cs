@@ -12,7 +12,7 @@ public partial class FriendService : Node
 	public static FriendService Instance { get; private set; }
 
 	private System.Net.Http.HttpClient httpClient;
-	private string baseUrl = "http://localhost:5276/api/friends/";
+	private string baseUrl = "http://localhost:5276/api/friends";
 	
 	public override void _Ready()
 	{
@@ -34,12 +34,21 @@ public partial class FriendService : Node
 		ApplyAuthHeader();
 
 		var response = await httpClient.GetAsync($"{baseUrl}/pending");
-
+		GD.Print($"HTTP GET /pending status: {response.StatusCode}");
+		
 		if (!response.IsSuccessStatusCode)
+		{
+			var text = await response.Content.ReadAsStringAsync();
+			GD.Print($"Response body: {text}");
 			return new List<FriendRequestDto>();
+		}
 
 		var json = await response.Content.ReadAsStringAsync();
-		return JsonSerializer.Deserialize<List<FriendRequestDto>>(json);
+		GD.Print($"Response JSON: {json}");
+		return JsonSerializer.Deserialize<List<FriendRequestDto>>(json, new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true
+		});
 	}
 
 	public async Task<bool> RespondToRequest(string userId, bool accept)

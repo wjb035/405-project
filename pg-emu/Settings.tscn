@@ -1,0 +1,82 @@
+[gd_scene format=3 uid="uid://bdq73fdyj3msu"]
+
+[ext_resource type="Script" uid="uid://bu1a7yapn2wxg" path="res://Settings.cs" id="1_bvb5x"]
+[ext_resource type="PackedScene" uid="uid://cim753lbasxqg" path="res://vault.tscn" id="2_2fv1l"]
+[ext_resource type="PackedScene" uid="uid://ht73q5hq63an" path="res://ProfileSettings.tscn" id="2_mx4kw"]
+
+[node name="Settings" type="Control" unique_id=166812288]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_bvb5x")
+BackPath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/MarginContainer/BtnBack")
+ProfileChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/ProfileChoice")
+ProfileScreenPath = NodePath("Margin/HBoxContainer/ProfileSettings")
+VaultChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/VaultChoice")
+VaultScreenPath = NodePath("Margin/HBoxContainer/Vault")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=365426328]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9019608, 0.827451, 0.91764706, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=538849793]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin" unique_id=1589249704]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/HBoxContainer" unique_id=1954892276]
+layout_mode = 2
+
+[node name="Bg" type="ColorRect" parent="Margin/HBoxContainer/Margin" unique_id=1938634757]
+layout_mode = 2
+color = Color(0.8217291, 0.6932336, 0.8486782, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/HBoxContainer/Margin" unique_id=1667887512]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/HBoxContainer/Margin/MarginContainer" unique_id=717297257]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=2086858166]
+layout_mode = 2
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 15
+
+[node name="BtnBack" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/MarginContainer" unique_id=315120136]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "←"
+
+[node name="ProfileChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=1422748368]
+layout_mode = 2
+text = "Profile Settings"
+
+[node name="VaultChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=1601826346]
+layout_mode = 2
+text = "Vault"
+
+[node name="ProfileSettings" parent="Margin/HBoxContainer" unique_id=1173785683 instance=ExtResource("2_mx4kw")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Vault" parent="Margin/HBoxContainer" unique_id=71697526 instance=ExtResource("2_2fv1l")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
