@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1772332779
+::res://::1772343409
 Achievements.tscn::PackedScene::9222093291491280280::1771554555::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs
 AchievementScreen.cs::CSharpScript::6693889573278468072::1771554555::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1771554555::0::1::::<><><>0<>0<><>::
@@ -31,7 +31,7 @@ souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1771554555::17715
 Vault.cs::CSharpScript::2866193499456904334::1771554555::0::1::::<>Control<><>0<>0<><>::
 vault.tscn::PackedScene::5361122654817674866::1771554555::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
 WelcomeScreen.cs::CSharpScript::5996109094376545087::1772322354::0::1::::<>Control<><>0<>0<><>::
-WelcomeScreen.tscn::PackedScene::4526708404385782447::1772322526::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://qgiy3vg5ydgm::::res://Videos/sh2 background.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png
+WelcomeScreen.tscn::PackedScene::4526708404385782447::1772337103::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png
 ::res://addons/::1771554555
 ::res://addons/spanning_table/::1771554555
 plugin.cfg::TextFile::-1::1771554555::0::1::::<><><>0<>0<><>::
@@ -86,5 +86,5 @@ FriendInbox.cs::CSharpScript::4117037499602220883::1772319179::0::1::::<>PopupPa
 FriendRequestItem.cs::CSharpScript::7844878079273845639::1771704343::0::1::::<>Panel<><>0<>0<><>::
 InboxItem.cs::CSharpScript::5619153750257441564::1771705540::0::1::::<>Panel<><>0<>0<><>::
 ScreenTransition.tscn::PackedScene::8578204708515963603::1772312916::0::1::::<><><>0<>0<><>::uid://b8754jh3b5v8g::::res://Helpers/ScreenTransition.cs
-::res://Videos/::1772320957
-sh2 background.ogv::VideoStreamTheora::1135937863137072388::1772320957::0::1::::<><><>0<>0<><>::
+::res://Videos/::1772337086
+sh2 background larger.ogv::VideoStreamTheora::5457824372431240263::1772333710::0::1::::<><><>0<>0<><>::
