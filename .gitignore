@@ -25,16 +25,8 @@
 .DS_Store
 config.local.json
 
-## GODOT
+## Godot editor/runtime cache
 .godot/
-pg-emu/.godot/
-pg-emu/.godot/imported/
-
-pg-emu/.godot/uid_cache.bin
-pg-emu/.godot/export_credentials.cfg
-!pg-emu/.godot/
-pg-emu/.godot/*
-.godot/*
 
 
 ## Local emulators + ROMs

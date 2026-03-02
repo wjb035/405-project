@@ -74,6 +74,7 @@ public partial class LibretroPlayer : Node
 	private static bool _loggedPpssppSoftwarePolicy = false;
 	private static bool _loggedPpssppBackendOverride = false;
 	private static bool _loggedPpssppHwRenderDenied = false;
+	private static uint _requestedMinimumAudioLatencyMs = 0;
 	private bool _loggedFirstRetroRun = false;
 	private bool _loggedFirstRetroRunComplete = false;
 	
@@ -109,8 +110,17 @@ public partial class LibretroPlayer : Node
 		public int progress;
 	}
 
+	[StructLayout(LayoutKind.Sequential)]
+	private struct retro_rumble_interface
+	{
+		public IntPtr set_rumble_state;
+	}
+
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	private delegate void RetroLogPrintfShimDelegate(int level, IntPtr format);
+
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	private delegate bool RetroSetRumbleStateDelegate(uint port, uint effect, ushort strength);
 	
 	// Stores unmanaged strings returned via RETRO_ENVIRONMENT_GET_VARIABLE.
 	private static Dictionary<string, IntPtr> _variableValuePtrs = new Dictionary<string, IntPtr>();
@@ -122,9 +132,11 @@ public partial class LibretroPlayer : Node
 	private static readonly object _environmentLogLock = new object();
 	private static readonly HashSet<uint> _loggedUnhandledEnvironmentCommands = new HashSet<uint>();
 	private static RetroLogPrintfShimDelegate? _retroLogPrintfShim;
+	private static RetroSetRumbleStateDelegate? _retroSetRumbleStateShim;
 	private static IntPtr _nativeRetroLogCallbackPtr = IntPtr.Zero;
 	private static IntPtr _nativeRetroLogLibraryHandle = IntPtr.Zero;
 	private static IntPtr _usernamePtr = IntPtr.Zero;
+	private const uint FrontendTargetSampleRateHz = 48000;
 
 	public override void _Ready()
 	{
@@ -263,11 +275,12 @@ public partial class LibretroPlayer : Node
 				_loggedHwRenderInterfaceUnsupported = false;
 				_loggedHwSharedContextUnsupported = false;
 				_loggedHwNegotiationUnsupported = false;
-				_loggedPpssppSoftwarePolicy = false;
-				_loggedPpssppBackendOverride = false;
-				_loggedPpssppHwRenderDenied = false;
-				_loggedFirstRetroRun = false;
-				_loggedFirstRetroRunComplete = false;
+			_loggedPpssppSoftwarePolicy = false;
+			_loggedPpssppBackendOverride = false;
+			_loggedPpssppHwRenderDenied = false;
+			_requestedMinimumAudioLatencyMs = 0;
+			_loggedFirstRetroRun = false;
+			_loggedFirstRetroRunComplete = false;
 
 		if (_saveDirectoryPtr != IntPtr.Zero)
 		{
@@ -790,6 +803,12 @@ public partial class LibretroPlayer : Node
 		return _inputStateCache[(int)id];
 	}
 
+	private static bool SetRumbleStateCallback(uint port, uint effect, ushort strength)
+	{
+		// No frontend haptics bridge yet. Return true so cores don't treat this as fatal.
+		return true;
+	}
+
 	private static string GetCoreFallbackId()
 	{
 		return LibretroNative.CurrentCore switch
@@ -878,6 +897,22 @@ public partial class LibretroPlayer : Node
 				case LibretroNative.RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
 					// Optional frontend hint; safe to accept as a no-op.
 					return true;
+
+				case LibretroNative.RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
+					if (data == IntPtr.Zero)
+						return false;
+
+					_retroSetRumbleStateShim ??= SetRumbleStateCallback;
+					IntPtr rumbleCallbackPtr = Marshal.GetFunctionPointerForDelegate(_retroSetRumbleStateShim);
+					if (rumbleCallbackPtr == IntPtr.Zero)
+						return false;
+
+					var rumbleInterface = new retro_rumble_interface
+					{
+						set_rumble_state = rumbleCallbackPtr
+					};
+					Marshal.StructureToPtr(rumbleInterface, data, false);
+					return true;
 				
 				case LibretroNative.RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO:
 				case LibretroNative.RETRO_ENVIRONMENT_SET_GEOMETRY:
@@ -894,11 +929,18 @@ public partial class LibretroPlayer : Node
 
 			case LibretroNative.RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_MEMORY_MAPS:
+			case LibretroNative.RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK_LEGACY:
 			case LibretroNative.RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
+				return true;
+
+			case LibretroNative.RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY:
+				if (data != IntPtr.Zero)
+					_requestedMinimumAudioLatencyMs = unchecked((uint)Marshal.ReadInt32(data));
 				return true;
 
 			case LibretroNative.RETRO_ENVIRONMENT_GET_INPUT_BITMASKS_LEGACY:
@@ -914,17 +956,22 @@ public partial class LibretroPlayer : Node
 				Marshal.WriteIntPtr(data, usernamePtr);
 				return true;
 
-			case LibretroNative.RETRO_ENVIRONMENT_GET_LANGUAGE:
-				if (data != IntPtr.Zero)
-				{
-					// RETRO_LANGUAGE_ENGLISH = 0
-					Marshal.WriteInt32(data, 0);
-				}
-				return true;
+				case LibretroNative.RETRO_ENVIRONMENT_GET_LANGUAGE:
+					if (data != IntPtr.Zero)
+					{
+						// RETRO_LANGUAGE_ENGLISH = 0
+						Marshal.WriteInt32(data, 0);
+					}
+					return true;
 
-			case LibretroNative.RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
-				// The frontend does not expose libretro VFS yet; cores should fall back to stdio.
-				return false;
+				case LibretroNative.RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE:
+					if (data != IntPtr.Zero)
+						Marshal.WriteInt32(data, unchecked((int)FrontendTargetSampleRateHz));
+					return true;
+
+				case LibretroNative.RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
+					// The frontend does not expose libretro VFS yet; cores should fall back to stdio.
+					return false;
 
 				case LibretroNative.RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
 					if (_forcePpssppSoftwareMode)
