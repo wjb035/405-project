@@ -1,0 +1,8 @@
+com.catui.launcher.plugin-pngs-0 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\generated\res\pngs\release
+com.catui.launcher.plugin-resValues-1 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\generated\res\resValues\release
+com.catui.launcher.plugin-rs-2 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\generated\res\rs\release
+com.catui.launcher.plugin-mergeReleaseResources-3 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\intermediates\incremental\release\mergeReleaseResources\merged.dir
+com.catui.launcher.plugin-mergeReleaseResources-4 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\intermediates\incremental\release\mergeReleaseResources\stripped.dir
+com.catui.launcher.plugin-merged_res-5 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\build\intermediates\merged_res\release
+com.catui.launcher.plugin-main-6 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\res
+com.catui.launcher.plugin-release-7 C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\release\res

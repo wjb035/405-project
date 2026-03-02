@@ -25,6 +25,14 @@
 .DS_Store
 config.local.json
 
+## GODOT
+.godot/
+pg-emu/.godot/
+!pg-emu/.godot/
+pg-emu/.godot/*
+.godot/*
+
+
 ## Local emulators + ROMs
 PGEmu/Dolphin.app/
 PGEmu/games/*

@@ -1,0 +1,109 @@
+[gd_scene load_steps=8 format=3 uid="uid://q160q13jgqqw"]
+
+[ext_resource type="Script" uid="uid://bu0o7bca6754" path="res://src/components/emulator_icon.gd" id="1_ydvfn"]
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="2_q81rj"]
+[ext_resource type="Texture2D" uid="uid://8ggsdr4od171" path="res://assets/images/catui/logoDEV.png" id="3_uxfhh"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uxfhh"]
+draw_center = false
+border_width_left = 18
+border_width_top = 18
+border_width_right = 18
+border_width_bottom = 18
+border_color = Color(1, 1, 1, 0.76862746)
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+anti_aliasing = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uxfhh"]
+shader = ExtResource("2_q81rj")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oj1e5"]
+draw_center = false
+border_width_left = 18
+border_width_top = 18
+border_width_right = 18
+border_width_bottom = 18
+border_color = Color(1, 1, 1, 0.76862746)
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q81rj"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 18
+border_width_top = 18
+border_width_right = 18
+border_width_bottom = 18
+border_color = Color(1, 1, 1, 0)
+border_blend = true
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+
+[node name="emulator_icon" type="Control"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ydvfn")
+Total = 5
+roms_extensions = PackedStringArray()
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="border" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_uxfhh")
+
+[node name="focus" type="Panel" parent="style"]
+visible = false
+material = SubResource("ShaderMaterial_uxfhh")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_oj1e5")
+
+[node name="EmuImage" type="Panel" parent="."]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_q81rj")
+
+[node name="TextureRect" type="TextureRect" parent="EmuImage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -5.0
+offset_right = 7.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_uxfhh")
+expand_mode = 4
+stretch_mode = 6

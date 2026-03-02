@@ -18,7 +18,7 @@ NextPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnNext")
 SelectedTitlePath = NodePath("Margin/Root/CenterArea/SelectedTitle")
 StatusPath = NodePath("Margin/Root/Status")
 SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
-BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+LogoutPath = NodePath("Margin/Root/TopBar/BtnLogout")
 FriendsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnFriends")
 InboxPath = NodePath("Margin/Root/TopBar/TopIcons/BtnInbox")
 ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
@@ -58,7 +58,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1639146064]
+[node name="BtnLogout" type="Button" parent="Margin/Root/TopBar" unique_id=1639146064]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
 text = "←"

@@ -6,6 +6,7 @@ using System.Linq;
 using PGEmu.app;
 using System.Threading.Tasks;
 using RetroAchievements.Api;
+using PGEmu.Services;
 
 
 public partial class GameSelect : Control
@@ -95,6 +96,7 @@ public partial class GameSelect : Control
 			i++;
 		}
 		 _optionButton.ItemSelected += SelectedOption;
+		UiStyle.StyleOptionButton(_optionButton);
 		
 		// Button events.
 		_prev.Pressed += () => Step(-1);
@@ -102,9 +104,11 @@ public partial class GameSelect : Control
 		_back.Pressed += GoBack;
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
+		ApplyAesthetic();
 		
 		ConnectAllButtons(this);
 		GD.Print("IN GAME SELECT");
+		InputRoutingService.Instance?.UnlockUiInput();
 		// Load data and build UI.
 		await LoadContextAndGames();
 		SpawnCards();
@@ -217,67 +221,82 @@ private void OnAnyButtonPressed()
 
 	private void PlaySelected()
 	{
-		GD.Print(GetSelectedGame().Name);
-		if (CollectionStorage.currentCollection == null){
-		// Can't launch without a loaded config + platform context.
-		if (_config == null || _platform == null)
+		if (ShouldIgnoreUiInput())
+			return;
+
+		var game = GetSelectedGame();
+		if (game == null || string.IsNullOrWhiteSpace(game.Path))
+		{
+			SetStatus("No game selected.");
+			return;
+		}
+
+		// Use platform from current screen, unless we are launching from a collection entry.
+		var launchPlatform = CollectionStorage.currentCollection == null ? _platform : game.platform;
+		if (_config == null || launchPlatform == null)
 		{
 			SetStatus("Can't launch: config or platform missing.");
 			return;
 		}
 
-		// Selected game is based on the current carousel center position.
-		var game = GetSelectedGame();
-		if (game == null)
-		{
-			SetStatus("No game selected.");
-			return;
-		}
-		
 		try
 		{
-			// Delegate launching to app layer.
-			if (CollectionStorage.currentCollection == null){
-			Launcher.LaunchFromConfig(_config, _platform, game);
-			SetStatus($"Launching: {game.Title}");
+			if (TryStartInProcessLaunch(_config, launchPlatform, game, out var inProcessStatus))
+			{
+				SetStatus(inProcessStatus);
+				return;
 			}
-			else{
-				Launcher.LaunchFromConfig(_config, game.platform, game);
-			SetStatus($"Launching: {game.Title}");
-			}
+
+			Launcher.LaunchFromConfig(_config, launchPlatform, game);
+			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
+			SetStatus($"Launching external emulator: {game.Title}");
 		}
 		catch (Exception ex)
 		{
-			// Surface launch errors to UI instead of crashing.
+			InputRoutingService.Instance?.UnlockUiInput();
 			SetStatus($"Launch failed: {ex.Message}");
 		}
-		}
-		
-		else{
-			
-			var game = GetSelectedGame();
-			if (game == null)
-			{
-				SetStatus("No game selected.");
-				return;
-			}
-			try
-				{
-					// Delegate launching to app layer.
-					
-					Launcher.LaunchFromConfig(_config, game.platform, game);
-					SetStatus($"Launching: {game.Title}");
-					
-				}
-				catch (Exception ex)
-				{
-					
-					GD.Print(game.platform.Name);
-					GD.Print(ex);
-					// Surface launch errors to UI instead of crashing.
-					SetStatus($"Launch failed: {ex.Message}");
-				}
-		}
+	}
+
+	private bool TryStartInProcessLaunch(AppConfig cfg, PlatformConfig platform, GameEntry game, out string status)
+	{
+		status = string.Empty;
+
+		var emulatorId = platform.DefaultEmulatorId ?? cfg.Emulators.FirstOrDefault()?.Id;
+		if (string.IsNullOrWhiteSpace(emulatorId))
+			return false;
+
+		var emulator = cfg.Emulators.FirstOrDefault(e =>
+			string.Equals(e.Id, emulatorId, StringComparison.OrdinalIgnoreCase));
+		if (emulator == null)
+			return false;
+
+		var configuredCorePath = SelectPlatformPath(
+			emulator.CorePath,
+			emulator.CorePathWindows,
+			emulator.CorePathMac,
+			emulator.CorePathLinux);
+
+		if (string.IsNullOrWhiteSpace(configuredCorePath))
+			return false;
+
+		var fullCorePath = ResolveConfigPath(cfg, configuredCorePath, allowDirectory: false);
+		if (fullCorePath == null || !File.Exists(fullCorePath))
+			throw new FileNotFoundException($"Libretro core not found. corePath='{configuredCorePath}'.");
+
+		InProcessLaunchState.SetPending(new InProcessLaunchRequest
+		{
+			RomPath = game.Path,
+			CorePath = fullCorePath,
+			CoreId = emulator.Id,
+			GameTitle = game.Title,
+			ReturnScene = "res://GameSelect.tscn",
+		});
+
+		InputRoutingService.Instance?.UnlockUiInput();
+		GetTree().ChangeSceneToFile("res://LibretroGame.tscn");
+		status = $"Launching in-app core: {Path.GetFileName(fullCorePath)}";
+		return true;
 	}
 
 	private async Task LoadContextAndGames()
@@ -546,6 +565,7 @@ private void OnAnyButtonPressed()
 
 	public override void _GuiInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
 		if (Count <= 1) return;
 
 		// Drag handling.
@@ -591,12 +611,22 @@ private void OnAnyButtonPressed()
 
 	public override void _UnhandledInput(InputEvent e)
 	{
+		if (ShouldIgnoreUiInput()) return;
+
 		if (e is not InputEventJoypadButton jb || !jb.Pressed)
 		{
-			if (Count > 1 && e is InputEventJoypadMotion jm && HandleAxisNav(jm))
-				GetViewport().SetInputAsHandled();
+			if (Count > 1 &&
+				e is InputEventJoypadMotion jm &&
+				ShouldHandleControllerInput(jm.Device) &&
+				HandleAxisNav(jm))
+			{
+				MarkInputHandled();
+			}
 			return;
 		}
+
+		if (!ShouldHandleControllerInput(jb.Device))
+			return;
 
 		switch (jb.ButtonIndex)
 		{
@@ -605,7 +635,7 @@ private void OnAnyButtonPressed()
 				if (Count > 1)
 				{
 					Step(-1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.RightShoulder:
@@ -613,31 +643,36 @@ private void OnAnyButtonPressed()
 				if (Count > 1)
 				{
 					Step(1);
-					GetViewport().SetInputAsHandled();
+					MarkInputHandled();
 				}
 				break;
 			case JoyButton.A:
 			case JoyButton.X:
+				MarkInputHandled();
 				PlaySelected();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.B:
+				MarkInputHandled();
 				GoBack();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Start:
+				MarkInputHandled();
 				OpenVault();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Touchpad:
+				MarkInputHandled();
 				OpenProfile();
-				GetViewport().SetInputAsHandled();
 				break;
 			case JoyButton.Guide:
+				MarkInputHandled();
 				GoHome();
-				GetViewport().SetInputAsHandled();
 				break;
 		}
+	}
+
+	private void MarkInputHandled()
+	{
+		GetViewport()?.SetInputAsHandled();
 	}
 
 	private bool HandleAxisNav(InputEventJoypadMotion jm)
@@ -795,5 +830,95 @@ private void OnAnyButtonPressed()
 		}
 
 		return path;
+	}
+
+	private static string? SelectPlatformPath(
+		string? genericPath,
+		string? windowsPath,
+		string? macPath,
+		string? linuxPath)
+	{
+		if (OperatingSystem.IsWindows() && !string.IsNullOrWhiteSpace(windowsPath))
+			return windowsPath;
+		if (OperatingSystem.IsMacOS() && !string.IsNullOrWhiteSpace(macPath))
+			return macPath;
+		if (OperatingSystem.IsLinux() && !string.IsNullOrWhiteSpace(linuxPath))
+			return linuxPath;
+		return string.IsNullOrWhiteSpace(genericPath) ? null : genericPath;
+	}
+
+	private static string? ResolveConfigPath(AppConfig cfg, string configuredPath, bool allowDirectory)
+	{
+		if (string.IsNullOrWhiteSpace(configuredPath))
+			return null;
+
+		var path = ExpandHomePath(configuredPath).Replace('/', Path.DirectorySeparatorChar);
+
+		if (IsProbablyAbsolutePath(path))
+		{
+			if (File.Exists(path) || (allowDirectory && Directory.Exists(path)))
+				return path;
+		}
+
+		var candidates = new[]
+		{
+			Path.Combine(AppContext.BaseDirectory, path),
+				Path.Combine(System.Environment.CurrentDirectory, path),
+			cfg.SourcePath != null ? Path.Combine(Path.GetDirectoryName(cfg.SourcePath)!, path) : null,
+			!string.IsNullOrWhiteSpace(cfg.LibraryRoot) ? Path.Combine(ExpandHomePath(cfg.LibraryRoot), path) : null,
+		};
+
+		foreach (var candidate in candidates)
+		{
+			if (string.IsNullOrWhiteSpace(candidate))
+				continue;
+			if (File.Exists(candidate) || (allowDirectory && Directory.Exists(candidate)))
+				return candidate;
+		}
+
+		return null;
+	}
+
+	private static bool IsProbablyAbsolutePath(string path)
+	{
+		if (Path.IsPathRooted(path)) return true;
+
+		if (path.Length >= 3 &&
+			char.IsLetter(path[0]) &&
+			path[1] == ':' &&
+			(path[2] == '\\' || path[2] == '/'))
+		{
+			return true;
+		}
+
+		return path.StartsWith(@"\\", StringComparison.Ordinal);
+	}
+
+	private bool ShouldIgnoreUiInput()
+	{
+		return InputRoutingService.Instance?.IsUiInputBlocked == true;
+	}
+
+	private static bool ShouldHandleControllerInput(int device)
+	{
+		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
+	}
+
+	private void ApplyAesthetic()
+	{
+		// Match game selection controls to the same launcher palette and contrast rules.
+		UiStyle.StyleNavButton(_prev);
+		UiStyle.StyleNavButton(_next);
+		UiStyle.StylePrimaryButton(_play);
+		UiStyle.StyleTopBarButton(_back);
+		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.StyleTopBarButton(_achievement);
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnFriends"));
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnChat"));
+		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnHelp"));
+		UiStyle.StyleTitleLabel(_title);
+		UiStyle.StyleMetaLabel(_metaLeft);
+		UiStyle.StyleMetaLabel(_metaRight);
+		UiStyle.StyleStatusLabel(_status);
 	}
 }

@@ -67,20 +67,25 @@ public partial class FriendInbox : PopupPanel
 		List<FriendRequestDto> requests;
 		try
 		{
-			// requests = await FriendService.Instance.GetPendingRequests();
-			requests = new List<FriendRequestDto>
+			requests = await FriendService.Instance.GetPendingRequests();
+			/* requests = new List<FriendRequestDto>
 			{
 				new FriendRequestDto { Id = "1", Username = "Peter Scully" },
 				new FriendRequestDto { Id = "2", Username = "Shabbibble" },
 				new FriendRequestDto { Id = "3", Username = "Shiashdo" }
-			};
+			}; */
 		}
 		catch (System.Exception ex)
 		{
 			GD.PrintErr(ex.Message);
 			StatusLabel.Text = "Failed to load requests. Retry later.";
+			StatusLabel.Visible = true;
 			return;
 		}
+		
+		GD.Print($"Friend requests loaded: {requests.Count}");
+		foreach (var r in requests)
+			GD.Print($"Request from: {r.Username}, Id: {r.Id}");
 
 		// remove existing children
 		foreach (Node child in InboxList.GetChildren().ToArray())

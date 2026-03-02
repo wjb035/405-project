@@ -13,14 +13,36 @@ public static class Launcher
         var emu = cfg.Emulators.FirstOrDefault(e => e.Id == emulatorId);
         if (emu == null) throw new InvalidOperationException("No emulator configured for platform");
 
-        var fullExe = ResolveExePath(cfg, emu.ExePath);
+        var configuredExePath = SelectPlatformPath(
+            emu.ExePath,
+            emu.ExePathWindows,
+            emu.ExePathMac,
+            emu.ExePathLinux);
+
+        var fullExe = ResolvePath(cfg, configuredExePath, allowDirectory: true);
         if (fullExe == null)
         {
-            throw new FileNotFoundException($"Emulator executable not found. exePath='{emu.ExePath}'.");
+            throw new FileNotFoundException($"Emulator executable not found. exePath='{configuredExePath ?? "(not configured)"}'.");
         }
 
         var args = emu.ArgsTemplate ?? string.Empty;
         args = args.Replace("{ROM}", game.Path);
+        if (args.Contains("{CORE}", StringComparison.Ordinal))
+        {
+            var configuredCorePath = SelectPlatformPath(
+                emu.CorePath,
+                emu.CorePathWindows,
+                emu.CorePathMac,
+                emu.CorePathLinux);
+
+            var fullCorePath = ResolvePath(cfg, configuredCorePath, allowDirectory: false);
+            if (fullCorePath == null)
+            {
+                throw new FileNotFoundException($"Libretro core not found. corePath='{configuredCorePath ?? "(not configured)"}'.");
+            }
+
+            args = args.Replace("{CORE}", fullCorePath);
+        }
 
         var psi = BuildProcessStartInfo(fullExe, args);
 
@@ -38,10 +60,14 @@ public static class Launcher
             {
                 // `--args` passes arguments through to the app.
                 // We quote only the app bundle path here; args are already templated (and may include quoting).
+                var openArgs = string.IsNullOrWhiteSpace(args)
+                    ? $"-a \"{appBundle}\""
+                    : $"-a \"{appBundle}\" --args {args}";
+
                 return new ProcessStartInfo
                 {
                     FileName = "open",
-                    Arguments = $"-a \"{appBundle}\" --args {args}",
+                    Arguments = openArgs,
                     UseShellExecute = false,
                 };
             }
@@ -69,17 +95,18 @@ public static class Launcher
         };
     }
 
-    private static string? ResolveExePath(AppConfig cfg, string exePath)
+    private static string? ResolvePath(AppConfig cfg, string? configuredPath, bool allowDirectory)
     {
-        if (string.IsNullOrWhiteSpace(exePath)) return null;
+        if (string.IsNullOrWhiteSpace(configuredPath)) return null;
 
+        var exePath = configuredPath;
         exePath = ExpandHomePath(exePath);
         exePath = exePath.Replace('/', Path.DirectorySeparatorChar);
 
         // Absolute path: use it directly if it exists.
         if (IsProbablyAbsolutePath(exePath))
         {
-            if (File.Exists(exePath) || Directory.Exists(exePath))
+            if (File.Exists(exePath) || (allowDirectory && Directory.Exists(exePath)))
                 return exePath;
         }
 
@@ -102,10 +129,30 @@ public static class Launcher
         foreach (var c in candidates)
         {
             if (string.IsNullOrWhiteSpace(c)) continue;
-            if (File.Exists(c) || Directory.Exists(c)) return c;
+            if (File.Exists(c) || (allowDirectory && Directory.Exists(c))) return c;
         }
 
         return null;
+    }
+
+    private static string? SelectPlatformPath(
+        string? genericPath,
+        string? windowsPath,
+        string? macPath,
+        string? linuxPath)
+    {
+        string? selected = null;
+
+        if (OperatingSystem.IsWindows() && !string.IsNullOrWhiteSpace(windowsPath))
+            selected = windowsPath;
+        else if (OperatingSystem.IsMacOS() && !string.IsNullOrWhiteSpace(macPath))
+            selected = macPath;
+        else if (OperatingSystem.IsLinux() && !string.IsNullOrWhiteSpace(linuxPath))
+            selected = linuxPath;
+        else
+            selected = genericPath;
+
+        return string.IsNullOrWhiteSpace(selected) ? null : selected;
     }
 
     private static bool IsProbablyAbsolutePath(string path)

@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup>
+    <!-- Exclude macOS AppleDouble sidecar files from SDK default item globs. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/._*</DefaultItemExcludes>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="**/._*" />
     <None Remove="**/._*" />

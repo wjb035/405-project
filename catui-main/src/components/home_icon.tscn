@@ -1,0 +1,111 @@
+[gd_scene load_steps=8 format=3 uid="uid://chk028sh3g7b5"]
+
+[ext_resource type="Script" path="res://src/components/home_icon.gd" id="1_q27xj"]
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="2_jb4yi"]
+[ext_resource type="Texture2D" uid="uid://8ggsdr4od171" path="res://assets/images/catui/logoDEV.png" id="3_jb4yi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4oyr4"]
+draw_center = false
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+shadow_color = Color(0, 0, 0, 0.078431375)
+shadow_size = 70
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8bni4"]
+draw_center = false
+border_width_left = 18
+border_width_top = 18
+border_width_right = 18
+border_width_bottom = 18
+border_color = Color(1, 1, 1, 0.76862746)
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+anti_aliasing = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8bni4"]
+shader = ExtResource("2_jb4yi")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jb4yi"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 18
+border_width_top = 18
+border_width_right = 18
+border_width_bottom = 18
+border_color = Color(1, 1, 1, 0)
+border_blend = true
+corner_radius_top_left = 47
+corner_radius_top_right = 47
+corner_radius_bottom_right = 47
+corner_radius_bottom_left = 47
+
+[node name="home_icon" type="Control"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 100.0
+offset_bottom = 100.0
+script = ExtResource("1_q27xj")
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4oyr4")
+
+[node name="border" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_8bni4")
+
+[node name="focus" type="Panel" parent="style"]
+visible = false
+material = SubResource("ShaderMaterial_8bni4")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_8bni4")
+
+[node name="IconImg" type="Panel" parent="."]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jb4yi")
+
+[node name="TextureRect" type="TextureRect" parent="IconImg"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_jb4yi")
+expand_mode = 4
+stretch_mode = 6
