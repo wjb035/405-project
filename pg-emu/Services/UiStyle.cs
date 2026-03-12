@@ -2,14 +2,13 @@ using Godot;
 
 namespace PGEmu.Services;
 
-// Shared launcher styling so screens keep a consistent neon-dark aesthetic.
 public static class UiStyle
 {
-    // Shared text colors so controls look coherent across scenes.
+    // Text colors
     private static readonly Color TextColor = new(0.95f, 0.94f, 1f, 0.98f);
     private static readonly Color MutedTextColor = new(0.87f, 0.86f, 0.96f, 0.9f);
 
-    // Main call-to-action button styling.
+    // Main button styling.
     public static void StylePrimaryButton(Button? button)
     {
         if (button == null) return;
@@ -28,7 +27,6 @@ public static class UiStyle
     public static void StyleNavButton(Button? button)
     {
         if (button == null) return;
-        // Reuse primary style and then enlarge to make shoulder/d-pad navigation easier.
         StylePrimaryButton(button);
         button.CustomMinimumSize = new Vector2(64f, 64f);
     }
@@ -51,7 +49,7 @@ public static class UiStyle
     public static void StyleTitleLabel(Label? label)
     {
         if (label == null) return;
-        // A light shadow keeps text readable over bright card art.
+        // A light shadow
         label.AddThemeColorOverride("font_color", TextColor);
         label.AddThemeColorOverride("font_shadow_color", new Color(0.05f, 0.04f, 0.08f, 0.9f));
     }

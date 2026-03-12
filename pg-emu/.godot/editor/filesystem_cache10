@@ -1,5 +1,9 @@
 63f7b34db8d8cdea90c76aacccf841ec
+<<<<<<< Updated upstream
 ::res://::1772151535
+=======
+::res://::1772042738
+>>>>>>> Stashed changes
 Achievements.tscn::PackedScene::9222093291491280280::1771269048::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs
 AchievementScreen.cs::CSharpScript::6693889573278468072::1771269048::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1771269370::0::1::::<><><>0<>0<><>::
@@ -16,10 +20,18 @@ GameSelect.tscn::PackedScene::6344109642126286492::1772145794::0::1::::<><><>0<>
 HomeScreen.cs::CSharpScript::3450512667325572821::1772150127::0::1::::<>Control<><>0<>0<><>::
 HomeScreen.tscn::PackedScene::3595765915259507013::1772145367::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn
 icon.svg::CompressedTexture2D::143724492836120447::1770065031::1770065480::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+<<<<<<< Updated upstream
 inbox.tscn::PackedScene::95044556963901650::1772145368::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
 inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1772145368::0::1::::<><><>0<>0<><>::
 Login.cs::CSharpScript::2130692794859400076::1772145794::0::1::::<>Control<><>0<>0<><>::
 LoginScreen.tscn::PackedScene::6750562284961884728::1772146092::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
+=======
+LibretroHost.cs::CSharpScript::5191850242086797574::1771634288::0::1::::<><><>0<>0<><>::
+LibretroPlayer.cs::CSharpScript::4228148779151358075::1771634049::0::1::::<>Control<><>0<>0<><>::
+LibretroPlayer.tscn::PackedScene::-1::1771275031::0::1::::<><><>0<>0<><>::res://LibretroPlayer.cs
+Login.cs::CSharpScript::2130692794859400076::1770652777::0::1::::<>Control<><>0<>0<><>::
+login.tscn::PackedScene::-1::1770146155::0::1::::<><><>0<>0<><>::res://Login.cs
+>>>>>>> Stashed changes
 platform_card.tscn::PackedScene::-1::1770072440::0::1::::<><><>0<>0<><>::
 Profile.cs::CSharpScript::7879751291555930961::1771269049::0::1::::<>Control<><>0<>0<><>::
 profile.tscn::PackedScene::387046989646537699::1771269049::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg
