@@ -1,7 +1,11 @@
 63f7b34db8d8cdea90c76aacccf841ec
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ::res://::1772151535
+=======
+::res://::1772042738
+>>>>>>> Stashed changes
 =======
 ::res://::1772042738
 >>>>>>> Stashed changes
@@ -26,11 +30,14 @@ HomeScreen.tscn::PackedScene::3595765915259507013::1772145367::0::1::::<><><>0<>
 icon.svg::CompressedTexture2D::143724492836120447::1770065031::1770065480::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 inbox.tscn::PackedScene::95044556963901650::1772145368::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
 inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1772145368::0::1::::<><><>0<>0<><>::
 Login.cs::CSharpScript::2130692794859400076::1772145794::0::1::::<>Control<><>0<>0<><>::
 LoginScreen.tscn::PackedScene::6750562284961884728::1772146092::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 LibretroHost.cs::CSharpScript::5191850242086797574::1771634288::0::1::::<><><>0<>0<><>::
