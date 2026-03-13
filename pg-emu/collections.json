@@ -1,12 +1,12 @@
 [
   {
-    "Key": "col",
+    "Key": "Monkey Games",
     "Value": [
       {
-        "Name": "Metroid Prime 2 - Echoes (USA)",
-        "Path": "D:/PGEmu Games\\games\\GameCube\\Metroid Prime 2 - Echoes (USA).rvz",
-        "Title": "Metroid Prime 2 - Echoes (USA)",
-        "retroAchievementsGameId": 7683,
+        "Name": "Super Monkey Ball (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball (USA).ciso",
+        "Title": "Super Monkey Ball (USA)",
+        "retroAchievementsGameId": 9510,
         "platform": {
           "Id": "gc",
           "Name": "Nintendo GameCube",
@@ -23,8 +23,30 @@
           "DefaultEmulatorId": "dolphin",
           "retroachievementsPlatformID": 16
         },
-        "AchievementNum": "7/68"
+        "AchievementNum": "8/77"
       },
+      {
+        "Name": "Ape Escape 3 (USA)",
+        "Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+        "Title": "Ape Escape 3 (USA)",
+        "retroAchievementsGameId": 2689,
+        "platform": {
+          "Id": "ps2",
+          "Name": "Playstation 2",
+          "RomPath": "games/PS2",
+          "Extensions": [
+            ".iso"
+          ],
+          "DefaultEmulatorId": "pcsx2",
+          "retroachievementsPlatformID": 21
+        },
+        "AchievementNum": "31/145"
+      }
+    ]
+  },
+  {
+    "Key": "Racing Games",
+    "Value": [
       {
         "Name": "Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It)",
         "Path": "D:/PGEmu Games\\games\\PSP\\Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It).iso",
@@ -41,6 +63,85 @@
           "retroachievementsPlatformID": 41
         },
         "AchievementNum": "14/88"
+      }
+    ]
+  },
+  {
+    "Key": "Favorites",
+    "Value": [
+      {
+        "Name": "Super Monkey Ball 2 (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+        "Title": "Super Monkey Ball 2 (USA)",
+        "retroAchievementsGameId": 6253,
+        "platform": {
+          "Id": "gc",
+          "Name": "Nintendo GameCube",
+          "RomPath": "games/GameCube",
+          "Extensions": [
+            ".iso",
+            ".gcm",
+            ".gcz",
+            ".ciso",
+            ".rvz",
+            ".wia",
+            ".wbfs"
+          ],
+          "DefaultEmulatorId": "dolphin",
+          "retroachievementsPlatformID": 16
+        },
+        "AchievementNum": "46/158"
+      }
+    ]
+  },
+  {
+    "Key": "Collection 4",
+    "Value": [
+      {
+        "Name": "Super Monkey Ball 2 (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+        "Title": "Super Monkey Ball 2 (USA)",
+        "retroAchievementsGameId": 6253,
+        "platform": {
+          "Id": "gc",
+          "Name": "Nintendo GameCube",
+          "RomPath": "games/GameCube",
+          "Extensions": [
+            ".iso",
+            ".gcm",
+            ".gcz",
+            ".ciso",
+            ".rvz",
+            ".wia",
+            ".wbfs"
+          ],
+          "DefaultEmulatorId": "dolphin",
+          "retroachievementsPlatformID": 16
+        },
+        "AchievementNum": "46/158"
+      },
+      {
+        "Name": "Super Monkey Ball 2 (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+        "Title": "Super Monkey Ball 2 (USA)",
+        "retroAchievementsGameId": 6253,
+        "platform": {
+          "Id": "gc",
+          "Name": "Nintendo GameCube",
+          "RomPath": "games/GameCube",
+          "Extensions": [
+            ".iso",
+            ".gcm",
+            ".gcz",
+            ".ciso",
+            ".rvz",
+            ".wia",
+            ".wbfs"
+          ],
+          "DefaultEmulatorId": "dolphin",
+          "retroachievementsPlatformID": 16
+        },
+        "AchievementNum": "46/158"
       }
     ]
   }
