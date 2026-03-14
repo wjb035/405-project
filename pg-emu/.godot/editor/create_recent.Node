@@ -1,6 +1,7 @@
-VideoStreamPlayer
+SubViewport
 ColorRect
 CanvasLayer
+VideoStreamPlayer
 AudioStreamPlayer
 Node
 VBoxContainer
@@ -12,4 +13,3 @@ HBoxContainer
 Panel
 PopupPanel
 MarginContainer
-HTTPRequest
