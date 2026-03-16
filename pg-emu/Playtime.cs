@@ -174,6 +174,7 @@ public partial class Playtime : Node
  			currentRunningGame.TimePlayed+=30;
 			GD.Print(currentRunningGame.Name + " has been running for " + currentRunningGame.TimePlayed + " seconds");
 			GD.Print("Game still running...");
+			PlaytimeStorage.SaveToJson();
 		}
 	}
 
