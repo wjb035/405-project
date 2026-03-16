@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using PGEmu.app;
 using System.Collections.Generic;
-
+using System.Linq;
 
 public partial class Playtime : Node
 {
@@ -14,6 +14,7 @@ public partial class Playtime : Node
 	
 	public override void _Ready()
 	{
+		PlaytimeStorage.LoadFromJson();
 		checkTimer = new Timer();
 		checkTimer.WaitTime = 30;
 		checkTimer.Autostart = false;
@@ -25,19 +26,46 @@ public partial class Playtime : Node
 
 
 	public void FindPlatform(PlatformConfig? platformCheck, GameEntry? currentGame){
-		Process[] processes = Process.GetProcessesByName(platformCheck.DefaultEmulatorId);
+		// iterate through all other emulators to kill their process
+		// For some reason, if PPSSPP is open beforehand, then it won't be closed
+		// (Since it has a different exeName, PPSSPPWindows64)
+		// However we wouldn't be tracking that so it's not going to intrude on that
+		foreach (var kvp in PlaytimeStorage.EmulatorToName){
+			if (kvp.Key == platformCheck.DefaultEmulatorId){
+				
+			}
+			else{
+				Process[] otherEmulators = Process.GetProcessesByName(kvp.Value);
+				foreach (var p in otherEmulators){
+					p.Kill();
+				}
+			}
+		}
+		
+		Process[] processes = [];
+		if (PlaytimeStorage.EmulatorToName.TryGetValue(platformCheck.DefaultEmulatorId, out string ExeName)){
+			processes = Process.GetProcessesByName(ExeName);
+			GD.Print("The process existed under " + ExeName);
+		}
+		else{
+			GD.Print("Error setting up playtime!");
+			//return;
+		}
+		
 		//Process[] processes = Process.GetProcessesByName("platformCheck.DefaultEmulatorId");
 		GD.Print(processes.Length + " "+ platformCheck.DefaultEmulatorId + " processes were found");
+		/*
+		This is basically just to find what the name of each exe is when running to find
+		
+*/
 		foreach (var p in Process.GetProcesses())
 {
 			if (p.ProcessName.ToLower().Contains("ppsspp"))
 			{
 				GD.Print("Found: " + p.ProcessName);
 			}
-}
 		
-		
-		
+		}
 		
 		
 		// if we have a single process, that's all we need
@@ -100,6 +128,25 @@ public partial class Playtime : Node
 			
 			StartMonitoring(processes[0]);
 		}
+		else if (processes.Length == 0){
+			GD.Print("We weren't able to detect any instances of "+ platformCheck.DefaultEmulatorId);
+		}
+		else if (processes.Length > 1){
+			// We want to sort the list of processes by when they were started
+			processes = processes
+	   	 	.OrderByDescending(p => p.StartTime)
+			.ToArray();
+			
+			foreach(var p in processes){
+				GD.Print(p.StartTime);
+			}
+			// Now that the newest is up front, kill EVERYTHING. 
+			for (int i = 1; i < processes.Length; i++){
+				processes[i].Kill();
+			}
+			
+			StartMonitoring(processes[0]);
+		}
 		
 	}
 	public void StartMonitoring(Process gameProcess)
@@ -119,11 +166,13 @@ public partial class Playtime : Node
 			GD.Print("Game closed!");
 			checkTimer.Stop();
 			OnGameClosed();
+			PlaytimeStorage.SaveToJson();
+			GD.Print("Playtime Saved!");
 		}
 		else
 		{
  			currentRunningGame.TimePlayed+=30;
-			GD.Print("Game been running for " + currentRunningGame.TimePlayed + " seconds");
+			GD.Print(currentRunningGame.Name + " has been running for " + currentRunningGame.TimePlayed + " seconds");
 			GD.Print("Game still running...");
 		}
 	}
