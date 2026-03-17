@@ -4,6 +4,8 @@ using System.Diagnostics;
 using PGEmu.app;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
 
 public partial class Playtime : Node
 {
@@ -16,7 +18,7 @@ public partial class Playtime : Node
 	{
 		PlaytimeStorage.LoadFromJson();
 		checkTimer = new Timer();
-		checkTimer.WaitTime = 30;
+		checkTimer.WaitTime = 10;
 		checkTimer.Autostart = false;
 		checkTimer.OneShot = false;
 
@@ -171,15 +173,73 @@ public partial class Playtime : Node
 		}
 		else
 		{
- 			currentRunningGame.TimePlayed+=30;
+ 			currentRunningGame.TimePlayed+=10;
 			GD.Print(currentRunningGame.Name + " has been running for " + currentRunningGame.TimePlayed + " seconds");
 			GD.Print("Game still running...");
 			PlaytimeStorage.SaveToJson();
 		}
 	}
 
-	public void OnGameClosed()
+	public async void OnGameClosed()
+{
+	GD.Print("Game closed! Sending playtime...");
+
+	// Get JWT token from your autoload
+	var authService = (PGEmu.Services.AuthService)GetNode("/root/AuthService");
+	await authService.Refresh(); // refresh token first
+
+	string jwtToken = authService.AccessToken;
+
+	GD.Print("JWT token: " + jwtToken);
+	if (currentRunningGame != null)
 	{
-		GD.Print("Run cleanup code here");
+		 SendPlaytimeToServer(
+			jwtToken,
+			currentRunningGame.Name,     // your ExternalGameId
+			currentRunningGame.TimePlayed, 
+			"dolphin"                    // or current platformId
+		);
 	}
+}
+	
+	private async Task SendPlaytimeToServer(string jwtToken, string externalGameId, int secondsPlayed, string platformId)
+{
+	var http = new HttpRequest();
+	AddChild(http); // Must be added to scene tree
+
+	string url = "http://localhost:5276/api/usergames/playtime";
+
+	var headers = new string[]
+	{
+		"Content-Type: application/json",
+		"Authorization: Bearer " + jwtToken
+	};
+
+	var body = new
+{
+	ExternalGameId = externalGameId,
+	Source = 0,
+	SecondsPlayed = secondsPlayed,
+	PlatformId = platformId
+};
+
+	string json = System.Text.Json.JsonSerializer.Serialize(body);
+
+	var tcs = new TaskCompletionSource<bool>();
+
+	http.RequestCompleted += (result, responseCode, responseHeaders, bodyBytes) =>
+	{
+		if (responseCode == 200)
+			GD.Print("Playtime successfully sent!");
+		else
+			GD.Print("Failed to send playtime: ", responseCode);
+
+		tcs.SetResult(true);
+		http.QueueFree(); // cleanup
+	};
+
+	http.Request(url, headers, HttpClient.Method.Put, json);
+
+	await tcs.Task;
+}
 }
