@@ -627,6 +627,7 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_chat);
 		UiStyle.StyleTopBarButton(_settings);
 		UiStyle.StyleTopBarButton(_help);
+		UiStyle.StyleTopBarButton(_collections);
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
 	}
