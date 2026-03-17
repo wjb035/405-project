@@ -39,6 +39,15 @@ PGEmu/games/Wii/*
 !PGEmu/games/GameCube/.gitkeep
 !PGEmu/games/Wii/.gitkeep
 
+## Libretro runtime data
+# Dolphin's Sys tree is a local runtime dependency for the libretro core.
+# Ignore it unless you intentionally want to vendor those upstream files in-repo.
+cores/dolphin_libretro.dylib
+cores/system/
+cores/save/
+cores/assets/
+cores/User/
+
 #idk what this is
 ._*
 

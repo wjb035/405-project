@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 using Godot;
 using System;
 
@@ -42,4 +43,15 @@ public static class LibraryLoaderFactory
 
 		return _instance;
 	}
+=======
+namespace PGEmu.Emu.Libretro;
+
+// Factory kept intentionally simple for now; structure mirrors CatUI so we can add per-platform loaders later.
+public static class LibraryLoaderFactory
+{
+    public static ILibraryLoader Create()
+    {
+        return new NativeLibraryLoader();
+    }
+>>>>>>> Stashed changes
 }
