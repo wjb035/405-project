@@ -18,6 +18,7 @@ public partial class WelcomeScreen : Control
 	private string _defaultContinuePrompt = string.Empty;
 	private TextureRect _logo = null!;
 	private TextureRect _shadow = null!;
+	private GlobalBackground _bg = null!;
 	
 	public override void _Ready()
 	{
@@ -28,17 +29,19 @@ public partial class WelcomeScreen : Control
 		_logo = GetNode<TextureRect>(LogoPath);
 		_shadow = GetNode<TextureRect>(ShadowPath);
 		_defaultContinuePrompt = _continue.Text;
-		
+		_bg = GetNode<GlobalBackground>("/root/GlobalBackground");		
 		_continueButton.Pressed += OnContinuePressed;
 		Input.JoyConnectionChanged += OnJoyConnectionChanged;
 		UpdateContinuePrompt();
 
 		// Initially transparent and black
+		_bg.SetOpacity(0f);
 		_fadeRect.Modulate = new Color(0, 0, 0, 1);
 		_welcomeLabel.Modulate = new Color(1, 1, 1, 0);
 		_continue.Modulate = new Color(1, 1, 1, 0);
 		
 		_logo.Modulate = new Color(1, 1, 1, 0);    
+		_shadow.Modulate = new Color(1, 1, 1, 0);    
 		
 		// Start the welcome logic
 		CallDeferred(nameof(StartWelcomeFlow));
@@ -136,32 +139,56 @@ public partial class WelcomeScreen : Control
 	
 	private async Task FadeIn()
 	{
-		_fadeRect.Modulate = new Color(0, 0, 0, 1);
+		if (!_bg.HasFadedIn)
+		{
+			_bg.SetOpacity(0f);
+			
+			await Task.WhenAll(
+				_bg.FadeIn(1.2f),
+				FadeRectOut()
+			);
+		} else {
+			await FadeRectOut();
+		}
+
 		var tween = CreateTween();
-		tween.TweenProperty(_fadeRect, "modulate:a", 0.0f, 1.5f)
-			.SetEase(Tween.EaseType.InOut);
-		await ToSignal(tween, "finished");
-		
-		tween = CreateTween();
 		tween.TweenProperty(_logo, "modulate:a", 1.0f, 2f)
 			.SetEase(Tween.EaseType.InOut);
-		tween.TweenProperty(_shadow, "modulate:a", 0.0f, 1.5f)
+		tween.TweenProperty(_shadow, "modulate:a", 1.0f, 2f)
 			.SetEase(Tween.EaseType.InOut);
+
 		await ToSignal(tween, "finished");
+
+		// Text after
+		await FadeText();
 		
-		_welcomeLabel.Modulate = new Color(1, 1, 1, 0); 
-		tween = CreateTween();
-		tween.TweenProperty(_welcomeLabel, "modulate:a", 1.0f, 0.8f)
-			.SetEase(Tween.EaseType.InOut);
+	}
+	private async Task FadeRectOut()
+	{
+		_fadeRect.Modulate = new Color(0, 0, 0, 1);
+
+		var tween = CreateTween();
+		tween.TweenProperty(_fadeRect, "modulate:a", 0.0f, 1.5f);
+
 		await ToSignal(tween, "finished");
-		
+	}
+	
+	private async Task FadeText()
+	{
+		_welcomeLabel.Modulate = new Color(1, 1, 1, 0);
+
+		var tween = CreateTween();
+		tween.TweenProperty(_welcomeLabel, "modulate:a", 1.0f, 0.8f);
+
+		await ToSignal(tween, "finished");
+
 		await Task.Delay(600);
-		
+
 		_continue.Modulate = new Color(1, 1, 1, 0);
+
 		tween = CreateTween();
-		tween.TweenProperty(_continue, "modulate:a", 1.0f, 1.5f)
-			.SetEase(Tween.EaseType.InOut);
-		
+		tween.TweenProperty(_continue, "modulate:a", 1.0f, 1.5f);
+
 		await ToSignal(tween, "finished");
 	}
 }

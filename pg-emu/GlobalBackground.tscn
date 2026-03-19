@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://btstrdwj4rrp8"]
+
+[ext_resource type="Script" uid="uid://bkbntobikh6hi" path="res://GlobalBackground.cs" id="1_o4xgy"]
+[ext_resource type="Shader" uid="uid://d3skfih3bcydu" path="res://BackgroundVisual.tres" id="1_xpfep"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o4xgy"]
+shader = ExtResource("1_xpfep")
+shader_parameter/ScrollSpeedX = 0.1
+shader_parameter/ScrollSpeedY = 0.07
+shader_parameter/transition2 = 0.0
+
+[node name="Control" type="CanvasLayer" unique_id=824831350]
+layer = -116
+script = ExtResource("1_o4xgy")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1721220873]
+material = SubResource("ShaderMaterial_o4xgy")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

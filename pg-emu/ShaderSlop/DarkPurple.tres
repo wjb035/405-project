@@ -1,0 +1,9 @@
+[gd_resource type="GradientTexture2D" format=3 uid="uid://bl4d3fqlk1yml"]
+
+[sub_resource type="Gradient" id="Gradient_oamho"]
+offsets = PackedFloat32Array(0.27011493, 0.5344828, 0.75287354, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.18750954, 0.028763209, 0.44595495, 1, 0.46994364, 0.0016818809, 0.69002163, 1, 0.92, 0.3128, 0.89976007, 1)
+
+[resource]
+resource_name = "DarkPurple"
+gradient = SubResource("Gradient_oamho")

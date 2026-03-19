@@ -1,0 +1,9 @@
+[gd_resource type="GradientTexture2D" format=3 uid="uid://cyjlmrq0fnof2"]
+
+[sub_resource type="Gradient" id="Gradient_6366u"]
+offsets = PackedFloat32Array(0.0862069, 0.3218391, 0.5229885, 0.7988506)
+colors = PackedColorArray(0.87186325, 0.6818284, 1, 1, 0.47940314, 0.42485315, 0.86314267, 1, 0.3647059, 0, 1, 1, 0.06666672, 0, 0.25, 1)
+
+[resource]
+resource_name = "BluePurple"
+gradient = SubResource("Gradient_6366u")

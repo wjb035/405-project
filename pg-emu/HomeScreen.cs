@@ -98,7 +98,10 @@ public partial class HomeScreen : Control
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 		if (_collections != null) _collections.Pressed += OnCollectionsPressed;
-
+		
+		// background transition
+		StartBackgroundTransition();
+		
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
 		InputRoutingService.Instance?.UnlockUiInput();
@@ -123,6 +126,27 @@ public partial class HomeScreen : Control
 		dialog.PopupCentered();
 	}
 
+	// BACKGOURND STUFF
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNode<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+		try
+		{
+			bg.StartTransition("HomeScreen", 20f);
+			GD.Print("Background transition finished!");
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
+		
+	}
+	
 private void ConnectAllButtons(Node node)
 {
 	foreach (Node child in node.GetChildren())
