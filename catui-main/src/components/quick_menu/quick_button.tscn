@@ -1,0 +1,101 @@
+[gd_scene load_steps=8 format=3 uid="uid://b1v76p0uwxw20"]
+
+[ext_resource type="FontFile" uid="uid://l2nuxykino4m" path="res://assets/fonts/Nunito-Black.ttf" id="1_4pleb"]
+[ext_resource type="Script" uid="uid://b2rl15cxd0agv" path="res://src/components/quick_menu/quick_button.gd" id="1_quick"]
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="2_nn2gg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yhqxx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fex7u"]
+bg_color = Color(1, 1, 1, 0.3372549)
+border_width_left = 2
+border_width_top = 15
+border_width_right = 2
+border_width_bottom = 15
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_r1ga4"]
+shader = ExtResource("2_nn2gg")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_we665"]
+bg_color = Color(0, 0.972549, 0, 1)
+draw_center = false
+border_width_left = 2
+border_width_top = 32
+border_width_right = 2
+border_width_bottom = 32
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[node name="quick_button" type="Control"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 135.0
+offset_bottom = 50.0
+script = ExtResource("1_quick")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 19.0
+offset_right = -19.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_4pleb")
+theme_override_font_sizes/font_size = 18
+text = "load"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 1
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 5.0
+offset_right = 58.0
+offset_bottom = 45.0
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="border" type="Panel" parent="style"]
+material = SubResource("ShaderMaterial_yhqxx")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_fex7u")
+
+[node name="focus" type="Panel" parent="style"]
+material = SubResource("ShaderMaterial_r1ga4")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.015, 1.015)
+pivot_offset = Vector2(100, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_we665")

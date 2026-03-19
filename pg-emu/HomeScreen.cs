@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PGEmu.app;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 public partial class HomeScreen : Control
@@ -14,7 +15,7 @@ public partial class HomeScreen : Control
 	[Export] public NodePath SelectedTitlePath;
 	[Export] public NodePath StatusPath;
 	[Export] public NodePath SelectPlatformPath;
-	[Export] public NodePath BackPath;
+	[Export] public NodePath LogoutPath;
 	[Export] public NodePath FriendsPath;
 	[Export] public NodePath InboxPath;
 	[Export] public NodePath ChatPath;
@@ -33,7 +34,7 @@ public partial class HomeScreen : Control
 	private Label _selectedTitle;
 	private Label _status;
 	private Button _selectPlatform;
-	private Button _back;
+	private Button _logout;
 	private Button _friends;
 	private Button _inbox;
 	private Button _chat;
@@ -60,6 +61,10 @@ public partial class HomeScreen : Control
 	private long _leftAxisNextMs;
 
 	private Tween _tween;
+	
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
+	
 
 	public override void _Ready()
 	{
@@ -71,7 +76,7 @@ public partial class HomeScreen : Control
 		_status = GetNode<Label>(StatusPath);
 		_selectPlatform = GetNode<Button>(SelectPlatformPath);
 
-		_back = GetNodeOrNull<Button>(BackPath);
+		_logout = GetNodeOrNull<Button>(LogoutPath);
 		_inbox = GetNodeOrNull<Button>(InboxPath);
 		_friends = GetNodeOrNull<Button>(FriendsPath);
 		_chat = GetNodeOrNull<Button>(ChatPath);
@@ -83,7 +88,7 @@ public partial class HomeScreen : Control
 		_next.Pressed += () => Step(1);
 		_selectPlatform.Pressed += OpenSelectedPlatform;
 
-		if (_back != null) _back.Pressed += OnBackPressed;
+		if (_logout != null) _logout.Pressed += OnLogoutPressed;
 		if (_settings != null) _settings.Pressed += OnSettingsPressed;
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
 		if (_chat != null) _chat.Pressed += OnChatPressed;
@@ -99,11 +104,19 @@ public partial class HomeScreen : Control
 		UpdateSelectedLabel();
 	}
 
-	private void OnBackPressed()
+	private void OnLogoutPressed()
 	{
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://WelcomeScreen.tscn");
+		var dialog = new ConfirmationDialog();
+		dialog.DialogText = "Are you sure you want to log out?";
+		AddChild(dialog);
+
+		dialog.Confirmed += async () =>
+		{
+			AuthService.Instance.Logout();
+			await Transition.ChangeScene("res://WelcomeScreen.tscn");
+		};
+
+		dialog.PopupCentered();
 	}
 
 private void ConnectAllButtons(Node node)
@@ -139,14 +152,14 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		tree.ChangeSceneToFile("res://vault.tscn");
+		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
 
 	private void OnFriendsPressed()
 	{
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Profile.tscn");
+		tree.ChangeSceneToFile("res://profile.tscn");
 	}
 	
 	private void OnAchPressed(){
@@ -382,10 +395,10 @@ private void OnAnyButtonPressed()
 				OpenSelectedPlatform();
 				break;
 			case JoyButton.B:
-				if (_back != null)
+				if (_logout != null)
 				{
 					MarkInputHandled();
-					OnBackPressed();
+					OnLogoutPressed();
 				}
 				break;
 			case JoyButton.Start:
@@ -603,7 +616,7 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
 		UiStyle.StylePrimaryButton(_selectPlatform);
-		UiStyle.StyleTopBarButton(_back);
+		UiStyle.StyleTopBarButton(_logout);
 		UiStyle.StyleTopBarButton(_inbox);
 		UiStyle.StyleTopBarButton(_friends);
 		UiStyle.StyleTopBarButton(_chat);

@@ -1,0 +1,108 @@
+[gd_scene load_steps=8 format=3 uid="uid://dm4yc4igowagp"]
+
+[ext_resource type="FontFile" uid="uid://l2nuxykino4m" path="res://assets/fonts/Nunito-Black.ttf" id="1_np1cx"]
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="2_r55q2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_okx7f"]
+draw_center = false
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
+shadow_color = Color(0, 0, 0, 0.17254902)
+shadow_size = 70
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sif16"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d7bab"]
+bg_color = Color(1, 1, 1, 0.3372549)
+border_width_left = 15
+border_width_top = 15
+border_width_right = 15
+border_width_bottom = 15
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ib8ht"]
+shader = ExtResource("2_r55q2")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_43aqp"]
+bg_color = Color(0, 0.972549, 0, 1)
+draw_center = false
+border_width_left = 32
+border_width_top = 32
+border_width_right = 32
+border_width_bottom = 32
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[node name="alert_pop" type="Control"]
+custom_minimum_size = Vector2(250, 70)
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_np1cx")
+theme_override_font_sizes/font_size = 18
+text = "Add to home"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_okx7f")
+
+[node name="border" type="Panel" parent="style"]
+material = SubResource("ShaderMaterial_sif16")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_d7bab")
+
+[node name="focus" type="Panel" parent="style"]
+modulate = Color(1, 1, 1, 0.44705883)
+material = SubResource("ShaderMaterial_ib8ht")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.015, 1.015)
+pivot_offset = Vector2(100, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_43aqp")

@@ -1,0 +1,153 @@
+[gd_scene load_steps=10 format=3 uid="uid://dnlxh7cb1vv2a"]
+
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="1_fwbln"]
+[ext_resource type="Texture2D" uid="uid://0h58jg1hnsaw" path="res://assets/icons/settings.png" id="2_4whho"]
+[ext_resource type="FontFile" uid="uid://l2nuxykino4m" path="res://assets/fonts/Nunito-Black.ttf" id="3_c1q72"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y2auv"]
+draw_center = false
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
+shadow_color = Color(0, 0, 0, 0.17254902)
+shadow_size = 70
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0qf2b"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vstqr"]
+bg_color = Color(1, 1, 1, 0.3372549)
+border_width_left = 15
+border_width_top = 15
+border_width_right = 15
+border_width_bottom = 15
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_m6jho"]
+shader = ExtResource("1_fwbln")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qfput"]
+bg_color = Color(0, 0.972549, 0, 1)
+draw_center = false
+border_width_left = 32
+border_width_top = 32
+border_width_right = 32
+border_width_bottom = 32
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m2nbb"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 40
+
+[node name="save_component" type="Control"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 369.0
+offset_bottom = 100.0
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="style"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_y2auv")
+
+[node name="border" type="Panel" parent="style"]
+material = SubResource("ShaderMaterial_0qf2b")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_vstqr")
+
+[node name="focus" type="Panel" parent="style"]
+visible = false
+material = SubResource("ShaderMaterial_m6jho")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.015, 1.015)
+pivot_offset = Vector2(100, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_qfput")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 21.5
+offset_right = -21.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 2
+
+[node name="Control" type="Control" parent="HBoxContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Panel" type="Panel" parent="HBoxContainer/Control"]
+clip_children = 1
+light_mask = 16385
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_m2nbb")
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/Control/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_4whho")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+custom_minimum_size = Vector2(169.785, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.15686275)
+theme_override_fonts/font = ExtResource("3_c1q72")
+theme_override_font_sizes/font_size = 18
+text = "Savestate 12345"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 1

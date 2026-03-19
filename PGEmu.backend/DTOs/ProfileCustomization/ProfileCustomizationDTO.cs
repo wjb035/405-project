@@ -1,12 +1,20 @@
 namespace PGEmuBackend.DTOs.ProfileCustomization;
 
-public class ProfileCustomization
+public class ProfileCustomizationDTO
 {
-    public Guid UserId { get; }
+    public Guid UserId { get; set; }
 
-    public string? UserName { get; set; }
+
+    public string? Username { get; set; }
 
     public string? AvatarUrl { get; set; }
+
     public string? Bio { get; set; }
-    public DateTime CreatedAt { get; }
+
+    public string? NewUsername { get; set; }
+
+    public string? NewAvatarUrl { get; set; }
+
+    public string? NewBio { get; set; }
+    //public DateTime CreatedAt { get; }
 }

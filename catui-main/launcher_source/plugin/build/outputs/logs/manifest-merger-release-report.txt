@@ -1,0 +1,37 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:2:1-12:12
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:2:1-12:12
+	package
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:3:5-33
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.QUERY_ALL_PACKAGES
+ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:5:5-77
+	android:name
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:5:22-74
+application
+ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:7:5-11:19
+meta-data#org.godotengine.plugin.v2.CatUILauncher
+ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:8:9-10:64
+	android:value
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:10:13-61
+	android:name
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml:9:13-67
+uses-sdk
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+		ADDED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\arthi\OneDrive\Documentos\catui\launcher_source\plugin\src\main\AndroidManifest.xml

@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.IO;
 using PGEmu.app;
+using PGEmu.Services;
 
 public partial class Vault : Control
 {
@@ -36,6 +37,8 @@ public partial class Vault : Control
 		_status = GetNode<Label>(StatusPath);
 		_fileDialog = GetNode<FileDialog>(FileDialogPath);
 
+		ApplyThemeAesthetic();
+
 		// Hook up UI actions.
 		_back.Pressed += GoBack;
 		_browse.Pressed += OpenBrowse;
@@ -46,6 +49,25 @@ public partial class Vault : Control
 
 		// Load existing config (or initialize defaults) and populate the UI.
 		LoadConfig();
+	}
+
+	private void ApplyThemeAesthetic()
+	{
+		var bg = GetNodeOrNull<ColorRect>("Bg");
+		if (bg != null)
+			bg.Color = new Color(0.068f, 0.048f, 0.121f, 1f);
+
+		var hint = GetNodeOrNull<Label>("Margin/Root/Body/Hint");
+		if (hint != null)
+			hint.Text = "Set your game library folder (LibraryRoot).";
+		UiStyle.StyleMetaLabel(hint);
+
+		UiStyle.StyleLineEdit(_libraryPathEdit);
+		UiStyle.StylePrimaryButton(_browse);
+		UiStyle.StylePrimaryButton(_save);
+		UiStyle.TightenButtonContentPadding(_browse, horizontal: 6f, vertical: 2f);
+		UiStyle.TightenButtonContentPadding(_save, horizontal: 6f, vertical: 2f);
+		UiStyle.StyleStatusLabel(_status);
 	}
 
 	private void GoBack()

@@ -15,7 +15,36 @@
         ".wbfs"
       ],
       "defaultEmulatorId": "dolphin",
+<<<<<<< Updated upstream
       "retroachievementsPlatformID": 16
+=======
+      "retroachievementsPlatformID": 16,
+      "libretro": {
+        "corePath": "cores/dolphin_libretro.dylib",
+        "libraryName": "Dolphin Libretro",
+        "libraryVersion": "1.0",
+        "validExtensions": "iso|gcm|gcz|ciso|cisos|rvz|wbfs",
+        "needFullPath": true,
+        "blockExtract": true,
+        "targetWidth": 640,
+        "targetHeight": 528,
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "aspectRatio": 1.3333333,
+        "targetFps": 60,
+        "sampleRate": 48000,
+        "startupTimeoutSeconds": 120,
+        "options": {
+          "dolphin_renderer": "OpenGL",
+          "dolphin_cpu_core": "Interpreter (slowest)",
+          "dolphin_main_cpu_thread": "Disabled",
+          "dolphin_fastmem": "Disabled",
+          "dolphin_fastmem_arena": "Disabled",
+          "dolphin_wiimote_continuous_scanning": "Disabled",
+          "dolphin_bluetooth_passthrough": "Disabled"
+        }
+      }
+>>>>>>> Stashed changes
     },
     {
       "id": "wii",
@@ -31,7 +60,36 @@
         ".nfs"
       ],
       "defaultEmulatorId": "dolphin",
+<<<<<<< Updated upstream
       "retroachievementsPlatformID": -1
+=======
+      "retroachievementsPlatformID": -1,
+      "libretro": {
+        "corePath": "cores/dolphin_libretro.dylib",
+        "libraryName": "Dolphin Libretro",
+        "libraryVersion": "1.0",
+        "validExtensions": "iso|gcz|ciso|rvz|wbfs|nfs",
+        "needFullPath": true,
+        "blockExtract": true,
+        "targetWidth": 640,
+        "targetHeight": 528,
+        "maxWidth": 1920,
+        "maxHeight": 1080,
+        "aspectRatio": 1.3333333,
+        "targetFps": 60,
+        "sampleRate": 48000,
+        "startupTimeoutSeconds": 120,
+        "options": {
+          "dolphin_renderer": "OpenGL",
+          "dolphin_cpu_core": "Interpreter (slowest)",
+          "dolphin_main_cpu_thread": "Disabled",
+          "dolphin_fastmem": "Disabled",
+          "dolphin_fastmem_arena": "Disabled",
+          "dolphin_wiimote_continuous_scanning": "Disabled",
+          "dolphin_bluetooth_passthrough": "Disabled"
+        }
+      }
+>>>>>>> Stashed changes
     },
     {
       "id": "ps2",
@@ -59,7 +117,10 @@
       "id": "dolphin",
       "name": "Dolphin",
       "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
-      "argsTemplate": "--exec \"{ROM}\" --batch"
+      "argsTemplate": "--exec \"{ROM}\" --batch",
+      "corePathWindows": "cores/dolphin_libretro.dll",
+      "corePathMac": "cores/dolphin_libretro.dylib",
+      "corePathLinux": "cores/dolphin_libretro.so"
     },
     {
       "id": "pcsx2",

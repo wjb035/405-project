@@ -25,10 +25,8 @@
 .DS_Store
 config.local.json
 
-## GODOT
+## Godot editor/runtime cache
 .godot/
-pg-emu/.godot/
-!pg-emu/.godot/
 
 
 ## Local emulators + ROMs
@@ -41,5 +39,35 @@ PGEmu/games/Wii/*
 !PGEmu/games/GameCube/.gitkeep
 !PGEmu/games/Wii/.gitkeep
 
+## Libretro runtime data
+# Dolphin's Sys tree is a local runtime dependency for the libretro core.
+# Ignore it unless you intentionally want to vendor those upstream files in-repo.
+cores/dolphin_libretro.dylib
+cores/system/
+cores/save/
+cores/assets/
+cores/User/
+
 #idk what this is
 ._*
+
+catui-main
+
+## Emulator runtime config (machine/local state)
+cores/User/Config/*.ini
+cores/Sys/GameSettings/*.ini
+cores/Sys/Profiles/**/*.ini
+cores/Sys/
+cores/dolphin-emu/**/*.ini
+cores/dolphin-emu/Sys/
+pg-emu/dolphin-emu/**/*.ini
+pg-emu/dolphin-emu/Sys/
+pg-emu/User/Config/*.ini
+pg-emu/Sys/GameSettings/*.ini
+pg-emu/Sys/
+pg-emu/User/
+pg-emu/dolphin-emu/
+cores/dolphin-emu/
+cores/*.dylib
+cores/*.zip
+pg-emu/export_presets.cfg
