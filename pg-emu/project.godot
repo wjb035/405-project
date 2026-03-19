@@ -26,6 +26,7 @@ QuitService="*res://Services/QuitService.cs"
 InputRoutingService="*res://Services/InputRoutingService.cs"
 ControllerService="*res://Services/ControllerService.cs"
 ScreenTransition="*uid://duhl1pwwacy2n"
+Playtime="*uid://djummfs7xnaqr"
 
 [display]
 

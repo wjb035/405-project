@@ -16,4 +16,9 @@ public partial class GameEntry : ObservableObject
 
     public override string ToString() => Title;
     public PlatformConfig? platform { get; set; } = null;
+    
+    
+    
+    // time a game has been played in seconds
+    public int TimePlayed {get; set;} = 0;
 }

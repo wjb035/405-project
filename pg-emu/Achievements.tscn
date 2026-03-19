@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://d4nir8xtcs6rk"]
 
 [ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
+[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="2_uqn2r"]
 
 [node name="Achievements" type="Control" unique_id=1415120403]
 layout_mode = 3
@@ -45,7 +46,9 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Bg/Margin/Root/TopBar" unique_id=581318012]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+icon = ExtResource("2_uqn2r")
+icon_alignment = 1
+expand_icon = true
 
 [node name="Title" type="Label" parent="Bg/Margin/Root/TopBar" unique_id=749932390]
 layout_mode = 2

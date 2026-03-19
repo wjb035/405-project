@@ -7,7 +7,7 @@ using PGEmu.app;
 using System.Threading.Tasks;
 using RetroAchievements.Api;
 using PGEmu.Services;
-
+using System.Diagnostics;
 
 public partial class GameSelect : Control
 {
@@ -246,8 +246,20 @@ private void OnAnyButtonPressed()
 				SetStatus(inProcessStatus);
 				return;
 			}
-
+			
+			//GetNode<Playtime>("/root/Playtime").killCur();
+			
+			
 			Launcher.LaunchFromConfig(_config, launchPlatform, game);
+			//runningProcesses = Process.GetProcessesByName("dolphin");
+			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game);
+			
+		//	foreach (var p in runningProcesses){
+			//GD.Print(p.ProcessName +  " started at " + p.StartTime);
+				
+			//}
+			
+			
 			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 			SetStatus($"Launching external emulator: {game.Title}");
 		}

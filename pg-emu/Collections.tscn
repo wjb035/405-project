@@ -2,6 +2,13 @@
 
 [ext_resource type="Script" uid="uid://dgm0r1qq55ebg" path="res://Collections.cs" id="1_pmjb3"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2_nbbm3"]
+[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_orb34"]
+[ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="4_fupj7"]
+[ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="5_rlxaj"]
+[ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="6_h06ym"]
+[ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="7_c58cc"]
+[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="8_gqrw3"]
+[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="9_jpbjf"]
 
 [node name="Collections" type="Control" unique_id=430325591]
 layout_mode = 3
@@ -27,8 +34,11 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -10.0
+offset_bottom = 27.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(1, 0.95)
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
@@ -45,7 +55,10 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=13951956]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+text = " "
+icon = ExtResource("3_orb34")
+icon_alignment = 1
+expand_icon = true
 
 [node name="TopSpacer" type="Control" parent="Margin/Root/TopBar" unique_id=143457840]
 layout_mode = 2
@@ -58,22 +71,30 @@ layout_mode = 2
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1856926597]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "👥"
+icon = ExtResource("4_fupj7")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2136396140]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "💬"
+icon = ExtResource("5_rlxaj")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1473282169]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "⚙"
+icon = ExtResource("6_h06ym")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1994266962]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-text = "?"
+icon = ExtResource("7_c58cc")
+icon_alignment = 1
+expand_icon = true
 
 [node name="CenterArea" type="VBoxContainer" parent="Margin/Root" unique_id=1146463170]
 layout_mode = 2
@@ -139,7 +160,9 @@ offset_left = 38.0
 offset_top = 198.0
 offset_right = 102.0
 offset_bottom = 262.0
-text = "◀"
+icon = ExtResource("8_gqrw3")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=989224372]
 layout_mode = 0
@@ -147,7 +170,9 @@ offset_left = 1014.0
 offset_top = 198.0
 offset_right = 1078.0
 offset_bottom = 262.0
-text = "▶"
+icon = ExtResource("9_jpbjf")
+icon_alignment = 1
+expand_icon = true
 
 [node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea" unique_id=1310809794]
 layout_mode = 2

@@ -43,6 +43,10 @@ builder.Services.AddScoped<FriendService>();
 
 builder.Services.AddScoped<IProfileCustomizationService, ProfileCustomizationService>();
 
+
+
+// user game stuff 
+builder.Services.AddScoped<IUserGameService, UserGameService>();
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);
 builder.Services.AddAuthentication(options =>

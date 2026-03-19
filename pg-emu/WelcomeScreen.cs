@@ -9,6 +9,7 @@ public partial class WelcomeScreen : Control
 	[Export] public NodePath ContinueLabelPath;
 	[Export] public NodePath FadeRectPath;
 	[Export] public NodePath LogoPath;
+	[Export] public NodePath ShadowPath;
 	
 	private Button _continueButton = null!;
 	private Label _welcomeLabel = null!;
@@ -16,6 +17,7 @@ public partial class WelcomeScreen : Control
 	private ColorRect _fadeRect = null!;
 	private string _defaultContinuePrompt = string.Empty;
 	private TextureRect _logo = null!;
+	private TextureRect _shadow = null!;
 	
 	public override void _Ready()
 	{
@@ -24,6 +26,7 @@ public partial class WelcomeScreen : Control
 		_continue = GetNode<Label>(ContinueLabelPath);
 		_fadeRect = GetNode<ColorRect>(FadeRectPath);
 		_logo = GetNode<TextureRect>(LogoPath);
+		_shadow = GetNode<TextureRect>(ShadowPath);
 		_defaultContinuePrompt = _continue.Text;
 		
 		_continueButton.Pressed += OnContinuePressed;
@@ -142,6 +145,8 @@ public partial class WelcomeScreen : Control
 		tween = CreateTween();
 		tween.TweenProperty(_logo, "modulate:a", 1.0f, 2f)
 			.SetEase(Tween.EaseType.InOut);
+		tween.TweenProperty(_shadow, "modulate:a", 0.0f, 1.5f)
+			.SetEase(Tween.EaseType.InOut);
 		await ToSignal(tween, "finished");
 		
 		_welcomeLabel.Modulate = new Color(1, 1, 1, 0); 
@@ -150,7 +155,7 @@ public partial class WelcomeScreen : Control
 			.SetEase(Tween.EaseType.InOut);
 		await ToSignal(tween, "finished");
 		
-		await Task.Delay(1000);
+		await Task.Delay(600);
 		
 		_continue.Modulate = new Color(1, 1, 1, 0);
 		tween = CreateTween();
