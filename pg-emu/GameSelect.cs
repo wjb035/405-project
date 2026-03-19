@@ -27,6 +27,7 @@ public partial class GameSelect : Control
 	[Export] public PackedScene CardScene;
 
 	// Cached scene nodes, resolved in _Ready().
+	private Control _carouselArea = null!;
 	private Control _cardsRoot = null!;
 	private Button _prev = null!;
 	private Button _next = null!;
@@ -37,13 +38,23 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	private PanelContainer _listShell = null!;
+	private ScrollContainer _listScroll = null!;
+	private VBoxContainer _listRows = null!;
+	private PanelContainer _gridShell = null!;
+	private ScrollContainer _gridScroll = null!;
+	private GridContainer _gridRows = null!;
 	OptionButton _optionButton = new OptionButton();
 	
 	private Button _achievement = null!;
 
 	// UI instances and data backing the carousel.
 	private readonly List<Control> _cards = new();
+	private readonly List<Control> _browseEntries = new();
 	private readonly List<GameEntry> _games = new();
+	private BrowseLayoutMode _browseLayout = BrowseLayoutMode.Carousel;
+	private int _selectedIndex;
+	private const int GridColumns = 4;
 
 	
 	// Loaded app context.
@@ -63,6 +74,8 @@ public partial class GameSelect : Control
 	private const int AxisRepeatMs = 180;
 	private int _leftAxisDir;
 	private long _leftAxisNextMs;
+	private int _verticalAxisDir;
+	private long _verticalAxisNextMs;
 
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
@@ -71,6 +84,7 @@ public partial class GameSelect : Control
 	{
 		
 		// Resolve exported node paths into actual nodes.
+		_carouselArea = GetNode<Control>("Margin/Root/CenterArea/CarouselArea");
 		_cardsRoot = GetNode<Control>(CardsPath);
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
@@ -78,10 +92,14 @@ public partial class GameSelect : Control
 		_metaLeft = GetNode<Label>(MetaLeftPath);
 		_metaRight = GetNode<Label>(MetaRightPath);
 		_status = GetNode<Label>(StatusPath);
+		_status.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		_status.ClipText = true;
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+		CreateAlternateLayoutViews();
+		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
 			
 		
@@ -112,6 +130,7 @@ public partial class GameSelect : Control
 		// Load data and build UI.
 		await LoadContextAndGames();
 		SpawnCards();
+		ApplyBrowseLayoutMode();
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
@@ -185,13 +204,14 @@ private void OnAnyButtonPressed()
 	}
 	private void OpenVault()
 	{
-		// Store return context in SceneTree meta so Vault can return here with the same config.
+		// Store return context in SceneTree meta so Settings can return here with the same config.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
+		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		tree.ChangeSceneToFile("res://vault.tscn");
+		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
 
 	private void OpenProfile()
@@ -711,9 +731,9 @@ private void OnAnyButtonPressed()
 			
 			if (_games.Count == 0)
 			{
+				GD.Print($"No games found for {_platform.Name}. Dir='{scanDir}', Extensions=[{string.Join(", ", _platform.Extensions)}].");
 				SetStatus(
-					$"No games found for {_platform.Name}. " +
-					$"Dir='{scanDir}', Extensions=[{string.Join(", ", _platform.Extensions)}].");
+					$"No games found for {_platform.Name}.");
 			}
 		}
 		else{
@@ -763,10 +783,15 @@ private void OnAnyButtonPressed()
 
 	private void SpawnCards()
 	{
-		// Destroy existing card nodes before rebuilding.
+		// Destroy existing browse nodes before rebuilding.
 		foreach (var c in _cards)
 			c.QueueFree();
 		_cards.Clear();
+		foreach (Node child in _listRows.GetChildren())
+			child.QueueFree();
+		foreach (Node child in _gridRows.GetChildren())
+			child.QueueFree();
+		_browseEntries.Clear();
 
 		// Keep the carousel visible even with zero results by injecting a placeholder entry.
 		if (_games.Count == 0)
@@ -775,22 +800,26 @@ private void OnAnyButtonPressed()
 			_games.Add(placeholder);
 		}
 
-		// Create a card instance for each game and set its label text.
-		foreach (var g in _games)
-		{
-			var card = (Control)CardScene.Instantiate();
-			_cardsRoot.AddChild(card);
-			_cards.Add(card);
+		_selectedIndex = Mathf.Clamp(_selectedIndex, 0, Mathf.Max(0, _games.Count - 1));
+		_carouselPos = WrapPos(_selectedIndex);
 
-			// Reuse `platform_card.tscn` label node path.
-			var label = card.GetNodeOrNull<Label>("Panel/Name");
-			if (label != null) label.Text = g.Title;
+		if (_browseLayout == BrowseLayoutMode.List)
+		{
+			BuildListRows();
+		}
+		else if (_browseLayout == BrowseLayoutMode.Grid)
+		{
+			BuildGridTiles();
+		}
+		else
+		{
+			BuildCarouselCards();
 		}
 
 		UpdateNavEnabled();
 	}
 
-	private int Count => _cards.Count;
+	private int Count => _games.Count;
 
 	private int WrapIndex(int i)
 	{
@@ -812,9 +841,28 @@ private void OnAnyButtonPressed()
 
 	private void Step(int dir)
 	{
-		// Move one card left/right.
 		if (Count <= 1) return;
-		SnapTo(_carouselPos + dir, overshoot: true);
+
+		if (_browseLayout == BrowseLayoutMode.Carousel)
+		{
+			SnapTo(_carouselPos + dir, overshoot: true);
+			return;
+		}
+
+		SetSelectedIndex(Mathf.Clamp(_selectedIndex + dir, 0, Count - 1));
+	}
+
+	private void StepVertical(int dir)
+	{
+		if (Count <= 1) return;
+
+		if (_browseLayout == BrowseLayoutMode.Grid)
+		{
+			SetSelectedIndex(Mathf.Clamp(_selectedIndex + (dir * GridColumns), 0, Count - 1));
+			return;
+		}
+
+		Step(dir);
 	}
 
 	private void SnapTo(float targetPos, bool overshoot)
@@ -836,6 +884,7 @@ private void OnAnyButtonPressed()
 		_tween.TweenCallback(Callable.From(() =>
 		{
 			_carouselPos = WrapPos(_carouselPos);
+			_selectedIndex = WrapIndex(Mathf.RoundToInt(_carouselPos));
 			LayoutCards();
 			UpdateSelectionUI();
 		}));
@@ -843,13 +892,14 @@ private void OnAnyButtonPressed()
 
 	public override void _Process(double delta)
 	{
-		// Layout every frame so drag updates look continuous.
-		LayoutCards();
+		if (_browseLayout == BrowseLayoutMode.Carousel)
+			LayoutCards();
 	}
 
 	public override void _GuiInput(InputEvent e)
 	{
 		if (ShouldIgnoreUiInput()) return;
+		if (_browseLayout != BrowseLayoutMode.Carousel) return;
 		if (Count <= 1) return;
 
 		// Drag handling.
@@ -915,7 +965,6 @@ private void OnAnyButtonPressed()
 		switch (jb.ButtonIndex)
 		{
 			case JoyButton.LeftShoulder:
-			case JoyButton.DpadLeft:
 				if (Count > 1)
 				{
 					Step(-1);
@@ -923,10 +972,37 @@ private void OnAnyButtonPressed()
 				}
 				break;
 			case JoyButton.RightShoulder:
+				if (Count > 1)
+				{
+					Step(1);
+					MarkInputHandled();
+				}
+				break;
+			case JoyButton.DpadLeft:
+				if (Count > 1)
+				{
+					Step(-1);
+					MarkInputHandled();
+				}
+				break;
 			case JoyButton.DpadRight:
 				if (Count > 1)
 				{
 					Step(1);
+					MarkInputHandled();
+				}
+				break;
+			case JoyButton.DpadUp:
+				if (Count > 1)
+				{
+					StepVertical(-1);
+					MarkInputHandled();
+				}
+				break;
+			case JoyButton.DpadDown:
+				if (Count > 1)
+				{
+					StepVertical(1);
 					MarkInputHandled();
 				}
 				break;
@@ -961,13 +1037,23 @@ private void OnAnyButtonPressed()
 
 	private bool HandleAxisNav(InputEventJoypadMotion jm)
 	{
-		if (jm.Axis == JoyAxis.LeftX)
-			return HandleAxis(jm.AxisValue, ref _leftAxisDir, ref _leftAxisNextMs);
+		if (_browseLayout == BrowseLayoutMode.Carousel)
+		{
+			if (jm.Axis == JoyAxis.LeftX)
+				return HandleAxis(jm.AxisValue, ref _leftAxisDir, ref _leftAxisNextMs, Step);
+			return false;
+		}
+
+		if (_browseLayout == BrowseLayoutMode.Grid && jm.Axis == JoyAxis.LeftX)
+			return HandleAxis(jm.AxisValue, ref _leftAxisDir, ref _leftAxisNextMs, Step);
+
+		if (jm.Axis == JoyAxis.LeftY)
+			return HandleAxis(jm.AxisValue, ref _verticalAxisDir, ref _verticalAxisNextMs, StepVertical);
 
 		return false;
 	}
 
-	private bool HandleAxis(float value, ref int heldDir, ref long nextMs)
+	private bool HandleAxis(float value, ref int heldDir, ref long nextMs, Action<int> stepAction)
 	{
 		var dir = 0;
 		if (value <= -AxisDeadzone) dir = -1;
@@ -982,7 +1068,7 @@ private void OnAnyButtonPressed()
 		var now = (long)Time.GetTicksMsec();
 		if (dir != heldDir || now >= nextMs)
 		{
-			Step(dir);
+			stepAction(dir);
 			heldDir = dir;
 			nextMs = now + AxisRepeatMs;
 			return true;
@@ -993,7 +1079,8 @@ private void OnAnyButtonPressed()
 
 	private void LayoutCards()
 	{
-		if (Count == 0) return;
+		if (_browseLayout != BrowseLayoutMode.Carousel) return;
+		if (Count == 0 || _cards.Count == 0) return;
 
 		// Center of the cards container.
 		var center = _cardsRoot.Size * 0.5f;
@@ -1038,43 +1125,1195 @@ private void OnAnyButtonPressed()
 
 	private GameEntry? GetSelectedGame()
 	{
-		// Selection is whichever card index is closest to the center position.
 		if (_games.Count == 0) return null;
-		var idx = WrapIndex(Mathf.RoundToInt(_carouselPos));
+		var idx = _browseLayout == BrowseLayoutMode.Carousel
+			? WrapIndex(Mathf.RoundToInt(_carouselPos))
+			: Mathf.Clamp(_selectedIndex, 0, _games.Count - 1);
 		if (idx < 0 || idx >= _games.Count) return null;
 		return _games[idx];
 	}
 
 	private void UpdateSelectionUI()
 	{
-		// Update title and metadata based on selected game + platform context.
 		var game = GetSelectedGame();
-		_title.Text = game?.Title ?? "";
+		var hasGames = GetActualGameCount() > 0;
+		_title.Text = hasGames ? game?.Title ?? "" : "No games found";
 
 		var platformName = _platform?.Name ?? "Unknown Platform";
-		_metaLeft.Text = $"{platformName} • {_games.Count} game(s)";
-		_metaRight.Text = game != null ? $"Achievements: {game.AchievementNum}" : "";
-		GD.Print(game.AchievementNum);	
-		// Disable Play if we cannot launch or if the selected entry has no path.
+		_metaLeft.Text = $"{platformName} • {GetActualGameCount()} game(s) • {BrowseLayoutSettings.GetLabel(_browseLayout)}";
+		_metaRight.Text = hasGames && game != null ? $"Achievements: {BuildAchievementDisplay(game)}" : "";
+		RefreshBrowseSelection();
 		_play.Disabled = _config == null || _platform == null || game == null || string.IsNullOrEmpty(game.Path);
-		//enable play if we came from collections
-		if (CollectionStorage.currentCollection != null){
+		if (CollectionStorage.currentCollection != null && game != null && !string.IsNullOrEmpty(game.Path))
+		{
 			_play.Disabled = false;
 		}
 	}
 
 	private void UpdateNavEnabled()
 	{
-		// Only allow prev/next when there is something to navigate.
-		var enabled = Count > 1;
+		// Only allow carousel nav when there are multiple real games to move through.
+		var enabled = _browseLayout == BrowseLayoutMode.Carousel && GetActualGameCount() > 1;
+		_prev.Visible = enabled;
+		_next.Visible = enabled;
 		_prev.Disabled = !enabled;
 		_next.Disabled = !enabled;
 	}
 
 	private void SetStatus(string text)
 	{
-		// Single place to push status text to the UI.
 		_status.Text = text;
+	}
+
+	private void CreateAlternateLayoutViews()
+	{
+		_listShell = CreateBrowseShell("ListShell");
+		_listScroll = new ScrollContainer
+		{
+			Name = "ListScroll",
+			LayoutMode = 1,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+		};
+		_listScroll.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_listRows = new VBoxContainer
+		{
+			Name = "ListRows",
+			LayoutMode = 2,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+		};
+		_listRows.AddThemeConstantOverride("separation", 14);
+		_listScroll.AddChild(_listRows);
+		_listShell.AddChild(_listScroll);
+		_carouselArea.AddChild(_listShell);
+		_carouselArea.MoveChild(_listShell, 1);
+
+		_gridShell = CreateBrowseShell("GridShell");
+		_gridScroll = new ScrollContainer
+		{
+			Name = "GridScroll",
+			LayoutMode = 1,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+		};
+		_gridScroll.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_gridRows = new GridContainer
+		{
+			Name = "GridRows",
+			LayoutMode = 2,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			Columns = GridColumns,
+		};
+		_gridRows.AddThemeConstantOverride("h_separation", 18);
+		_gridRows.AddThemeConstantOverride("v_separation", 18);
+		_gridScroll.AddChild(_gridRows);
+		_gridShell.AddChild(_gridScroll);
+		_carouselArea.AddChild(_gridShell);
+		_carouselArea.MoveChild(_gridShell, 2);
+	}
+
+	private PanelContainer CreateBrowseShell(string name)
+	{
+		var shell = new PanelContainer
+		{
+			Name = name,
+			LayoutMode = 1,
+			Visible = false,
+			MouseFilter = Control.MouseFilterEnum.Stop,
+		};
+		shell.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		shell.OffsetLeft = 120f;
+		shell.OffsetTop = 72f;
+		shell.OffsetRight = -120f;
+		shell.OffsetBottom = -22f;
+		shell.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+			new Color(0.08f, 0.06f, 0.14f, 0.94f),
+			new Color(0.64f, 0.52f, 0.88f, 0.72f),
+			borderWidth: 2,
+			radius: 28,
+			contentMarginLeft: 22f,
+			contentMarginTop: 22f,
+			contentMarginRight: 22f,
+			contentMarginBottom: 22f));
+		return shell;
+	}
+
+	private static StyleBoxFlat CreatePanelStyleBox(
+		Color background,
+		Color border,
+		int borderWidth,
+		int radius,
+		float contentMarginLeft = 0f,
+		float contentMarginTop = 0f,
+		float contentMarginRight = 0f,
+		float contentMarginBottom = 0f)
+	{
+		return new StyleBoxFlat
+		{
+			BgColor = background,
+			BorderColor = border,
+			BorderBlend = true,
+			BorderWidthLeft = borderWidth,
+			BorderWidthTop = borderWidth,
+			BorderWidthRight = borderWidth,
+			BorderWidthBottom = borderWidth,
+			CornerRadiusTopLeft = radius,
+			CornerRadiusTopRight = radius,
+			CornerRadiusBottomRight = radius,
+			CornerRadiusBottomLeft = radius,
+			ContentMarginLeft = contentMarginLeft,
+			ContentMarginTop = contentMarginTop,
+			ContentMarginRight = contentMarginRight,
+			ContentMarginBottom = contentMarginBottom,
+		};
+	}
+
+	private void BuildCarouselCards()
+	{
+		foreach (var g in _games)
+		{
+			var card = (Control)CardScene.Instantiate();
+			_cardsRoot.AddChild(card);
+			_cards.Add(card);
+
+			var label = card.GetNodeOrNull<Label>("Panel/Name");
+			if (label != null) label.Text = g.Title;
+		}
+	}
+
+	private void BuildListRows()
+	{
+		if (GetActualGameCount() == 0)
+		{
+			BuildListEmptyState();
+			return;
+		}
+
+		for (int i = 0; i < _games.Count; i++)
+		{
+			var row = CreateSelectableEntry(i, gridStyle: false);
+			row.CustomMinimumSize = new Vector2(0f, 126f);
+			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+			var margin = new MarginContainer
+			{
+				Name = "RowMargin",
+				LayoutMode = 2,
+			};
+			margin.AddThemeConstantOverride("margin_left", 18);
+			margin.AddThemeConstantOverride("margin_top", 14);
+			margin.AddThemeConstantOverride("margin_right", 18);
+			margin.AddThemeConstantOverride("margin_bottom", 14);
+
+			var split = new HBoxContainer
+			{
+				Name = "RowSplit",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				Alignment = BoxContainer.AlignmentMode.Begin,
+			};
+			split.AddThemeConstantOverride("separation", 18);
+
+			var stripe = new ColorRect
+			{
+				Name = "AccentBar",
+				CustomMinimumSize = new Vector2(6f, 0f),
+				LayoutMode = 2,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+				Color = new Color(0.44f, 0.31f, 0.70f, 0.58f),
+			};
+
+			var posterShell = new PanelContainer
+			{
+				Name = "PosterShell",
+				CustomMinimumSize = new Vector2(170f, 96f),
+				LayoutMode = 2,
+			};
+
+			var posterMargin = new MarginContainer
+			{
+				LayoutMode = 2,
+			};
+			posterMargin.AddThemeConstantOverride("margin_left", 14);
+			posterMargin.AddThemeConstantOverride("margin_top", 12);
+			posterMargin.AddThemeConstantOverride("margin_right", 14);
+			posterMargin.AddThemeConstantOverride("margin_bottom", 12);
+
+			var posterColumn = new VBoxContainer
+			{
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			};
+			posterColumn.AddThemeConstantOverride("separation", 6);
+
+			var posterHeader = new HBoxContainer
+			{
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+
+			var posterSlot = new Label
+			{
+				Name = "PosterSlot",
+				LayoutMode = 2,
+				Text = $"PG {i + 1:00}",
+				HorizontalAlignment = HorizontalAlignment.Left,
+			};
+			posterSlot.AddThemeColorOverride("font_color", new Color(0.82f, 0.78f, 0.95f, 0.82f));
+			posterSlot.AddThemeFontSizeOverride("font_size", 11);
+
+			var posterFormat = new Label
+			{
+				Name = "PosterFormat",
+				LayoutMode = 2,
+				Text = BuildFormatLabel(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Right,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			posterFormat.AddThemeColorOverride("font_color", new Color(0.71f, 0.90f, 1f, 0.88f));
+			posterFormat.AddThemeFontSizeOverride("font_size", 11);
+
+			var posterCenter = new CenterContainer
+			{
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			};
+
+			var posterMonogram = new Label
+			{
+				Name = "PosterMonogram",
+				LayoutMode = 2,
+				Text = BuildGameMonogram(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			posterMonogram.AddThemeColorOverride("font_color", new Color(0.94f, 0.92f, 1f, 0.96f));
+			posterMonogram.AddThemeFontSizeOverride("font_size", 28);
+
+			var posterFooter = new Label
+			{
+				Name = "PosterFooter",
+				LayoutMode = 2,
+				Text = BuildShelfLabel(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Left,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			posterFooter.AddThemeColorOverride("font_color", new Color(0.80f, 0.88f, 0.96f, 0.84f));
+			posterFooter.AddThemeFontSizeOverride("font_size", 12);
+
+			var textColumn = new VBoxContainer
+			{
+				Name = "TextColumn",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			textColumn.AddThemeConstantOverride("separation", 6);
+
+			var titleRow = new HBoxContainer
+			{
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			titleRow.AddThemeConstantOverride("separation", 12);
+
+			var title = new Label
+			{
+				Name = "TitleLabel",
+				LayoutMode = 2,
+				Text = _games[i].Title,
+				HorizontalAlignment = HorizontalAlignment.Left,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			title.AddThemeColorOverride("font_color", new Color(0.96f, 0.94f, 1f, 0.98f));
+			title.AddThemeFontSizeOverride("font_size", 25);
+
+			var statusChip = CreateChip(BuildGameBadge(_games[i]), new Color(0.20f, 0.29f, 0.36f, 0.90f), "StateChip", 11);
+
+			var subtitle = new Label
+			{
+				Name = "SubtitleLabel",
+				LayoutMode = 2,
+				Text = BuildGameSubtitle(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Left,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			subtitle.AddThemeColorOverride("font_color", new Color(0.83f, 0.82f, 0.94f, 0.88f));
+			subtitle.AddThemeFontSizeOverride("font_size", 14);
+
+			var footerRow = new HBoxContainer
+			{
+				Name = "FooterRow",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			footerRow.AddThemeConstantOverride("separation", 10);
+
+			var playtime = new Label
+			{
+				Name = "PlaytimeLabel",
+				LayoutMode = 2,
+				Text = BuildPlaytimeSummary(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Left,
+			};
+			playtime.AddThemeColorOverride("font_color", new Color(0.72f, 0.90f, 1f, 0.88f));
+			playtime.AddThemeFontSizeOverride("font_size", 13);
+
+			var divider = new Label
+			{
+				Name = "DividerLabel",
+				LayoutMode = 2,
+				Text = "•",
+				HorizontalAlignment = HorizontalAlignment.Center,
+			};
+			divider.AddThemeColorOverride("font_color", new Color(0.54f, 0.50f, 0.66f, 0.70f));
+			divider.AddThemeFontSizeOverride("font_size", 13);
+
+			var libraryCue = new Label
+			{
+				Name = "LibraryCueLabel",
+				LayoutMode = 2,
+				Text = BuildLibraryCue(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Left,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			libraryCue.AddThemeColorOverride("font_color", new Color(0.72f, 0.73f, 0.84f, 0.78f));
+			libraryCue.AddThemeFontSizeOverride("font_size", 13);
+
+			var actionShell = new PanelContainer
+			{
+				Name = "ActionShell",
+				CustomMinimumSize = new Vector2(170f, 0f),
+				LayoutMode = 2,
+			};
+
+			var actionMargin = new MarginContainer
+			{
+				LayoutMode = 2,
+			};
+			actionMargin.AddThemeConstantOverride("margin_left", 16);
+			actionMargin.AddThemeConstantOverride("margin_top", 12);
+			actionMargin.AddThemeConstantOverride("margin_right", 16);
+			actionMargin.AddThemeConstantOverride("margin_bottom", 12);
+
+			var rightColumn = new VBoxContainer
+			{
+				Alignment = BoxContainer.AlignmentMode.Center,
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			rightColumn.AddThemeConstantOverride("separation", 6);
+
+			var achievementLabel = new Label
+			{
+				Name = "AchievementCaption",
+				LayoutMode = 2,
+				Text = "ACHIEVEMENTS",
+				HorizontalAlignment = HorizontalAlignment.Right,
+			};
+			achievementLabel.AddThemeColorOverride("font_color", new Color(0.82f, 0.78f, 0.94f, 0.80f));
+			achievementLabel.AddThemeFontSizeOverride("font_size", 11);
+
+			var achievements = new Label
+			{
+				Name = "AchievementValue",
+				LayoutMode = 2,
+				Text = BuildAchievementDisplay(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Right,
+			};
+			achievements.AddThemeColorOverride("font_color", new Color(0.92f, 0.88f, 1f, 0.98f));
+			achievements.AddThemeFontSizeOverride("font_size", 24);
+
+			var actionHint = new Label
+			{
+				Name = "ActionHint",
+				LayoutMode = 2,
+				Text = BuildActionHint(i == _selectedIndex),
+				HorizontalAlignment = HorizontalAlignment.Right,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			actionHint.AddThemeColorOverride("font_color", new Color(0.72f, 0.90f, 1f, 0.88f));
+			actionHint.AddThemeFontSizeOverride("font_size", 13);
+
+			posterHeader.AddChild(posterSlot);
+			posterHeader.AddChild(posterFormat);
+			posterCenter.AddChild(posterMonogram);
+			posterColumn.AddChild(posterHeader);
+			posterColumn.AddChild(posterCenter);
+			posterColumn.AddChild(posterFooter);
+			posterMargin.AddChild(posterColumn);
+			posterShell.AddChild(posterMargin);
+
+			titleRow.AddChild(title);
+			titleRow.AddChild(statusChip);
+			textColumn.AddChild(titleRow);
+			textColumn.AddChild(subtitle);
+			footerRow.AddChild(playtime);
+			footerRow.AddChild(divider);
+			footerRow.AddChild(libraryCue);
+			textColumn.AddChild(footerRow);
+			rightColumn.AddChild(achievementLabel);
+			rightColumn.AddChild(achievements);
+			rightColumn.AddChild(actionHint);
+			actionMargin.AddChild(rightColumn);
+			actionShell.AddChild(actionMargin);
+			split.AddChild(stripe);
+			split.AddChild(posterShell);
+			split.AddChild(textColumn);
+			split.AddChild(actionShell);
+			margin.AddChild(split);
+			row.AddChild(margin);
+			_listRows.AddChild(row);
+			_browseEntries.Add(row);
+		}
+	}
+
+	private void BuildGridTiles()
+	{
+		if (GetActualGameCount() == 0)
+		{
+			_gridRows.Columns = 1;
+			BuildGridEmptyState();
+			return;
+		}
+
+		_gridRows.Columns = GridColumns;
+		for (int i = 0; i < _games.Count; i++)
+		{
+			var tile = CreateSelectableEntry(i, gridStyle: true);
+			tile.CustomMinimumSize = new Vector2(224f, 166f);
+			tile.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+			var margin = new MarginContainer
+			{
+				Name = "TileMargin",
+				LayoutMode = 2,
+			};
+			margin.AddThemeConstantOverride("margin_left", 14);
+			margin.AddThemeConstantOverride("margin_top", 12);
+			margin.AddThemeConstantOverride("margin_right", 14);
+			margin.AddThemeConstantOverride("margin_bottom", 12);
+
+			var stack = new VBoxContainer
+			{
+				Name = "TileStack",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			};
+			stack.AddThemeConstantOverride("separation", 8);
+
+			var topRow = new HBoxContainer
+			{
+				Name = "TopRow",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			topRow.AddThemeConstantOverride("separation", 8);
+
+			var channelTag = new Label
+			{
+				Name = "ChannelTag",
+				LayoutMode = 2,
+				Text = $"CHANNEL {i + 1:00}",
+				HorizontalAlignment = HorizontalAlignment.Left,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			channelTag.AddThemeColorOverride("font_color", new Color(0.78f, 0.74f, 0.92f, 0.82f));
+			channelTag.AddThemeFontSizeOverride("font_size", 11);
+
+			var readyTag = CreateChip(BuildGameBadge(_games[i]), new Color(0.21f, 0.29f, 0.36f, 0.90f), "GridStateChip", 10);
+
+			var screenShell = new PanelContainer
+			{
+				Name = "ScreenShell",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+				CustomMinimumSize = new Vector2(0f, 94f),
+			};
+
+			var screenMargin = new MarginContainer
+			{
+				LayoutMode = 2,
+			};
+			screenMargin.AddThemeConstantOverride("margin_left", 12);
+			screenMargin.AddThemeConstantOverride("margin_top", 10);
+			screenMargin.AddThemeConstantOverride("margin_right", 12);
+			screenMargin.AddThemeConstantOverride("margin_bottom", 10);
+
+			var titleWrap = new CenterContainer
+			{
+				Name = "ScreenWrap",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			};
+
+			var screenStack = new VBoxContainer
+			{
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			screenStack.AddThemeConstantOverride("separation", 3);
+
+			var monogram = new Label
+			{
+				Name = "GridMonogram",
+				LayoutMode = 2,
+				Text = BuildGameMonogram(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			monogram.AddThemeColorOverride("font_color", new Color(0.75f, 0.88f, 1f, 0.92f));
+			monogram.AddThemeFontSizeOverride("font_size", 30);
+
+			var title = new Label
+			{
+				Name = "GridTitle",
+				LayoutMode = 2,
+				Text = _games[i].Title,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			title.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+			title.AddThemeFontSizeOverride("font_size", 17);
+
+			var subtitle = new Label
+			{
+				Name = "GridSubtitle",
+				LayoutMode = 2,
+				Text = BuildGridSubtitle(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
+			subtitle.AddThemeColorOverride("font_color", new Color(0.82f, 0.90f, 1f, 0.9f));
+			subtitle.AddThemeFontSizeOverride("font_size", 12);
+
+			var projection = new ColorRect
+			{
+				Name = "ProjectionBar",
+				CustomMinimumSize = new Vector2(0f, 5f),
+				LayoutMode = 2,
+				Color = new Color(0.50f, 0.34f, 0.80f, 0.68f),
+			};
+
+			var footerRow = new HBoxContainer
+			{
+				Name = "FooterRow",
+				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+
+			var footerLeft = new Label
+			{
+				Name = "FooterLeft",
+				LayoutMode = 2,
+				Text = BuildFormatLabel(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Left,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			footerLeft.AddThemeColorOverride("font_color", new Color(0.76f, 0.78f, 0.90f, 0.82f));
+			footerLeft.AddThemeFontSizeOverride("font_size", 11);
+
+			var footerRight = new Label
+			{
+				Name = "FooterRight",
+				LayoutMode = 2,
+				Text = BuildAchievementDisplay(_games[i]),
+				HorizontalAlignment = HorizontalAlignment.Right,
+			};
+			footerRight.AddThemeColorOverride("font_color", new Color(0.82f, 0.90f, 1f, 0.90f));
+			footerRight.AddThemeFontSizeOverride("font_size", 11);
+
+			topRow.AddChild(channelTag);
+			topRow.AddChild(readyTag);
+			screenStack.AddChild(monogram);
+			screenStack.AddChild(title);
+			screenStack.AddChild(subtitle);
+			titleWrap.AddChild(screenStack);
+			screenMargin.AddChild(titleWrap);
+			screenShell.AddChild(screenMargin);
+			footerRow.AddChild(footerLeft);
+			footerRow.AddChild(footerRight);
+			stack.AddChild(topRow);
+			stack.AddChild(screenShell);
+			stack.AddChild(projection);
+			stack.AddChild(footerRow);
+			margin.AddChild(stack);
+			tile.AddChild(margin);
+			_gridRows.AddChild(tile);
+			_browseEntries.Add(tile);
+		}
+	}
+
+	private void BuildListEmptyState()
+	{
+		var row = CreateSelectableEntry(0, gridStyle: false);
+		row.CustomMinimumSize = new Vector2(0f, 320f);
+		row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+		var center = new CenterContainer
+		{
+			LayoutMode = 2,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+		};
+
+		var card = CreateEmptyStateCard("Library empty", "Add ROMs to this platform folder or fix the library path, then try again!");
+		center.AddChild(card);
+		row.AddChild(center);
+		_listRows.AddChild(row);
+		_browseEntries.Add(row);
+	}
+
+	private void BuildGridEmptyState()
+	{
+		var tile = CreateSelectableEntry(0, gridStyle: true);
+		tile.CustomMinimumSize = new Vector2(0f, 340f);
+		tile.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+		var center = new CenterContainer
+		{
+			LayoutMode = 2,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+		};
+
+		var card = CreateEmptyStateCard("No channels yet", "Drop games into the selected platform library and the channel grid will populate here.");
+		center.AddChild(card);
+		tile.AddChild(center);
+		_gridRows.AddChild(tile);
+		_browseEntries.Add(tile);
+	}
+
+	private PanelContainer CreateEmptyStateCard(string title, string body)
+	{
+		var card = new PanelContainer
+		{
+			Name = "EmptyStateCard",
+			LayoutMode = 2,
+			CustomMinimumSize = new Vector2(640f, 210f),
+		};
+		card.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+			new Color(0.11f, 0.10f, 0.19f, 0.96f),
+			new Color(0.48f, 0.39f, 0.70f, 0.64f),
+			borderWidth: 2,
+			radius: 24,
+			contentMarginLeft: 28f,
+			contentMarginTop: 22f,
+			contentMarginRight: 28f,
+			contentMarginBottom: 22f));
+
+		var column = new VBoxContainer
+		{
+			LayoutMode = 2,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			Alignment = BoxContainer.AlignmentMode.Center,
+		};
+		column.AddThemeConstantOverride("separation", 10);
+
+		var eyebrow = new Label
+		{
+			LayoutMode = 2,
+			Text = "PGEMU LIBRARY",
+			HorizontalAlignment = HorizontalAlignment.Center,
+		};
+		eyebrow.AddThemeColorOverride("font_color", new Color(0.74f, 0.92f, 1f, 0.88f));
+		eyebrow.AddThemeFontSizeOverride("font_size", 12);
+
+		var titleLabel = new Label
+		{
+			LayoutMode = 2,
+			Text = title,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+		};
+		titleLabel.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.99f));
+		titleLabel.AddThemeFontSizeOverride("font_size", 30);
+
+		var bodyLabel = new Label
+		{
+			LayoutMode = 2,
+			Text = body,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+		};
+		bodyLabel.AddThemeColorOverride("font_color", new Color(0.84f, 0.85f, 0.95f, 0.88f));
+		bodyLabel.AddThemeFontSizeOverride("font_size", 15);
+
+		var hintChip = CreateChip(_platform?.Name ?? "Platform", new Color(0.19f, 0.28f, 0.38f, 0.92f), "EmptyStateChip", 11);
+
+		var actionRow = new HBoxContainer
+		{
+			LayoutMode = 2,
+			Alignment = BoxContainer.AlignmentMode.Center,
+		};
+		actionRow.AddThemeConstantOverride("separation", 12);
+
+		var settingsButton = new Button
+		{
+			Text = "Library Settings",
+			CustomMinimumSize = new Vector2(180f, 42f),
+			LayoutMode = 2,
+		};
+		UiStyle.StyleTopBarButton(settingsButton);
+		settingsButton.Pressed += OpenVault;
+		actionRow.AddChild(settingsButton);
+
+		column.AddChild(eyebrow);
+		column.AddChild(titleLabel);
+		column.AddChild(bodyLabel);
+		column.AddChild(hintChip);
+		column.AddChild(actionRow);
+		card.AddChild(column);
+		return card;
+	}
+
+	private PanelContainer CreateSelectableEntry(int index, bool gridStyle)
+	{
+		var entry = new PanelContainer
+		{
+			LayoutMode = 2,
+			MouseFilter = Control.MouseFilterEnum.Stop,
+			FocusMode = Control.FocusModeEnum.All,
+		};
+
+		entry.GuiInput += e =>
+		{
+			if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+			{
+				SetSelectedIndex(index);
+				if (mb.DoubleClick)
+					PlaySelected();
+				MarkInputHandled();
+			}
+		};
+
+		entry.MouseEntered += () =>
+		{
+			if (_browseLayout == BrowseLayoutMode.Carousel)
+				return;
+			SetSelectedIndex(index, ensureVisible: false);
+		};
+
+		ApplyBrowseEntryStyle(entry, index == _selectedIndex, gridStyle);
+		return entry;
+	}
+
+	private void ApplyBrowseLayoutMode()
+	{
+		var showCarousel = _browseLayout == BrowseLayoutMode.Carousel;
+		_cardsRoot.Visible = showCarousel;
+		_listShell.Visible = _browseLayout == BrowseLayoutMode.List;
+		_gridShell.Visible = _browseLayout == BrowseLayoutMode.Grid;
+		ApplySelectionToBrowseEntries();
+		UpdateNavEnabled();
+	}
+
+	private void SetSelectedIndex(int index, bool ensureVisible = true)
+	{
+		if (Count == 0)
+			return;
+
+		_selectedIndex = Mathf.Clamp(index, 0, Count - 1);
+
+		if (_browseLayout == BrowseLayoutMode.Carousel)
+		{
+			_carouselPos = WrapPos(_selectedIndex);
+			LayoutCards();
+		}
+
+		UpdateSelectionUI();
+
+		if (ensureVisible && _browseLayout != BrowseLayoutMode.Carousel)
+			CallDeferred(nameof(EnsureSelectedEntryVisible));
+	}
+
+	private void EnsureSelectedEntryVisible()
+	{
+		if (_browseLayout == BrowseLayoutMode.Carousel)
+			return;
+		if (_selectedIndex < 0 || _selectedIndex >= _browseEntries.Count)
+			return;
+
+		var entry = _browseEntries[_selectedIndex];
+		var scroll = _browseLayout == BrowseLayoutMode.List ? _listScroll : _gridScroll;
+		var entryTop = (int)entry.Position.Y;
+		var entryBottom = entryTop + (int)entry.Size.Y;
+		var viewportTop = scroll.ScrollVertical;
+		var viewportBottom = viewportTop + (int)scroll.Size.Y;
+
+		if (entryTop < viewportTop)
+			scroll.ScrollVertical = entryTop;
+		else if (entryBottom > viewportBottom)
+			scroll.ScrollVertical = Mathf.Max(0, entryBottom - (int)scroll.Size.Y);
+	}
+
+	private void ApplySelectionToBrowseEntries()
+	{
+		for (int i = 0; i < _browseEntries.Count; i++)
+		{
+			if (_browseEntries[i] is PanelContainer panel)
+			{
+				var selected = i == _selectedIndex;
+				var gridStyle = _browseLayout == BrowseLayoutMode.Grid;
+				ApplyBrowseEntryStyle(panel, selected, gridStyle);
+				if (gridStyle)
+					ApplyGridEntryContentStyle(panel, _games[i], i, selected);
+				else
+					ApplyListEntryContentStyle(panel, _games[i], i, selected);
+			}
+		}
+	}
+
+	private static void ApplyBrowseEntryStyle(PanelContainer panel, bool selected, bool gridStyle)
+	{
+		panel.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+			selected
+				? (gridStyle
+					? new Color(0.18f, 0.15f, 0.29f, 0.98f)
+					: new Color(0.12f, 0.11f, 0.20f, 0.98f))
+				: (gridStyle
+					? new Color(0.11f, 0.10f, 0.19f, 0.96f)
+					: new Color(0.08f, 0.07f, 0.13f, 0.96f)),
+			selected
+				? new Color(0.67f, 0.92f, 1f, 1f)
+				: new Color(gridStyle ? 0.49f : 0.31f, gridStyle ? 0.40f : 0.28f, gridStyle ? 0.71f : 0.44f, 0.72f),
+			borderWidth: selected ? 3 : 2,
+			radius: gridStyle ? 26 : 22));
+	}
+
+	private void ApplyListEntryContentStyle(PanelContainer panel, GameEntry game, int index, bool selected)
+	{
+		if (panel.FindChild("AccentBar", true, false) is ColorRect accentBar)
+		{
+			accentBar.Color = selected
+				? new Color(0.58f, 0.92f, 1f, 1f)
+				: new Color(0.46f, 0.32f, 0.72f, 0.58f);
+		}
+
+		if (panel.FindChild("PosterShell", true, false) is PanelContainer posterShell)
+		{
+			posterShell.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+				selected ? new Color(0.18f, 0.17f, 0.31f, 0.98f) : new Color(0.12f, 0.12f, 0.22f, 0.94f),
+				selected ? new Color(0.68f, 0.90f, 1f, 0.94f) : new Color(0.48f, 0.39f, 0.70f, 0.58f),
+				borderWidth: 2,
+				radius: 22));
+		}
+
+		if (panel.FindChild("ActionShell", true, false) is PanelContainer actionShell)
+		{
+			actionShell.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+				selected ? new Color(0.17f, 0.16f, 0.30f, 0.98f) : new Color(0.10f, 0.10f, 0.19f, 0.94f),
+				selected ? new Color(0.58f, 0.90f, 1f, 0.88f) : new Color(0.38f, 0.34f, 0.58f, 0.55f),
+				borderWidth: 2,
+				radius: 20));
+		}
+
+		if (panel.FindChild("PosterSlot", true, false) is Label posterSlot)
+			posterSlot.AddThemeColorOverride("font_color", selected
+				? new Color(0.88f, 0.94f, 1f, 0.92f)
+				: new Color(0.82f, 0.78f, 0.95f, 0.82f));
+
+		if (panel.FindChild("PosterFormat", true, false) is Label posterFormat)
+			posterFormat.AddThemeColorOverride("font_color", selected
+				? new Color(0.72f, 0.94f, 1f, 0.96f)
+				: new Color(0.71f, 0.90f, 1f, 0.88f));
+
+		if (panel.FindChild("PosterMonogram", true, false) is Label posterMonogram)
+		{
+			posterMonogram.AddThemeColorOverride("font_color", selected
+				? new Color(0.74f, 0.92f, 1f, 0.98f)
+				: new Color(0.94f, 0.92f, 1f, 0.96f));
+			posterMonogram.AddThemeFontSizeOverride("font_size", selected ? 30 : 28);
+		}
+
+		if (panel.FindChild("PosterFooter", true, false) is Label posterFooter)
+			posterFooter.AddThemeColorOverride("font_color", selected
+				? new Color(0.84f, 0.92f, 0.98f, 0.90f)
+				: new Color(0.80f, 0.88f, 0.96f, 0.84f));
+
+		if (panel.FindChild("TitleLabel", true, false) is Label titleLabel)
+			titleLabel.AddThemeColorOverride("font_color", selected
+				? new Color(1f, 0.99f, 1f, 0.99f)
+				: new Color(0.96f, 0.94f, 1f, 0.98f));
+
+		if (panel.FindChild("SubtitleLabel", true, false) is Label subtitleLabel)
+		{
+			subtitleLabel.Text = BuildGameSubtitle(game);
+			subtitleLabel.AddThemeColorOverride("font_color", selected
+				? new Color(0.88f, 0.90f, 0.98f, 0.92f)
+				: new Color(0.83f, 0.82f, 0.94f, 0.88f));
+		}
+
+		if (panel.FindChild("PlaytimeLabel", true, false) is Label playtimeLabel)
+		{
+			playtimeLabel.Text = BuildPlaytimeSummary(game);
+			playtimeLabel.AddThemeColorOverride("font_color", selected
+				? new Color(0.74f, 0.92f, 1f, 0.94f)
+				: new Color(0.72f, 0.90f, 1f, 0.88f));
+		}
+
+		if (panel.FindChild("LibraryCueLabel", true, false) is Label libraryCueLabel)
+		{
+			libraryCueLabel.Text = BuildLibraryCue(game);
+			libraryCueLabel.AddThemeColorOverride("font_color", selected
+				? new Color(0.82f, 0.84f, 0.92f, 0.84f)
+				: new Color(0.72f, 0.73f, 0.84f, 0.78f));
+		}
+
+		if (panel.FindChild("AchievementValue", true, false) is Label achievementValue)
+		{
+			achievementValue.Text = BuildAchievementDisplay(game);
+			achievementValue.AddThemeColorOverride("font_color", selected
+				? new Color(0.98f, 0.98f, 1f, 1f)
+				: new Color(0.92f, 0.88f, 1f, 0.98f));
+		}
+
+		if (panel.FindChild("ActionHint", true, false) is Label actionHint)
+		{
+			actionHint.Text = BuildActionHint(selected);
+			actionHint.AddThemeColorOverride("font_color", selected
+				? new Color(0.74f, 0.92f, 1f, 0.96f)
+				: new Color(0.72f, 0.90f, 1f, 0.88f));
+		}
+
+		if (panel.FindChild("StateChip", true, false) is PanelContainer stateChip)
+		{
+			StyleChip(
+				stateChip,
+				selected ? new Color(0.20f, 0.40f, 0.46f, 0.96f) : new Color(0.18f, 0.27f, 0.34f, 0.92f),
+				selected ? new Color(0.74f, 0.95f, 1f, 0.92f) : new Color(0.52f, 0.60f, 0.76f, 0.42f),
+				new Color(0.95f, 0.96f, 1f, 0.98f),
+				11);
+		}
+	}
+
+	private void ApplyGridEntryContentStyle(PanelContainer panel, GameEntry game, int index, bool selected)
+	{
+		if (panel.FindChild("ScreenShell", true, false) is PanelContainer screenShell)
+		{
+			screenShell.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+				selected ? new Color(0.15f, 0.15f, 0.28f, 0.98f) : new Color(0.10f, 0.10f, 0.18f, 0.96f),
+				selected ? new Color(0.69f, 0.92f, 1f, 0.92f) : new Color(0.46f, 0.39f, 0.68f, 0.56f),
+				borderWidth: selected ? 2 : 1,
+				radius: 18));
+		}
+
+		if (panel.FindChild("ChannelTag", true, false) is Label channelTag)
+			channelTag.AddThemeColorOverride("font_color", selected
+				? new Color(0.88f, 0.94f, 1f, 0.92f)
+				: new Color(0.78f, 0.74f, 0.92f, 0.82f));
+
+		if (panel.FindChild("GridMonogram", true, false) is Label gridMonogram)
+		{
+			gridMonogram.Text = BuildGameMonogram(game);
+			gridMonogram.AddThemeColorOverride("font_color", selected
+				? new Color(0.72f, 0.93f, 1f, 0.98f)
+				: new Color(0.75f, 0.88f, 1f, 0.92f));
+			gridMonogram.AddThemeFontSizeOverride("font_size", selected ? 32 : 30);
+		}
+
+		if (panel.FindChild("GridTitle", true, false) is Label gridTitle)
+			gridTitle.AddThemeColorOverride("font_color", selected
+				? new Color(1f, 0.99f, 1f, 0.99f)
+				: new Color(0.97f, 0.95f, 1f, 0.98f));
+
+		if (panel.FindChild("GridSubtitle", true, false) is Label gridSubtitle)
+		{
+			gridSubtitle.Text = BuildGridSubtitle(game);
+			gridSubtitle.AddThemeColorOverride("font_color", selected
+				? new Color(0.84f, 0.93f, 1f, 0.94f)
+				: new Color(0.82f, 0.90f, 1f, 0.90f));
+		}
+
+		if (panel.FindChild("ProjectionBar", true, false) is ColorRect projectionBar)
+		{
+			projectionBar.Color = selected
+				? new Color(0.64f, 0.92f, 1f, 0.95f)
+				: new Color(0.50f, 0.34f, 0.80f, 0.68f);
+		}
+
+		if (panel.FindChild("FooterLeft", true, false) is Label footerLeft)
+		{
+			footerLeft.Text = BuildFormatLabel(game);
+			footerLeft.AddThemeColorOverride("font_color", selected
+				? new Color(0.88f, 0.90f, 0.98f, 0.92f)
+				: new Color(0.76f, 0.78f, 0.90f, 0.82f));
+		}
+
+		if (panel.FindChild("FooterRight", true, false) is Label footerRight)
+		{
+			footerRight.Text = BuildAchievementDisplay(game);
+			footerRight.AddThemeColorOverride("font_color", selected
+				? new Color(0.74f, 0.92f, 1f, 0.98f)
+				: new Color(0.82f, 0.90f, 1f, 0.90f));
+		}
+
+		if (panel.FindChild("GridStateChip", true, false) is PanelContainer stateChip)
+		{
+			StyleChip(
+				stateChip,
+				selected ? new Color(0.20f, 0.40f, 0.46f, 0.96f) : new Color(0.18f, 0.27f, 0.34f, 0.92f),
+				selected ? new Color(0.74f, 0.95f, 1f, 0.92f) : new Color(0.52f, 0.60f, 0.76f, 0.42f),
+				new Color(0.95f, 0.96f, 1f, 0.98f),
+				10);
+		}
+	}
+
+	private void RefreshBrowseSelection()
+	{
+		if (_browseLayout != BrowseLayoutMode.Carousel)
+			ApplySelectionToBrowseEntries();
+	}
+
+	private string BuildGameSubtitle(GameEntry game)
+	{
+		var availability = string.IsNullOrWhiteSpace(game.Path)
+			? "No ROM detected"
+			: game.TimePlayed > 0
+				? $"Resume after {FormatPlaytime(game.TimePlayed)}"
+				: "Ready to launch";
+		var achievements = string.IsNullOrWhiteSpace(game.AchievementNum)
+			? "Achievements loading"
+			: $"Achievements {game.AchievementNum}";
+		return $"{availability} • {achievements}";
+	}
+
+	private string BuildGridSubtitle(GameEntry game)
+	{
+		if (string.IsNullOrWhiteSpace(game.Path))
+			return "Missing from library";
+
+		return game.TimePlayed > 0
+			? $"Played {FormatPlaytime(game.TimePlayed)}"
+			: "Ready to launch";
+	}
+
+	private static string BuildGameBadge(GameEntry game)
+	{
+		return string.IsNullOrWhiteSpace(game.Path) ? "Missing" : "Ready";
+	}
+
+	private static string BuildFormatLabel(GameEntry game)
+	{
+		if (string.IsNullOrWhiteSpace(game.Path))
+			return "ROM";
+
+		var extension = Path.GetExtension(game.Path).TrimStart('.').ToUpperInvariant();
+		return string.IsNullOrWhiteSpace(extension) ? "ROM" : extension;
+	}
+
+	private static string BuildGameMonogram(GameEntry game)
+	{
+		var words = game.Title
+			.Split(new[] { ' ', '-', '_', ':', '.', ',', '(', ')', '[', ']' }, StringSplitOptions.RemoveEmptyEntries)
+			.Where(word => word.Length > 0)
+			.Take(2)
+			.Select(word => char.ToUpperInvariant(word[0]))
+			.ToArray();
+
+		if (words.Length == 0)
+			return "PG";
+
+		return new string(words);
+	}
+
+	private static string BuildShelfLabel(GameEntry game)
+	{
+		if (string.IsNullOrWhiteSpace(game.Path))
+			return "Reconnect ROM";
+
+		return game.TimePlayed > 0 ? $"Resume {FormatPlaytime(game.TimePlayed)}" : "Fresh in library";
+	}
+
+	private static string BuildPlaytimeSummary(GameEntry game)
+	{
+		return game.TimePlayed <= 0 ? "No playtime yet" : $"{FormatPlaytime(game.TimePlayed)} played";
+	}
+
+	private static string BuildLibraryCue(GameEntry game)
+	{
+		return string.IsNullOrWhiteSpace(game.Path) ? "Path missing" : "Installed locally";
+	}
+
+	private static string BuildAchievementDisplay(GameEntry game)
+	{
+		return string.IsNullOrWhiteSpace(game.AchievementNum) ? "Loading..." : game.AchievementNum;
+	}
+
+	private static string BuildActionHint(bool selected)
+	{
+		return selected ? "Press A or double-click" : "Select to preview";
+	}
+
+	private static string FormatPlaytime(int totalSeconds)
+	{
+		if (totalSeconds <= 0)
+			return "0m";
+
+		var hours = totalSeconds / 3600;
+		var minutes = (totalSeconds % 3600) / 60;
+
+		if (hours <= 0)
+			return $"{Math.Max(1, minutes)}m";
+
+		return minutes > 0 ? $"{hours}h {minutes:00}m" : $"{hours}h";
+	}
+
+	private static PanelContainer CreateChip(string text, Color background, string? name = null, int fontSize = 11)
+	{
+		var chip = new PanelContainer
+		{
+			LayoutMode = 2,
+		};
+		if (!string.IsNullOrWhiteSpace(name))
+			chip.Name = name;
+
+		var label = new Label
+		{
+			Name = "Label",
+			LayoutMode = 2,
+			Text = string.IsNullOrWhiteSpace(text) ? "ROM" : text,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+		};
+		chip.AddChild(label);
+		StyleChip(chip, background, new Color(0.74f, 0.70f, 0.94f, 0.22f), new Color(0.94f, 0.93f, 1f, 0.97f), fontSize);
+		return chip;
+	}
+
+	private static void StyleChip(PanelContainer chip, Color background, Color border, Color textColor, int fontSize)
+	{
+		chip.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
+			background,
+			border,
+			borderWidth: 1,
+			radius: 999,
+			contentMarginLeft: 10f,
+			contentMarginTop: 4f,
+			contentMarginRight: 10f,
+			contentMarginBottom: 4f));
+
+		if (chip.GetNodeOrNull<Label>("Label") is Label label)
+		{
+			label.AddThemeColorOverride("font_color", textColor);
+			label.AddThemeFontSizeOverride("font_size", fontSize);
+		}
+	}
+
+	private int GetActualGameCount()
+	{
+		return _games.Count == 1 && string.IsNullOrWhiteSpace(_games[0].Path) ? 0 : _games.Count;
 	}
 
 	private static string? TryFindConfigNearGodotProject()

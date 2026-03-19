@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bu1a7yapn2wxg" path="res://Settings.cs" id="1_bvb5x"]
 [ext_resource type="PackedScene" uid="uid://cim753lbasxqg" path="res://vault.tscn" id="2_2fv1l"]
 [ext_resource type="PackedScene" uid="uid://ht73q5hq63an" path="res://ProfileSettings.tscn" id="2_mx4kw"]
+[ext_resource type="PackedScene" path="res://AppearanceSettings.tscn" id="3_appr"]
 
 [node name="Settings" type="Control" unique_id=166812288]
 layout_mode = 3
@@ -17,6 +18,8 @@ ProfileChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxCo
 ProfileScreenPath = NodePath("Margin/HBoxContainer/ProfileSettings")
 VaultChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/VaultChoice")
 VaultScreenPath = NodePath("Margin/HBoxContainer/Vault")
+AppearanceChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/AppearanceChoice")
+AppearanceScreenPath = NodePath("Margin/HBoxContainer/AppearanceSettings")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=365426328]
 layout_mode = 1
@@ -72,11 +75,20 @@ text = "Profile Settings"
 layout_mode = 2
 text = "Vault"
 
+[node name="AppearanceChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=467182349]
+layout_mode = 2
+text = "Appearance"
+
 [node name="ProfileSettings" parent="Margin/HBoxContainer" unique_id=1173785683 instance=ExtResource("2_mx4kw")]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Vault" parent="Margin/HBoxContainer" unique_id=71697526 instance=ExtResource("2_2fv1l")]
 visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AppearanceSettings" parent="Margin/HBoxContainer" instance=ExtResource("3_appr")]
 layout_mode = 2
 size_flags_horizontal = 3

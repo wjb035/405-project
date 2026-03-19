@@ -1,0 +1,107 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://AppearanceSettings.cs" id="1"]
+
+[node name="AppearanceSettings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+CarouselButtonPath = NodePath("Margin/Root/Modes/CarouselButton")
+ListButtonPath = NodePath("Margin/Root/Modes/ListButton")
+GridButtonPath = NodePath("Margin/Root/Modes/GridButton")
+DescriptionTitlePath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentLayout")
+DescriptionBodyPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentDescription")
+StatusPath = NodePath("Margin/Root/Status")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Margin/Root"]
+layout_mode = 2
+text = "Appearance"
+theme_override_font_sizes/font_size = 24
+
+[node name="Hint" type="Label" parent="Margin/Root"]
+layout_mode = 2
+text = "Choose how the game library is presented when you open a platform."
+
+[node name="Modes" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CarouselButton" type="Button" parent="Margin/Root/Modes"]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Carousel"
+
+[node name="ListButton" type="Button" parent="Margin/Root/Modes"]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "List"
+
+[node name="GridButton" type="Button" parent="Margin/Root/Modes"]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Grid"
+
+[node name="Preview" type="PanelContainer" parent="Margin/Root"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="Margin/Root/Preview"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="PreviewRoot" type="VBoxContainer" parent="Margin/Root/Preview/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CurrentLayout" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot"]
+layout_mode = 2
+text = "Carousel View"
+theme_override_font_sizes/font_size = 22
+
+[node name="CurrentDescription" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot"]
+layout_mode = 2
+text = "The existing PGEmu carousel with centered focus, oversized cards, and left-right browsing momentum."
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="Margin/Root"]
+layout_mode = 2
+horizontal_alignment = 1

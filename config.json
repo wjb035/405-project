@@ -15,9 +15,6 @@
         ".wbfs"
       ],
       "defaultEmulatorId": "dolphin",
-<<<<<<< Updated upstream
-      "retroachievementsPlatformID": 16
-=======
       "retroachievementsPlatformID": 16,
       "libretro": {
         "corePath": "cores/dolphin_libretro.dylib",
@@ -44,7 +41,6 @@
           "dolphin_bluetooth_passthrough": "Disabled"
         }
       }
->>>>>>> Stashed changes
     },
     {
       "id": "wii",
@@ -60,9 +56,6 @@
         ".nfs"
       ],
       "defaultEmulatorId": "dolphin",
-<<<<<<< Updated upstream
-      "retroachievementsPlatformID": -1
-=======
       "retroachievementsPlatformID": -1,
       "libretro": {
         "corePath": "cores/dolphin_libretro.dylib",
@@ -89,7 +82,6 @@
           "dolphin_bluetooth_passthrough": "Disabled"
         }
       }
->>>>>>> Stashed changes
     },
     {
       "id": "ps2",

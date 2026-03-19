@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using PGEmu.Services;
 
 public partial class Settings : Control
 {
@@ -8,13 +9,17 @@ public partial class Settings : Control
 	[Export] public NodePath ProfileScreenPath;
 	[Export] public NodePath VaultChoicePath;
 	[Export] public NodePath VaultScreenPath;
+	[Export] public NodePath AppearanceChoicePath;
+	[Export] public NodePath AppearanceScreenPath;
 	
 	private Control _profileScreen;
 	private Control _vaultScreen;
+	private Control _appearanceScreen;
 	
 	private Button _back;
 	private Button _profileChoice;
 	private Button _vaultChoice;
+	private Button _appearanceChoice;
 	
 	
 	
@@ -24,12 +29,17 @@ public partial class Settings : Control
 		_back = GetNode<Button>(BackPath);
 		_profileScreen = GetNode<Control>(ProfileScreenPath);
 		_vaultScreen = GetNode<Control>(VaultScreenPath);
+		_appearanceScreen = GetNode<Control>(AppearanceScreenPath);
 		_profileChoice = GetNode<Button>(ProfileChoicePath);
 		_vaultChoice = GetNode<Button>(VaultChoicePath);
+		_appearanceChoice = GetNode<Button>(AppearanceChoicePath);
 		
 		_back.Pressed += GoBack;
 		_profileChoice.Pressed += ShowProfileScreen;
 		_vaultChoice.Pressed += ShowVaultScreen;
+		_appearanceChoice.Pressed += ShowAppearanceScreen;
+		ApplyThemeAesthetic();
+		ShowRequestedScreen();
 		
 	
 	
@@ -47,14 +57,61 @@ public partial class Settings : Control
 	
 	public void ShowProfileScreen()
 	{
-		_profileScreen.Visible = true;
-		_vaultScreen.Visible = false;
+		SetVisibleScreen("profile");
 	}
 	
 	public void ShowVaultScreen()
 	{
-		_profileScreen.Visible = false;
-		_vaultScreen.Visible = true;
+		SetVisibleScreen("vault");
+	}
+
+	public void ShowAppearanceScreen()
+	{
+		SetVisibleScreen("appearance");
+	}
+
+	private void ShowRequestedScreen()
+	{
+		var tree = GetTree();
+		var requested = tree.HasMeta("pgemu_settings_tab")
+			? tree.GetMeta("pgemu_settings_tab").AsString()
+			: "appearance";
+
+		SetVisibleScreen(string.IsNullOrWhiteSpace(requested) ? "appearance" : requested);
+	}
+
+	private void SetVisibleScreen(string screen)
+	{
+		_profileScreen.Visible = screen == "profile";
+		_vaultScreen.Visible = screen == "vault";
+		_appearanceScreen.Visible = screen == "appearance";
+
+		_profileChoice.ButtonPressed = screen == "profile";
+		_vaultChoice.ButtonPressed = screen == "vault";
+		_appearanceChoice.ButtonPressed = screen == "appearance";
+	}
+
+	private void ApplyThemeAesthetic()
+	{
+		var bg = GetNodeOrNull<ColorRect>("Bg");
+		if (bg != null)
+			bg.Color = new Color(0.068f, 0.048f, 0.121f, 1f);
+
+		var sideBg = GetNodeOrNull<ColorRect>("Margin/HBoxContainer/Margin/Bg");
+		if (sideBg != null)
+			sideBg.Color = new Color(0.115f, 0.093f, 0.182f, 0.94f);
+
+		UiStyle.StyleTopBarButton(_back);
+		StyleSectionButton(_profileChoice);
+		StyleSectionButton(_vaultChoice);
+		StyleSectionButton(_appearanceChoice);
+	}
+
+	private static void StyleSectionButton(Button button)
+	{
+		button.ToggleMode = true;
+		UiStyle.StylePrimaryButton(button);
+		button.CustomMinimumSize = new Vector2(180f, 42f);
 	}
 	
 

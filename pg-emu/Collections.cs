@@ -170,12 +170,13 @@ private void OnAnyButtonPressed()
 
 	private void OnSettingsPressed()
 	{
-		// Jump to the Vault (settings) screen. Store the return scene so Vault can go back here.
+		// Jump to the shared settings screen and return here afterward.
 		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
+		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		tree.ChangeSceneToFile("res://vault.tscn");
+		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
 
 	private void OnFriendsPressed()
