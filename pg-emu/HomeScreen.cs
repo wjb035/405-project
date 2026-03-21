@@ -110,6 +110,8 @@ public partial class HomeScreen : Control
 		LayoutCards();
 		UpdateSelectedLabel();
 		SetupFriendHover();
+		
+		 ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
 	}
 
 	private void OnLogoutPressed()
