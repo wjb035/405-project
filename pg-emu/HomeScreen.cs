@@ -112,6 +112,7 @@ public partial class HomeScreen : Control
 		SetupFriendHover();
 		
 		 ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
+		ActivityManager.runTimer();
 	}
 
 	private void OnLogoutPressed()

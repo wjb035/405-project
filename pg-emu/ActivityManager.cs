@@ -7,7 +7,40 @@ using PGEmu.Services;
 public static class ActivityManager
 {
 	private const string BaseUrl = "http://localhost:5276/api/activity/set";
+	private static Timer checkTimer;
+	
+	private static bool timerRunning = false;
+	
+	static string lastAct = null;
+	
+	public static void runTimer(){
+		if (!timerRunning){
+			checkTimer = new Timer();
+			checkTimer.WaitTime = 60;
+			checkTimer.Autostart = false;
+			checkTimer.OneShot = false;
 
+			 var root = Engine.GetMainLoop() as SceneTree;
+				if (root != null)
+				{
+					root.Root.AddChild(checkTimer);
+				}
+
+			checkTimer.Timeout += OnTimerTimeout;
+			checkTimer.Start();
+			timerRunning = true;
+		}
+	}
+	
+	
+	
+	
+	private static void OnTimerTimeout(){
+		if (lastAct != null){
+			GD.Print("Updating the status!");
+			SetActivity("", lastAct, "");
+		}
+	}
 	public static async Task SetActivity(string activityType, string externalGameId = "", string source = "GodotClient")
 	{
 		GD.Print("HI HI FROM THE ACTMANAGER");
@@ -18,7 +51,7 @@ public static class ActivityManager
 			GD.PrintErr("[ActivityManager] No auth token, cannot update activity.");
 			return;
 		}
-
+		lastAct = externalGameId;
 		var payload = new
 		{
 			UserId = authService.getUID(),
