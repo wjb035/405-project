@@ -255,7 +255,7 @@ op_type = 3
 input_name = "time"
 
 [sub_resource type="VisualShaderNodeFloatOp" id="VisualShaderNodeFloatOp_dfmla"]
-default_input_values = [0, 0.0, 1, 0.2]
+default_input_values = [0, 0.0, 1, 0.35]
 operator = 2
 
 [sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_vep8v"]
