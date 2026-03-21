@@ -280,6 +280,12 @@ private void OnAnyButtonPressed()
 			//runningProcesses = Process.GetProcessesByName("dolphin");
 			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game);
 			
+			
+			foreach (var child in GetTree().Root.GetChildren())
+				GD.Print(child.Name);
+			
+	 ActivityManager.SetActivity("Playing", game.Title, "GodotClient");
+
 		//	foreach (var p in runningProcesses){
 			//GD.Print(p.ProcessName +  " started at " + p.StartTime);
 				

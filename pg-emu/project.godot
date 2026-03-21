@@ -28,6 +28,7 @@ ControllerService="*res://Services/ControllerService.cs"
 ScreenTransition="*res://UI/ScreenTransition.tscn"
 Playtime="*res://Playtime.cs"
 GlobalBackground="*res://GlobalBackground.tscn"
+ActivityManager="*uid://d0ods16pac2w3"
 
 [display]
 

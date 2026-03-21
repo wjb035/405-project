@@ -22,8 +22,17 @@
         "Title": "Ape Escape 3 (USA)",
         "retroAchievementsGameId": 2689,
         "platform": null,
-        "TimePlayed": 0,
+        "TimePlayed": 180,
         "AchievementNum": "31/145"
+      },
+      {
+        "Name": "Shin Megami Tensei - Nocturne (USA)",
+        "Path": "D:/PGEmu Games\\games\\PS2\\Shin Megami Tensei - Nocturne (USA).iso",
+        "Title": "Shin Megami Tensei - Nocturne (USA)",
+        "retroAchievementsGameId": 2655,
+        "platform": null,
+        "TimePlayed": 20,
+        "AchievementNum": "0/150"
       }
     ]
   }
