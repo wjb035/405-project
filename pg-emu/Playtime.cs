@@ -197,7 +197,7 @@ public partial class Playtime : Node
 			jwtToken,
 			currentRunningGame.Name,     // your ExternalGameId
 			currentRunningGame.TimePlayed, 
-			"dolphin"                    // or current platformId
+			"dolphin"                // placeholder
 		);
 	}
 }

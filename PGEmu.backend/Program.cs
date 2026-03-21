@@ -42,7 +42,7 @@ builder.Services.AddScoped<FriendService>();
 // Profile customization service
 
 builder.Services.AddScoped<IProfileCustomizationService, ProfileCustomizationService>();
-
+builder.Services.AddScoped<IUserActivityService, UserActivityService>();
 
 
 // user game stuff 

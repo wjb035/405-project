@@ -33,7 +33,7 @@ public class FriendsController : ControllerBase
         return Ok(new { message = "Friend request sent." });
     }
 
-    [Authorize]
+    [Authorize] 
     [HttpPost("accept/{requesterId}")]
     public async Task<IActionResult> AcceptRequest(Guid requesterId)
     {

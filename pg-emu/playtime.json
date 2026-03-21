@@ -8,8 +8,22 @@
         "Title": "Super Monkey Ball (USA)",
         "retroAchievementsGameId": 9510,
         "platform": null,
-        "TimePlayed": 120,
+        "TimePlayed": 160,
         "AchievementNum": "8/77"
+      }
+    ]
+  },
+  {
+    "Key": "pcsx2",
+    "Value": [
+      {
+        "Name": "Ape Escape 3 (USA)",
+        "Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+        "Title": "Ape Escape 3 (USA)",
+        "retroAchievementsGameId": 2689,
+        "platform": null,
+        "TimePlayed": 0,
+        "AchievementNum": "31/145"
       }
     ]
   }

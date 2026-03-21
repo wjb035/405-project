@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using RetroAchievements.Api;
 using PGEmu.Services;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+
 
 public partial class GameSelect : Control
 {
@@ -258,7 +260,11 @@ private void OnAnyButtonPressed()
 			SetStatus("Can't launch: config or platform missing.");
 			return;
 		}
-
+		
+		var authService = GetNode<AuthService>("/root/AuthService");
+		var uid = authService.getUID();
+		GD.Print("Current user ID: " + uid);
+		
 		try
 		{
 			if (TryStartInProcessLaunch(_config, launchPlatform, game, out var inProcessStatus))

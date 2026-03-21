@@ -109,6 +109,7 @@ public partial class HomeScreen : Control
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectedLabel();
+		SetupFriendHover();
 	}
 
 	private void OnLogoutPressed()
@@ -164,7 +165,17 @@ private void ConnectAllButtons(Node node)
 		ConnectAllButtons(child);
 	}
 }
+private void SetupFriendHover(){
+		var friendsRow = GetNode<Control>("Margin/Root/CenterArea/FriendsRow");
 
+		int i = 1;
+		foreach (Control friend in friendsRow.GetChildren())
+		{
+			friend.TooltipText = $"Howdy from friend #{i}\nCan you smell me";
+			i++;
+		}
+	}
+	
 private void OnAnyButtonPressed()
 {
 	var audio = GetNode<AudioManager>("/root/AudioManager");

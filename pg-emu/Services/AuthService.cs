@@ -3,6 +3,8 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 
 namespace PGEmu.Services;
 
@@ -16,6 +18,7 @@ public partial class AuthService : Node
 	public string AccessToken { get; private set; } = "";
 	public string RefreshToken { get; private set; } = "";
 	public string Username { get; private set; } = "";
+	public Guid UserId { get; private set; }
 	
 	public void SetTokens(string accessToken, string refreshToken, string username)
 	{
@@ -23,11 +26,38 @@ public partial class AuthService : Node
 		RefreshToken = refreshToken;
 		Username = username;
 	}
+	
+	
+	
+	public Guid getUID(){
+		LoadTokensFromDisk();
+		
+		var handler = new JwtSecurityTokenHandler();
+		var token = handler.ReadJwtToken(AccessToken);
+		var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+		if (!string.IsNullOrEmpty(userIdClaim))
+		{
+			UserId = Guid.Parse(userIdClaim);
+		}
+		GD.Print(UserId);
+		return UserId;
+	}
 
 	public override void _Ready()
 	{
 		Instance = this;
 		LoadTokensFromDisk();
+		
+		var handler = new JwtSecurityTokenHandler();
+		var token = handler.ReadJwtToken(AccessToken);
+		var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+		if (!string.IsNullOrEmpty(userIdClaim))
+		{
+			UserId = Guid.Parse(userIdClaim);
+		}
+		GD.Print(UserId);
 	}
 	
 	// LOGIN
@@ -44,7 +74,7 @@ public partial class AuthService : Node
 		AccessToken = response.Value.GetProperty("accessToken").GetString()!;
 		RefreshToken = response.Value.GetProperty("refreshToken").GetString()!;
 		Username = response.Value.GetProperty("username").GetString()!;
-		
+		//UserId = Guid.Parse(response.Value.GetProperty("userId").GetString()!);
 		SetTokens(AccessToken, RefreshToken, Username);
 
 		SaveTokensToDisk();
@@ -65,7 +95,7 @@ public partial class AuthService : Node
 		AccessToken = response.Value.GetProperty("accessToken").GetString()!;
 		RefreshToken = response.Value.GetProperty("refreshToken").GetString()!;
 		Username = response.Value.GetProperty("username").GetString()!;
-		
+		//UserId = Guid.Parse(response.Value.GetProperty("userId").GetString()!);
 		SetTokens(AccessToken, RefreshToken, Username);
 
 		SaveTokensToDisk();
