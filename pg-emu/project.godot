@@ -25,14 +25,9 @@ AudioManager="*res://AudioManager.tscn"
 QuitService="*res://Services/QuitService.cs"
 InputRoutingService="*res://Services/InputRoutingService.cs"
 ControllerService="*res://Services/ControllerService.cs"
-<<<<<<< Updated upstream
 ScreenTransition="*res://UI/ScreenTransition.tscn"
 Playtime="*res://Playtime.cs"
-=======
-ScreenTransition="*uid://duhl1pwwacy2n"
-Playtime="*uid://djummfs7xnaqr"
-GlobalBackground="*uid://btstrdwj4rrp8"
->>>>>>> Stashed changes
+GlobalBackground="*res://GlobalBackground.tscn"
 
 [display]
 
