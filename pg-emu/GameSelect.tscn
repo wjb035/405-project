@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cwnetad1wffaa"]
 
 [ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
-[ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://game_cover_card.tscn" id="2"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_8s1q4"]
 [ext_resource type="Texture2D" uid="uid://bjj1k8ig6w0dr" path="res://Images/trophy icon.png" id="3_ju5ei"]
 [ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="5_1x65b"]
@@ -176,12 +176,14 @@ text = "Add"
 
 [node name="Title" type="Label" parent="Margin/Root/CenterArea" unique_id=777097425]
 layout_mode = 2
+z_index = 1200
 theme_override_colors/font_color = Color(0, 0, 0, 0.92)
 theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 
 [node name="MetaRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=2104703426]
 layout_mode = 2
+z_index = 1200
 alignment = 1
 
 [node name="MetaLeft" type="Label" parent="Margin/Root/CenterArea/MetaRow" unique_id=813034884]
@@ -201,6 +203,7 @@ text = "Achievements"
 
 [node name="ActionRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=1247217525]
 layout_mode = 2
+z_index = 1200
 alignment = 1
 
 [node name="BtnPlay" type="Button" parent="Margin/Root/CenterArea/ActionRow" unique_id=242986329]
@@ -210,6 +213,7 @@ text = "Play"
 
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1328005150]
 layout_mode = 2
+z_index = 1200
 size_flags_horizontal = 3
 clip_text = true
 theme_override_colors/font_color = Color(0, 0, 0, 0.75)

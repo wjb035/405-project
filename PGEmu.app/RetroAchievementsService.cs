@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using RetroAchievements.Api;
 using Godot;
 using RetroAchievements.Api.Response.Users.Records;
-using System.Collections.Generic;
 
 namespace PGEmu.app;
 
@@ -17,6 +17,7 @@ public static class RetroAchievementsService
     // IF YOU NEED HELP WITH THIS!!!!!!!!!!!!!!!!!!!!!!
     static string username = "badacctname";
     static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYtktA4pK";
+    const string MediaBaseUrl = "https://retroachievements.org";
 			
     static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
     public static async Task Retro(
@@ -30,8 +31,9 @@ public static class RetroAchievementsService
         Console.WriteLine(selectedPlatform?.retroachievementsPlatformID);
        // load the list of games for the selected platform
        //if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1)
-       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1 && 
-           !AchievementStorage.gameToString.ContainsKey(selectedPlatform.retroachievementsPlatformID))
+       if (selectedPlatform != null && selectedPlatform.retroachievementsPlatformID != -1 &&
+           (!AchievementStorage.gameToString.ContainsKey(selectedPlatform.retroachievementsPlatformID) ||
+            games.Any(NeedsMetadataRefresh)))
        {
            var gameList = await client.GetGamesListAsync(selectedPlatform.retroachievementsPlatformID, true);
            //var gameList = await client.GetGamesListAsync(16, true);
@@ -54,6 +56,7 @@ public static class RetroAchievementsService
                userGameFileName = Regex.Replace(userGameFileName, pattern2, String.Empty);
                
                g.AchievementNum = "0/0";
+               g.retroAchievementsGameId = 0;
                foreach (var gamesItem in gameList.Items)
                {
 
@@ -69,6 +72,9 @@ public static class RetroAchievementsService
                        g.AchievementNum = disposableGame.EarnedAchievementsCount + "/" +
                                           disposableGame.AchievementsCount;
                        g.retroAchievementsGameId = gamesItem.Id;
+                       g.CoverArtUrl ??= BuildMediaUrl(disposableGame.ImageBoxArt)
+                           ?? BuildMediaUrl(disposableGame.ImageTitle)
+                           ?? BuildMediaUrl(disposableGame.ImageIcon);
                        GD.Print(g.Title + " has a game ID as " + g.retroAchievementsGameId);
                        //Console.WriteLine(g.AchievementNum);
                        
@@ -103,6 +109,36 @@ public static class RetroAchievementsService
            }
        }
         
+    }
+
+    private static string? BuildMediaUrl(string? siteRelativePath)
+    {
+        if (string.IsNullOrWhiteSpace(siteRelativePath))
+        {
+            return null;
+        }
+
+        if (siteRelativePath.StartsWith("/", StringComparison.Ordinal))
+        {
+            return $"{MediaBaseUrl}{siteRelativePath}";
+        }
+
+        if (Uri.TryCreate(siteRelativePath, UriKind.Absolute, out var absoluteUri))
+        {
+            return absoluteUri.ToString();
+        }
+
+        var normalizedPath = siteRelativePath.StartsWith("/")
+            ? siteRelativePath
+            : "/" + siteRelativePath;
+        return $"{MediaBaseUrl}{normalizedPath}";
+    }
+
+    private static bool NeedsMetadataRefresh(GameEntry game)
+    {
+        return game.retroAchievementsGameId < 0 ||
+               string.IsNullOrWhiteSpace(game.AchievementNum) ||
+               string.Equals(game.AchievementNum, "Loading...", StringComparison.Ordinal);
     }
 
 

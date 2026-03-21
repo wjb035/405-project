@@ -54,9 +54,12 @@ public partial class GameSelect : Control
 	private readonly List<Control> _cards = new();
 	private readonly List<Control> _browseEntries = new();
 	private readonly List<GameEntry> _games = new();
+	private static readonly System.Net.Http.HttpClient CoverArtClient = new();
+	private static readonly Dictionary<string, Texture2D> CoverArtCache = new(StringComparer.OrdinalIgnoreCase);
 	private BrowseLayoutMode _browseLayout = BrowseLayoutMode.Carousel;
 	private int _selectedIndex;
 	private const int GridColumns = 4;
+	private const float CarouselCardSpacing = 404f;
 
 	
 	// Loaded app context.
@@ -694,17 +697,27 @@ private void OnAnyButtonPressed()
 			// this can be fixed, but at this point it's a little niche to spend time on such a minor inconvenience-- definitely can be fixed later though
 			
 			// UNCOMMENT LATER
-			if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){
-				var prevGames = (IEnumerable<GameEntry>)AchievementStorage.gameToString[_platform.retroachievementsPlatformID];
-				
-				foreach (var g in prevGames){
-					_games.Add(g);
+				if (AchievementStorage.gameToString.ContainsKey(_platform.retroachievementsPlatformID)){
+					var prevGames = ((IEnumerable<GameEntry>)AchievementStorage.gameToString[_platform.retroachievementsPlatformID]).ToList();
+
+					if (prevGames.Count == 0 && scanned.Count > 0)
+					{
+						AchievementStorage.gameToString.Remove(_platform.retroachievementsPlatformID);
+						foreach (var g in scanned){
+							_games.Add(g);
+						}
+					}
+					else
+					{
+						foreach (var g in prevGames){
+							_games.Add(g);
+						}
+					}
 				}
-			}
-			else{
-				foreach (var g in scanned){
-					_games.Add(g);
-				}
+				else{
+					foreach (var g in scanned){
+						_games.Add(g);
+					}
 				}
 			
 			GD.Print("above if else");
@@ -732,12 +745,9 @@ private void OnAnyButtonPressed()
 			
 			
 			
-			
-			
-			
-			
-			
-			await RetroAchievementsService.Retro(_platform, _games);
+			await Task.WhenAll(
+				LibretroThumbnailService.PopulateCoverArtAsync(_platform, _games),
+				RetroAchievementsService.Retro(_platform, _games));
 			
 			
 			
@@ -940,8 +950,8 @@ private void OnAnyButtonPressed()
 		{
 			var dx = mm.Position.X - _dragStartPos;
 
-			// 520f matches the spacing used by LayoutCards().
-			_carouselPos = WrapPos(_dragStartCarouselPos - (dx / 520f));
+			// Keep drag distance aligned with the actual carousel spacing.
+			_carouselPos = WrapPos(_dragStartCarouselPos - (dx / CarouselCardSpacing));
 
 			// Update labels/button state during drag so selection feels live.
 			UpdateSelectionUI();
@@ -1097,9 +1107,6 @@ private void OnAnyButtonPressed()
 		// Center of the cards container.
 		var center = _cardsRoot.Size * 0.5f;
 
-		// Horizontal spacing between cards.
-		var spacing = 520f;
-
 		for (int i = 0; i < Count; i++)
 		{
 			var card = _cards[i];
@@ -1119,7 +1126,7 @@ private void OnAnyButtonPressed()
 			var alpha = Mathf.Lerp(1.0f, 0.35f, t);
 
 			// Position cards along X with a slight Y drop for depth.
-			var x = center.X + d * spacing;
+			var x = center.X + d * CarouselCardSpacing;
 			var y = center.Y + t * 40f;
 
 			// Pivot at center so scaling doesn't shift the card.
@@ -1294,6 +1301,14 @@ private void OnAnyButtonPressed()
 
 			var label = card.GetNodeOrNull<Label>("Panel/Name");
 			if (label != null) label.Text = g.Title;
+
+			var coverArt = card.GetNodeOrNull<TextureRect>("Panel/CoverArt");
+			if (coverArt != null && label != null)
+			{
+				coverArt.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+				coverArt.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+				BindCoverArt(coverArt, label, g);
+			}
 		}
 	}
 
@@ -1308,7 +1323,7 @@ private void OnAnyButtonPressed()
 		for (int i = 0; i < _games.Count; i++)
 		{
 			var row = CreateSelectableEntry(i, gridStyle: false);
-			row.CustomMinimumSize = new Vector2(0f, 126f);
+			row.CustomMinimumSize = new Vector2(0f, 174f);
 			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
 			var margin = new MarginContainer
@@ -1342,57 +1357,34 @@ private void OnAnyButtonPressed()
 			var posterShell = new PanelContainer
 			{
 				Name = "PosterShell",
-				CustomMinimumSize = new Vector2(170f, 96f),
+				CustomMinimumSize = new Vector2(132f, 146f),
 				LayoutMode = 2,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
 
 			var posterMargin = new MarginContainer
 			{
 				LayoutMode = 2,
 			};
-			posterMargin.AddThemeConstantOverride("margin_left", 14);
-			posterMargin.AddThemeConstantOverride("margin_top", 12);
-			posterMargin.AddThemeConstantOverride("margin_right", 14);
-			posterMargin.AddThemeConstantOverride("margin_bottom", 12);
+			posterMargin.AddThemeConstantOverride("margin_left", 6);
+			posterMargin.AddThemeConstantOverride("margin_top", 6);
+			posterMargin.AddThemeConstantOverride("margin_right", 6);
+			posterMargin.AddThemeConstantOverride("margin_bottom", 6);
 
-			var posterColumn = new VBoxContainer
+			var posterCenter = new CenterContainer
 			{
 				LayoutMode = 2,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
-			posterColumn.AddThemeConstantOverride("separation", 6);
 
-			var posterHeader = new HBoxContainer
+			var posterArt = new TextureRect
 			{
+				Name = "PosterArt",
 				LayoutMode = 2,
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			};
-
-			var posterSlot = new Label
-			{
-				Name = "PosterSlot",
-				LayoutMode = 2,
-				Text = $"PG {i + 1:00}",
-				HorizontalAlignment = HorizontalAlignment.Left,
-			};
-			posterSlot.AddThemeColorOverride("font_color", new Color(0.82f, 0.78f, 0.95f, 0.82f));
-			posterSlot.AddThemeFontSizeOverride("font_size", 11);
-
-			var posterFormat = new Label
-			{
-				Name = "PosterFormat",
-				LayoutMode = 2,
-				Text = BuildFormatLabel(_games[i]),
-				HorizontalAlignment = HorizontalAlignment.Right,
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			};
-			posterFormat.AddThemeColorOverride("font_color", new Color(0.71f, 0.90f, 1f, 0.88f));
-			posterFormat.AddThemeFontSizeOverride("font_size", 11);
-
-			var posterCenter = new CenterContainer
-			{
-				LayoutMode = 2,
+				CustomMinimumSize = new Vector2(120f, 134f),
+				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
@@ -1406,18 +1398,8 @@ private void OnAnyButtonPressed()
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			posterMonogram.AddThemeColorOverride("font_color", new Color(0.94f, 0.92f, 1f, 0.96f));
-			posterMonogram.AddThemeFontSizeOverride("font_size", 28);
-
-			var posterFooter = new Label
-			{
-				Name = "PosterFooter",
-				LayoutMode = 2,
-				Text = BuildShelfLabel(_games[i]),
-				HorizontalAlignment = HorizontalAlignment.Left,
-				AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			};
-			posterFooter.AddThemeColorOverride("font_color", new Color(0.80f, 0.88f, 0.96f, 0.84f));
-			posterFooter.AddThemeFontSizeOverride("font_size", 12);
+			posterMonogram.AddThemeFontSizeOverride("font_size", 34);
+			BindCoverArt(posterArt, posterMonogram, _games[i]);
 
 			var textColumn = new VBoxContainer
 			{
@@ -1446,18 +1428,10 @@ private void OnAnyButtonPressed()
 			title.AddThemeColorOverride("font_color", new Color(0.96f, 0.94f, 1f, 0.98f));
 			title.AddThemeFontSizeOverride("font_size", 25);
 
-			var statusChip = CreateChip(BuildGameBadge(_games[i]), new Color(0.20f, 0.29f, 0.36f, 0.90f), "StateChip", 11);
-
-			var subtitle = new Label
-			{
-				Name = "SubtitleLabel",
-				LayoutMode = 2,
-				Text = BuildGameSubtitle(_games[i]),
-				HorizontalAlignment = HorizontalAlignment.Left,
-				AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			};
-			subtitle.AddThemeColorOverride("font_color", new Color(0.83f, 0.82f, 0.94f, 0.88f));
-			subtitle.AddThemeFontSizeOverride("font_size", 14);
+			var statusBadge = BuildGameBadge(_games[i]);
+			PanelContainer? statusChip = string.IsNullOrWhiteSpace(statusBadge)
+				? null
+				: CreateChip(statusBadge, new Color(0.20f, 0.29f, 0.36f, 0.90f), "StateChip", 11);
 
 			var footerRow = new HBoxContainer
 			{
@@ -1477,31 +1451,10 @@ private void OnAnyButtonPressed()
 			playtime.AddThemeColorOverride("font_color", new Color(0.72f, 0.90f, 1f, 0.88f));
 			playtime.AddThemeFontSizeOverride("font_size", 13);
 
-			var divider = new Label
-			{
-				Name = "DividerLabel",
-				LayoutMode = 2,
-				Text = "•",
-				HorizontalAlignment = HorizontalAlignment.Center,
-			};
-			divider.AddThemeColorOverride("font_color", new Color(0.54f, 0.50f, 0.66f, 0.70f));
-			divider.AddThemeFontSizeOverride("font_size", 13);
-
-			var libraryCue = new Label
-			{
-				Name = "LibraryCueLabel",
-				LayoutMode = 2,
-				Text = BuildLibraryCue(_games[i]),
-				HorizontalAlignment = HorizontalAlignment.Left,
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			};
-			libraryCue.AddThemeColorOverride("font_color", new Color(0.72f, 0.73f, 0.84f, 0.78f));
-			libraryCue.AddThemeFontSizeOverride("font_size", 13);
-
 			var actionShell = new PanelContainer
 			{
 				Name = "ActionShell",
-				CustomMinimumSize = new Vector2(170f, 0f),
+				CustomMinimumSize = new Vector2(150f, 0f),
 				LayoutMode = 2,
 			};
 
@@ -1553,23 +1506,20 @@ private void OnAnyButtonPressed()
 			actionHint.AddThemeColorOverride("font_color", new Color(0.72f, 0.90f, 1f, 0.88f));
 			actionHint.AddThemeFontSizeOverride("font_size", 13);
 
-			posterHeader.AddChild(posterSlot);
-			posterHeader.AddChild(posterFormat);
+			posterCenter.AddChild(posterArt);
 			posterCenter.AddChild(posterMonogram);
-			posterColumn.AddChild(posterHeader);
-			posterColumn.AddChild(posterCenter);
-			posterColumn.AddChild(posterFooter);
-			posterMargin.AddChild(posterColumn);
+			posterMargin.AddChild(posterCenter);
 			posterShell.AddChild(posterMargin);
 
 			titleRow.AddChild(title);
-			titleRow.AddChild(statusChip);
+			if (statusChip != null)
+				titleRow.AddChild(statusChip);
 			textColumn.AddChild(titleRow);
-			textColumn.AddChild(subtitle);
-			footerRow.AddChild(playtime);
-			footerRow.AddChild(divider);
-			footerRow.AddChild(libraryCue);
-			textColumn.AddChild(footerRow);
+			if (!string.IsNullOrWhiteSpace(playtime.Text))
+			{
+				footerRow.AddChild(playtime);
+				textColumn.AddChild(footerRow);
+			}
 			rightColumn.AddChild(achievementLabel);
 			rightColumn.AddChild(achievements);
 			rightColumn.AddChild(actionHint);
@@ -1640,7 +1590,10 @@ private void OnAnyButtonPressed()
 			channelTag.AddThemeColorOverride("font_color", new Color(0.78f, 0.74f, 0.92f, 0.82f));
 			channelTag.AddThemeFontSizeOverride("font_size", 11);
 
-			var readyTag = CreateChip(BuildGameBadge(_games[i]), new Color(0.21f, 0.29f, 0.36f, 0.90f), "GridStateChip", 10);
+			var statusBadge = BuildGameBadge(_games[i]);
+			PanelContainer? readyTag = string.IsNullOrWhiteSpace(statusBadge)
+				? null
+				: CreateChip(statusBadge, new Color(0.21f, 0.29f, 0.36f, 0.90f), "GridStateChip", 10);
 
 			var screenShell = new PanelContainer
 			{
@@ -1655,10 +1608,10 @@ private void OnAnyButtonPressed()
 			{
 				LayoutMode = 2,
 			};
-			screenMargin.AddThemeConstantOverride("margin_left", 12);
-			screenMargin.AddThemeConstantOverride("margin_top", 10);
-			screenMargin.AddThemeConstantOverride("margin_right", 12);
-			screenMargin.AddThemeConstantOverride("margin_bottom", 10);
+			screenMargin.AddThemeConstantOverride("margin_left", 8);
+			screenMargin.AddThemeConstantOverride("margin_top", 7);
+			screenMargin.AddThemeConstantOverride("margin_right", 8);
+			screenMargin.AddThemeConstantOverride("margin_bottom", 7);
 
 			var titleWrap = new CenterContainer
 			{
@@ -1675,6 +1628,17 @@ private void OnAnyButtonPressed()
 			};
 			screenStack.AddThemeConstantOverride("separation", 3);
 
+			var gridArt = new TextureRect
+			{
+				Name = "GridArt",
+				LayoutMode = 2,
+				CustomMinimumSize = new Vector2(0f, 76f),
+				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			};
+
 			var monogram = new Label
 			{
 				Name = "GridMonogram",
@@ -1685,6 +1649,7 @@ private void OnAnyButtonPressed()
 			};
 			monogram.AddThemeColorOverride("font_color", new Color(0.75f, 0.88f, 1f, 0.92f));
 			monogram.AddThemeFontSizeOverride("font_size", 30);
+			BindCoverArt(gridArt, monogram, _games[i]);
 
 			var title = new Label
 			{
@@ -1697,18 +1662,6 @@ private void OnAnyButtonPressed()
 			};
 			title.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 			title.AddThemeFontSizeOverride("font_size", 17);
-
-			var subtitle = new Label
-			{
-				Name = "GridSubtitle",
-				LayoutMode = 2,
-				Text = BuildGridSubtitle(_games[i]),
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Center,
-				AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			};
-			subtitle.AddThemeColorOverride("font_color", new Color(0.82f, 0.90f, 1f, 0.9f));
-			subtitle.AddThemeFontSizeOverride("font_size", 12);
 
 			var projection = new ColorRect
 			{
@@ -1747,10 +1700,11 @@ private void OnAnyButtonPressed()
 			footerRight.AddThemeFontSizeOverride("font_size", 11);
 
 			topRow.AddChild(channelTag);
-			topRow.AddChild(readyTag);
+			if (readyTag != null)
+				topRow.AddChild(readyTag);
+			screenStack.AddChild(gridArt);
 			screenStack.AddChild(monogram);
 			screenStack.AddChild(title);
-			screenStack.AddChild(subtitle);
 			titleWrap.AddChild(screenStack);
 			screenMargin.AddChild(titleWrap);
 			screenShell.AddChild(screenMargin);
@@ -2049,38 +2003,21 @@ private void OnAnyButtonPressed()
 			posterMonogram.AddThemeFontSizeOverride("font_size", selected ? 30 : 28);
 		}
 
-		if (panel.FindChild("PosterFooter", true, false) is Label posterFooter)
-			posterFooter.AddThemeColorOverride("font_color", selected
-				? new Color(0.84f, 0.92f, 0.98f, 0.90f)
-				: new Color(0.80f, 0.88f, 0.96f, 0.84f));
+		if (panel.FindChild("PosterArt", true, false) is TextureRect posterArt)
+			posterArt.Modulate = selected ? Colors.White : new Color(1f, 1f, 1f, 0.94f);
 
 		if (panel.FindChild("TitleLabel", true, false) is Label titleLabel)
 			titleLabel.AddThemeColorOverride("font_color", selected
 				? new Color(1f, 0.99f, 1f, 0.99f)
 				: new Color(0.96f, 0.94f, 1f, 0.98f));
 
-		if (panel.FindChild("SubtitleLabel", true, false) is Label subtitleLabel)
-		{
-			subtitleLabel.Text = BuildGameSubtitle(game);
-			subtitleLabel.AddThemeColorOverride("font_color", selected
-				? new Color(0.88f, 0.90f, 0.98f, 0.92f)
-				: new Color(0.83f, 0.82f, 0.94f, 0.88f));
-		}
-
 		if (panel.FindChild("PlaytimeLabel", true, false) is Label playtimeLabel)
 		{
 			playtimeLabel.Text = BuildPlaytimeSummary(game);
+			playtimeLabel.Visible = !string.IsNullOrWhiteSpace(playtimeLabel.Text);
 			playtimeLabel.AddThemeColorOverride("font_color", selected
 				? new Color(0.74f, 0.92f, 1f, 0.94f)
 				: new Color(0.72f, 0.90f, 1f, 0.88f));
-		}
-
-		if (panel.FindChild("LibraryCueLabel", true, false) is Label libraryCueLabel)
-		{
-			libraryCueLabel.Text = BuildLibraryCue(game);
-			libraryCueLabel.AddThemeColorOverride("font_color", selected
-				? new Color(0.82f, 0.84f, 0.92f, 0.84f)
-				: new Color(0.72f, 0.73f, 0.84f, 0.78f));
 		}
 
 		if (panel.FindChild("AchievementValue", true, false) is Label achievementValue)
@@ -2135,18 +2072,13 @@ private void OnAnyButtonPressed()
 			gridMonogram.AddThemeFontSizeOverride("font_size", selected ? 32 : 30);
 		}
 
+		if (panel.FindChild("GridArt", true, false) is TextureRect gridArt)
+			gridArt.Modulate = selected ? Colors.White : new Color(1f, 1f, 1f, 0.94f);
+
 		if (panel.FindChild("GridTitle", true, false) is Label gridTitle)
 			gridTitle.AddThemeColorOverride("font_color", selected
 				? new Color(1f, 0.99f, 1f, 0.99f)
 				: new Color(0.97f, 0.95f, 1f, 0.98f));
-
-		if (panel.FindChild("GridSubtitle", true, false) is Label gridSubtitle)
-		{
-			gridSubtitle.Text = BuildGridSubtitle(game);
-			gridSubtitle.AddThemeColorOverride("font_color", selected
-				? new Color(0.84f, 0.93f, 1f, 0.94f)
-				: new Color(0.82f, 0.90f, 1f, 0.90f));
-		}
 
 		if (panel.FindChild("ProjectionBar", true, false) is ColorRect projectionBar)
 		{
@@ -2188,32 +2120,9 @@ private void OnAnyButtonPressed()
 			ApplySelectionToBrowseEntries();
 	}
 
-	private string BuildGameSubtitle(GameEntry game)
+	private static string? BuildGameBadge(GameEntry game)
 	{
-		var availability = string.IsNullOrWhiteSpace(game.Path)
-			? "No ROM detected"
-			: game.TimePlayed > 0
-				? $"Resume after {FormatPlaytime(game.TimePlayed)}"
-				: "Ready to launch";
-		var achievements = string.IsNullOrWhiteSpace(game.AchievementNum)
-			? "Achievements loading"
-			: $"Achievements {game.AchievementNum}";
-		return $"{availability} • {achievements}";
-	}
-
-	private string BuildGridSubtitle(GameEntry game)
-	{
-		if (string.IsNullOrWhiteSpace(game.Path))
-			return "Missing from library";
-
-		return game.TimePlayed > 0
-			? $"Played {FormatPlaytime(game.TimePlayed)}"
-			: "Ready to launch";
-	}
-
-	private static string BuildGameBadge(GameEntry game)
-	{
-		return string.IsNullOrWhiteSpace(game.Path) ? "Missing" : "Ready";
+		return string.IsNullOrWhiteSpace(game.Path) ? "Missing" : null;
 	}
 
 	private static string BuildFormatLabel(GameEntry game)
@@ -2240,22 +2149,9 @@ private void OnAnyButtonPressed()
 		return new string(words);
 	}
 
-	private static string BuildShelfLabel(GameEntry game)
-	{
-		if (string.IsNullOrWhiteSpace(game.Path))
-			return "Reconnect ROM";
-
-		return game.TimePlayed > 0 ? $"Resume {FormatPlaytime(game.TimePlayed)}" : "Fresh in library";
-	}
-
 	private static string BuildPlaytimeSummary(GameEntry game)
 	{
-		return game.TimePlayed <= 0 ? "No playtime yet" : $"{FormatPlaytime(game.TimePlayed)} played";
-	}
-
-	private static string BuildLibraryCue(GameEntry game)
-	{
-		return string.IsNullOrWhiteSpace(game.Path) ? "Path missing" : "Installed locally";
+		return game.TimePlayed <= 0 ? string.Empty : $"{FormatPlaytime(game.TimePlayed)} played";
 	}
 
 	private static string BuildAchievementDisplay(GameEntry game)
@@ -2280,6 +2176,69 @@ private void OnAnyButtonPressed()
 			return $"{Math.Max(1, minutes)}m";
 
 		return minutes > 0 ? $"{hours}h {minutes:00}m" : $"{hours}h";
+	}
+
+	private void BindCoverArt(TextureRect artRect, Label fallbackLabel, GameEntry game)
+	{
+		fallbackLabel.Text = BuildGameMonogram(game);
+		fallbackLabel.Visible = true;
+		artRect.Texture = null;
+		artRect.Visible = false;
+
+		if (string.IsNullOrWhiteSpace(game.CoverArtUrl))
+			return;
+
+		if (CoverArtCache.TryGetValue(game.CoverArtUrl, out var cachedTexture))
+		{
+			artRect.Texture = cachedTexture;
+			artRect.Visible = true;
+			fallbackLabel.Visible = false;
+			return;
+		}
+
+		artRect.SetMeta("pgemu_cover_art_url", game.CoverArtUrl);
+		_ = LoadCoverArtAsync(artRect, fallbackLabel, game.CoverArtUrl);
+	}
+
+	private async Task LoadCoverArtAsync(TextureRect artRect, Label fallbackLabel, string coverArtUrl)
+	{
+		try
+		{
+			byte[] imageData = await CoverArtClient.GetByteArrayAsync(coverArtUrl);
+
+			if (!GodotObject.IsInstanceValid(this) ||
+				!GodotObject.IsInstanceValid(artRect) ||
+				!GodotObject.IsInstanceValid(fallbackLabel) ||
+				!artRect.IsInsideTree())
+			{
+				return;
+			}
+
+			Image coverArt = new Image();
+			Error loadError = coverArt.LoadPngFromBuffer(imageData);
+			if (loadError != Error.Ok)
+				loadError = coverArt.LoadJpgFromBuffer(imageData);
+
+			if (loadError != Error.Ok)
+				return;
+
+			ImageTexture texture = ImageTexture.CreateFromImage(coverArt);
+			CoverArtCache[coverArtUrl] = texture;
+
+			if (!artRect.HasMeta("pgemu_cover_art_url") ||
+				artRect.GetMeta("pgemu_cover_art_url").AsString() != coverArtUrl)
+			{
+				return;
+			}
+
+			artRect.Texture = texture;
+			artRect.Visible = true;
+			fallbackLabel.Visible = false;
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Failed to load cover art: {ex.Message}");
+		}
 	}
 
 	private static PanelContainer CreateChip(string text, Color background, string? name = null, int fontSize = 11)

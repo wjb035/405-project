@@ -8,6 +8,7 @@ public partial class GameEntry : ObservableObject
     public string Name { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public string Title => Name;
+    public string? CoverArtUrl { get; set; }
 
     [ObservableProperty]
     public string achievementNum = "Loading...";

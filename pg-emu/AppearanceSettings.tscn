@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://5s7f8el1wpuq"]
 
-[ext_resource type="Script" path="res://AppearanceSettings.cs" id="1"]
+[ext_resource type="Script" uid="uid://emu61kksnyb" path="res://AppearanceSettings.cs" id="1"]
 
-[node name="AppearanceSettings" type="Control"]
+[node name="AppearanceSettings" type="Control" unique_id=434181989]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,7 +17,7 @@ DescriptionTitlePath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentL
 DescriptionBodyPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentDescription")
 StatusPath = NodePath("Margin/Root/Status")
 
-[node name="Bg" type="ColorRect" parent="."]
+[node name="Bg" type="ColorRect" parent="." unique_id=995043538]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,7 +26,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.06801925, 0.047571667, 0.12111964, 1)
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=595528702]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,70 +38,70 @@ theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1000864255]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Margin/Root" unique_id=175639303]
 layout_mode = 2
-text = "Appearance"
 theme_override_font_sizes/font_size = 24
+text = "Appearance"
 
-[node name="Hint" type="Label" parent="Margin/Root"]
+[node name="Hint" type="Label" parent="Margin/Root" unique_id=2124697753]
 layout_mode = 2
 text = "Choose how the game library is presented when you open a platform."
 
-[node name="Modes" type="HBoxContainer" parent="Margin/Root"]
+[node name="Modes" type="HBoxContainer" parent="Margin/Root" unique_id=403764606]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="CarouselButton" type="Button" parent="Margin/Root/Modes"]
+[node name="CarouselButton" type="Button" parent="Margin/Root/Modes" unique_id=81668965]
 custom_minimum_size = Vector2(180, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Carousel"
 
-[node name="ListButton" type="Button" parent="Margin/Root/Modes"]
+[node name="ListButton" type="Button" parent="Margin/Root/Modes" unique_id=1424019837]
 custom_minimum_size = Vector2(180, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "List"
 
-[node name="GridButton" type="Button" parent="Margin/Root/Modes"]
+[node name="GridButton" type="Button" parent="Margin/Root/Modes" unique_id=2036859825]
 custom_minimum_size = Vector2(180, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Grid"
 
-[node name="Preview" type="PanelContainer" parent="Margin/Root"]
+[node name="Preview" type="PanelContainer" parent="Margin/Root" unique_id=1757765341]
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Margin" type="MarginContainer" parent="Margin/Root/Preview"]
+[node name="Margin" type="MarginContainer" parent="Margin/Root/Preview" unique_id=961957307]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="PreviewRoot" type="VBoxContainer" parent="Margin/Root/Preview/Margin"]
+[node name="PreviewRoot" type="VBoxContainer" parent="Margin/Root/Preview/Margin" unique_id=1550424250]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CurrentLayout" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot"]
+[node name="CurrentLayout" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=1387000004]
 layout_mode = 2
-text = "Carousel View"
 theme_override_font_sizes/font_size = 22
+text = "Carousel View"
 
-[node name="CurrentDescription" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot"]
+[node name="CurrentDescription" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=2012465321]
 layout_mode = 2
-text = "The existing PGEmu carousel with centered focus, oversized cards, and left-right browsing momentum."
+text = "The Default PGEmu carousel."
 autowrap_mode = 3
 
-[node name="Status" type="Label" parent="Margin/Root"]
+[node name="Status" type="Label" parent="Margin/Root" unique_id=1851641132]
 layout_mode = 2
 horizontal_alignment = 1
