@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<CollectionGame> CollectionGames => Set<CollectionGame>();
     public DbSet<UserGame> UserGames => Set<UserGame>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
     
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -149,5 +150,12 @@ public class AppDbContext : DbContext
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+        
+        // Password resets
+        modelBuilder.Entity<PasswordResetCode>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

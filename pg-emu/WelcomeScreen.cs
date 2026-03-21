@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using PGEmu.Services;
 using System.Threading.Tasks;
@@ -34,6 +35,9 @@ public partial class WelcomeScreen : Control
 		Input.JoyConnectionChanged += OnJoyConnectionChanged;
 		UpdateContinuePrompt();
 
+		// background transition
+		StartBackgroundTransition();
+		
 		// Initially transparent and black
 		_bg.SetOpacity(0f);
 		_fadeRect.Modulate = new Color(0, 0, 0, 1);
@@ -47,6 +51,26 @@ public partial class WelcomeScreen : Control
 		CallDeferred(nameof(StartWelcomeFlow));
 	}
 
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNode<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+		try
+		{
+			bg.StartTransition("WelcomeScreen", 2f);
+			GD.Print("Background transition finished!");
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
+		
+	}
+	
 	public override void _ExitTree()
 	{
 		Input.JoyConnectionChanged -= OnJoyConnectionChanged;

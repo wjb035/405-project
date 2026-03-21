@@ -25,7 +25,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("Default"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("Default"))
+        new MySqlServerVersion(new Version(8, 0, 0))
     )
 );
 
@@ -35,6 +35,8 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 // JWT Service
 builder.Services.AddScoped<JwtService>();
 
+// Email Service
+builder.Services.AddScoped<EmailService>();
 
 // Friends Service
 builder.Services.AddScoped<FriendService>();

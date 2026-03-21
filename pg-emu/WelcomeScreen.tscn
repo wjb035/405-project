@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://crotbndk3td0j" path="res://WelcomeScreen.cs" id="1_tto14"]
 [ext_resource type="VideoStream" uid="uid://cj02tm65wto52" path="res://Videos/sh2 background larger.ogv" id="2_7kx2i"]
 [ext_resource type="Texture2D" uid="uid://c2xn26rk444xl" path="res://Images/pgemu outline (pink).png" id="3_7kx2i"]
-[ext_resource type="Shader" path="res://CRT.gdshader" id="5_xrt5d"]
+[ext_resource type="Shader" uid="uid://buq1ti2e1ebm5" path="res://CRT.gdshader" id="5_xrt5d"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qlnan"]
 font_size = 70

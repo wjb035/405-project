@@ -141,7 +141,7 @@ public partial class HomeScreen : Control
 		}
 		try
 		{
-			bg.StartTransition("HomeScreen", 20f);
+			bg.StartTransition("HomeScreen", 1.5f);
 			GD.Print("Background transition finished!");
 		}
 		catch (Exception ex)
