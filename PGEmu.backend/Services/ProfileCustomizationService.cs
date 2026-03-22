@@ -101,6 +101,20 @@ public class ProfileCustomizationService : IProfileCustomizationService
         UserProfile? userProfile = await _context.UserProfiles.FindAsync(UserId);
 
         if (user == null) return (false, "User not found.", null);
+        
+        // Create profile row if it doesn't exist
+        if (userProfile == null)
+        {
+            userProfile = new UserProfile
+            {
+                UserId = UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            await _context.UserProfiles.AddAsync(userProfile);
+            await _context.SaveChangesAsync();
+        }
+        
         return (true, "User found",
             new ProfileCustomizationDTO
         {

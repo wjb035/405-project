@@ -111,6 +111,10 @@ public class AuthController : ControllerBase
         if (result != PasswordVerificationResult.Success)
             return Unauthorized("Invalid username or password");
         
+        var existingTokens = _db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.RevokedAt == null);
+        await existingTokens.ForEachAsync(t => t.RevokedAt = DateTime.UtcNow);
+        
         // Generate tokens
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshTokenRaw = _jwtService.GenerateRefreshToken();

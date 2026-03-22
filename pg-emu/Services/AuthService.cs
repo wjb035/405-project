@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http;
+using HttpClient = Godot.HttpClient;
 
 namespace PGEmu.Services;
 
@@ -48,16 +50,19 @@ public partial class AuthService : Node
 	{
 		Instance = this;
 		LoadTokensFromDisk();
-		
-		var handler = new JwtSecurityTokenHandler();
-		var token = handler.ReadJwtToken(AccessToken);
-		var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-
-		if (!string.IsNullOrEmpty(userIdClaim))
+		ParseUserIdFromToken();
+		if (!string.IsNullOrEmpty(AccessToken))
 		{
-			UserId = Guid.Parse(userIdClaim);
+			var handler = new JwtSecurityTokenHandler();
+			var token = handler.ReadJwtToken(AccessToken);
+			var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+			if (!string.IsNullOrEmpty(userIdClaim))
+				UserId = Guid.Parse(userIdClaim);
 		}
-		GD.Print(UserId);
+		else
+		{
+			ParseUserIdFromToken(); 
+		}
 	}
 	
 	// LOGIN
@@ -148,9 +153,14 @@ public partial class AuthService : Node
 	}
 	
 	// AUTHORIZED REQUEST WITH AUTO RETRY
-	public async Task<JsonElement?> SendAuthorizedRequest(string endpoint)
+	public event Action? SessionExpired;
+	public async Task<JsonElement?> SendAuthorizedRequest(string endpoint, 
+		object? body = null, 
+		HttpMethod? method = null)
 	{
-		var response = await SendRequest(endpoint, null, true);
+		method ??= body != null ? HttpMethod.Post : HttpMethod.Get;
+		
+		var response = await SendRequest(endpoint, body, true, method);
 
 		if (response == null)
 		{
@@ -158,10 +168,13 @@ public partial class AuthService : Node
 			var refreshed = await Refresh();
 
 			if (!refreshed)
+			{
+				SessionExpired?.Invoke();
 				return null;
+			}
 
 			// Retry once
-			response = await SendRequest(endpoint, null, true);
+			response = await SendRequest(endpoint, body, true, method);
 		}
 
 		return response;
@@ -171,8 +184,18 @@ public partial class AuthService : Node
 	private async Task<JsonElement?> SendRequest(
 		string url,
 		object? body,
-		bool authorized = false)
+		bool authorized = false,
+		HttpMethod? method = null)
 	{
+		method ??= body != null ? HttpMethod.Post : HttpMethod.Get;
+		
+		// convert HttpMethod to Godot's enum
+		var godotMethod = method == HttpMethod.Put    ? HttpClient.Method.Put
+			: method == HttpMethod.Delete ? HttpClient.Method.Delete
+			: method == HttpMethod.Post   ? HttpClient.Method.Post
+			:                               HttpClient.Method.Get;
+
+		
 		var http = new HttpRequest();
 		AddChild(http);
 
@@ -200,6 +223,7 @@ public partial class AuthService : Node
 			}
 			else
 			{
+				GD.Print($"Request failed: {code} {url}");
 				tcs.SetResult(null);
 			}
 
@@ -209,7 +233,7 @@ public partial class AuthService : Node
 		http.Request(
 			url,
 			headers.ToArray(),
-			body != null ? HttpClient.Method.Post : HttpClient.Method.Get,
+			godotMethod, 
 			json
 		);
 
@@ -246,8 +270,11 @@ public partial class AuthService : Node
 	}
 
 	// what do you think this does
-	public void Logout()
+	public async Task Logout()
 	{
+		if (!string.IsNullOrEmpty(RefreshToken))
+			await SendRequest(BaseUrl + "logout", new { refreshToken = RefreshToken });
+		
 		AccessToken = "";
 		RefreshToken = "";
 		if (FileAccess.FileExists(SavePath))
@@ -259,5 +286,16 @@ public partial class AuthService : Node
 	public bool IsLoggedIn()
 	{
 		return !string.IsNullOrEmpty(AccessToken);
+	}
+	
+	// DOES WHAT IT SAY
+	private void ParseUserIdFromToken()
+	{
+		if (string.IsNullOrEmpty(AccessToken)) return;
+		var handler = new JwtSecurityTokenHandler();
+		var token = handler.ReadJwtToken(AccessToken);
+		var sub = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+		if (!string.IsNullOrEmpty(sub))
+			UserId = Guid.Parse(sub);
 	}
 }
