@@ -5,16 +5,18 @@ using System.Collections.Generic;
 using RetroAchievements.Api.Response.Users.Records;
 using System.Linq;
 using System.Text.RegularExpressions;
+using PGEmu.Services;
 
 
 public partial class AchievementScreen : Control
 {
 	
+	private Button _back;
 	
 	public override async void _Ready()
 	{
 		Label _topText = GetNode<Label>("Bg/Margin/Root/TopBar/Title");
-		Button back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
+		_back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
 		string splashText = "Achievements for " + AchievementStorage.gameName;
 		
 		string regexPattern =  @"\([^)]*\)";
@@ -22,7 +24,8 @@ public partial class AchievementScreen : Control
 		
 		
 		_topText.Text = splashText;
-		back.Pressed += GoBack;
+		_back.Pressed += GoBack;
+		ApplyAesthetic();
 		
 		// Get the container
 		VBoxContainer container = GetNode<VBoxContainer>("ScrollContainer/ButtonContainer");
@@ -61,6 +64,7 @@ public partial class AchievementScreen : Control
 	btn.SizeFlagsHorizontal = SizeFlags.Fill;      // stretch horizontally
 	btn.SizeFlagsVertical = SizeFlags.ShrinkCenter; // height controlled by CustomMinimumSize
 	btn.CustomMinimumSize = new Vector2(400, 60);  // button size
+	UiStyle.StyleTopBarButton(btn);  
 	int index = i;
 	btn.Pressed += () => GD.Print($"Button {index + 1} pressed");
 
@@ -140,7 +144,7 @@ dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 	{
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
-		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://GameSelect.tscn" : returnScene;
 
 		tree.ChangeSceneToFile(returnScene);
 	}
@@ -197,7 +201,13 @@ dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 	var errRequest = request.Request(url);
 	if (errRequest != Error.Ok)
 		GD.PrintErr($"Failed to start HTTP request: {url}");
+	
 }
 
-
+	private void ApplyAesthetic()
+	{
+		var title = GetNodeOrNull<Label>("Bg/Margin/Root/TopBar/Title");
+		UiStyle.StyleTitleLabel(title);
+		UiStyle.StyleTopBarButton(_back);
+	}
 }
