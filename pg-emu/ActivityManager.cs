@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using PGEmu.Services;
 
+
+
 public static class ActivityManager
 {
 	private const string BaseUrl = "http://localhost:5276/api/activity/set";
@@ -44,7 +46,7 @@ public static class ActivityManager
 	public static async Task SetActivity(string activityType, string externalGameId = "", string source = "GodotClient")
 	{
 		GD.Print("HI HI FROM THE ACTMANAGER");
-
+		
 		var authService = AuthService.Instance;
 		if (authService == null || string.IsNullOrEmpty(authService.AccessToken))
 		{

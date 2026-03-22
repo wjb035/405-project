@@ -113,6 +113,8 @@ public partial class HomeScreen : Control
 		
 		 ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
 		ActivityManager.runTimer();
+		
+		FriendActivity.GetFriendsJson();
 	}
 
 	private void OnLogoutPressed()

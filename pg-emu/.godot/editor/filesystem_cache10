@@ -1,338 +1,170 @@
 63f7b34db8d8cdea90c76aacccf841ec
-<<<<<<< Updated upstream
-::res://::1774114684
-Achievements.tscn::PackedScene::9222093291491280280::1773922738::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png
-AchievementScreen.cs::CSharpScript::6693889573278468072::1771269048::0::1::::<>Control<><>0<>0<><>::
-achievement_card.tscn::PackedScene::3050951422021996085::1771269370::0::1::::<><><>0<>0<><>::
-AppearanceSettings.cs::CSharpScript::9023499664744789::1774107348::0::1::::<>Control<><>0<>0<><>::
-AppearanceSettings.tscn::PackedScene::2144777721437288356::1774107348::0::1::::<><><>0<>0<><>::uid://emu61kksnyb::::res://AppearanceSettings.cs
-AudioManager.tscn::PackedScene::6506420070939653425::1772146092::0::1::::<><><>0<>0<><>::uid://cegs0xqk2507d::::res://AudioManager.cs
-BackgroundShader.gdshader::Shader::6437037093189678268::1773922738::0::1::::<><><>0<>0<><>::
-BackgroundVisual.tres::VisualShader::9162325003688541754::1774104019::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
-Collections.cs::CSharpScript::7606717320363974664::1773926621::0::1::::<>Control<><>0<>0<><>::
-collections.json::JSON::-1::1773922740::0::1::::<><><>0<>0<><>::
-Collections.tscn::PackedScene::5700284930515526576::1773922738::0::1::::<><><>0<>0<><>::uid://dgm0r1qq55ebg::::res://Collections.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-CRT.gdshader::Shader::3824840634527991866::1773922738::0::1::::<><><>0<>0<><>::
-export_presets.cfg::TextFile::-1::1773924102::0::1::::<><><>0<>0<><>::
-FriendsList.cs::CSharpScript::6371099269646437739::1771269048::0::1::::<>Node<><>0<>0<><>::
-FriendsList.tscn::PackedScene::1855649014337715298::1771269370::0::1::::<><><>0<>0<><>::
-friend_request_item.tscn::PackedScene::5952679683128112426::1772145368::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
-GameSelect.cs::CSharpScript::6550570635931546279::1774110806::0::1::::<>Control<><>0<>0<><>::
-GameSelect.tscn::PackedScene::6344109642126286492::1774114532::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://game_cover_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bjj1k8ig6w0dr::::res://Images/trophy icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-game_cover_card.tscn::PackedScene::-1::1774114526::0::1::::<><><>0<>0<><>::
-GlobalBackground.cs::CSharpScript::3091197486066506122::1774107322::0::1::::<>CanvasLayer<><>0<>0<><>::
-GlobalBackground.tscn::PackedScene::3758351685751846875::1774038421::0::1::::<><><>0<>0<><>::uid://bkbntobikh6hi::::res://GlobalBackground.cs<>uid://d3skfih3bcydu::::res://BackgroundVisual.tres
-HomeScreen.cs::CSharpScript::3450512667325572821::1774107322::0::1::::<>Control<><>0<>0<><>::
-HomeScreen.tscn::PackedScene::3595765915259507013::1774038421::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-icon.svg::CompressedTexture2D::143724492836120447::1770065031::1773924119::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-inbox.tscn::PackedScene::95044556963901650::1772145368::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
-inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1772145368::0::1::::<><><>0<>0<><>::
-LibretroGame.cs::CSharpScript::1815289238835525547::1773864754::0::1::::<>Control<><>0<>0<><>::
-LibretroGame.tscn::PackedScene::-1::1773864754::0::1::::<><><>0<>0<><>::res://LibretroGame.cs
-LibretroHost.cs::CSharpScript::5191850242086797574::1773924100::0::1::::<><><>0<>0<><>::
-Login.cs::CSharpScript::2130692794859400076::1773924100::0::1::::<>Control<><>0<>0<><>::
-LoginScreen.tscn::PackedScene::6750562284961884728::1773924100::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
-platform_card.tscn::PackedScene::-1::1774111294::0::1::::<><><>0<>0<><>::
-Playtime.cs::CSharpScript::7832999524251257481::1774107322::0::1::::<>Node<><>0<>0<><>::
-playtime.json::JSON::-1::1774107322::0::1::::<><><>0<>0<><>::
-Profile.cs::CSharpScript::7879751291555930961::1773924100::0::1::::<>Control<><>0<>0<><>::
-profile.tscn::PackedScene::387046989646537699::1773924103::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg
-ProfileSettings.cs::CSharpScript::251846148516989756::1773924100::0::1::::<>Control<><>0<>0<><>::
-ProfileSettings.tscn::PackedScene::532538915849641301::1773924100::0::1::::<><><>0<>0<><>::uid://dt84s428syeu::::res://ProfileSettings.cs
-README.md::TextFile::-1::1771269049::0::1::::<><><>0<>0<><>::
-Register.cs::CSharpScript::8838925792148172637::1773924100::0::1::::<>Control<><>0<>0<><>::
-RegisterScreen.tscn::PackedScene::2330346922626633503::1773924100::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
-Settings.cs::CSharpScript::3843929784724654196::1773926621::0::1::::<>Control<><>0<>0<><>::
-Settings.tscn::PackedScene::2632010473024774744::1773926621::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>res://AppearanceSettings.tscn
-souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1771269050::1773924119::1::::<><><>0<>0<>342c1d92eb558274773f082c2d8a2cf3<>res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex::
-Vault.cs::CSharpScript::2866193499456904334::1773924102::0::1::::<>Control<><>0<>0<><>::
-vault.tscn::PackedScene::5361122654817674866::1773924103::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
-WelcomeScreen.cs::CSharpScript::5996109094376545087::1774038421::0::1::::<>Control<><>0<>0<><>::
-WelcomeScreen.tscn::PackedScene::4526708404385782447::1774038421::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png<>res://CRT.gdshader
-::res://addons/::1771269535
-::res://addons/spanning_table/::1773924119
-plugin.cfg::TextFile::-1::1771269049::0::1::::<><><>0<>0<><>::
-spanning_cell_container.gd::GDScript::6629457065888776101::1771269049::0::1::::SpanningCellContainer<>Container<><>0<>1<><>::
-spanning_cell_icon.svg::CompressedTexture2D::5416843449976166262::1771269049::1773924119::1::::<><><>0<>0<>520e7de3aa50804bc33e7d8ce39cd8f2<>res://.godot/imported/spanning_cell_icon.svg-c7dc21c145a73f86a807db800122f615.ctex::
-spanning_table_container.gd::GDScript::6337152408986593699::1771269049::0::1::::SpanningTableContainer<>Container<><>0<>1<><>::
-spanning_table_container_plugin.gd::GDScript::4159832820899278075::1771269049::0::1::::<>EditorPlugin<><>0<>1<><>::
-spanning_table_icon.png::CompressedTexture2D::3272762204369011089::1771269049::1773924119::1::::<><><>0<>0<>1022d89efeca3925228fcd10a763cbe1<>res://.godot/imported/spanning_table_icon.png-08e98fd5c5c70da5a1bc088fe9db8fab.ctex::
-spanning_table_icon.svg::CompressedTexture2D::4233690390075957967::1771269049::1773924119::1::::<><><>0<>0<>c78bdb0d4476904aacca8bd03793443f<>res://.godot/imported/spanning_table_icon.svg-aeecf44d4bd55facf2289176e290cde8.ctex::
-::res://addons/spanning_table/test/::1771269535
-test_spanning_table.tscn::PackedScene::5442060569244470804::1771269049::0::1::::<><><>0<>0<><>::res://addons/spanning_table/spanning_table_container.gd<>res://addons/spanning_table/spanning_cell_container.gd
-::res://audio/::1773924120
-click.wav::AudioStreamWAV::853492358556649020::1772145794::1773924120::1::::<><><>0<>0<>91f36ab14767d96bde5fe589b640ff75<>res://.godot/imported/click.wav-fd13f10d6f727710e39f04648321cf68.sample::
-::res://dolphin-emu/::1773924102
-::res://dolphin-emu/User/::1773924102
-::res://dolphin-emu/User/Cache/::1773924102
-::res://dolphin-emu/User/GC/::1773924102
-::res://dolphin-emu/User/GC/USA/::1773924102
-::res://dolphin-emu/User/GC/USA/Card A/::1773924102
-::res://dolphin-emu/User/Wii/::1773924102
-::res://dolphin-emu/User/Wii/shared2/::1773924102
-::res://dolphin-emu/User/Wii/shared2/sys/::1773924102
-::res://Emu/::1773923325
-::res://Emu/Libretro/::1773924100
-FileLogger.cs::CSharpScript::4875747403792471641::1773924100::0::1::::<><><>0<>0<><>::
-ILibraryLoader.cs::CSharpScript::2609588552559985180::1773924100::0::1::::<><><>0<>0<><>::
-InputMapper.cs::CSharpScript::1868629139134963920::1773924100::0::1::::<>Node<><>0<>0<><>::
-LibraryLoaderFactory.cs::CSharpScript::751530579940077854::1773924100::0::1::::<><><>0<>0<><>::
-LibretroNative.cs::CSharpScript::8479103474522252367::1773924100::0::1::::<>Node<><>0<>0<><>::
-LibretroPlayer.cs::CSharpScript::6353045369317325432::1773924100::0::1::::<>Node<><>0<>0<><>::
-NativeLibraryLoader.cs::CSharpScript::5253934811413773685::1773924100::0::1::::<><><>0<>0<><>::
-UnixLibraryLoader.cs::CSharpScript::333137773481165854::1773864753::0::1::::<><><>0<>0<><>::
-::res://Emu/Libretro/windows/::1773923325
-WindowsLibraryLoader.cs::CSharpScript::5486143438762551720::1773864753::0::1::::<><><>0<>0<><>::
-::res://Helpers/::1774107322
-AudioManager.cs::CSharpScript::5067121792425677447::1773864753::0::1::::<>Node<><>0<>0<><>::
-ScreenTransition.cs::CSharpScript::4770586394482833404::1774107322::0::1::::<>CanvasLayer<><>0<>0<><>::
-::res://Images/::1773924120
-arrow left icon.png::CompressedTexture2D::6250585574779176309::1773922738::1773922864::1::::<><><>0<>0<>d40375005534bb6c7f99b97462274a27<>res://.godot/imported/arrow left icon.png-c622747a261e398f06ee12ce2ad5af9d.ctex::
-chat icon.png::CompressedTexture2D::730754731589020984::1773922738::1773922864::1::::<><><>0<>0<>e66e8f2769c908ad0043ffdc013e5c3d<>res://.godot/imported/chat icon.png-2b2f4028e143a9fbae1b597cc26fac16.ctex::
-folders icon.png::CompressedTexture2D::6845460153447156746::1773922739::1773922864::1::::<><><>0<>0<>ba1d059851a38d78afe02a29a5404679<>res://.godot/imported/folders icon.png-334fc776bc3147e6d2641f419e292551.ctex::
-funny desktop icon.png::CompressedTexture2D::5073403619527740689::1772145794::1773924119::1::::<><><>0<>0<>5839e98b505726028ecf59f4ad3a638f<>res://.godot/imported/funny desktop icon.png-3a4e234f0f2cf1578785c840250536cf.ctex::
-inbox icon.png::CompressedTexture2D::3080503807257765394::1773922739::1773922864::1::::<><><>0<>0<>4c3e3bc2e220539711ddf772295aefe3<>res://.godot/imported/inbox icon.png-35f96c24aee6c85466c5354ae9661805.ctex::
-list icon.png::CompressedTexture2D::5174006076936794555::1773922739::1773922864::1::::<><><>0<>0<>dbcae85b244bc59d4d1b5f581b13b139<>res://.godot/imported/list icon.png-9a15418882132bfc8f86d7f1eeef311b.ctex::
-outline (standalone).png::CompressedTexture2D::7417877986711891871::1772145368::1773924120::1::::<><><>0<>0<>5915ee50ecd32309781f4ac24cfec07d<>res://.godot/imported/outline (standalone).png-82c5eb4df0defbc1bff2f3d042f5252b.ctex::
-PGEmu Desktop Icon.png::CompressedTexture2D::8810990632822693959::1772145368::1773924118::1::::<><><>0<>0<>b40f170f7e7cda720e1dac5975c99115<>res://.godot/imported/PGEmu Desktop Icon.png-ae948e703e64f80f4514a238a749e199.ctex::
-pgemu mini logo.png::CompressedTexture2D::3875546998002212737::1772145794::1773924118::1::::<><><>0<>0<>41ab9ff4a1141c2b0c3107d6168ff3dc<>res://.godot/imported/pgemu mini logo.png-cf9542c4ad079f24fa307747ea8813fc.ctex::
-pgemu outline (blue).png::CompressedTexture2D::5051311296511794371::1772145368::1773924119::1::::<><><>0<>0<>b1ab67930ed12c255bd6f9f1a7bf9ed4<>res://.godot/imported/pgemu outline (blue).png-799910ce16a0c9c4cfd0e7e27751e4cb.ctex::
-pgemu outline (green).png::CompressedTexture2D::3189635321433820507::1772145368::1773924119::1::::<><><>0<>0<>361662a779a1ebe09c1983989636894f<>res://.godot/imported/pgemu outline (green).png-853b418328a0162b14d5febcc7d00880.ctex::
-pgemu outline (pink).png::CompressedTexture2D::6716260026277659205::1772145368::1773924119::1::::<><><>0<>0<>c0b6e8f9823be476bcd93210177f7143<>res://.godot/imported/pgemu outline (pink).png-38d58fd1d34415389f85a2c6b0414774.ctex::
-pretty good emulator.png::CompressedTexture2D::7387732663025593870::1772145368::1773924119::1::::<><><>0<>0<>d07c1a78e0a35d2abe989a9066d56300<>res://.godot/imported/pretty good emulator.png-8364920516c0322b22fcc78e4649f97e.ctex::
-profile icon.png::CompressedTexture2D::6027575112359469288::1773922739::1773922864::1::::<><><>0<>0<>d57690c61a02fb6598a76ded8b866e47<>res://.godot/imported/profile icon.png-cdd8e89078f719459972312781347d87.ctex::
-question icon.png::CompressedTexture2D::4516915085665625318::1773922739::1773922865::1::::<><><>0<>0<>8ca16b7b11b1d561a19781c0226e04db<>res://.godot/imported/question icon.png-ecfb6eba821ba307d899f038635232b5.ctex::
-settings icon.png::CompressedTexture2D::4826937912168137300::1773922739::1773922865::1::::<><><>0<>0<>286dbfa2435b7cec9a7adf3689fef2c2<>res://.godot/imported/settings icon.png-7d01bd06aa67cd610a4f19ac58bbbcb0.ctex::
-small arrow left icon.png::CompressedTexture2D::7125684834061436588::1773922739::1773922865::1::::<><><>0<>0<>5659ed9d1f3b7b03e2034a454487b077<>res://.godot/imported/small arrow left icon.png-79a263b9074814fdcb464a1c43ffca0a.ctex::
-small arrow right icon.png::CompressedTexture2D::5985252830179934906::1773922739::1773922865::1::::<><><>0<>0<>2454e4ca614e6772215b4d7844844a73<>res://.godot/imported/small arrow right icon.png-1c9cde35770cad38d5e7dcf4cfcb00ad.ctex::
-trophy icon.png::CompressedTexture2D::3038297921916830267::1773922739::1773922865::1::::<><><>0<>0<>4cb87e6fe746633fe108d7e1042ed9a4<>res://.godot/imported/trophy icon.png-a3a952cbbe2e05cd88a500405a935325.ctex::
-::res://screenshots/::1773924118
-spanning_table_container_demo.png::CompressedTexture2D::7249265451959373567::1771269049::1773924118::1::::<><><>0<>0<>9dc037d4430c1dad684fed4126ce43ca<>res://.godot/imported/spanning_table_container_demo.png-48fc0b92df8dcc7d17b1087e6f81f79c.ctex::
-spanning_table_container_example_1.png::CompressedTexture2D::6678019456609695703::1771269049::1773924118::1::::<><><>0<>0<>3f412d98b111bf9ba84da8a0f59268cd<>res://.godot/imported/spanning_table_container_example_1.png-6c53ce5fde2b5fe679e9d52a631eb7ff.ctex::
-spanning_table_container_inspector_example_1.png::CompressedTexture2D::3578856315294686406::1771269049::1773924118::1::::<><><>0<>0<>750d565edee20af6b2055f930cc35117<>res://.godot/imported/spanning_table_container_inspector_example_1.png-f005c444577aa15d05da422f14286336.ctex::
-spanning_table_container_scene_example_1.png::CompressedTexture2D::282854368447783121::1771269049::1773924118::1::::<><><>0<>0<>e9b241fdaa28ef683ea32fbe72bf8499<>res://.godot/imported/spanning_table_container_scene_example_1.png-171f19710b7fc49886704611a324e38b.ctex::
-::res://Services/::1774107322
-AuthService.cs::CSharpScript::994187413389896066::1774107322::0::1::::<>Node<><>0<>0<><>::
-BrowseLayoutSettings.cs::CSharpScript::8443188763427680006::1773926620::0::1::::<><><>0<>0<><>::
-ControllerService.cs::CSharpScript::6658850858433575865::1773922739::0::1::::<>Node<><>0<>0<><>::
-FriendService.cs::CSharpScript::638228935682986426::1773864754::0::1::::<>Node<><>0<>0<><>::
-InProcessLaunchState.cs::CSharpScript::4897426424976993013::1773864754::0::1::::<><><>0<>0<><>::
-InputRoutingService.cs::CSharpScript::3314707751854982747::1772161890::0::1::::<>Node<><>0<>0<><>::
-LibretroRunner.cs::CSharpScript::7220367243002862339::1773924101::0::1::::<><><>0<>0<><>::
-ProfileService.cs::CSharpScript::3517034232592957849::1773864754::0::1::::<>Node<><>0<>0<><>::
-QuitService.cs::CSharpScript::4103234503971379844::1772161890::0::1::::<>CanvasLayer<><>0<>0<><>::
-UiStyle.cs::CSharpScript::4207572949793757131::1773924101::0::1::::<><><>0<>0<><>::
-::res://Services/Models/::1773923324
-ProfileResponse.cs::CSharpScript::3077731634420152775::1773864754::0::1::::<><><>0<>0<><>::
-::res://ShaderSlop/::1774104018
-BluePurple.tres::GradientTexture2D::6476643249689724885::1774104018::0::1::::<><><>0<>0<><>::
-DarkPurple.tres::GradientTexture2D::3218597359634651731::1774104018::0::1::::<><><>0<>0<><>::
-Game1.tres::GradientTexture2D::503595129483968585::1774038421::0::1::::<><><>0<>0<><>::
-Game2.tres::GradientTexture2D::6254437708092479149::1774038421::0::1::::<><><>0<>0<><>::
-Home1.tres::GradientTexture2D::6859754372738140631::1774038421::0::1::::<><><>0<>0<><>::
-Home2.tres::GradientTexture2D::3098587904130529176::1774038421::0::1::::<><><>0<>0<><>::
-Login1.tres::GradientTexture2D::1940596010064889515::1774038421::0::1::::<><><>0<>0<><>::
-Login2.tres::GradientTexture2D::5559288019053623605::1774038421::0::1::::<><><>0<>0<><>::
-NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774104018::0::1::::<><><>0<>0<><>::
-::res://Sys/::1773924101
-ApprovedInis.json::JSON::-1::1773924101::0::1::::<><><>0<>0<><>::
-triforcetdb-en.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-de.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-en.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-es.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-fr.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-it.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-ja.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-ko.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-nl.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-pt.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-ru.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-zh_CN.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-wiitdb-zh_TW.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-::res://Sys/GC/::1773924101
-font-licenses.txt::TextFile::-1::1773924101::0::1::::<><><>0<>0<><>::
-::res://UI/::1773923324
-FriendInbox.cs::CSharpScript::4117037499602220883::1773864755::0::1::::<>PopupPanel<><>0<>0<><>::
-FriendRequestItem.cs::CSharpScript::7844878079273845639::1772145368::0::1::::<>Panel<><>0<>0<><>::
-InboxItem.cs::CSharpScript::5619153750257441564::1772145368::0::1::::<>Panel<><>0<>0<><>::
-ScreenTransition.tscn::PackedScene::8578204708515963603::1773864755::0::1::::<><><>0<>0<><>::uid://b8754jh3b5v8g::::res://Helpers/ScreenTransition.cs
-::res://User/::1773924102
-::res://User/Cache/::1773924101
-::res://User/GC/::1773924102
-::res://User/GC/USA/::1773924102
-::res://User/GC/USA/Card A/::1773924102
-::res://User/Wii/::1773924102
-::res://User/Wii/shared2/::1773924102
-::res://User/Wii/shared2/sys/::1773924102
-::res://Videos/::1773923325
-sh2 background larger.ogv::VideoStreamTheora::5457824372431240263::1773864758::0::1::::<><><>0<>0<><>::
-=======
-::res://::1774118266
-Achievements.tscn::PackedScene::9222093291491280280::1772478757::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png
-AchievementScreen.cs::CSharpScript::6693889573278468072::1771554555::0::1::::<>Control<><>0<>0<><>::
-achievement_card.tscn::PackedScene::3050951422021996085::1771554555::0::1::::<><><>0<>0<><>::
-ActivityManager.cs::CSharpScript::8943100140033219748::1774109621::0::1::::<><><>0<>0<><>::
-AppearanceSettings.cs::CSharpScript::9023499664744789::1773939301::0::1::::<>Control<><>0<>0<><>::
-AppearanceSettings.tscn::PackedScene::-1::1773939301::0::1::::<><><>0<>0<><>::res://AppearanceSettings.cs
-AudioManager.tscn::PackedScene::6506420070939653425::1772155432::0::1::::<><><>0<>0<><>::uid://cegs0xqk2507d::::res://AudioManager.cs
-BackgroundShader.gdshader::Shader::6437037093189678268::1773517709::0::1::::<><><>0<>0<><>::
-BackgroundVisual.tres::VisualShader::9162325003688541754::1774117759::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
-Collections.cs::CSharpScript::7606717320363974664::1773939301::0::1::::<>Control<><>0<>0<><>::
-collections.json::JSON::-1::1773432453::0::1::::<><><>0<>0<><>::
-Collections.tscn::PackedScene::5700284930515526576::1772478730::0::1::::<><><>0<>0<><>::uid://dgm0r1qq55ebg::::res://Collections.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-CRT.gdshader::Shader::3824840634527991866::1773517709::0::1::::<><><>0<>0<><>::
-export_presets.cfg::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-FriendsList.cs::CSharpScript::6371099269646437739::1771554555::0::1::::<>Node<><>0<>0<><>::
-FriendsList.tscn::PackedScene::1855649014337715298::1771554555::0::1::::<><><>0<>0<><>::
-friend_request_item.tscn::PackedScene::5952679683128112426::1771709302::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
-GameSelect.cs::CSharpScript::6550570635931546279::1774109621::0::1::::<>Control<><>0<>0<><>::
-GameSelect.tscn::PackedScene::6344109642126286492::1773939301::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bjj1k8ig6w0dr::::res://Images/trophy icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-GlobalBackground.cs::CSharpScript::3091197486066506122::1774117957::0::1::::<>CanvasLayer<><>0<>0<><>::
-GlobalBackground.tscn::PackedScene::3758351685751846875::1774117434::0::1::::<><><>0<>0<><>::uid://bkbntobikh6hi::::res://GlobalBackground.cs<>uid://d3skfih3bcydu::::res://BackgroundVisual.tres
-HomeScreen.cs::CSharpScript::3450512667325572821::1774116420::0::1::::<>Control<><>0<>0<><>::
-HomeScreen.tscn::PackedScene::3595765915259507013::1773939309::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
-icon.svg::CompressedTexture2D::143724492836120447::1771554555::1774109685::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-inbox.tscn::PackedScene::95044556963901650::1771711453::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
-inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1771710170::0::1::::<><><>0<>0<><>::
-LibretroGame.cs::CSharpScript::1815289238835525547::1772309992::0::1::::<>Control<><>0<>0<><>::
-LibretroGame.tscn::PackedScene::-1::1772309992::0::1::::<><><>0<>0<><>::res://LibretroGame.cs
-LibretroHost.cs::CSharpScript::5191850242086797574::1773939301::0::1::::<><><>0<>0<><>::
-Login.cs::CSharpScript::2130692794859400076::1774114927::0::1::::<>Control<><>0<>0<><>::
-LoginScreen.tscn::PackedScene::6750562284961884728::1774115232::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
-platform_card.tscn::PackedScene::-1::1772309992::0::1::::<><><>0<>0<><>::
-Playtime.cs::CSharpScript::7832999524251257481::1774109621::0::1::::<>Node<><>0<>0<><>::
-playtime.json::JSON::-1::1774109621::0::1::::<><><>0<>0<><>::
-Profile.cs::CSharpScript::7879751291555930961::1773939301::0::1::::<>Control<><>0<>0<><>::
-profile.tscn::PackedScene::387046989646537699::1773939301::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg
-ProfileSettings.cs::CSharpScript::251846148516989756::1773939301::0::1::::<>Control<><>0<>0<><>::
-ProfileSettings.tscn::PackedScene::532538915849641301::1773939301::0::1::::<><><>0<>0<><>::uid://dt84s428syeu::::res://ProfileSettings.cs
-README.md::TextFile::-1::1771554555::0::1::::<><><>0<>0<><>::
-Register.cs::CSharpScript::8838925792148172637::1773939301::0::1::::<>Control<><>0<>0<><>::
-RegisterScreen.tscn::PackedScene::2330346922626633503::1773939301::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
-ResetPassword.cs::CSharpScript::7752308560448638781::1774110965::0::1::::<>Control<><>0<>0<><>::
-ResetPasswordScreen.tscn::PackedScene::636400489347355775::1774111863::0::1::::<><><>0<>0<><>::uid://dipjnidtkq8hl::::res://ResetPassword.cs
-Settings.cs::CSharpScript::3843929784724654196::1773939301::0::1::::<>Control<><>0<>0<><>::
-Settings.tscn::PackedScene::2632010473024774744::1773939301::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>res://AppearanceSettings.tscn
-souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1771554555::1774109685::1::::<><><>0<>0<>342c1d92eb558274773f082c2d8a2cf3<>res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex::
-Vault.cs::CSharpScript::2866193499456904334::1773939301::0::1::::<>Control<><>0<>0<><>::
-vault.tscn::PackedScene::5361122654817674866::1773939301::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
-WelcomeScreen.cs::CSharpScript::5996109094376545087::1774116416::0::1::::<>Control<><>0<>0<><>::
-WelcomeScreen.tscn::PackedScene::4526708404385782447::1774118224::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png<>uid://buq1ti2e1ebm5::::res://CRT.gdshader
-::res://addons/::1771554555
-::res://addons/spanning_table/::1774109685
-plugin.cfg::TextFile::-1::1771554555::0::1::::<><><>0<>0<><>::
-spanning_cell_container.gd::GDScript::6629457065888776101::1771554555::0::1::::SpanningCellContainer<>Container<><>0<>1<><>::
-spanning_cell_icon.svg::CompressedTexture2D::5416843449976166262::1771554555::1774109685::1::::<><><>0<>0<>520e7de3aa50804bc33e7d8ce39cd8f2<>res://.godot/imported/spanning_cell_icon.svg-c7dc21c145a73f86a807db800122f615.ctex::
-spanning_table_container.gd::GDScript::6337152408986593699::1771554555::0::1::::SpanningTableContainer<>Container<><>0<>1<><>::
-spanning_table_container_plugin.gd::GDScript::4159832820899278075::1771554555::0::1::::<>EditorPlugin<><>0<>1<><>::
-spanning_table_icon.png::CompressedTexture2D::3272762204369011089::1771554555::1774109685::1::::<><><>0<>0<>1022d89efeca3925228fcd10a763cbe1<>res://.godot/imported/spanning_table_icon.png-08e98fd5c5c70da5a1bc088fe9db8fab.ctex::
-spanning_table_icon.svg::CompressedTexture2D::4233690390075957967::1771554555::1774109685::1::::<><><>0<>0<>c78bdb0d4476904aacca8bd03793443f<>res://.godot/imported/spanning_table_icon.svg-aeecf44d4bd55facf2289176e290cde8.ctex::
-::res://addons/spanning_table/test/::1771554555
-test_spanning_table.tscn::PackedScene::5442060569244470804::1771554555::0::1::::<><><>0<>0<><>::res://addons/spanning_table/spanning_table_container.gd<>res://addons/spanning_table/spanning_cell_container.gd
-::res://audio/::1774109685
-click.wav::AudioStreamWAV::853492358556649020::1772155432::1774109685::1::::<><><>0<>0<>91f36ab14767d96bde5fe589b640ff75<>res://.godot/imported/click.wav-fd13f10d6f727710e39f04648321cf68.sample::
-::res://dolphin-emu/::1773939301
-::res://dolphin-emu/User/::1773939301
-::res://dolphin-emu/User/Cache/::1773939301
-::res://dolphin-emu/User/GC/::1773939301
-::res://dolphin-emu/User/GC/USA/::1773939301
-::res://dolphin-emu/User/GC/USA/Card A/::1773939301
-::res://dolphin-emu/User/Wii/::1773939301
-::res://dolphin-emu/User/Wii/shared2/::1773939301
-::res://dolphin-emu/User/Wii/shared2/sys/::1773939301
-::res://Emu/::1772309992
-::res://Emu/Libretro/::1774109621
-FileLogger.cs::CSharpScript::4875747403792471641::1773939301::0::1::::<><><>0<>0<><>::
-ILibraryLoader.cs::CSharpScript::2609588552559985180::1773939301::0::1::::<><><>0<>0<><>::
-InputMapper.cs::CSharpScript::1868629139134963920::1773939301::0::1::::<>Node<><>0<>0<><>::
-LibraryLoaderFactory.cs::CSharpScript::751530579940077854::1773939301::0::1::::<><><>0<>0<><>::
-LibretroNative.cs::CSharpScript::8479103474522252367::1773939301::0::1::::<>Node<><>0<>0<><>::
-LibretroPlayer.cs::CSharpScript::6353045369317325432::1773939301::0::1::::<>Node<><>0<>0<><>::
-NativeLibraryLoader.cs::CSharpScript::5253934811413773685::1773939301::0::1::::<><><>0<>0<><>::
-UnixLibraryLoader.cs::CSharpScript::333137773481165854::1772309992::0::1::::<><><>0<>0<><>::
-::res://Emu/Libretro/windows/::1772309992
-WindowsLibraryLoader.cs::CSharpScript::5486143438762551720::1772309992::0::1::::<><><>0<>0<><>::
-::res://Helpers/::1774109621
-AudioManager.cs::CSharpScript::5067121792425677447::1772155432::0::1::::<>Node<><>0<>0<><>::
-ScreenTransition.cs::CSharpScript::4770586394482833404::1774109621::0::1::::<>CanvasLayer<><>0<>0<><>::
-::res://Images/::1774109685
-arrow left icon.png::CompressedTexture2D::6250585574779176309::1772476522::1772476570::1::::<><><>0<>0<>d40375005534bb6c7f99b97462274a27<>res://.godot/imported/arrow left icon.png-c622747a261e398f06ee12ce2ad5af9d.ctex::
-chat icon.png::CompressedTexture2D::730754731589020984::1772478400::1772478422::1::::<><><>0<>0<>e66e8f2769c908ad0043ffdc013e5c3d<>res://.godot/imported/chat icon.png-2b2f4028e143a9fbae1b597cc26fac16.ctex::
-folders icon.png::CompressedTexture2D::6845460153447156746::1772478243::1772478422::1::::<><><>0<>0<>ba1d059851a38d78afe02a29a5404679<>res://.godot/imported/folders icon.png-334fc776bc3147e6d2641f419e292551.ctex::
-funny desktop icon.png::CompressedTexture2D::5073403619527740689::1772063348::1774109685::1::::<><><>0<>0<>5839e98b505726028ecf59f4ad3a638f<>res://.godot/imported/funny desktop icon.png-3a4e234f0f2cf1578785c840250536cf.ctex::
-inbox icon.png::CompressedTexture2D::3080503807257765394::1772478345::1772478422::1::::<><><>0<>0<>4c3e3bc2e220539711ddf772295aefe3<>res://.godot/imported/inbox icon.png-35f96c24aee6c85466c5354ae9661805.ctex::
-list icon.png::CompressedTexture2D::5174006076936794555::1772478212::1772478422::1::::<><><>0<>0<>dbcae85b244bc59d4d1b5f581b13b139<>res://.godot/imported/list icon.png-9a15418882132bfc8f86d7f1eeef311b.ctex::
-outline (standalone).png::CompressedTexture2D::7417877986711891871::1771568431::1774109685::1::::<><><>0<>0<>5915ee50ecd32309781f4ac24cfec07d<>res://.godot/imported/outline (standalone).png-82c5eb4df0defbc1bff2f3d042f5252b.ctex::
-PGEmu Desktop Icon.png::CompressedTexture2D::8810990632822693959::1770757492::1774109685::1::::<><><>0<>0<>b40f170f7e7cda720e1dac5975c99115<>res://.godot/imported/PGEmu Desktop Icon.png-ae948e703e64f80f4514a238a749e199.ctex::
-pgemu mini logo.png::CompressedTexture2D::3875546998002212737::1772063081::1774109685::1::::<><><>0<>0<>41ab9ff4a1141c2b0c3107d6168ff3dc<>res://.godot/imported/pgemu mini logo.png-cf9542c4ad079f24fa307747ea8813fc.ctex::
-pgemu outline (blue).png::CompressedTexture2D::5051311296511794371::1771568315::1774109685::1::::<><><>0<>0<>b1ab67930ed12c255bd6f9f1a7bf9ed4<>res://.godot/imported/pgemu outline (blue).png-799910ce16a0c9c4cfd0e7e27751e4cb.ctex::
-pgemu outline (green).png::CompressedTexture2D::3189635321433820507::1771568407::1774109685::1::::<><><>0<>0<>361662a779a1ebe09c1983989636894f<>res://.godot/imported/pgemu outline (green).png-853b418328a0162b14d5febcc7d00880.ctex::
-pgemu outline (pink).png::CompressedTexture2D::6716260026277659205::1771568374::1774109685::1::::<><><>0<>0<>c0b6e8f9823be476bcd93210177f7143<>res://.godot/imported/pgemu outline (pink).png-38d58fd1d34415389f85a2c6b0414774.ctex::
-pretty good emulator.png::CompressedTexture2D::7387732663025593870::1770764628::1774109685::1::::<><><>0<>0<>d07c1a78e0a35d2abe989a9066d56300<>res://.godot/imported/pretty good emulator.png-8364920516c0322b22fcc78e4649f97e.ctex::
-profile icon.png::CompressedTexture2D::6027575112359469288::1772478291::1772478422::1::::<><><>0<>0<>d57690c61a02fb6598a76ded8b866e47<>res://.godot/imported/profile icon.png-cdd8e89078f719459972312781347d87.ctex::
-question icon.png::CompressedTexture2D::4516915085665625318::1772478187::1772478422::1::::<><><>0<>0<>8ca16b7b11b1d561a19781c0226e04db<>res://.godot/imported/question icon.png-ecfb6eba821ba307d899f038635232b5.ctex::
-settings icon.png::CompressedTexture2D::4826937912168137300::1772477893::1772478063::1::::<><><>0<>0<>286dbfa2435b7cec9a7adf3689fef2c2<>res://.godot/imported/settings icon.png-7d01bd06aa67cd610a4f19ac58bbbcb0.ctex::
-small arrow left icon.png::CompressedTexture2D::7125684834061436588::1772478152::1772478422::1::::<><><>0<>0<>5659ed9d1f3b7b03e2034a454487b077<>res://.godot/imported/small arrow left icon.png-79a263b9074814fdcb464a1c43ffca0a.ctex::
-small arrow right icon.png::CompressedTexture2D::5985252830179934906::1772478169::1772478422::1::::<><><>0<>0<>2454e4ca614e6772215b4d7844844a73<>res://.godot/imported/small arrow right icon.png-1c9cde35770cad38d5e7dcf4cfcb00ad.ctex::
-trophy icon.png::CompressedTexture2D::3038297921916830267::1772478257::1772476570::1::::<><><>0<>0<>4cb87e6fe746633fe108d7e1042ed9a4<>res://.godot/imported/trophy icon.png-a3a952cbbe2e05cd88a500405a935325.ctex::
-::res://screenshots/::1774109685
-spanning_table_container_demo.png::CompressedTexture2D::7249265451959373567::1771554555::1774109685::1::::<><><>0<>0<>9dc037d4430c1dad684fed4126ce43ca<>res://.godot/imported/spanning_table_container_demo.png-48fc0b92df8dcc7d17b1087e6f81f79c.ctex::
-spanning_table_container_example_1.png::CompressedTexture2D::6678019456609695703::1771554555::1774109685::1::::<><><>0<>0<>3f412d98b111bf9ba84da8a0f59268cd<>res://.godot/imported/spanning_table_container_example_1.png-6c53ce5fde2b5fe679e9d52a631eb7ff.ctex::
-spanning_table_container_inspector_example_1.png::CompressedTexture2D::3578856315294686406::1771554555::1774109685::1::::<><><>0<>0<>750d565edee20af6b2055f930cc35117<>res://.godot/imported/spanning_table_container_inspector_example_1.png-f005c444577aa15d05da422f14286336.ctex::
-spanning_table_container_scene_example_1.png::CompressedTexture2D::282854368447783121::1771554555::1774109685::1::::<><><>0<>0<>e9b241fdaa28ef683ea32fbe72bf8499<>res://.godot/imported/spanning_table_container_scene_example_1.png-171f19710b7fc49886704611a324e38b.ctex::
-::res://Services/::1774109623
-AuthService.cs::CSharpScript::994187413389896066::1774109623::0::1::::<>Node<><>0<>0<><>::
-BrowseLayoutSettings.cs::CSharpScript::8443188763427680006::1773939301::0::1::::<><><>0<>0<><>::
-ControllerService.cs::CSharpScript::6658850858433575865::1773432453::0::1::::<>Node<><>0<>0<><>::
-FriendService.cs::CSharpScript::638228935682986426::1772320888::0::1::::<>Node<><>0<>0<><>::
-InProcessLaunchState.cs::CSharpScript::4897426424976993013::1772309992::0::1::::<><><>0<>0<><>::
-InputRoutingService.cs::CSharpScript::3314707751854982747::1772309992::0::1::::<>Node<><>0<>0<><>::
-LibretroRunner.cs::CSharpScript::7220367243002862339::1773939301::0::1::::<><><>0<>0<><>::
-ProfileService.cs::CSharpScript::3517034232592957849::1772473569::0::1::::<>Node<><>0<>0<><>::
-QuitService.cs::CSharpScript::4103234503971379844::1772309992::0::1::::<>CanvasLayer<><>0<>0<><>::
-UiStyle.cs::CSharpScript::4207572949793757131::1773939301::0::1::::<><><>0<>0<><>::
-::res://Services/Models/::1772473569
-ProfileResponse.cs::CSharpScript::3077731634420152775::1772473569::0::1::::<><><>0<>0<><>::
-::res://ShaderSlop/::1774111534
-BluePurple.tres::GradientTexture2D::6476643249689724885::1774111534::0::1::::<><><>0<>0<><>::
-DarkPurple.tres::GradientTexture2D::3218597359634651731::1774111534::0::1::::<><><>0<>0<><>::
-Game1.tres::GradientTexture2D::503595129483968585::1773939309::0::1::::<><><>0<>0<><>::
-Game2.tres::GradientTexture2D::6254437708092479149::1773939309::0::1::::<><><>0<>0<><>::
-Home1.tres::GradientTexture2D::6859754372738140631::1773939309::0::1::::<><><>0<>0<><>::
-Home2.tres::GradientTexture2D::3098587904130529176::1773939309::0::1::::<><><>0<>0<><>::
-Login1.tres::GradientTexture2D::1940596010064889515::1773939309::0::1::::<><><>0<>0<><>::
-Login2.tres::GradientTexture2D::5559288019053623605::1773939309::0::1::::<><><>0<>0<><>::
-NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774111534::0::1::::<><><>0<>0<><>::
-::res://Sys/::1773939301
-ApprovedInis.json::JSON::-1::1773939301::0::1::::<><><>0<>0<><>::
-triforcetdb-en.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-de.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-en.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-es.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-fr.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-it.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-ja.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-ko.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-nl.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-pt.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-ru.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-zh_CN.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-wiitdb-zh_TW.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-::res://Sys/GC/::1773939301
-font-licenses.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
-::res://UI/::1772319179
-FriendInbox.cs::CSharpScript::4117037499602220883::1772319179::0::1::::<>PopupPanel<><>0<>0<><>::
-FriendRequestItem.cs::CSharpScript::7844878079273845639::1771704343::0::1::::<>Panel<><>0<>0<><>::
-InboxItem.cs::CSharpScript::5619153750257441564::1771705540::0::1::::<>Panel<><>0<>0<><>::
-ScreenTransition.tscn::PackedScene::8578204708515963603::1772312916::0::1::::<><><>0<>0<><>::uid://b8754jh3b5v8g::::res://Helpers/ScreenTransition.cs
-::res://User/::1773939301
-::res://User/Cache/::1773939301
-::res://User/GC/::1773939301
-::res://User/GC/USA/::1773939301
-::res://User/GC/USA/Card A/::1773939301
-::res://User/Wii/::1773939301
-::res://User/Wii/shared2/::1773939301
-::res://User/Wii/shared2/sys/::1773939301
-::res://Videos/::1772337086
-sh2 background larger.ogv::VideoStreamTheora::5457824372431240263::1772333710::0::1::::<><><>0<>0<><>::
->>>>>>> Stashed changes
+::res://::1774190308
+Achievements.tscn::PackedScene::9222093291491280280::1772481539::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png
+AchievementScreen.cs::CSharpScript::6693889573278468072::1770848136::0::1::::<>Control<><>0<>0<><>::
+achievement_card.tscn::PackedScene::3050951422021996085::1770756662::0::1::::<><><>0<>0<><>::
+ActivityManager.cs::CSharpScript::8943100140033219748::1774113000::0::1::::<><><>0<>0<><>::
+AppearanceSettings.cs::CSharpScript::9023499664744789::1774190221::0::1::::<>Control<><>0<>0<><>::
+AppearanceSettings.tscn::PackedScene::2144777721437288356::1774190221::0::1::::<><><>0<>0<><>::uid://emu61kksnyb::::res://AppearanceSettings.cs
+AudioManager.tscn::PackedScene::6506420070939653425::1772135086::0::1::::<><><>0<>0<><>::uid://cegs0xqk2507d::::res://AudioManager.cs
+BackgroundShader.gdshader::Shader::6437037093189678268::1773682044::0::1::::<><><>0<>0<><>::
+BackgroundVisual.tres::VisualShader::9162325003688541754::1774190221::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
+Collections.cs::CSharpScript::7606717320363974664::1774105337::0::1::::<>Control<><>0<>0<><>::
+collections.json::JSON::-1::1772487885::0::1::::<><><>0<>0<><>::
+Collections.tscn::PackedScene::5700284930515526576::1774104736::0::1::::<><><>0<>0<><>::uid://dgm0r1qq55ebg::::res://Collections.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
+CRT.gdshader::Shader::3824840634527991866::1773682044::0::1::::<><><>0<>0<><>::
+export_presets.cfg::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+FriendsList.cs::CSharpScript::6371099269646437739::1770673123::0::1::::<>Node<><>0<>0<><>::
+FriendsList.tscn::PackedScene::1855649014337715298::1770673123::0::1::::<><><>0<>0<><>::
+friend_request_item.tscn::PackedScene::5952679683128112426::1771955430::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
+GameSelect.cs::CSharpScript::6550570635931546279::1774190221::0::1::::<>Control<><>0<>0<><>::
+GameSelect.tscn::PackedScene::6344109642126286492::1774190221::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://game_cover_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bjj1k8ig6w0dr::::res://Images/trophy icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
+game_cover_card.tscn::PackedScene::-1::1774190221::0::1::::<><><>0<>0<><>::
+GlobalBackground.cs::CSharpScript::3091197486066506122::1774190221::0::1::::<>CanvasLayer<><>0<>0<><>::
+GlobalBackground.tscn::PackedScene::3758351685751846875::1774105345::0::1::::<><><>0<>0<><>::uid://bkbntobikh6hi::::res://GlobalBackground.cs<>uid://d3skfih3bcydu::::res://BackgroundVisual.tres
+HomeScreen.cs::CSharpScript::3450512667325572821::1774190221::0::1::::<>Control<><>0<>0<><>::
+HomeScreen.tscn::PackedScene::3595765915259507013::1774113743::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
+icon.svg::CompressedTexture2D::143724492836120447::1770514941::1774105345::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+inbox.tscn::PackedScene::95044556963901650::1771955430::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
+inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1771955435::0::1::::<><><>0<>0<><>::
+LibretroGame.cs::CSharpScript::1815289238835525547::1772472254::0::1::::<>Control<><>0<>0<><>::
+LibretroGame.tscn::PackedScene::-1::1772472254::0::1::::<><><>0<>0<><>::res://LibretroGame.cs
+LibretroHost.cs::CSharpScript::5191850242086797574::1774105338::0::1::::<><><>0<>0<><>::
+Login.cs::CSharpScript::2130692794859400076::1774190221::0::1::::<>Control<><>0<>0<><>::
+LoginScreen.tscn::PackedScene::6750562284961884728::1774190221::0::1::::<><><>0<>0<><>::uid://5meg1c2i140w::::res://Login.cs
+platform_card.tscn::PackedScene::-1::1772472255::0::1::::<><><>0<>0<><>::
+Playtime.cs::CSharpScript::7832999524251257481::1774112018::0::1::::<>Node<><>0<>0<><>::
+playtime.json::JSON::-1::1774111920::0::1::::<><><>0<>0<><>::
+Profile.cs::CSharpScript::7879751291555930961::1774105338::0::1::::<>Control<><>0<>0<><>::
+profile.tscn::PackedScene::387046989646537699::1774105338::0::1::::<><><>0<>0<><>::uid://dkjal8rw8w85r::::res://Profile.cs<>uid://dhwqlqt8712qy::::res://souljaboytellem.jpg
+ProfileSettings.cs::CSharpScript::251846148516989756::1774105338::0::1::::<>Control<><>0<>0<><>::
+ProfileSettings.tscn::PackedScene::532538915849641301::1774105338::0::1::::<><><>0<>0<><>::uid://dt84s428syeu::::res://ProfileSettings.cs
+README.md::TextFile::-1::1770673124::0::1::::<><><>0<>0<><>::
+Register.cs::CSharpScript::8838925792148172637::1774105338::0::1::::<>Control<><>0<>0<><>::
+RegisterScreen.tscn::PackedScene::2330346922626633503::1774105338::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
+ResetPassword.cs::CSharpScript::7752308560448638781::1774190221::0::1::::<><><>0<>0<><>::
+ResetPasswordScreen.tscn::PackedScene::636400489347355775::1774190221::0::1::::<><><>0<>0<><>::uid://dipjnidtkq8hl::::res://ResetPassword.cs
+Settings.cs::CSharpScript::3843929784724654196::1774105338::0::1::::<>Control<><>0<>0<><>::
+Settings.tscn::PackedScene::2632010473024774744::1774105338::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>res://AppearanceSettings.tscn
+souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1770673124::1774105345::1::::<><><>0<>0<>342c1d92eb558274773f082c2d8a2cf3<>res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex::
+Vault.cs::CSharpScript::2866193499456904334::1774105338::0::1::::<>Control<><>0<>0<><>::
+vault.tscn::PackedScene::5361122654817674866::1774105338::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
+WelcomeScreen.cs::CSharpScript::5996109094376545087::1774190221::0::1::::<>Control<><>0<>0<><>::
+WelcomeScreen.tscn::PackedScene::4526708404385782447::1774190221::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png<>uid://buq1ti2e1ebm5::::res://CRT.gdshader
+::res://addons/::1770673124
+::res://addons/spanning_table/::1774105345
+plugin.cfg::TextFile::-1::1770673124::0::1::::<><><>0<>0<><>::
+spanning_cell_container.gd::GDScript::6629457065888776101::1770673124::0::1::::SpanningCellContainer<>Container<><>0<>1<><>::
+spanning_cell_icon.svg::CompressedTexture2D::5416843449976166262::1770673124::1774105345::1::::<><><>0<>0<>520e7de3aa50804bc33e7d8ce39cd8f2<>res://.godot/imported/spanning_cell_icon.svg-c7dc21c145a73f86a807db800122f615.ctex::
+spanning_table_container.gd::GDScript::6337152408986593699::1770673124::0::1::::SpanningTableContainer<>Container<><>0<>1<><>::
+spanning_table_container_plugin.gd::GDScript::4159832820899278075::1770673124::0::1::::<>EditorPlugin<><>0<>1<><>::
+spanning_table_icon.png::CompressedTexture2D::3272762204369011089::1770673124::1774105345::1::::<><><>0<>0<>1022d89efeca3925228fcd10a763cbe1<>res://.godot/imported/spanning_table_icon.png-08e98fd5c5c70da5a1bc088fe9db8fab.ctex::
+spanning_table_icon.svg::CompressedTexture2D::4233690390075957967::1770673124::1774105345::1::::<><><>0<>0<>c78bdb0d4476904aacca8bd03793443f<>res://.godot/imported/spanning_table_icon.svg-aeecf44d4bd55facf2289176e290cde8.ctex::
+::res://addons/spanning_table/test/::1770673124
+test_spanning_table.tscn::PackedScene::5442060569244470804::1770673124::0::1::::<><><>0<>0<><>::res://addons/spanning_table/spanning_table_container.gd<>res://addons/spanning_table/spanning_cell_container.gd
+::res://audio/::1774105346
+click.wav::AudioStreamWAV::853492358556649020::1772135003::1774105346::1::::<><><>0<>0<>91f36ab14767d96bde5fe589b640ff75<>res://.godot/imported/click.wav-fd13f10d6f727710e39f04648321cf68.sample::
+::res://dolphin-emu/::1774105338
+::res://dolphin-emu/User/::1774105338
+::res://dolphin-emu/User/Cache/::1774105338
+::res://dolphin-emu/User/GC/::1774105338
+::res://dolphin-emu/User/GC/USA/::1774105338
+::res://dolphin-emu/User/GC/USA/Card A/::1774105338
+::res://dolphin-emu/User/Wii/::1774105338
+::res://dolphin-emu/User/Wii/shared2/::1774105338
+::res://dolphin-emu/User/Wii/shared2/sys/::1774105338
+::res://Emu/::1772472254
+::res://Emu/Libretro/::1774105338
+FileLogger.cs::CSharpScript::4875747403792471641::1774105337::0::1::::<><><>0<>0<><>::
+ILibraryLoader.cs::CSharpScript::2609588552559985180::1774105337::0::1::::<><><>0<>0<><>::
+InputMapper.cs::CSharpScript::1868629139134963920::1774105337::0::1::::<>Node<><>0<>0<><>::
+LibraryLoaderFactory.cs::CSharpScript::751530579940077854::1774105337::0::1::::<><><>0<>0<><>::
+LibretroNative.cs::CSharpScript::8479103474522252367::1774105337::0::1::::<>Node<><>0<>0<><>::
+LibretroPlayer.cs::CSharpScript::6353045369317325432::1774105338::0::1::::<>Node<><>0<>0<><>::
+NativeLibraryLoader.cs::CSharpScript::5253934811413773685::1774105338::0::1::::<><><>0<>0<><>::
+UnixLibraryLoader.cs::CSharpScript::333137773481165854::1772472254::0::1::::<><><>0<>0<><>::
+::res://Emu/Libretro/windows/::1772472254
+WindowsLibraryLoader.cs::CSharpScript::5486143438762551720::1772472254::0::1::::<><><>0<>0<><>::
+::res://Helpers/::1774105539
+AudioManager.cs::CSharpScript::5067121792425677447::1772472254::0::1::::<>Node<><>0<>0<><>::
+ScreenTransition.cs::CSharpScript::4770586394482833404::1774105539::0::1::::<>CanvasLayer<><>0<>0<><>::
+::res://Images/::1774105346
+arrow left icon.png::CompressedTexture2D::6250585574779176309::1772481539::1772481548::1::::<><><>0<>0<>d40375005534bb6c7f99b97462274a27<>res://.godot/imported/arrow left icon.png-c622747a261e398f06ee12ce2ad5af9d.ctex::
+chat icon.png::CompressedTexture2D::730754731589020984::1772481539::1772481548::1::::<><><>0<>0<>e66e8f2769c908ad0043ffdc013e5c3d<>res://.godot/imported/chat icon.png-2b2f4028e143a9fbae1b597cc26fac16.ctex::
+folders icon.png::CompressedTexture2D::6845460153447156746::1772481539::1772481548::1::::<><><>0<>0<>ba1d059851a38d78afe02a29a5404679<>res://.godot/imported/folders icon.png-334fc776bc3147e6d2641f419e292551.ctex::
+funny desktop icon.png::CompressedTexture2D::5073403619527740689::1772124137::1774105345::1::::<><><>0<>0<>5839e98b505726028ecf59f4ad3a638f<>res://.godot/imported/funny desktop icon.png-3a4e234f0f2cf1578785c840250536cf.ctex::
+inbox icon.png::CompressedTexture2D::3080503807257765394::1772481539::1772481548::1::::<><><>0<>0<>4c3e3bc2e220539711ddf772295aefe3<>res://.godot/imported/inbox icon.png-35f96c24aee6c85466c5354ae9661805.ctex::
+list icon.png::CompressedTexture2D::5174006076936794555::1772481539::1772481548::1::::<><><>0<>0<>dbcae85b244bc59d4d1b5f581b13b139<>res://.godot/imported/list icon.png-9a15418882132bfc8f86d7f1eeef311b.ctex::
+outline (standalone).png::CompressedTexture2D::7417877986711891871::1771704613::1774105346::1::::<><><>0<>0<>5915ee50ecd32309781f4ac24cfec07d<>res://.godot/imported/outline (standalone).png-82c5eb4df0defbc1bff2f3d042f5252b.ctex::
+PGEmu Desktop Icon.png::CompressedTexture2D::8810990632822693959::1771704613::1774105345::1::::<><><>0<>0<>b40f170f7e7cda720e1dac5975c99115<>res://.godot/imported/PGEmu Desktop Icon.png-ae948e703e64f80f4514a238a749e199.ctex::
+pgemu mini logo.png::CompressedTexture2D::3875546998002212737::1772124137::1774105345::1::::<><><>0<>0<>41ab9ff4a1141c2b0c3107d6168ff3dc<>res://.godot/imported/pgemu mini logo.png-cf9542c4ad079f24fa307747ea8813fc.ctex::
+pgemu outline (blue).png::CompressedTexture2D::5051311296511794371::1771704613::1774105346::1::::<><><>0<>0<>b1ab67930ed12c255bd6f9f1a7bf9ed4<>res://.godot/imported/pgemu outline (blue).png-799910ce16a0c9c4cfd0e7e27751e4cb.ctex::
+pgemu outline (green).png::CompressedTexture2D::3189635321433820507::1771704613::1774105346::1::::<><><>0<>0<>361662a779a1ebe09c1983989636894f<>res://.godot/imported/pgemu outline (green).png-853b418328a0162b14d5febcc7d00880.ctex::
+pgemu outline (pink).png::CompressedTexture2D::6716260026277659205::1771704613::1774105346::1::::<><><>0<>0<>c0b6e8f9823be476bcd93210177f7143<>res://.godot/imported/pgemu outline (pink).png-38d58fd1d34415389f85a2c6b0414774.ctex::
+pretty good emulator.png::CompressedTexture2D::7387732663025593870::1771704613::1774105346::1::::<><><>0<>0<>d07c1a78e0a35d2abe989a9066d56300<>res://.godot/imported/pretty good emulator.png-8364920516c0322b22fcc78e4649f97e.ctex::
+profile icon.png::CompressedTexture2D::6027575112359469288::1772481539::1772481548::1::::<><><>0<>0<>d57690c61a02fb6598a76ded8b866e47<>res://.godot/imported/profile icon.png-cdd8e89078f719459972312781347d87.ctex::
+question icon.png::CompressedTexture2D::4516915085665625318::1772481539::1772481548::1::::<><><>0<>0<>8ca16b7b11b1d561a19781c0226e04db<>res://.godot/imported/question icon.png-ecfb6eba821ba307d899f038635232b5.ctex::
+settings icon.png::CompressedTexture2D::4826937912168137300::1772481539::1772481548::1::::<><><>0<>0<>286dbfa2435b7cec9a7adf3689fef2c2<>res://.godot/imported/settings icon.png-7d01bd06aa67cd610a4f19ac58bbbcb0.ctex::
+small arrow left icon.png::CompressedTexture2D::7125684834061436588::1772481539::1772481548::1::::<><><>0<>0<>5659ed9d1f3b7b03e2034a454487b077<>res://.godot/imported/small arrow left icon.png-79a263b9074814fdcb464a1c43ffca0a.ctex::
+small arrow right icon.png::CompressedTexture2D::5985252830179934906::1772481539::1772481548::1::::<><><>0<>0<>2454e4ca614e6772215b4d7844844a73<>res://.godot/imported/small arrow right icon.png-1c9cde35770cad38d5e7dcf4cfcb00ad.ctex::
+trophy icon.png::CompressedTexture2D::3038297921916830267::1772481539::1772481548::1::::<><><>0<>0<>4cb87e6fe746633fe108d7e1042ed9a4<>res://.godot/imported/trophy icon.png-a3a952cbbe2e05cd88a500405a935325.ctex::
+::res://screenshots/::1774105345
+spanning_table_container_demo.png::CompressedTexture2D::7249265451959373567::1770673124::1774105345::1::::<><><>0<>0<>9dc037d4430c1dad684fed4126ce43ca<>res://.godot/imported/spanning_table_container_demo.png-48fc0b92df8dcc7d17b1087e6f81f79c.ctex::
+spanning_table_container_example_1.png::CompressedTexture2D::6678019456609695703::1770673124::1774105345::1::::<><><>0<>0<>3f412d98b111bf9ba84da8a0f59268cd<>res://.godot/imported/spanning_table_container_example_1.png-6c53ce5fde2b5fe679e9d52a631eb7ff.ctex::
+spanning_table_container_inspector_example_1.png::CompressedTexture2D::3578856315294686406::1770673124::1774105345::1::::<><><>0<>0<>750d565edee20af6b2055f930cc35117<>res://.godot/imported/spanning_table_container_inspector_example_1.png-f005c444577aa15d05da422f14286336.ctex::
+spanning_table_container_scene_example_1.png::CompressedTexture2D::282854368447783121::1770673124::1774105345::1::::<><><>0<>0<>e9b241fdaa28ef683ea32fbe72bf8499<>res://.godot/imported/spanning_table_container_scene_example_1.png-171f19710b7fc49886704611a324e38b.ctex::
+::res://Services/::1774190221
+AuthService.cs::CSharpScript::994187413389896066::1774190221::0::1::::<>Node<><>0<>0<><>::
+BrowseLayoutSettings.cs::CSharpScript::8443188763427680006::1774105338::0::1::::<><><>0<>0<><>::
+ControllerService.cs::CSharpScript::6658850858433575865::1773350687::0::1::::<>Node<><>0<>0<><>::
+FriendService.cs::CSharpScript::638228935682986426::1772472254::0::1::::<>Node<><>0<>0<><>::
+InProcessLaunchState.cs::CSharpScript::4897426424976993013::1772472254::0::1::::<><><>0<>0<><>::
+InputRoutingService.cs::CSharpScript::3314707751854982747::1772472254::0::1::::<>Node<><>0<>0<><>::
+LibretroRunner.cs::CSharpScript::7220367243002862339::1774105338::0::1::::<><><>0<>0<><>::
+ProfileService.cs::CSharpScript::3517034232592957849::1772472254::0::1::::<>Node<><>0<>0<><>::
+QuitService.cs::CSharpScript::4103234503971379844::1772472254::0::1::::<>CanvasLayer<><>0<>0<><>::
+UiStyle.cs::CSharpScript::4207572949793757131::1774105338::0::1::::<><><>0<>0<><>::
+::res://Services/Models/::1772472254
+ProfileResponse.cs::CSharpScript::3077731634420152775::1772472254::0::1::::<><><>0<>0<><>::
+::res://ShaderSlop/::1774190221
+BluePurple.tres::GradientTexture2D::6476643249689724885::1774113272::0::1::::<><><>0<>0<><>::
+DarkPurple.tres::GradientTexture2D::3218597359634651731::1774113272::0::1::::<><><>0<>0<><>::
+Game1.tres::GradientTexture2D::503595129483968585::1774105345::0::1::::<><><>0<>0<><>::
+Game2.tres::GradientTexture2D::6254437708092479149::1774105345::0::1::::<><><>0<>0<><>::
+Home1.tres::GradientTexture2D::6859754372738140631::1774190221::0::1::::<><><>0<>0<><>::
+Home2.tres::GradientTexture2D::3098587904130529176::1774190221::0::1::::<><><>0<>0<><>::
+Login1.tres::GradientTexture2D::1940596010064889515::1774105345::0::1::::<><><>0<>0<><>::
+Login2.tres::GradientTexture2D::5559288019053623605::1774105345::0::1::::<><><>0<>0<><>::
+NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774113272::0::1::::<><><>0<>0<><>::
+::res://Sys/::1774105338
+ApprovedInis.json::JSON::-1::1774105338::0::1::::<><><>0<>0<><>::
+triforcetdb-en.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-de.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-en.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-es.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-fr.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-it.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-ja.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-ko.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-nl.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-pt.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-ru.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-zh_CN.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+wiitdb-zh_TW.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+::res://Sys/GC/::1774105338
+font-licenses.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+::res://UI/::1773350580
+FriendInbox.cs::CSharpScript::4117037499602220883::1772472254::0::1::::<>PopupPanel<><>0<>0<><>::
+FriendRequestItem.cs::CSharpScript::7844878079273845639::1771955430::0::1::::<>Panel<><>0<>0<><>::
+InboxItem.cs::CSharpScript::5619153750257441564::1771704613::0::1::::<>Panel<><>0<>0<><>::
+ScreenTransition.tscn::PackedScene::8578204708515963603::1773350580::0::1::::<><><>0<>0<><>::uid://b8754jh3b5v8g::::res://Helpers/ScreenTransition.cs
+::res://User/::1774105338
+::res://User/Cache/::1774105338
+::res://User/GC/::1774105338
+::res://User/GC/USA/::1774105338
+::res://User/GC/USA/Card A/::1774105338
+::res://User/Wii/::1774105338
+::res://User/Wii/shared2/::1774105338
+::res://User/Wii/shared2/sys/::1774105338
+::res://Videos/::1772479068
+sh2 background larger.ogv::VideoStreamTheora::5457824372431240263::1772472255::0::1::::<><><>0<>0<><>::
