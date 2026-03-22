@@ -68,7 +68,7 @@ public partial class HomeScreen : Control
 		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
 
-	public override void _Ready()
+	public async override void _Ready()
 	{
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
 		_cardsRoot = GetNode<Control>(CardsPath);
@@ -109,12 +109,14 @@ public partial class HomeScreen : Control
 		SpawnCards();
 		LayoutCards();
 		UpdateSelectedLabel();
-		SetupFriendHover();
+		
 		
 		 ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
 		ActivityManager.runTimer();
 		
-		FriendActivity.GetFriendsJson();
+		await FriendActivity.GetFriendsJson(this);
+		await FriendActivity.GetActivitiesAsync();
+		SetupFriendHover();
 	}
 
 	private void OnLogoutPressed()
@@ -170,7 +172,20 @@ private void ConnectAllButtons(Node node)
 		ConnectAllButtons(child);
 	}
 }
-private void SetupFriendHover(){
+public void SetupFriendHover(){
+		if (FriendActivity.results.Count == 0){
+			GD.Print("Oops! Empty!");
+		}
+		else{
+			foreach (var p in FriendActivity.results){
+				GD.Print("frogs");
+				GD.Print(p.Key);
+				foreach (var g in p.Value.EnumerateObject()){
+					GD.Print(g);
+				}
+			}
+		}
+	
 		var friendsRow = GetNode<Control>("Margin/Root/CenterArea/FriendsRow");
 
 		int i = 1;

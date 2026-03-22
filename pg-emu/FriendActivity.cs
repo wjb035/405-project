@@ -9,10 +9,11 @@ using System.Collections.Generic;
 public static class FriendActivity
 {
 	private const string BaseUrl = "http://localhost:5276/api/friends";
-	private static List<String> friendIds = new();
-
+	private static List<KeyValuePair<string,string>> friendIds = new();
+	public static Dictionary<KeyValuePair<string,string>, JsonElement> results = new Dictionary<KeyValuePair<string,string>, JsonElement>();
 	
-	public static async Task<Dictionary<string, JsonElement>> GetActivitiesAsync(List<string> userIds)
+	private static HomeScreen homeScreen = null;
+	public static async Task<Dictionary<KeyValuePair<string,string>, JsonElement>> GetActivitiesAsync()
 {
 	var authService = AuthService.Instance;
 	await authService.Refresh();
@@ -22,17 +23,19 @@ public static class FriendActivity
 		return null;
 	}
 
-	var results = new Dictionary<string, JsonElement>();
-
+	var userIds = friendIds;
+	var localResults = new Dictionary<KeyValuePair<string,string>, JsonElement>(); // use local
+	
+	
+	foreach (var uid in userIds){
+		localResults.Add(new KeyValuePair<string,string>(uid.Key, uid.Value), new JsonElement());
+	}
 	foreach (var userIdStr in userIds)
 	{
-		// ----------------------------
-		// Convert string to Guid before calling the API
-		// ----------------------------
-		if (!Guid.TryParse(userIdStr, out Guid userId))
+		if (!Guid.TryParse(userIdStr.Value, out Guid userId))
 		{
-			GD.PrintErr($"[ActivityFetcher] Invalid GUID: {userIdStr}, skipping...");
-			continue; // skip invalid IDs
+			GD.PrintErr($"Invalid GUID: {userIdStr}");
+			continue;
 		}
 
 		var http = new HttpRequest();
@@ -63,7 +66,7 @@ public static class FriendActivity
 			}
 			else
 			{
-				GD.PrintErr($"[ActivityFetcher] Failed for user {userIdStr}, HTTP {code}");
+				GD.PrintErr($"Failed for user HTTP {code}");
 				taskCompletion.SetResult(null);
 			}
 
@@ -71,31 +74,23 @@ public static class FriendActivity
 		};
 
 		string activityUrl = $"http://localhost:5276/api/activity/{userId}";
-	http.Request(activityUrl, headers, HttpClient.Method.Get);
+		http.Request(activityUrl, headers, HttpClient.Method.Get);
 
 		var activityResult = await taskCompletion.Task;
 		if (activityResult.HasValue)
 		{
-			results[userIdStr] = activityResult.Value;
-
-			// ----------------------------
-			// Print the activity immediately
-			// ----------------------------
-			GD.Print($"User ID: {userIdStr}");
-			foreach (var property in activityResult.Value.EnumerateObject())
-			{
-				GD.Print($"    {property.Name}: {property.Value}");
-			}
+			localResults[userIdStr] = activityResult.Value;
 		}
 	}
 
+	results = localResults; 
 	return results;
 }
 
 
 
 
-	public static async Task<string> GetFriendsJson()
+	public static async Task<string> GetFriendsJson(HomeScreen homeScreen)
 	{
 		var authService = AuthService.Instance;
 		// THIS SEEMS LIKE I SHOULDN'T B E DOING THIS.... MAYBE FIX AFTER THE TOKEN ISSUE IS MERGED???
@@ -141,8 +136,8 @@ public static class FriendActivity
 		string username = friend["username"];
 
 		GD.Print("Friend ID: " + id);
-		if (!friendIds.Contains(id)){
-			friendIds.Add(id);
+		if (!friendIds.Contains(new KeyValuePair<string, string>(username,id))){
+			friendIds.Add(new KeyValuePair<string, string>(username,id));
 		}
 		
 		GD.Print("Friend Username: " + username);
@@ -160,7 +155,7 @@ public static class FriendActivity
 
 		GD.Print("[FriendActivity] Sending request...");
 		http.Request(BaseUrl, headers, HttpClient.Method.Get);
-		GetActivitiesAsync(friendIds);
+		
 		return await tcs.Task;
 	}
 	

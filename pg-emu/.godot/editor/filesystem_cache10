@@ -1,19 +1,20 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1774190308
+::res://::1774195085
 Achievements.tscn::PackedScene::9222093291491280280::1772481539::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png
 AchievementScreen.cs::CSharpScript::6693889573278468072::1770848136::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1770756662::0::1::::<><><>0<>0<><>::
-ActivityManager.cs::CSharpScript::8943100140033219748::1774113000::0::1::::<><><>0<>0<><>::
+ActivityManager.cs::CSharpScript::8943100140033219748::1774194311::0::1::::<><><>0<>0<><>::
 AppearanceSettings.cs::CSharpScript::9023499664744789::1774190221::0::1::::<>Control<><>0<>0<><>::
 AppearanceSettings.tscn::PackedScene::2144777721437288356::1774190221::0::1::::<><><>0<>0<><>::uid://emu61kksnyb::::res://AppearanceSettings.cs
 AudioManager.tscn::PackedScene::6506420070939653425::1772135086::0::1::::<><><>0<>0<><>::uid://cegs0xqk2507d::::res://AudioManager.cs
 BackgroundShader.gdshader::Shader::6437037093189678268::1773682044::0::1::::<><><>0<>0<><>::
-BackgroundVisual.tres::VisualShader::9162325003688541754::1774190221::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
+BackgroundVisual.tres::VisualShader::9162325003688541754::1774191946::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
 Collections.cs::CSharpScript::7606717320363974664::1774105337::0::1::::<>Control<><>0<>0<><>::
 collections.json::JSON::-1::1772487885::0::1::::<><><>0<>0<><>::
 Collections.tscn::PackedScene::5700284930515526576::1774104736::0::1::::<><><>0<>0<><>::uid://dgm0r1qq55ebg::::res://Collections.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
 CRT.gdshader::Shader::3824840634527991866::1773682044::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
+FriendActivity.cs::CSharpScript::6723567283691285519::1774194883::0::1::::<><><>0<>0<><>::
 FriendsList.cs::CSharpScript::6371099269646437739::1770673123::0::1::::<>Node<><>0<>0<><>::
 FriendsList.tscn::PackedScene::1855649014337715298::1770673123::0::1::::<><><>0<>0<><>::
 friend_request_item.tscn::PackedScene::5952679683128112426::1771955430::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
@@ -22,7 +23,7 @@ GameSelect.tscn::PackedScene::6344109642126286492::1774190221::0::1::::<><><>0<>
 game_cover_card.tscn::PackedScene::-1::1774190221::0::1::::<><><>0<>0<><>::
 GlobalBackground.cs::CSharpScript::3091197486066506122::1774190221::0::1::::<>CanvasLayer<><>0<>0<><>::
 GlobalBackground.tscn::PackedScene::3758351685751846875::1774105345::0::1::::<><><>0<>0<><>::uid://bkbntobikh6hi::::res://GlobalBackground.cs<>uid://d3skfih3bcydu::::res://BackgroundVisual.tres
-HomeScreen.cs::CSharpScript::3450512667325572821::1774190221::0::1::::<>Control<><>0<>0<><>::
+HomeScreen.cs::CSharpScript::3450512667325572821::1774192072::0::1::::<>Control<><>0<>0<><>::
 HomeScreen.tscn::PackedScene::3595765915259507013::1774113743::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
 icon.svg::CompressedTexture2D::143724492836120447::1770514941::1774105345::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 inbox.tscn::PackedScene::95044556963901650::1771955430::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
@@ -42,7 +43,7 @@ ProfileSettings.tscn::PackedScene::532538915849641301::1774105338::0::1::::<><><
 README.md::TextFile::-1::1770673124::0::1::::<><><>0<>0<><>::
 Register.cs::CSharpScript::8838925792148172637::1774105338::0::1::::<>Control<><>0<>0<><>::
 RegisterScreen.tscn::PackedScene::2330346922626633503::1774105338::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
-ResetPassword.cs::CSharpScript::7752308560448638781::1774190221::0::1::::<><><>0<>0<><>::
+ResetPassword.cs::CSharpScript::7752308560448638781::1774190221::0::1::::<>Control<><>0<>0<><>::
 ResetPasswordScreen.tscn::PackedScene::636400489347355775::1774190221::0::1::::<><><>0<>0<><>::uid://dipjnidtkq8hl::::res://ResetPassword.cs
 Settings.cs::CSharpScript::3843929784724654196::1774105338::0::1::::<>Control<><>0<>0<><>::
 Settings.tscn::PackedScene::2632010473024774744::1774105338::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>res://AppearanceSettings.tscn
@@ -50,7 +51,7 @@ souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1770673124::17741
 Vault.cs::CSharpScript::2866193499456904334::1774105338::0::1::::<>Control<><>0<>0<><>::
 vault.tscn::PackedScene::5361122654817674866::1774105338::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
 WelcomeScreen.cs::CSharpScript::5996109094376545087::1774190221::0::1::::<>Control<><>0<>0<><>::
-WelcomeScreen.tscn::PackedScene::4526708404385782447::1774190221::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png<>uid://buq1ti2e1ebm5::::res://CRT.gdshader
+WelcomeScreen.tscn::PackedScene::4526708404385782447::1774191946::0::1::::<><><>0<>0<><>::uid://crotbndk3td0j::::res://WelcomeScreen.cs<>uid://cj02tm65wto52::::res://Videos/sh2 background larger.ogv<>uid://c2xn26rk444xl::::res://Images/pgemu outline (pink).png<>uid://buq1ti2e1ebm5::::res://CRT.gdshader
 ::res://addons/::1770673124
 ::res://addons/spanning_table/::1774105345
 plugin.cfg::TextFile::-1::1770673124::0::1::::<><><>0<>0<><>::
@@ -126,16 +127,16 @@ QuitService.cs::CSharpScript::4103234503971379844::1772472254::0::1::::<>CanvasL
 UiStyle.cs::CSharpScript::4207572949793757131::1774105338::0::1::::<><><>0<>0<><>::
 ::res://Services/Models/::1772472254
 ProfileResponse.cs::CSharpScript::3077731634420152775::1772472254::0::1::::<><><>0<>0<><>::
-::res://ShaderSlop/::1774190221
-BluePurple.tres::GradientTexture2D::6476643249689724885::1774113272::0::1::::<><><>0<>0<><>::
-DarkPurple.tres::GradientTexture2D::3218597359634651731::1774113272::0::1::::<><><>0<>0<><>::
+::res://ShaderSlop/::1774191946
+BluePurple.tres::GradientTexture2D::6476643249689724885::1774191946::0::1::::<><><>0<>0<><>::
+DarkPurple.tres::GradientTexture2D::3218597359634651731::1774191946::0::1::::<><><>0<>0<><>::
 Game1.tres::GradientTexture2D::503595129483968585::1774105345::0::1::::<><><>0<>0<><>::
 Game2.tres::GradientTexture2D::6254437708092479149::1774105345::0::1::::<><><>0<>0<><>::
 Home1.tres::GradientTexture2D::6859754372738140631::1774190221::0::1::::<><><>0<>0<><>::
 Home2.tres::GradientTexture2D::3098587904130529176::1774190221::0::1::::<><><>0<>0<><>::
 Login1.tres::GradientTexture2D::1940596010064889515::1774105345::0::1::::<><><>0<>0<><>::
 Login2.tres::GradientTexture2D::5559288019053623605::1774105345::0::1::::<><><>0<>0<><>::
-NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774113272::0::1::::<><><>0<>0<><>::
+NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774191945::0::1::::<><><>0<>0<><>::
 ::res://Sys/::1774105338
 ApprovedInis.json::JSON::-1::1774105338::0::1::::<><><>0<>0<><>::
 triforcetdb-en.txt::TextFile::-1::1774105338::0::1::::<><><>0<>0<><>::
