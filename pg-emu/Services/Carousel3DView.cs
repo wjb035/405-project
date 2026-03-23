@@ -268,7 +268,7 @@ public partial class Carousel3DView : SubViewportContainer
                 _dragging = false;
                 MouseFilter = MouseFilterEnum.Pass;
                 // Transfer drag velocity to physics
-                _velocity = _lastDragVelocity;fr
+                _velocity = _lastDragVelocity;
             }
         }
 
