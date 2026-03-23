@@ -16,6 +16,7 @@ public static class RetroAchievementsService
     // NOTE! IF YOU ARE HAVING ISSUES WITH ANY OF THIS, IT'S LIKELY YOUR CONFIG.JSON FILE ISN'T LAID OUT PROPERLY. PLEASE LET ME KNOW
     // IF YOU NEED HELP WITH THIS!!!!!!!!!!!!!!!!!!!!!!
     static string username = "badacctname";
+    //static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYpK";
     static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYtktA4pK";
     const string MediaBaseUrl = "https://retroachievements.org";
 			

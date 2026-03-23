@@ -33,7 +33,7 @@ public partial class AchievementScreen : Control
 			await RetroAchievementsService.achievementGet(AchievementStorage.gameId);
 		}
 		else{
-			await RetroAchievementsService.achievementGet(2689);
+			//await RetroAchievementsService.achievementGet(2689);
 		}
 		
 		
@@ -51,6 +51,7 @@ public partial class AchievementScreen : Control
 				//icons.Add("https://media.retroachievements.org/Badge/"+g.Value.BadgeName+".png");
 			}
 		}
+		
 		iconsAndAchData = iconsAndAchData.OrderByDescending(x => x.Value.EarnedDate).ToList();
 		
 
@@ -134,6 +135,9 @@ dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 
 	// Load icon asynchronously
 	LoadIconFromUrl(icon, iconsAndAchData[i].Key, unlocked);
+}
+if (iconsAndAchData.Count == 0){
+	_topText.Text ="Invalid API Key or RetroAchievements Username";
 }
 
 
