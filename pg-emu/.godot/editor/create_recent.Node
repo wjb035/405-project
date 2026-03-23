@@ -1,3 +1,4 @@
+Button
 HBoxContainer
 VBoxContainer
 ColorRect
@@ -8,7 +9,6 @@ AudioStreamPlayer
 Node
 TextureRect
 Label
-Button
 GridContainer
 Panel
 PopupPanel

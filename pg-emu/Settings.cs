@@ -11,15 +11,20 @@ public partial class Settings : Control
 	[Export] public NodePath VaultScreenPath;
 	[Export] public NodePath AppearanceChoicePath;
 	[Export] public NodePath AppearanceScreenPath;
+	[Export] public NodePath AchievementChoicePath;
+	[Export] public NodePath AchievementScreenPath;
+	
 	
 	private Control _profileScreen;
 	private Control _vaultScreen;
 	private Control _appearanceScreen;
+	private Control _achievementScreen;
 	
 	private Button _back;
 	private Button _profileChoice;
 	private Button _vaultChoice;
 	private Button _appearanceChoice;
+	private Button _achievementChoice;
 	
 	
 	
@@ -30,14 +35,17 @@ public partial class Settings : Control
 		_profileScreen = GetNode<Control>(ProfileScreenPath);
 		_vaultScreen = GetNode<Control>(VaultScreenPath);
 		_appearanceScreen = GetNode<Control>(AppearanceScreenPath);
+		_achievementScreen = GetNode<Control>(AchievementScreenPath);
 		_profileChoice = GetNode<Button>(ProfileChoicePath);
 		_vaultChoice = GetNode<Button>(VaultChoicePath);
 		_appearanceChoice = GetNode<Button>(AppearanceChoicePath);
+		_achievementChoice = GetNode<Button>(AchievementChoicePath);
 		
 		_back.Pressed += GoBack;
 		_profileChoice.Pressed += ShowProfileScreen;
 		_vaultChoice.Pressed += ShowVaultScreen;
 		_appearanceChoice.Pressed += ShowAppearanceScreen;
+		_achievementChoice.Pressed += ShowAchievementScreen;
 		ApplyThemeAesthetic();
 		ShowRequestedScreen();
 		
@@ -56,6 +64,11 @@ public partial class Settings : Control
 		tree.ChangeSceneToFile(returnScene);
 	}
 	
+	
+	public void ShowAchievementScreen(){
+		AudioManager.Instance?.PlaySelect();
+		SetVisibleScreen("achievement");
+	}
 	public void ShowProfileScreen()
 	{
 		AudioManager.Instance?.PlaySelect();
@@ -89,10 +102,12 @@ public partial class Settings : Control
 		_profileScreen.Visible = screen == "profile";
 		_vaultScreen.Visible = screen == "vault";
 		_appearanceScreen.Visible = screen == "appearance";
+		_achievementScreen.Visible = screen == "achievement";
 
 		_profileChoice.ButtonPressed = screen == "profile";
 		_vaultChoice.ButtonPressed = screen == "vault";
 		_appearanceChoice.ButtonPressed = screen == "appearance";
+		_achievementChoice.ButtonPressed = screen == "achievement";
 	}
 
 	private void ApplyThemeAesthetic()
@@ -109,6 +124,7 @@ public partial class Settings : Control
 		StyleSectionButton(_profileChoice);
 		StyleSectionButton(_vaultChoice);
 		StyleSectionButton(_appearanceChoice);
+		StyleSectionButton(_achievementChoice);
 	}
 
 	private static void StyleSectionButton(Button button)
