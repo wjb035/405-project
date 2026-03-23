@@ -5,6 +5,8 @@ using System.IO;
 using PGEmu.app;
 using PGEmu.Helpers;
 using PGEmu.Services;
+using System.Linq;
+
 
 public partial class HomeScreen : Control
 {
@@ -185,25 +187,113 @@ private void ConnectAllButtons(Node node)
 public void SetupFriendHover(){
 		if (FriendActivity.results.Count == 0){
 			GD.Print("Oops! Empty!");
+			// hide all children here 
 		}
 		else{
+			List<KeyValuePair<string,KeyValuePair<string, DateTime>>> fullList = new();
 			foreach (var p in FriendActivity.results){
-				GD.Print("frogs");
-				GD.Print(p.Key);
-				foreach (var g in p.Value.EnumerateObject()){
-					GD.Print(g);
-				}
+				//GD.Print("frogs");
+				GD.Print(p.Key.Key);
+				var listOfStatus = p.Value.EnumerateObject().ToList();
+				GD.Print(listOfStatus[3].Value);
+				GD.Print(listOfStatus[5].Value);
+				fullList.Add(new KeyValuePair<string, KeyValuePair<string, DateTime>>(p.Key.Key, new KeyValuePair<string, DateTime>(listOfStatus[3].Value.GetString(),listOfStatus[5].Value.GetDateTime(	))));;
+			// OK, we have all the friends and their data! now let's show or hide the icons
+			
+		
 			}
+			GD.Print("count of the list is "+ fullList.Count);
+			GD.Print(DateTime.UtcNow);
+				// Brute forcing it...
+				// If they have 0 friends, hide it all
+				if (fullList.Count == 0){
+					
+				}
+				else if (fullList.Count == 1){
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
+					
+					int k = 0;
+					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
+						if (child.Visible == true){
+							string username = fullList[k].Key;
+							string activity = fullList[k].Value.Key;
+							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
+								activity = "Offline";
+							}
+							child.TooltipText = username + "\n"+ activity;
+							k++;
+							
+						}
+					}
+					
+					
+					
+				}
+				else if (fullList.Count == 2){
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
+					int k = 0;
+					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
+						if (child.Visible == true){
+							string username = fullList[k].Key;
+							string activity = fullList[k].Value.Key;
+							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
+								activity = "Offline";
+							}
+							child.TooltipText = username + "\n"+ activity;
+							k++;
+							
+						}
+					}
+				
+				}
+				else if (fullList.Count == 3){
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend3").Visible = true;
+					int k = 0;
+					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
+						if (child.Visible == true){
+							string username = fullList[k].Key;
+							string activity = fullList[k].Value.Key;
+							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
+								activity = "Offline";
+							}
+							child.TooltipText = username + "\n"+ activity;
+							k++;
+							
+						}
+					}
+				
+				}
+				else{
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend3").Visible = true;
+					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/MoreFriends").Visible = true;
+					int realVal = fullList.Count;
+					GetNode<Label>("Margin/Root/CenterArea/FriendsRow/MoreFriends").Text = "+"+ realVal + " more";
+					int k = 0;
+					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
+						if (child.Visible == true){
+							string username = fullList[k].Key;
+							string activity = fullList[k].Value.Key;
+							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
+								activity = "Offline";
+							}
+							child.TooltipText = username + "\n"+ activity;
+							k++;
+							
+						}
+					}
+					
+					
+					
+				}
+			
 		}
 	
-		var friendsRow = GetNode<Control>("Margin/Root/CenterArea/FriendsRow");
-
-		int i = 1;
-		foreach (Control friend in friendsRow.GetChildren())
-		{
-			friend.TooltipText = $"Howdy from friend #{i}\nCan you smell me";
-			i++;
-		}
+		
 	}
 	
 private void OnAnyButtonPressed()

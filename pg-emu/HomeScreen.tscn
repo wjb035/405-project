@@ -161,21 +161,25 @@ layout_mode = 2
 alignment = 1
 
 [node name="Friend1" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=2122993267]
+visible = false
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_friend1")
 
 [node name="Friend2" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=1126889066]
+visible = false
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_friend2")
 
 [node name="Friend3" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=726034347]
+visible = false
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_friend3")
 
 [node name="MoreFriends" type="Label" parent="Margin/Root/CenterArea/FriendsRow" unique_id=962111946]
+visible = false
 layout_mode = 2
 text = "+2 more"
 
