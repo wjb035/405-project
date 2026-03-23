@@ -3,7 +3,10 @@ using System;
 using PGEmu.Services;
 using System.Net.Http;
 using System.Net.Http.Headers;
-
+using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public partial class AchievementSettings : Control
 {
@@ -21,7 +24,11 @@ public partial class AchievementSettings : Control
 	private Label _status = null!;
 	ProfileService _profileService = new ProfileService();
 
-	
+	private static readonly JsonSerializerOptions _jsonOptions = new()
+	{
+		WriteIndented = true,
+		PropertyNameCaseInsensitive = true
+	};
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -57,11 +64,17 @@ public partial class AchievementSettings : Control
 		else{
 			GD.Print(_usernameEdit.Text?.Trim());
 			GD.Print(_apiEdit.Text?.Trim());
-		
+			SaveToJson(new KeyValuePair<string,string>(_usernameEdit.Text?.Trim(),_apiEdit.Text?.Trim()));
 			_status.Text = "RetroAcheivements Settings updated.";
 		}
 	}
 	
+	
+	public static async Task SaveToJson(KeyValuePair<string, string> credentials){
+		await using FileStream createStream = File.Create("credentials.json");
+		await JsonSerializer.SerializeAsync(createStream, credentials, _jsonOptions);
+		Console.WriteLine("Credential data saved.");
+	}
 
 	private void ApplyThemeAesthetic()
 	{
