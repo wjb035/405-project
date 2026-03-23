@@ -253,6 +253,8 @@ public partial class Carousel3DView : SubViewportContainer
         {
             if (mb.Pressed)
             {
+                if (mb.Position.Y < 70f)
+                    return;
                 MouseFilter = MouseFilterEnum.Stop;
                 _dragging = true;
                 _dragStartX = mb.Position.X;
@@ -266,7 +268,7 @@ public partial class Carousel3DView : SubViewportContainer
                 _dragging = false;
                 MouseFilter = MouseFilterEnum.Pass;
                 // Transfer drag velocity to physics
-                _velocity = _lastDragVelocity;
+                _velocity = _lastDragVelocity;fr
             }
         }
 

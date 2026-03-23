@@ -64,71 +64,15 @@ theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1210967862]
+[node name="Root" type="Control" parent="Margin" unique_id=203830593]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=332360183]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-
-[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1193984394]
-custom_minimum_size = Vector2(56, 40)
-layout_mode = 2
-text = "
-"
-icon = ExtResource("3_8s1q4")
-icon_alignment = 1
-expand_icon = true
-
-[node name="TopSpacer" type="Control" parent="Margin/Root/TopBar" unique_id=1933101760]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-
-[node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=2023052200]
-layout_mode = 2
-
-[node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=514724767]
-layout_mode = 2
-text = "         "
-icon = ExtResource("3_ju5ei")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-icon = ExtResource("5_1x65b")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1002384540]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-icon = ExtResource("6_cja7x")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2026026780]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-icon = ExtResource("7_scx6q")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2126903515]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-text = " "
-icon = ExtResource("8_xj10s")
-icon_alignment = 1
-expand_icon = true
-
 [node name="CenterArea" type="Control" parent="Margin/Root" unique_id=1871831154]
-layout_mode = 2
+anchors_preset = 0
+offset_right = 1116.0
+offset_bottom = 584.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -150,9 +94,9 @@ color = Color(0.050980393, 0.050980393, 0.078431375, 0.72156864)
 [node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea" unique_id=1530909692]
 custom_minimum_size = Vector2(1040, 580)
 anchors_preset = 0
-offset_top = -45.157898
+offset_top = -52.52632
 offset_right = 1116.0
-offset_bottom = 601.1579
+offset_bottom = 632.4737
 
 [node name="Cards" type="Control" parent="Margin/Root/CenterArea/CarouselArea" unique_id=770127776]
 layout_mode = 1
@@ -170,10 +114,10 @@ grow_vertical = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/CenterArea/CarouselArea" unique_id=2006590248]
 layout_mode = 0
-offset_left = 14.0
-offset_top = 15.5
-offset_right = 92.0
-offset_bottom = 55.5
+offset_left = 9.0
+offset_top = 99.710526
+offset_right = 87.0
+offset_bottom = 139.71053
 
 [node name="Button" type="Button" parent="Margin/Root/CenterArea/CarouselArea/HBoxContainer" unique_id=757375629]
 layout_mode = 2
@@ -248,13 +192,76 @@ custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
 text = "Play"
 
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=332360183]
+layout_mode = 0
+offset_right = 1116.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1193984394]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "
+"
+icon = ExtResource("3_8s1q4")
+icon_alignment = 1
+expand_icon = true
+
+[node name="TopSpacer" type="Control" parent="Margin/Root/TopBar" unique_id=1933101760]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=2023052200]
+layout_mode = 2
+
+[node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=514724767]
+layout_mode = 2
+text = "         "
+icon = ExtResource("3_ju5ei")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("5_1x65b")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1002384540]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("6_cja7x")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2026026780]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("7_scx6q")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2126903515]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+text = " "
+icon = ExtResource("8_xj10s")
+icon_alignment = 1
+expand_icon = true
+
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1328005150]
 z_index = 1200
-layout_mode = 2
+layout_mode = 0
+offset_top = 632.0
+offset_right = 1116.0
+offset_bottom = 655.0
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 0.75)
 horizontal_alignment = 1
 clip_text = true
 
-[connection signal="pressed" from="Margin/Root/TopBar/TopIcons/BtnAch" to="." method="GoAch"]
 [connection signal="pressed" from="Margin/Root/CenterArea/CarouselArea/HBoxContainer/Button" to="." method="addToCollection"]
+[connection signal="pressed" from="Margin/Root/TopBar/TopIcons/BtnAch" to="." method="GoAch"]
