@@ -71,8 +71,9 @@ size_flags_vertical = 3
 
 [node name="CenterArea" type="Control" parent="Margin/Root" unique_id=1871831154]
 anchors_preset = 0
+offset_top = 47.368412
 offset_right = 1116.0
-offset_bottom = 584.0
+offset_bottom = 631.3684
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
