@@ -25,6 +25,8 @@ public partial class GlobalBackground : CanvasLayer
 	
 	private Dictionary<string, (Texture2D, Texture2D)> screenGradients = new()
 	{
+		{"WelcomeScreen", (GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres"))},
 		{"HomeScreen", (GD.Load<Texture2D>("res://ShaderSlop/Home1.tres"),
 			GD.Load<Texture2D>("res://ShaderSlop/Home2.tres"))},
 		{"GameScreen", (GD.Load<Texture2D>("res://ShaderSlop/Game1.tres"),
@@ -52,14 +54,19 @@ public partial class GlobalBackground : CanvasLayer
 		}
 		
 		// Set defaults for first load
-		_mat.SetShaderParameter("tex_frg_80", default1);
-		_mat.SetShaderParameter("tex_frg_81", default2);
-		_mat.SetShaderParameter("tex_frg_82", default1);
-		_mat.SetShaderParameter("tex_frg_83", default2);
-		_mat.SetShaderParameter("transition2", 0f);
-		
 		currentTex1 = default1;
 		currentTex2 = default2;
+		nextTex1 = default1;
+		nextTex2 = default2;
+		
+		_mat.SetShaderParameter("tex_frg_80", currentTex1);
+		_mat.SetShaderParameter("tex_frg_81", currentTex2);
+		_mat.SetShaderParameter("tex_frg_82", currentTex1);
+		_mat.SetShaderParameter("tex_frg_83", currentTex2);
+		_mat.SetShaderParameter("transition2", 0f);
+		
+		
+		PrintShaderState();
 		
 		//GD.Print("Default gradients applied: DarkPurple & BluePurple");
 	}
@@ -102,17 +109,16 @@ public partial class GlobalBackground : CanvasLayer
 		}
 
 		(nextTex1, nextTex2) = screenGradients[screenName];
-
-		_mat.SetShaderParameter("tex_frg_80", currentTex1);
-		_mat.SetShaderParameter("tex_frg_81", currentTex2);
+		
 		_mat.SetShaderParameter("tex_frg_82", nextTex1);
 		_mat.SetShaderParameter("tex_frg_83", nextTex2);
-
+		
 		_transitionDuration = duration;
 		_transitionValue = 0f;
 		_isTransitioning = true;
 
-	  //  GD.Print($"Transition to '{screenName}' started.");
+		GD.Print($"Transition to '{screenName}' started.");
+		PrintShaderState();
 	}
 
 	public override void _Process(double delta)
@@ -145,18 +151,34 @@ public partial class GlobalBackground : CanvasLayer
 			{
 				_isTransitioning = false;
 
-				// DO NOT reassign tex_frg_80/81 instantly
 				currentTex1 = nextTex1;
 				currentTex2 = nextTex2;
+				
+				_mat.SetShaderParameter("tex_frg_80", currentTex1);
+				_mat.SetShaderParameter("tex_frg_81", currentTex2);
+				_mat.SetShaderParameter("tex_frg_82", currentTex1);
+				_mat.SetShaderParameter("tex_frg_83", currentTex2);
+				
 				_transitionValue = 0f;
-				_mat.SetShaderParameter("transition2", 1f);
-
+				_mat.SetShaderParameter("transition2", 0f);
+				
 				GD.Print("Transition complete.");
 				GD.Print($"  final tex_frg_80 = {currentTex1.ResourcePath}");
 				GD.Print($"  final tex_frg_81 = {currentTex2.ResourcePath}");
 				GD.Print($"  final transition2 = {(float)_mat.GetShaderParameter("transition2"):F3}");
 			}
 		}
+	}
+	
+	private void PrintShaderState()
+	{
+		GD.Print("--- Shader State ---");
+		GD.Print($"  tex_frg_80 = {currentTex1?.ResourcePath ?? "null"}");
+		GD.Print($"  tex_frg_81 = {currentTex2?.ResourcePath ?? "null"}");
+		GD.Print($"  tex_frg_82 = {nextTex1?.ResourcePath ?? "null"}");
+		GD.Print($"  tex_frg_83 = {nextTex2?.ResourcePath ?? "null"}");
+		GD.Print($"  transition2 = {(float)_mat.GetShaderParameter("transition2"):F3}");
+		GD.Print("--------------------");
 	}
 
 }

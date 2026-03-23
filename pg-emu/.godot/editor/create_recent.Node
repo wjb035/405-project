@@ -1,14 +1,14 @@
+HBoxContainer
+VBoxContainer
 ColorRect
 CanvasLayer
 SubViewport
 VideoStreamPlayer
 AudioStreamPlayer
 Node
-VBoxContainer
 TextureRect
 Label
 Button
 GridContainer
-HBoxContainer
 Panel
 PopupPanel

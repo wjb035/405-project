@@ -10,7 +10,10 @@ public partial class Login : Control
 	[Export] public NodePath LoginButtonPath;
 	[Export] public NodePath RegisterButtonPath;
 	[Export] public NodePath ErrorLabelPath;
-
+    [Export] public NodePath ForgotButtonPath;
+    [Export] public NodePath ForgotPanelPath;
+    [Export] public NodePath ForgotEmailPath; 
+    [Export] public NodePath ForgotSubmitPath;
 
 	private LineEdit _username = null!;
 	private LineEdit _password = null!;
@@ -18,6 +21,11 @@ public partial class Login : Control
 	private Button _registerButton = null!;
 	private Button _back = null!;
 	private Label _error = null!;
+	private Button _forgotButton = null!;
+	private Control _forgotPanel = null!;
+	private LineEdit _forgotEmail = null!;
+	private Button _forgotSubmit = null!;
+
 
 	public override void _Ready()
 	{
@@ -27,13 +35,23 @@ public partial class Login : Control
 		_registerButton = GetNode<Button>(RegisterButtonPath);
 		_back = GetNode<Button>(BackPath);
 		_error = GetNode<Label>(ErrorLabelPath);
-
+		_forgotButton = GetNode<Button>(ForgotButtonPath);
+		_forgotPanel = GetNode<Control>(ForgotPanelPath);
+		_forgotEmail = GetNode<LineEdit>(ForgotEmailPath);
+		_forgotSubmit = GetNode<Button>(ForgotSubmitPath);
+		
+		_forgotPanel.Visible = false;
+		
 		ApplyThemeAesthetic();
 		ConfigureInputBehavior();
 
 		_loginButton.Pressed += async () => await AttemptLogin();
 		_back.Pressed += GoBack;
 		_registerButton.Pressed += OpenRegister;
+		
+		_forgotButton.Pressed += ToggleForgotPanel;
+		_forgotSubmit.Pressed += async () => await SubmitForgotPassword();
+
 		
 		if (AuthService.Instance.IsLoggedIn())
 		{
@@ -70,11 +88,16 @@ public partial class Login : Control
 		UiStyle.StylePrimaryButton(_registerButton);
 		UiStyle.TightenButtonContentPadding(_loginButton, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_registerButton, horizontal: 6f, vertical: 2f);
+		UiStyle.StyleLineEdit(_forgotEmail);
+		UiStyle.StylePrimaryButton(_forgotSubmit);
 
 		_loginButton.Text = "Sign In";
 		_registerButton.Text = "Create Account";
 		_username.PlaceholderText = "Username";
 		_password.PlaceholderText = "Password";
+		_forgotEmail.PlaceholderText = "Email address";
+		_forgotSubmit.Text = "Send reset code";
+		_forgotButton.Text = "Forgot password?";
 
 		var userLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/UserLabel");
 		var passLabel = GetNodeOrNull<Label>("Margin/Root/Body/GridContainer/PassLabel");
@@ -136,6 +159,51 @@ public partial class Login : Control
 		AudioManager.Instance?.PlaySelect();
 		GetTree().ChangeSceneToFile("res://RegisterScreen.tscn");
 	}
+	
+	
+	// Makes the forgot password panel visible
+	private void ToggleForgotPanel()
+	{
+		_forgotPanel.Visible = !_forgotPanel.Visible;
+
+		// Clear any previous state when toggling
+		if (_forgotPanel.Visible)
+		{
+			_forgotEmail.Text = "";
+			_error.Text = "";
+			_forgotEmail.GrabFocus();
+		}
+	}
+	
+	// Forgot password workflow
+	private async Task SubmitForgotPassword()
+	{
+		var email = _forgotEmail.Text.Trim();
+
+		if (string.IsNullOrEmpty(email))
+		{
+			_error.Text = "Please enter your email address";
+			return;
+		}
+
+		_forgotSubmit.Disabled = true;
+		_error.Text = "";
+
+		bool success = await AuthService.Instance.ForgotPassword(email);
+
+		_forgotSubmit.Disabled = false;
+
+		if (!success)
+		{
+			_error.Text = "Something went wrong, please try again";
+			return;
+		}
+
+		// Pass the email to the reset screen so it doesn't have to be typed again
+		ResetPassword.PendingEmail = email;
+		GetTree().ChangeSceneToFile("res://ResetPasswordScreen.tscn");
+	}
+
 	
 	private void GoBack()
 	{

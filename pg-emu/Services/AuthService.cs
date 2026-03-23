@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Text;
 using System.Text.Json;
@@ -101,6 +101,30 @@ public partial class AuthService : Node
 		SaveTokensToDisk();
 		return true;
 	}
+
+	// FORGOT PASSWORD
+	public async Task<bool> ForgotPassword(string email)
+	{
+		var response = await SendRequest(
+			BaseUrl + "forgot-password",
+			new { email }
+		);
+		return response != null;
+	}
+	
+	// RESET PASSWORD
+	public async Task<(bool success, string message)> ResetPassword(string email, string code, string newPassword)
+	{
+		var response = await SendRequest(
+			BaseUrl + "reset-password",
+			new { email, code, newPassword }
+		);
+		if (response == null)
+			return (false, "Invalid reset password");
+		
+		var msg = response.Value.TryGetProperty("message", out var m) ? m.GetString()! : "";
+		return  (true, msg);
+	}
 	
 	// REFRESH
 	public async Task<bool> Refresh()
@@ -122,6 +146,7 @@ public partial class AuthService : Node
 		SaveTokensToDisk();
 		return true;
 	}
+	
 	// AUTHORIZED REQUEST WITH AUTO RETRY
 	public async Task<JsonElement?> SendAuthorizedRequest(string endpoint)
 	{
@@ -220,6 +245,7 @@ public partial class AuthService : Node
 		Username = doc.RootElement.TryGetProperty("Username", out var u) ? u.GetString() ?? "" : "";
 	}
 
+	// what do you think this does
 	public void Logout()
 	{
 		AccessToken = "";

@@ -18,7 +18,7 @@ public class ActivityController : ControllerBase
         _activityService = activityService;
     }
 
-    // ✅ SET activity
+    //get activity
     [HttpPost("set")]
     public async Task<IActionResult> SetActivity([FromBody] SetActivityDto dto)
     {
@@ -32,7 +32,7 @@ public class ActivityController : ControllerBase
         return Ok();
     }
 
-    // ✅ GET activity
+    // get activity
     [HttpGet("{userId}")]
     public async Task<ActionResult<UserActivity>> GetActivity(Guid userId)
     {
