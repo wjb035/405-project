@@ -40,6 +40,7 @@ public partial class GameSelect : Control
 	private Button _back = null!;
 	private Button _play = null!;
 	private Button _settings = null!;
+	private Button _friends = null!;
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
 	private VBoxContainer _listRows = null!;
@@ -102,6 +103,7 @@ public partial class GameSelect : Control
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
+		_friends = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
@@ -127,6 +129,7 @@ public partial class GameSelect : Control
 		_back.Pressed += GoBack;
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
+		_friends.Pressed += OpenProfile;
 		ApplyAesthetic();
 		
 		ConnectAllButtons(this);
@@ -147,16 +150,21 @@ private void ConnectAllButtons(Node node)
 {
 	foreach (Node child in node.GetChildren())
 	{
-		if (child is Button button)
+		if (child is Button button &&
+			button != _prev &&
+			button != _next &&
+			button != _play &&
+			button != _back &&
+			button != _settings &&
+			button != _friends &&
+			button != _achievement)
 		{
-			// Correct way to connect in Godot 4 C#
 			button.Pressed += () =>
 			{
-				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+				AudioManager.Instance?.PlayClick();
 			};
 		}
 
-		// Recurse into children
 		ConnectAllButtons(child);
 	}
 }
@@ -164,13 +172,14 @@ private void ConnectAllButtons(Node node)
 private void OnAnyButtonPressed()
 {
 	var audio = GetNode<AudioManager>("/root/AudioManager");
-	audio.PlaySfx("res://audio/click.wav");
+	audio.PlayClick();
 }
 
 
 	private void GoBack()
 	{
 		CollectionStorage.currentCollection = null;
+		AudioManager.Instance?.PlayNavigation(-1);
 		// Navigate back to the home screen scene.
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
@@ -209,6 +218,7 @@ private void OnAnyButtonPressed()
 	}
 	private void OpenVault()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		// Store return context in SceneTree meta so Settings can return here with the same config.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
@@ -221,6 +231,7 @@ private void OnAnyButtonPressed()
 
 	private void OpenProfile()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		// Store return context so Profile can route back to this scene.
 		CollectionStorage.currentCollection = null;
 		var tree = GetTree();
@@ -239,6 +250,7 @@ private void OnAnyButtonPressed()
 	
 	private void GoAch()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		AchievementStorage.gameName = GetSelectedGame().Name;
 		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
 		GetTree().ChangeSceneToFile("res://Achievements.tscn");
@@ -255,6 +267,8 @@ private void OnAnyButtonPressed()
 			SetStatus("No game selected.");
 			return;
 		}
+
+		AudioManager.Instance?.PlaySelect();
 
 		// Use platform from current screen, unless we are launching from a collection entry.
 		var launchPlatform = CollectionStorage.currentCollection == null ? _platform : game.platform;
@@ -864,6 +878,7 @@ private void OnAnyButtonPressed()
 	private void Step(int dir)
 	{
 		if (Count <= 1) return;
+		AudioManager.Instance?.PlayNavigation(dir);
 
 		if (_browseLayout == BrowseLayoutMode.Carousel)
 		{
@@ -880,6 +895,7 @@ private void OnAnyButtonPressed()
 
 		if (_browseLayout == BrowseLayoutMode.Grid)
 		{
+			AudioManager.Instance?.PlayNavigation(dir);
 			SetSelectedIndex(Mathf.Clamp(_selectedIndex + (dir * GridColumns), 0, Count - 1));
 			return;
 		}
@@ -1831,8 +1847,11 @@ private void OnAnyButtonPressed()
 			CustomMinimumSize = new Vector2(180f, 42f),
 			LayoutMode = 2,
 		};
-		UiStyle.StyleTopBarButton(settingsButton);
-		settingsButton.Pressed += OpenVault;
+			UiStyle.StyleTopBarButton(settingsButton);
+			settingsButton.Pressed += () =>
+			{
+				OpenVault();
+			};
 		actionRow.AddChild(settingsButton);
 
 		column.AddChild(eyebrow);

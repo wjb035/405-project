@@ -105,16 +105,20 @@ private void ConnectAllButtons(Node node)
 {
 	foreach (Node child in node.GetChildren())
 	{
-		if (child is Button button)
+		if (child is Button button &&
+			button != _prev &&
+			button != _next &&
+			button != _selectPlatform &&
+			button != _back &&
+			button != _settings &&
+			button != _friends)
 		{
-			// Correct way to connect in Godot 4 C#
 			button.Pressed += () =>
 			{
-				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+				AudioManager.Instance?.PlayClick();
 			};
 		}
 
-		// Recurse into children
 		ConnectAllButtons(child);
 	}
 }
@@ -122,7 +126,7 @@ private void ConnectAllButtons(Node node)
 private void OnAnyButtonPressed()
 {
 	var audio = GetNode<AudioManager>("/root/AudioManager");
-	audio.PlaySfx("res://audio/click.wav");
+	audio.PlayClick();
 }
 	private void OnCollectionPressed()
 {
@@ -163,6 +167,7 @@ private void OnAnyButtonPressed()
 
 	private void OnBackPressed()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://HomeScreen.tscn");
@@ -170,6 +175,7 @@ private void OnAnyButtonPressed()
 
 	private void OnSettingsPressed()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		// Jump to the shared settings screen and return here afterward.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
@@ -181,12 +187,14 @@ private void OnAnyButtonPressed()
 
 	private void OnFriendsPressed()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://profile.tscn");
 	}
 	
 	private void OnAchPressed(){
+		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
@@ -196,6 +204,7 @@ private void OnAnyButtonPressed()
 	}
 	
 	private void OnCollectionsPressed(){
+		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
@@ -223,6 +232,7 @@ private void OnAnyButtonPressed()
 
 		if (idx < 0 || idx >= _platforms.Count) return;
 		var platform = _platforms[idx];
+		AudioManager.Instance?.PlaySelect();
 		GD.Print(platform.Name);
 		
 		// we have to navigate to the games screen, but we have to make sure we're using the right list
@@ -320,6 +330,7 @@ private void OnAnyButtonPressed()
 	private void Step(int dir)
 	{
 		if (Count <= 1) return;
+		AudioManager.Instance?.PlayNavigation(dir);
 		SnapTo(_carouselPos + dir, true);
 	}
 

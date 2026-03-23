@@ -181,6 +181,7 @@ public partial class Profile : Control
 
 	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		// Return to the scene we came from if provided, otherwise go home.
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
@@ -191,12 +192,14 @@ public partial class Profile : Control
 	
 	private void GoFriendsList() 
 	{
+		AudioManager.Instance?.PlaySelect();
 		var tree = GetTree();
 		tree.ChangeSceneToFile("res://FriendsList.tscn");
 	}
 
 	private void GoProfileSettings()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
 		tree.ChangeSceneToFile("res://Settings.tscn");

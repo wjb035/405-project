@@ -19,8 +19,9 @@ public partial class FriendsList : Node
 	}
 	
 	
-		private void GoBack()
+	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;

@@ -105,6 +105,7 @@ public partial class Register : Control
 		if (_registerButton.Disabled)
 			return;
 
+		AudioManager.Instance?.PlaySelect();
 		_error.Text = "";
 
 		// Validate input
@@ -161,6 +162,7 @@ public partial class Register : Control
 
 	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;

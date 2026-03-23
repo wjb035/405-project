@@ -161,6 +161,8 @@ public partial class QuitService : CanvasLayer
 
     private void HidePopup()
     {
+        AudioManager.Instance?.PlayClick();
+
         if (!_quitPopup.Visible)
             return;
 
@@ -177,6 +179,7 @@ public partial class QuitService : CanvasLayer
 
     private void QuitNow()
     {
+        AudioManager.Instance?.PlaySelect();
         GetTree().Quit();
     }
 }

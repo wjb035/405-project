@@ -45,8 +45,9 @@ public partial class Settings : Control
 	
 	}
 	
-		private void GoBack()
+	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		// Return to the scene we came from if provided, otherwise go home.
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
@@ -57,16 +58,19 @@ public partial class Settings : Control
 	
 	public void ShowProfileScreen()
 	{
+		AudioManager.Instance?.PlaySelect();
 		SetVisibleScreen("profile");
 	}
 	
 	public void ShowVaultScreen()
 	{
+		AudioManager.Instance?.PlaySelect();
 		SetVisibleScreen("vault");
 	}
 
 	public void ShowAppearanceScreen()
 	{
+		AudioManager.Instance?.PlaySelect();
 		SetVisibleScreen("appearance");
 	}
 

@@ -22,6 +22,7 @@ public partial class FriendInbox : PopupPanel
 	
 	public void ShowPopup()
 	{
+		AudioManager.Instance?.PlayMessageOpen();
 		GrabFocus();
 		
 		Position = new Vector2I(740,60);

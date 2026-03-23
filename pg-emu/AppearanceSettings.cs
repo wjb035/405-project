@@ -46,6 +46,7 @@ public partial class AppearanceSettings : Control
 
 	private void SaveLayout(BrowseLayoutMode layout)
 	{
+		AudioManager.Instance?.PlaySelect();
 		BrowseLayoutSettings.SetLayout(layout);
 		UpdateUi(layout, announceSave: true);
 	}

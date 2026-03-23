@@ -59,8 +59,10 @@ public partial class HomeScreen : Control
 	// Gamepad navigation (left stick + d-pad)
 	private const float AxisDeadzone = 0.55f;
 	private const int AxisRepeatMs = 180;
+	private const string SelectedPlatformMetaKey = "pgemu_selected_platform_id";
 	private int _leftAxisDir;
 	private long _leftAxisNextMs;
+	private string? _rememberedPlatformId;
 
 	private Tween _tween;
 	
@@ -97,7 +99,8 @@ public partial class HomeScreen : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
-		if (_collections != null) _collections.Pressed += OnCollectionsPressed;
+		if (_collections != null && !_collections.IsConnected(Button.SignalName.Pressed, Callable.From(OnCollectionsPressed)))
+			_collections.Pressed += OnCollectionsPressed;
 		
 		// background transition
 		StartBackgroundTransition();
@@ -107,6 +110,7 @@ public partial class HomeScreen : Control
 		InputRoutingService.Instance?.UnlockUiInput();
 		LoadConfigAndPlatforms();
 		SpawnCards();
+		RestoreSelectedPlatformSelection();
 		LayoutCards();
 		UpdateSelectedLabel();
 		SetupFriendHover();
@@ -155,19 +159,25 @@ private void ConnectAllButtons(Node node)
 {
 	foreach (Node child in node.GetChildren())
 	{
-		if (child is Button button)
+		if (child is Button button &&
+			button != _prev &&
+			button != _next &&
+			button != _selectPlatform &&
+			button != _settings &&
+			button != _friends &&
+			button != _inbox &&
+			button != _collections)
 		{
-			// Correct way to connect in Godot 4 C#
 			button.Pressed += () =>
 			{
-				AudioManager.Instance?.PlaySfx("res://audio/click.wav");
+				AudioManager.Instance?.PlayClick();
 			};
 		}
 
-		// Recurse into children
 		ConnectAllButtons(child);
 	}
 }
+
 private void SetupFriendHover(){
 		var friendsRow = GetNode<Control>("Margin/Root/CenterArea/FriendsRow");
 
@@ -182,13 +192,14 @@ private void SetupFriendHover(){
 private void OnAnyButtonPressed()
 {
 	var audio = GetNode<AudioManager>("/root/AudioManager");
-	audio.PlaySfx("res://audio/click.wav");
+	audio.PlayClick();
 }
 
 
 
 	private void OnSettingsPressed()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		// Jump to the shared settings screen and return here afterward.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
@@ -200,12 +211,14 @@ private void OnAnyButtonPressed()
 
 	private void OnFriendsPressed()
 	{
+		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://profile.tscn");
 	}
 	
 	private void OnAchPressed(){
+		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
@@ -215,6 +228,7 @@ private void OnAnyButtonPressed()
 	}
 	
 	private void OnCollectionsPressed(){
+		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
@@ -246,14 +260,55 @@ private void OnAnyButtonPressed()
 
 		if (idx < 0 || idx >= _platforms.Count) return;
 		var platform = _platforms[idx];
+		AudioManager.Instance?.PlaySelect();
 
 		// Pass selection to the next screen without needing a singleton.
 		var tree = GetTree();
-		tree.SetMeta("pgemu_selected_platform_id", platform.Id);
+		tree.SetMeta(SelectedPlatformMetaKey, platform.Id);
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
 		tree.ChangeSceneToFile("res://GameSelect.tscn");
+	}
+
+	private void RestoreSelectedPlatformSelection()
+	{
+		if (Count == 0)
+			return;
+
+		var tree = GetTree();
+		if (!tree.HasMeta(SelectedPlatformMetaKey))
+			return;
+
+		var platformId = tree.GetMeta(SelectedPlatformMetaKey).AsString();
+		if (string.IsNullOrWhiteSpace(platformId))
+			return;
+
+		for (var i = 0; i < _platforms.Count; i++)
+		{
+			if (!string.Equals(_platforms[i].Id, platformId, StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			_carouselPos = i;
+			_rememberedPlatformId = _platforms[i].Id;
+			return;
+		}
+	}
+
+	private void RememberSelectedPlatformSelection(int idx)
+	{
+		if (idx < 0 || idx >= _platforms.Count)
+			return;
+
+		var platformId = _platforms[idx].Id;
+		if (string.IsNullOrWhiteSpace(platformId))
+			return;
+
+		if (string.Equals(_rememberedPlatformId, platformId, StringComparison.OrdinalIgnoreCase))
+			return;
+
+		GetTree().SetMeta(SelectedPlatformMetaKey, platformId);
+		_rememberedPlatformId = platformId;
 	}
 
 	private void SpawnCards()
@@ -285,7 +340,6 @@ private void OnAnyButtonPressed()
 			if (label != null) label.Text = p.Name;
 		}
 
-		UpdateSelectedLabel();
 		UpdateNavEnabled();
 	}
 
@@ -312,6 +366,7 @@ private void OnAnyButtonPressed()
 	private void Step(int dir)
 	{
 		if (Count <= 1) return;
+		AudioManager.Instance?.PlayNavigation(dir);
 		SnapTo(_carouselPos + dir, true);
 	}
 
@@ -557,6 +612,7 @@ private void OnAnyButtonPressed()
 				_status.Text = _configPath != null
 					? $"{_platforms[idx].Name} selected (loaded {_configPath})"
 					: $"{_platforms[idx].Name} selected";
+			RememberSelectedPlatformSelection(idx);
 		}
 	}
 

@@ -86,6 +86,7 @@ public partial class LibretroGame : Control
 
 	private void ExitToLibrary()
 	{
+		AudioManager.Instance?.PlayClick();
 		_player?.StopGame();
 		GetTree().ChangeSceneToFile(_returnScene);
 	}

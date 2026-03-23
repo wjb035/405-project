@@ -107,10 +107,8 @@ public partial class WelcomeScreen : Control
 	{
 		_continueButton.Disabled = true;
 
-		AudioManager.Instance?.PlaySfx("res://audio/click.wav");
-
 		await FadeOut();
-
+		
 		// After fade completes, go to next scene
 		var nextScene = AuthService.Instance.IsLoggedIn() 
 			? "res://HomeScreen.tscn" 

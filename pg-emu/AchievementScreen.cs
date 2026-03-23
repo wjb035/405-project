@@ -62,7 +62,11 @@ public partial class AchievementScreen : Control
 	btn.SizeFlagsVertical = SizeFlags.ShrinkCenter; // height controlled by CustomMinimumSize
 	btn.CustomMinimumSize = new Vector2(400, 60);  // button size
 	int index = i;
-	btn.Pressed += () => GD.Print($"Button {index + 1} pressed");
+	btn.Pressed += () =>
+	{
+		AudioManager.Instance?.PlayClick();
+		GD.Print($"Button {index + 1} pressed");
+	};
 
 	// HBoxContainer inside button
 	HBoxContainer hbox = new HBoxContainer();
@@ -138,6 +142,7 @@ dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 
 	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;

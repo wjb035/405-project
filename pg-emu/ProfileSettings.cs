@@ -45,6 +45,7 @@ public partial class ProfileSettings : Control
 	
 	public void ChangeUsername() 
 	{
+		AudioManager.Instance?.PlaySelect();
 		
 		GD.Print(_usernameEdit.Text?.Trim());
 		_profileService.SetUsername(_usernameEdit.Text?.Trim());
@@ -53,6 +54,7 @@ public partial class ProfileSettings : Control
 	
 	public void ChangeBio() 
 	{
+		AudioManager.Instance?.PlaySelect();
 		
 		GD.Print(_bioEdit.Text?.Trim());
 		_profileService.SetBio(_bioEdit.Text?.Trim());
@@ -61,6 +63,7 @@ public partial class ProfileSettings : Control
 	
 	public void ChangeAvatar() 
 	{
+		AudioManager.Instance?.PlaySelect();
 		
 		GD.Print(_avatarEdit.Text?.Trim());
 		_profileService.SetAvatar(_avatarEdit.Text?.Trim());

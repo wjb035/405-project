@@ -32,6 +32,7 @@ public partial class FriendRequestItem : InboxItem
 
   private async void OnAccept()
 	{
+		AudioManager.Instance?.PlaySelect();
 		AcceptButton.Disabled = true;
 		DeclineButton.Disabled = true;
 
@@ -56,6 +57,7 @@ public partial class FriendRequestItem : InboxItem
 
 	private async void OnDecline()
 	{
+		AudioManager.Instance?.PlayClick();
 		AcceptButton.Disabled = true;
 		DeclineButton.Disabled = true;
 

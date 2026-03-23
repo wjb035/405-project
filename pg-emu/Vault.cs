@@ -72,6 +72,7 @@ public partial class Vault : Control
 
 	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		// Return to the scene we came from if provided, otherwise go home.
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
@@ -82,6 +83,7 @@ public partial class Vault : Control
 
 	private void OpenBrowse()
 	{
+		AudioManager.Instance?.PlaySelect();
 		// Use current text as the starting directory when possible.
 		var current = _libraryPathEdit.Text?.Trim();
 		if (!string.IsNullOrWhiteSpace(current))
@@ -149,6 +151,7 @@ public partial class Vault : Control
 
 	private void SaveConfig()
 	{
+		AudioManager.Instance?.PlaySelect();
 		try
 		{
 			// Pull value from UI.

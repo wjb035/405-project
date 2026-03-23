@@ -33,10 +33,7 @@ public partial class Login : Control
 
 		_loginButton.Pressed += async () => await AttemptLogin();
 		_back.Pressed += GoBack;
-		_registerButton.Pressed += () =>
-		{
-			GetTree().ChangeSceneToFile("res://RegisterScreen.tscn");
-		};
+		_registerButton.Pressed += OpenRegister;
 		
 		if (AuthService.Instance.IsLoggedIn())
 		{
@@ -116,6 +113,7 @@ public partial class Login : Control
 		if (_loginButton.Disabled)
 			return;
 
+		AudioManager.Instance?.PlaySelect();
 		_error.Text = "";
 		_loginButton.Disabled = true;
 
@@ -132,9 +130,16 @@ public partial class Login : Control
 
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
 	}
+
+	private void OpenRegister()
+	{
+		AudioManager.Instance?.PlaySelect();
+		GetTree().ChangeSceneToFile("res://RegisterScreen.tscn");
+	}
 	
 	private void GoBack()
 	{
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
