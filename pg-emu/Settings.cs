@@ -21,7 +21,7 @@ public partial class Settings : Control
 	private Button _vaultChoice;
 	private Button _appearanceChoice;
 	
-	
+
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()

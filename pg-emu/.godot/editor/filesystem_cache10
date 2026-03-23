@@ -1,14 +1,14 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1774203091
+::res://::1774230103
 Achievements.tscn::PackedScene::9222093291491280280::1772478757::0::1::::<><><>0<>0<><>::uid://c2mtnbcsb556s::::res://AchievementScreen.cs<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png
-AchievementScreen.cs::CSharpScript::6693889573278468072::1771554555::0::1::::<>Control<><>0<>0<><>::
+AchievementScreen.cs::CSharpScript::6693889573278468072::1774204097::0::1::::<>Control<><>0<>0<><>::
 achievement_card.tscn::PackedScene::3050951422021996085::1771554555::0::1::::<><><>0<>0<><>::
 ActivityManager.cs::CSharpScript::8943100140033219748::1774119310::0::1::::<><><>0<>0<><>::
-AppearanceSettings.cs::CSharpScript::9023499664744789::1774119310::0::1::::<>Control<><>0<>0<><>::
-AppearanceSettings.tscn::PackedScene::2144777721437288356::1774119310::0::1::::<><><>0<>0<><>::uid://emu61kksnyb::::res://AppearanceSettings.cs
+AppearanceSettings.cs::CSharpScript::9023499664744789::1774210438::0::1::::<>Control<><>0<>0<><>::
+AppearanceSettings.tscn::PackedScene::2144777721437288356::1774210441::0::1::::<><><>0<>0<><>::uid://emu61kksnyb::::res://AppearanceSettings.cs
 AudioManager.tscn::PackedScene::6506420070939653425::1772155432::0::1::::<><><>0<>0<><>::uid://cegs0xqk2507d::::res://AudioManager.cs
 BackgroundShader.gdshader::Shader::6437037093189678268::1773517709::0::1::::<><><>0<>0<><>::
-BackgroundVisual.tres::VisualShader::9162325003688541754::1774119605::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
+BackgroundVisual.tres::VisualShader::9162325003688541754::1774210321::0::1::::<><><>0<>0<><>::uid://bsjlr0db6rpwn::::res://ShaderSlop/NoiseTexture.tres<>uid://cyjlmrq0fnof2::::res://ShaderSlop/BluePurple.tres<>uid://bl4d3fqlk1yml::::res://ShaderSlop/DarkPurple.tres
 Collections.cs::CSharpScript::7606717320363974664::1773939301::0::1::::<>Control<><>0<>0<><>::
 collections.json::JSON::-1::1773432453::0::1::::<><><>0<>0<><>::
 Collections.tscn::PackedScene::5700284930515526576::1772478730::0::1::::<><><>0<>0<><>::uid://dgm0r1qq55ebg::::res://Collections.cs<>res://platform_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
@@ -17,13 +17,13 @@ export_presets.cfg::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::
 FriendsList.cs::CSharpScript::6371099269646437739::1771554555::0::1::::<>Node<><>0<>0<><>::
 FriendsList.tscn::PackedScene::1855649014337715298::1771554555::0::1::::<><><>0<>0<><>::
 friend_request_item.tscn::PackedScene::5952679683128112426::1771709302::0::1::::<><><>0<>0<><>::uid://dj1d84fq58e7p::::res://UI/FriendRequestItem.cs
-GameSelect.cs::CSharpScript::6550570635931546279::1774119310::0::1::::<>Control<><>0<>0<><>::
-GameSelect.tscn::PackedScene::6344109642126286492::1774119310::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://game_cover_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bjj1k8ig6w0dr::::res://Images/trophy icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
+GameSelect.cs::CSharpScript::6550570635931546279::1774217363::0::1::::<>Control<><>0<>0<><>::
+GameSelect.tscn::PackedScene::6344109642126286492::1774218796::0::1::::<><><>0<>0<><>::uid://c0le7af1n38k6::::res://GameSelect.cs<>res://game_cover_card.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bjj1k8ig6w0dr::::res://Images/trophy icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
 game_cover_card.tscn::PackedScene::-1::1774119310::0::1::::<><><>0<>0<><>::
 GlobalBackground.cs::CSharpScript::3091197486066506122::1774155388::0::1::::<>CanvasLayer<><>0<>0<><>::
 GlobalBackground.tscn::PackedScene::3758351685751846875::1774118729::0::1::::<><><>0<>0<><>::uid://bkbntobikh6hi::::res://GlobalBackground.cs<>uid://d3skfih3bcydu::::res://BackgroundVisual.tres
 HomeScreen.cs::CSharpScript::3450512667325572821::1774119312::0::1::::<>Control<><>0<>0<><>::
-HomeScreen.tscn::PackedScene::3595765915259507013::1773939309::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
+HomeScreen.tscn::PackedScene::3595765915259507013::1774219018::0::1::::<><><>0<>0<><>::uid://bpfpo7cj41l4p::::res://HomeScreen.cs<>res://platform_card.tscn<>uid://bmbmtxgib04m::::res://inbox.tscn<>uid://cvb3h4i4yd27r::::res://Images/arrow left icon.png<>uid://bj5hphp8f2kgw::::res://Images/inbox icon.png<>uid://c4r8y1ivdhsq1::::res://Images/folders icon.png<>uid://cr42jtmshqpsy::::res://Images/profile icon.png<>uid://kn8on0yl4fns::::res://Images/chat icon.png<>uid://ca1g7yj40dy4s::::res://Images/settings icon.png<>uid://b5ma6w355kjrq::::res://Images/question icon.png<>uid://c8ry8uj564spo::::res://Images/small arrow left icon.png<>uid://crjkifbp36pxy::::res://Images/small arrow right icon.png
 icon.svg::CompressedTexture2D::143724492836120447::1771554555::1774109685::1::::<><><>0<>0<>7edf3b31ca215ecc490207fedea140f1<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 inbox.tscn::PackedScene::95044556963901650::1771711453::0::1::::<><><>0<>0<><>::uid://bywlahchlucp4::::res://UI/FriendInbox.cs<>uid://cq2r088enxgnq::::res://friend_request_item.tscn<>uid://bu2co241aj1r8::::res://inbox_style_flat.tres
 inbox_style_flat.tres::StyleBoxFlat::3846083655025051539::1771710170::0::1::::<><><>0<>0<><>::
@@ -44,8 +44,8 @@ Register.cs::CSharpScript::8838925792148172637::1773939301::0::1::::<>Control<><
 RegisterScreen.tscn::PackedScene::2330346922626633503::1773939301::0::1::::<><><>0<>0<><>::uid://dx6v201kx0ckj::::res://Register.cs
 ResetPassword.cs::CSharpScript::7752308560448638781::1774119312::0::1::::<>Control<><>0<>0<><>::
 ResetPasswordScreen.tscn::PackedScene::636400489347355775::1774119312::0::1::::<><><>0<>0<><>::uid://dipjnidtkq8hl::::res://ResetPassword.cs
-Settings.cs::CSharpScript::3843929784724654196::1773939301::0::1::::<>Control<><>0<>0<><>::
-Settings.tscn::PackedScene::2632010473024774744::1773939301::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>res://AppearanceSettings.tscn
+Settings.cs::CSharpScript::3843929784724654196::1774210016::0::1::::<>Control<><>0<>0<><>::
+Settings.tscn::PackedScene::2632010473024774744::1774210330::0::1::::<><><>0<>0<><>::uid://bu1a7yapn2wxg::::res://Settings.cs<>uid://cim753lbasxqg::::res://vault.tscn<>uid://ht73q5hq63an::::res://ProfileSettings.tscn<>uid://5s7f8el1wpuq::::res://AppearanceSettings.tscn
 souljaboytellem.jpg::CompressedTexture2D::7696992254020133844::1771554555::1774109685::1::::<><><>0<>0<>342c1d92eb558274773f082c2d8a2cf3<>res://.godot/imported/souljaboytellem.jpg-9494a111b70b6f785fe1f0731220343f.ctex::
 Vault.cs::CSharpScript::2866193499456904334::1773939301::0::1::::<>Control<><>0<>0<><>::
 vault.tscn::PackedScene::5361122654817674866::1773939301::0::1::::<><><>0<>0<><>::uid://bg3n12evh7of3::::res://Vault.cs
@@ -113,9 +113,10 @@ spanning_table_container_demo.png::CompressedTexture2D::7249265451959373567::177
 spanning_table_container_example_1.png::CompressedTexture2D::6678019456609695703::1771554555::1774109685::1::::<><><>0<>0<>3f412d98b111bf9ba84da8a0f59268cd<>res://.godot/imported/spanning_table_container_example_1.png-6c53ce5fde2b5fe679e9d52a631eb7ff.ctex::
 spanning_table_container_inspector_example_1.png::CompressedTexture2D::3578856315294686406::1771554555::1774109685::1::::<><><>0<>0<>750d565edee20af6b2055f930cc35117<>res://.godot/imported/spanning_table_container_inspector_example_1.png-f005c444577aa15d05da422f14286336.ctex::
 spanning_table_container_scene_example_1.png::CompressedTexture2D::282854368447783121::1771554555::1774109685::1::::<><><>0<>0<>e9b241fdaa28ef683ea32fbe72bf8499<>res://.godot/imported/spanning_table_container_scene_example_1.png-171f19710b7fc49886704611a324e38b.ctex::
-::res://Services/::1774164656
+::res://Services/::1774218693
 AuthService.cs::CSharpScript::994187413389896066::1774164656::0::1::::<>Node<><>0<>0<><>::
-BrowseLayoutSettings.cs::CSharpScript::8443188763427680006::1773939301::0::1::::<><><>0<>0<><>::
+BrowseLayoutSettings.cs::CSharpScript::8443188763427680006::1774206042::0::1::::<><><>0<>0<><>::
+Carousel3DView.cs::CSharpScript::8186876439739098997::1774218693::0::1::::<>SubViewportContainer<><>0<>0<><>::
 ControllerService.cs::CSharpScript::6658850858433575865::1773432453::0::1::::<>Node<><>0<>0<><>::
 FriendService.cs::CSharpScript::638228935682986426::1772320888::0::1::::<>Node<><>0<>0<><>::
 InProcessLaunchState.cs::CSharpScript::4897426424976993013::1772309992::0::1::::<><><>0<>0<><>::
@@ -126,16 +127,16 @@ QuitService.cs::CSharpScript::4103234503971379844::1772309992::0::1::::<>CanvasL
 UiStyle.cs::CSharpScript::4207572949793757131::1773939301::0::1::::<><><>0<>0<><>::
 ::res://Services/Models/::1772473569
 ProfileResponse.cs::CSharpScript::3077731634420152775::1772473569::0::1::::<><><>0<>0<><>::
-::res://ShaderSlop/::1774119655
-BluePurple.tres::GradientTexture2D::6476643249689724885::1774118604::0::1::::<><><>0<>0<><>::
-DarkPurple.tres::GradientTexture2D::3218597359634651731::1774118604::0::1::::<><><>0<>0<><>::
-Game1.tres::GradientTexture2D::503595129483968585::1773939309::0::1::::<><><>0<>0<><>::
-Game2.tres::GradientTexture2D::6254437708092479149::1773939309::0::1::::<><><>0<>0<><>::
-Home1.tres::GradientTexture2D::6859754372738140631::1774119482::0::1::::<><><>0<>0<><>::
-Home2.tres::GradientTexture2D::3098587904130529176::1774119655::0::1::::<><><>0<>0<><>::
-Login1.tres::GradientTexture2D::1940596010064889515::1773939309::0::1::::<><><>0<>0<><>::
+::res://ShaderSlop/::1774215230
+BluePurple.tres::GradientTexture2D::6476643249689724885::1774210320::0::1::::<><><>0<>0<><>::
+DarkPurple.tres::GradientTexture2D::3218597359634651731::1774210320::0::1::::<><><>0<>0<><>::
+Game1.tres::GradientTexture2D::503595129483968585::1774215090::0::1::::<><><>0<>0<><>::
+Game2.tres::GradientTexture2D::6254437708092479149::1774215090::0::1::::<><><>0<>0<><>::
+Home1.tres::GradientTexture2D::6859754372738140631::1774215090::0::1::::<><><>0<>0<><>::
+Home2.tres::GradientTexture2D::3098587904130529176::1774215230::0::1::::<><><>0<>0<><>::
+Login1.tres::GradientTexture2D::1940596010064889515::1774215230::0::1::::<><><>0<>0<><>::
 Login2.tres::GradientTexture2D::5559288019053623605::1773939309::0::1::::<><><>0<>0<><>::
-NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774118604::0::1::::<><><>0<>0<><>::
+NoiseTexture.tres::NoiseTexture2D::3669098832186751245::1774215090::0::1::::<><><>0<>0<><>::
 ::res://Sys/::1773939301
 ApprovedInis.json::JSON::-1::1773939301::0::1::::<><><>0<>0<><>::
 triforcetdb-en.txt::TextFile::-1::1773939301::0::1::::<><><>0<>0<><>::

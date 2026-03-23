@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bu1a7yapn2wxg" path="res://Settings.cs" id="1_bvb5x"]
 [ext_resource type="PackedScene" uid="uid://cim753lbasxqg" path="res://vault.tscn" id="2_2fv1l"]
 [ext_resource type="PackedScene" uid="uid://ht73q5hq63an" path="res://ProfileSettings.tscn" id="2_mx4kw"]
-[ext_resource type="PackedScene" path="res://AppearanceSettings.tscn" id="3_appr"]
+[ext_resource type="PackedScene" uid="uid://5s7f8el1wpuq" path="res://AppearanceSettings.tscn" id="3_appr"]
 
 [node name="Settings" type="Control" unique_id=166812288]
 layout_mode = 3
@@ -89,6 +89,6 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AppearanceSettings" parent="Margin/HBoxContainer" instance=ExtResource("3_appr")]
+[node name="AppearanceSettings" parent="Margin/HBoxContainer" unique_id=117886063 instance=ExtResource("3_appr")]
 layout_mode = 2
 size_flags_horizontal = 3

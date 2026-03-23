@@ -7,6 +7,7 @@ public enum BrowseLayoutMode
     Carousel,
     List,
     Grid,
+    ThreeD,
 }
 
 public static class BrowseLayoutSettings
@@ -39,6 +40,7 @@ public static class BrowseLayoutSettings
         {
             BrowseLayoutMode.List => "List View",
             BrowseLayoutMode.Grid => "Grid View",
+            BrowseLayoutMode.ThreeD => "3D View",
             _ => "Carousel View",
         };
     }
@@ -49,6 +51,7 @@ public static class BrowseLayoutSettings
         {
             "list" => BrowseLayoutMode.List,
             "grid" => BrowseLayoutMode.Grid,
+            "threed" => BrowseLayoutMode.ThreeD, 
             _ => BrowseLayoutMode.Carousel,
         };
     }
@@ -59,6 +62,7 @@ public static class BrowseLayoutSettings
         {
             BrowseLayoutMode.List => "list",
             BrowseLayoutMode.Grid => "grid",
+            BrowseLayoutMode.ThreeD => "threed",
             _ => "carousel",
         };
     }

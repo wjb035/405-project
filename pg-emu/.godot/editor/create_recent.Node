@@ -1,6 +1,7 @@
+Control
+ColorRect
 HBoxContainer
 VBoxContainer
-ColorRect
 CanvasLayer
 SubViewport
 VideoStreamPlayer
@@ -11,4 +12,3 @@ Label
 Button
 GridContainer
 Panel
-PopupPanel
