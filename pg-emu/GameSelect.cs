@@ -867,7 +867,7 @@ private void OnAnyButtonPressed()
 			{
 				Texture2D? tex = null;
 				if (!string.IsNullOrWhiteSpace(g.CoverArtUrl) &&
-				    CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
+					CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
 				return (g.Title, tex);
@@ -2297,7 +2297,7 @@ private void OnAnyButtonPressed()
 				for (int i = 0; i < _games.Count; i++)
 				{
 					if (string.Equals(_games[i].CoverArtUrl?.Trim(), coverArtUrl.Trim(), 
-						    StringComparison.OrdinalIgnoreCase))
+							StringComparison.OrdinalIgnoreCase))
 					{
 						_carousel3D.UpdateCoverArt(i, texture);
 					}

@@ -7,6 +7,10 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using PGEmu.app;
+using RetroAchievements.Api;
+using Godot;
+using RetroAchievements.Api.Response.Users.Records;
 
 public partial class AchievementSettings : Control
 {
@@ -43,11 +47,24 @@ public partial class AchievementSettings : Control
 	
 		
 		_apiSave.Pressed += ChangeApi;
-		
+		//LoadFromJson();
 
 	}
 	
+	public static async Task LoadFromJson(){
+		if (!File.Exists("credentials.json")){
+			GD.Print("Oops! No credentials.json file was found!");
+			return;
+		}
+		
+		await using FileStream openStream = File.OpenRead("credentials.json");
+		var fileContents = await JsonSerializer.DeserializeAsync<
+			KeyValuePair<string,string>
+		>(openStream, _jsonOptions);
+		
+		GD.Print(fileContents.Key);
 	
+	}
 	
 	public void ChangeApi() 
 	{
@@ -64,8 +81,16 @@ public partial class AchievementSettings : Control
 		else{
 			GD.Print(_usernameEdit.Text?.Trim());
 			GD.Print(_apiEdit.Text?.Trim());
+			
+			RetroAchievementsService.username = _usernameEdit.Text?.Trim();
+			RetroAchievementsService.apiKey = _apiEdit.Text?.Trim();
+			RetroAchievementsService.client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(RetroAchievementsService.username, RetroAchievementsService.apiKey));
+		
+			GD.Print(RetroAchievementsService.apiKey);
+			//vwhMq54xiImAMo35mdQ20UGgYtktA4pK
 			SaveToJson(new KeyValuePair<string,string>(_usernameEdit.Text?.Trim(),_apiEdit.Text?.Trim()));
 			_status.Text = "RetroAcheivements Settings updated.";
+			
 		}
 	}
 	
@@ -75,7 +100,8 @@ public partial class AchievementSettings : Control
 		await JsonSerializer.SerializeAsync(createStream, credentials, _jsonOptions);
 		Console.WriteLine("Credential data saved.");
 	}
-
+	
+	
 	private void ApplyThemeAesthetic()
 	{
 		var bg = GetNodeOrNull<ColorRect>("Bg");

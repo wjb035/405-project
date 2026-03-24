@@ -15,12 +15,13 @@ public static class RetroAchievementsService
     //requires the use of an async task function that we call when the platform is changed
     // NOTE! IF YOU ARE HAVING ISSUES WITH ANY OF THIS, IT'S LIKELY YOUR CONFIG.JSON FILE ISN'T LAID OUT PROPERLY. PLEASE LET ME KNOW
     // IF YOU NEED HELP WITH THIS!!!!!!!!!!!!!!!!!!!!!!
-    static string username = "badacctname";
-    //static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYpK";
-    static string apiKey = "vwhMq54xiImAMo35mdQ20UGgYtktA4pK";
+    public static string username;
+    
+    public static string apiKey;
+    
     const string MediaBaseUrl = "https://retroachievements.org";
 			
-    static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
+    public static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
     public static async Task Retro(
         
         PlatformConfig? selectedPlatform,
