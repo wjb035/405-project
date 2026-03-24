@@ -85,6 +85,9 @@ public partial class GameSelect : Control
 
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
+	
+	// 3D CAROUSEL MODE
+	private Carousel3DView? _carousel3D;
 
 	public override async void _Ready()
 	{
@@ -108,7 +111,9 @@ public partial class GameSelect : Control
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
-			
+		// DEBUG
+		GD.Print($"CarouselArea size: {_carouselArea.Size}, position: {_carouselArea.Position}");
+		
 		
 		_optionButton.Name = "test";
 		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/CarouselArea/HBoxContainer");
@@ -131,6 +136,10 @@ public partial class GameSelect : Control
 		_settings.Pressed += OpenVault;
 		_friends.Pressed += OpenProfile;
 		ApplyAesthetic();
+		
+
+		// background transition
+		StartBackgroundTransition();
 		
 		ConnectAllButtons(this);
 		GD.Print("IN GAME SELECT");
@@ -851,6 +860,20 @@ private void OnAnyButtonPressed()
 		{
 			BuildCarouselCards();
 		}
+		
+		if (_carousel3D != null)
+		{
+			var gameData = _games.Select(g =>
+			{
+				Texture2D? tex = null;
+				if (!string.IsNullOrWhiteSpace(g.CoverArtUrl) &&
+				    CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
+					tex = cached;
+				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
+				return (g.Title, tex);
+			}).ToList();
+			_carousel3D.Populate(gameData, _carouselPos);
+		}
 
 		UpdateNavEnabled();
 	}
@@ -883,6 +906,14 @@ private void OnAnyButtonPressed()
 		if (_browseLayout == BrowseLayoutMode.Carousel)
 		{
 			SnapTo(_carouselPos + dir, overshoot: true);
+			return;
+		}
+
+		if (_browseLayout == BrowseLayoutMode.ThreeD)
+		{
+			// Push velocity directly into the 3D carousel
+			if (_carousel3D != null)
+				_carousel3D.StepDirection(dir);
 			return;
 		}
 
@@ -1188,7 +1219,7 @@ private void OnAnyButtonPressed()
 	private void UpdateNavEnabled()
 	{
 		// Only allow carousel nav when there are multiple real games to move through.
-		var enabled = _browseLayout == BrowseLayoutMode.Carousel && GetActualGameCount() > 1;
+		var enabled = (_browseLayout == BrowseLayoutMode.Carousel || _browseLayout == BrowseLayoutMode.ThreeD) && GetActualGameCount() > 1;
 		_prev.Visible = enabled;
 		_next.Visible = enabled;
 		_prev.Disabled = !enabled;
@@ -1247,8 +1278,17 @@ private void OnAnyButtonPressed()
 		_gridRows.AddThemeConstantOverride("v_separation", 18);
 		_gridScroll.AddChild(_gridRows);
 		_gridShell.AddChild(_gridScroll);
+		
 		_carouselArea.AddChild(_gridShell);
 		_carouselArea.MoveChild(_gridShell, 2);
+		_carousel3D = new Carousel3DView { Name = "Carousel3D", Visible = false };
+		_carousel3D.SelectionChanged += idx => SetSelectedIndex(idx);
+		_carousel3D.LayoutMode = 1;
+		_carousel3D.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_carousel3D.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		_carousel3D.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		_carouselArea.AddChild(_carousel3D);
+		_carousel3D.MouseFilter = Control.MouseFilterEnum.Pass;
 	}
 
 	private PanelContainer CreateBrowseShell(string name)
@@ -1309,6 +1349,7 @@ private void OnAnyButtonPressed()
 
 	private void BuildCarouselCards()
 	{
+		GD.Print($"BuildCarouselCards called, game count: {_games.Count}");
 		foreach (var g in _games)
 		{
 			var card = (Control)CardScene.Instantiate();
@@ -1323,6 +1364,7 @@ private void OnAnyButtonPressed()
 			{
 				coverArt.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
 				coverArt.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+				GD.Print($"Binding cover art for {g.Title}, url={g.CoverArtUrl}"); 
 				BindCoverArt(coverArt, label, g);
 			}
 		}
@@ -1900,6 +1942,8 @@ private void OnAnyButtonPressed()
 		_cardsRoot.Visible = showCarousel;
 		_listShell.Visible = _browseLayout == BrowseLayoutMode.List;
 		_gridShell.Visible = _browseLayout == BrowseLayoutMode.Grid;
+		if (_carousel3D != null)
+			_carousel3D.Visible = _browseLayout == BrowseLayoutMode.ThreeD;
 		ApplySelectionToBrowseEntries();
 		UpdateNavEnabled();
 	}
@@ -2224,7 +2268,9 @@ private void OnAnyButtonPressed()
 		try
 		{
 			byte[] imageData = await CoverArtClient.GetByteArrayAsync(coverArtUrl);
-
+			GD.Print($"Downloaded cover art for {coverArtUrl}"); 
+			GD.Print($"Download complete, this valid? {GodotObject.IsInstanceValid(this)}, artRect valid? {GodotObject.IsInstanceValid(artRect)}");
+			
 			if (!GodotObject.IsInstanceValid(this) ||
 				!GodotObject.IsInstanceValid(artRect) ||
 				!GodotObject.IsInstanceValid(fallbackLabel) ||
@@ -2243,6 +2289,20 @@ private void OnAnyButtonPressed()
 
 			ImageTexture texture = ImageTexture.CreateFromImage(coverArt);
 			CoverArtCache[coverArtUrl] = texture;
+			GD.Print($"_carousel3D null? {_carousel3D == null}, valid? {GodotObject.IsInstanceValid(_carousel3D)}");
+			GD.Print($"Cached texture for {coverArtUrl}");
+			
+			if (_carousel3D != null)
+			{
+				for (int i = 0; i < _games.Count; i++)
+				{
+					if (string.Equals(_games[i].CoverArtUrl?.Trim(), coverArtUrl.Trim(), 
+						    StringComparison.OrdinalIgnoreCase))
+					{
+						_carousel3D.UpdateCoverArt(i, texture);
+					}
+				}
+			}
 
 			if (!artRect.HasMeta("pgemu_cover_art_url") ||
 				artRect.GetMeta("pgemu_cover_art_url").AsString() != coverArtUrl)
@@ -2253,6 +2313,8 @@ private void OnAnyButtonPressed()
 			artRect.Texture = texture;
 			artRect.Visible = true;
 			fallbackLabel.Visible = false;
+			
+			
 		}
 		catch (Exception ex)
 		{
@@ -2391,6 +2453,28 @@ private void OnAnyButtonPressed()
 
 		return null;
 	}
+	
+	// BACKGOURND STUFF
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNode<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+		try
+		{
+			bg.StartTransition("GameScreen", 1.5f);
+			GD.Print("Background transition finished!");
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
+		
+	}
+	
 
 	private static bool IsProbablyAbsolutePath(string path)
 	{

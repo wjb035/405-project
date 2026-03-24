@@ -11,6 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 CarouselButtonPath = NodePath("Margin/Root/Modes/CarouselButton")
+ThreeDButtonPath = NodePath("Margin/Root/Modes/3DCarouselButton")
 ListButtonPath = NodePath("Margin/Root/Modes/ListButton")
 GridButtonPath = NodePath("Margin/Root/Modes/GridButton")
 DescriptionTitlePath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentLayout")
@@ -62,6 +63,12 @@ custom_minimum_size = Vector2(180, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Carousel"
+
+[node name="3DCarouselButton" type="Button" parent="Margin/Root/Modes" unique_id=1511596883]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "3D Carousel"
 
 [node name="ListButton" type="Button" parent="Margin/Root/Modes" unique_id=1424019837]
 custom_minimum_size = Vector2(180, 54)

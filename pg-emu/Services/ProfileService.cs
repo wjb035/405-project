@@ -7,142 +7,82 @@ using PGEmu.Services.Models;
 using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
+using PGEmu.Services.Models;
 
 namespace PGEmu.Services;
 
 
 public partial class ProfileService : Node
 {
-	private readonly System.Net.Http.HttpClient _client = new System.Net.Http.HttpClient();
-	
-	private void ApplyAuthHeader()
-	{
-		var token = AuthService.Instance.AccessToken;
-		GD.Print(token);
+	private AuthService Auth => AuthService.Instance;	
 
-		_client.DefaultRequestHeaders.Authorization =
-			new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);;
-	}
-	
-	// Called when the node enters the scene tree for the first time.
-	public override void _Ready()
-	{
-	}
-
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
-	}
-	
 	public async Task<ProfileResponse> GetMyProfile()
 	{
-		ApplyAuthHeader();
-		
-		var response = await _client.GetAsync("http://localhost:5276/api/profile/me");
-		
-		if (!response.IsSuccessStatusCode)
+		var response = await Auth.SendAuthorizedRequest("http://localhost:5276/api/profile/me");
+		if (response == null)
 		{
-			GD.Print("Error: " + response.StatusCode);
+			GD.Print("Error: GetMyProfile failed or session expired");
 			return null;
 		}
 		
-		var json = await response.Content.ReadAsStringAsync();
+		var profile = JsonSerializer.Deserialize<ProfileResponse>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 		
-		var profile = JsonSerializer.Deserialize<ProfileResponse>(json,
-			new JsonSerializerOptions {PropertyNameCaseInsensitive = true});
-			
 		GD.Print("Username: " + profile.Username);
 		GD.Print("Bio: " + profile.Bio);
 		GD.Print("AvatarUrl: " + profile.AvatarUrl);
 		return profile;
 	}
 	
-		public async void SetUsername(string? newUsername)
+		public async Task SetUsername(string? newUsername)
 	{
-		ApplyAuthHeader();
 		
-		var requestContent = new 
+		var response = await Auth.SendAuthorizedRequest(
+			"http://localhost:5276/api/profile/username",
+			new { newUsername },
+			HttpMethod.Put);
+		
+		if (response == null)
 		{
-			newUsername = newUsername
-		};
-		
-		var json = JsonSerializer.Serialize(requestContent);
-		var content = new StringContent(json, Encoding.UTF8, "application/json");
-		
-		var response = await _client.PutAsync(("http://localhost:5276/api/profile/username"), content);
-		
-		if (!response.IsSuccessStatusCode)
-		{
-			GD.Print("Error: " + response.StatusCode);
+			GD.Print("Error: SetUsername failed");
 			return;
 		}
-		
-		json = await response.Content.ReadAsStringAsync();
-		
-		var profile = JsonSerializer.Deserialize<ProfileResponse>(json,
-			new JsonSerializerOptions {PropertyNameCaseInsensitive = true});
-			
-		GD.Print("Username: " + profile.Username);
-		GD.Print("Bio: " + profile.Bio);
+
+		GD.Print("Username updated");
 	}
 	
 	
 	
-	public async void SetBio(string? newBio)
+	public async Task SetBio(string? newBio)
 	{
-		ApplyAuthHeader();
-		
-		var requestContent = new 
+		var response = await Auth.SendAuthorizedRequest(
+			"http://localhost:5276/api/profile/bio",
+			new { newBio },
+			HttpMethod.Put);
+
+		if (response == null)
 		{
-			newBio = newBio
-		};
-		
-		var json = JsonSerializer.Serialize(requestContent);
-		var content = new StringContent(json, Encoding.UTF8, "application/json");
-		
-		var response = await _client.PutAsync(("http://localhost:5276/api/profile/bio"), content);
-		
-		if (!response.IsSuccessStatusCode)
-		{
-			GD.Print("Error: " + response.StatusCode);
+			GD.Print("Error: SetBio failed");
 			return;
 		}
-		
-		json = await response.Content.ReadAsStringAsync();
-		
-		var profile = JsonSerializer.Deserialize<ProfileResponse>(json,
-			new JsonSerializerOptions {PropertyNameCaseInsensitive = true});
-			
-		GD.Print("Username: " + profile.Username);
-		GD.Print("Bio: " + profile.Bio);
+
+		GD.Print("Bio updated");
 	}
 	
 		public async void SetAvatar(string? newAvatarUrl)
 	{
-		ApplyAuthHeader();
-		
-		var requestContent = new 
+		var response = await Auth.SendAuthorizedRequest(
+			"http://localhost:5276/api/profile/avatar",
+			new { newAvatarUrl },
+			HttpMethod.Put);
+
+		if (response == null)
 		{
-			newAvatarUrl = newAvatarUrl
-		};
-		
-		var json = JsonSerializer.Serialize(requestContent);
-		var content = new StringContent(json, Encoding.UTF8, "application/json");
-		
-		var response = await _client.PutAsync(("http://localhost:5276/api/profile/avatar"), content);
-		
-		if (!response.IsSuccessStatusCode)
-		{
-			GD.Print("Error: " + response.StatusCode);
+			GD.Print("Error: SetAvatar failed");
 			return;
 		}
-		
-		json = await response.Content.ReadAsStringAsync();
-		
-		var profile = JsonSerializer.Deserialize<ProfileResponse>(json,
-			new JsonSerializerOptions {PropertyNameCaseInsensitive = true});
-			
-		GD.Print("Username: " + profile.Username);
-		GD.Print("Bio: " + profile.Bio);
+
+		GD.Print("Avatar updated");
 	}
 }

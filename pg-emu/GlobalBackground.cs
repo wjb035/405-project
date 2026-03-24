@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Threading.Tasks;
+using PGEmu.Services;
 using System.Collections.Generic;
 
 public partial class GlobalBackground : CanvasLayer
@@ -69,6 +70,7 @@ public partial class GlobalBackground : CanvasLayer
 		PrintShaderState();
 		
 		//GD.Print("Default gradients applied: DarkPurple & BluePurple");
+		AuthService.Instance.SessionExpired += OnSessionExpired;
 	}
 
 	public void SetOpacity(float value)
@@ -181,4 +183,9 @@ public partial class GlobalBackground : CanvasLayer
 		GD.Print("--------------------");
 	}
 
+	private void OnSessionExpired()
+	{
+		StartTransition("LoginScreen");
+		GetTree().ChangeSceneToFile("res://scenes/LoginScreen.tscn"); // adjust path to match yours
+	}
 }

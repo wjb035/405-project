@@ -4,43 +4,56 @@ using PGEmu.Services;
 public partial class AppearanceSettings : Control
 {
 	[Export] public NodePath CarouselButtonPath;
+	[Export] public NodePath ThreeDButtonPath;
 	[Export] public NodePath ListButtonPath;
 	[Export] public NodePath GridButtonPath;
 	[Export] public NodePath DescriptionTitlePath;
 	[Export] public NodePath DescriptionBodyPath;
 	[Export] public NodePath StatusPath;
 	[Export] public NodePath CarouselPreviewPath;
+	[Export] public NodePath ThreeDPreviewPath;
 	[Export] public NodePath ListPreviewPath;
 	[Export] public NodePath GridPreviewPath;
 
+
+
+
 	private Button _carouselButton = null!;
+	private Button _threeDButton = null!;
 	private Button _listButton = null!;
 	private Button _gridButton = null!;
 	private Label _descriptionTitle = null!;
 	private Label _descriptionBody = null!;
 	private Label _status = null!;
 	private Control _carouselPreview = null!;
+	private Control _threeDPreview = null!;
 	private Control _listPreview = null!;
 	private Control _gridPreview = null!;
+
 
 	public override void _Ready()
 	{
 		_carouselButton = GetNode<Button>(CarouselButtonPath);
+		_threeDButton = GetNode<Button>(ThreeDButtonPath);
 		_listButton = GetNode<Button>(ListButtonPath);
 		_gridButton = GetNode<Button>(GridButtonPath);
 		_descriptionTitle = GetNode<Label>(DescriptionTitlePath);
 		_descriptionBody = GetNode<Label>(DescriptionBodyPath);
 		_status = GetNode<Label>(StatusPath);
 		_carouselPreview = GetNode<Control>(CarouselPreviewPath);
+		_threeDPreview = GetNode<Control>(ThreeDPreviewPath);
 		_listPreview = GetNode<Control>(ListPreviewPath);
 		_gridPreview = GetNode<Control>(GridPreviewPath);
+
+
 
 		ApplyThemeAesthetic();
 
 		_carouselButton.Pressed += () => SaveLayout(BrowseLayoutMode.Carousel);
 		_listButton.Pressed += () => SaveLayout(BrowseLayoutMode.List);
 		_gridButton.Pressed += () => SaveLayout(BrowseLayoutMode.Grid);
-
+		_threeDButton.Pressed += () => SaveLayout(BrowseLayoutMode.ThreeD);
+		
 		UpdateUi(BrowseLayoutSettings.GetLayout(), announceSave: false);
 	}
 
@@ -56,7 +69,8 @@ public partial class AppearanceSettings : Control
 		_carouselButton.ButtonPressed = layout == BrowseLayoutMode.Carousel;
 		_listButton.ButtonPressed = layout == BrowseLayoutMode.List;
 		_gridButton.ButtonPressed = layout == BrowseLayoutMode.Grid;
-
+		_threeDButton.ButtonPressed   = layout == BrowseLayoutMode.ThreeD; 
+		
 		_descriptionTitle.Text = BrowseLayoutSettings.GetLabel(layout);
 		_descriptionBody.Text = layout switch
 		{
@@ -64,6 +78,7 @@ public partial class AppearanceSettings : Control
 				"A more compact layout.",
 			BrowseLayoutMode.Grid =>
 				"A wall of larger tiles, built for couch browsing, and quick pick-up play.",
+			BrowseLayoutMode.ThreeD => "A 3D shelf of animated game cases.",
 			_ =>
 				"The Default PGEmu carousel.",
 		};
@@ -93,7 +108,8 @@ public partial class AppearanceSettings : Control
 		StyleModeButton(_carouselButton);
 		StyleModeButton(_listButton);
 		StyleModeButton(_gridButton);
-
+		StyleModeButton(_threeDButton); 
+		
 		var preview = GetNodeOrNull<PanelContainer>("Margin/Root/Stage");
 		if (preview != null)
 		{
