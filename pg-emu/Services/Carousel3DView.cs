@@ -6,6 +6,7 @@ namespace PGEmu.Services;
 public partial class Carousel3DView : SubViewportContainer
 {
     // Physics
+    private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
     private const float Friction = 4.5f;
     private const float DragScale = 0.004f;
@@ -19,6 +20,9 @@ public partial class Carousel3DView : SubViewportContainer
     // Carousel state (mirrors GameSelect._carouselPos)
     public float CarouselPos { get; private set; } = 0f;
     private int _count = 0;
+    private float _spinAudioPos = 0f;
+    private float _lastSpinAudioCarouselPos = 0f;
+    private int _lastSpinAudioStep = 0;
 
     // 3D scene internals
     private SubViewport _viewport;
@@ -104,7 +108,7 @@ public partial class Carousel3DView : SubViewportContainer
         _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
         
     }
-    
+
     // Call this from GameSelect after loading games to clear everything and rebuild
     public void Populate(List<(string title, Texture2D? coverArt)> games, float initialPos)
     {
@@ -116,7 +120,10 @@ public partial class Carousel3DView : SubViewportContainer
         _baseMaterials.Clear();
         
         _count = games.Count;
-        CarouselPos = initialPos;
+        CarouselPos = WrapPos(initialPos);
+        _spinAudioPos = CarouselPos;
+        _lastSpinAudioCarouselPos = CarouselPos;
+        _lastSpinAudioStep = Mathf.RoundToInt(_spinAudioPos);
 
         for (int i = 0; i < games.Count; i++)
         {
@@ -216,11 +223,18 @@ public partial class Carousel3DView : SubViewportContainer
     public override void _Process(double delta)
     {
         _mouseIdleTime += delta;
+
+        if (IsCarouselMoving() && _hoveredIdx != -1)
+        {
+            OnBoxHoverExit(_hoveredIdx);
+            _hoveredIdx = -1;
+        }
         
         if (!_dragging && Mathf.Abs(_velocity) > 0.001f)
         {
             CarouselPos += _velocity * (float)delta;
             CarouselPos = WrapPos(CarouselPos);
+            UpdateSpinAudioFromMotion();
             _velocity = Mathf.Lerp(_velocity, 0f, Friction * (float)delta);
 
             // Snap when nearly stopped
@@ -230,7 +244,8 @@ public partial class Carousel3DView : SubViewportContainer
                 var nearest = Mathf.Round(CarouselPos);
                 CarouselPos = WrapPos(nearest);
                 SelectionChanged?.Invoke(WrapIndex(Mathf.RoundToInt(CarouselPos)));
-                ElasticSnapSelected(); 
+                ElasticSnapSelected();
+                AudioManager.Instance?.PlayCarouselSpin();
             }
         }
 
@@ -243,6 +258,11 @@ public partial class Carousel3DView : SubViewportContainer
         }
 
         LayoutBoxes();
+    }
+
+    public override void _ExitTree()
+    {
+        AudioManager.Instance?.StopCarouselHover(false);
     }
     
     
@@ -257,6 +277,7 @@ public partial class Carousel3DView : SubViewportContainer
                     return;
                 MouseFilter = MouseFilterEnum.Stop;
                 _dragging = true;
+                AudioManager.Instance?.StopCarouselHover();
                 _dragStartX = mb.Position.X;
                 _dragStartPos = CarouselPos;
                 _lastDragX = mb.Position.X;
@@ -276,6 +297,7 @@ public partial class Carousel3DView : SubViewportContainer
         {
             var dx = mm.Position.X - _dragStartX;
             CarouselPos = WrapPos(_dragStartPos - dx * DragScale * 5f);
+            UpdateSpinAudioFromMotion();
 
             // Track velocity for fling
             _lastDragVelocity = (mm.Position.X - _lastDragX) * -0.001f * FlingMultiplier * 30f;
@@ -297,18 +319,19 @@ public partial class Carousel3DView : SubViewportContainer
             var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
             var localPos = GetLocalMousePosition();
             var isOverCenter = localPos.X > Size.X * 0.2f && localPos.X < Size.X * 0.8f;
+            var canHover = !IsCarouselMoving();
             
-            if (isOverCenter && _hoveredIdx != selectedIdx)
+            if (canHover && isOverCenter && _hoveredIdx != selectedIdx)
             {
                 _hoveredIdx = selectedIdx;
                 OnBoxHoverEnter(selectedIdx, localPos);
             }
-            else if (!isOverCenter && _hoveredIdx != -1)
+            else if ((!canHover || !isOverCenter) && _hoveredIdx != -1)
             {
                 OnBoxHoverExit(_hoveredIdx);
                 _hoveredIdx = -1;
             }
-            else if (isOverCenter && _hoveredIdx == selectedIdx)
+            else if (canHover && isOverCenter && _hoveredIdx == selectedIdx)
             {
                 // Update tilt based on mouse position within the card
                 UpdateHoverTilt(selectedIdx, localPos);
@@ -325,6 +348,9 @@ public partial class Carousel3DView : SubViewportContainer
         if (idx >= _boxes.Count) return;
         var box = _boxes[idx];
 
+        if (!_dragging)
+            AudioManager.Instance?.PlayCarouselHover();
+
         _hoverTween?.Kill();
         _hoverTween = CreateTween();
         _hoverTween.SetTrans(Tween.TransitionType.Back);
@@ -338,6 +364,8 @@ public partial class Carousel3DView : SubViewportContainer
     {
         if (idx >= _boxes.Count) return;
         var box = _boxes[idx];
+
+        AudioManager.Instance?.StopCarouselHover();
 
         _hoverTween?.Kill();
         _hoverTween = CreateTween();
@@ -444,9 +472,42 @@ public partial class Carousel3DView : SubViewportContainer
         if (i < 0) i += _count;
         return i;
     }
+
+    private void UpdateSpinAudioFromMotion()
+    {
+        if (_count == 0)
+            return;
+
+        var delta = CarouselPos - _lastSpinAudioCarouselPos;
+        var halfCount = _count * 0.5f;
+
+        if (delta > halfCount)
+            delta -= _count;
+        else if (delta < -halfCount)
+            delta += _count;
+
+        if (Mathf.IsZeroApprox(delta))
+            return;
+
+        _spinAudioPos += delta;
+        _lastSpinAudioCarouselPos = CarouselPos;
+
+        var currentStep = Mathf.RoundToInt(_spinAudioPos);
+        if (currentStep == _lastSpinAudioStep)
+            return;
+
+        _lastSpinAudioStep = currentStep;
+        AudioManager.Instance?.PlayCarouselSpin();
+    }
+
+    private bool IsCarouselMoving()
+    {
+        return _dragging || Mathf.Abs(_velocity) > HoverMotionThreshold;
+    }
     
     public void StepDirection(int dir)
     {
+        AudioManager.Instance?.StopCarouselHover();
         _velocity = dir * -8f; 
     }
     

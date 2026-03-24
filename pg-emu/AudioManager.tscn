@@ -6,3 +6,5 @@
 script = ExtResource("1_2nh25")
 
 [node name="Sfx" type="AudioStreamPlayer" parent="." unique_id=392917724]
+
+[node name="Hover" type="AudioStreamPlayer" parent="."]
