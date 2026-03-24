@@ -183,7 +183,9 @@ public partial class Playtime : Node
 	public async void OnGameClosed()
 {
 	GD.Print("Game closed! Sending playtime...");
-
+	
+	//Set the status as being in the menus, since the user isn't playing anymore
+	ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
 	// Get JWT token from your autoload
 	var authService = (PGEmu.Services.AuthService)GetNode("/root/AuthService");
 	await authService.Refresh(); // refresh token first

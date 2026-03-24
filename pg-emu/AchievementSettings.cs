@@ -88,6 +88,7 @@ public partial class AchievementSettings : Control
 		
 			GD.Print(RetroAchievementsService.apiKey);
 			//vwhMq54xiImAMo35mdQ20UGgYtktA4pK
+			
 			SaveToJson(new KeyValuePair<string,string>(_usernameEdit.Text?.Trim(),_apiEdit.Text?.Trim()));
 			_status.Text = "RetroAcheivements Settings updated.";
 			

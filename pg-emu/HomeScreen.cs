@@ -6,7 +6,7 @@ using PGEmu.app;
 using PGEmu.Helpers;
 using PGEmu.Services;
 using System.Linq;
-
+using System.Diagnostics;
 
 public partial class HomeScreen : Control
 {
@@ -116,9 +116,24 @@ public partial class HomeScreen : Control
 		LayoutCards();
 		UpdateSelectedLabel();
 		
+		// we want to check if any emulator is running when posting the status
+		// cause if they're meandering around the home menu but playing a game 
+		// we don't want that to overtake this
+		bool gameIsRunning = false;
+		foreach (var emulator in PlaytimeStorage.EmulatorToName){
+			
+			Process[] runningEmulators = Process.GetProcessesByName(emulator.Value);
+			if (runningEmulators.Length != 0){
+				gameIsRunning = true;
+				GD.Print(emulator.Value + " is running!");
+				break;
+			}
+		}
+		if (!gameIsRunning){
+			ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
+			ActivityManager.runTimer();
+		}
 		
-		 ActivityManager.SetActivity("Playing", "In the Menus", "GodotClient");
-		ActivityManager.runTimer();
 		
 		await FriendActivity.GetFriendsJson(this);
 		await FriendActivity.GetActivitiesAsync();
