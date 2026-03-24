@@ -10,7 +10,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using PGEmu.app;
-
+using RetroAchievements.Api;
+using Godot;
+using RetroAchievements.Api.Response.Users.Records;
 
 public partial class AchievementCredentialLoad : Node
 {
@@ -21,9 +23,9 @@ public partial class AchievementCredentialLoad : Node
 		PropertyNameCaseInsensitive = true
 	};
 	// Called when the node enters the scene tree for the first time.
-	public override void _Ready()
+	public async override void _Ready()
 	{
-		LoadFromJson();
+		await LoadFromJson();
 	}
 
 	
@@ -41,12 +43,26 @@ public partial class AchievementCredentialLoad : Node
 		
 		
 		GD.Print("credentials autoloaded!");
+		
 		GD.Print(fileContents.Key);
+	
 		GD.Print(fileContents.Value);
 		
+		
+		GD.Print(RetroAchievementsService.username);
+		GD.Print(RetroAchievementsService.apiKey);
+		
+		if (RetroAchievementsService.username == fileContents.Key){
+			GD.Print("usernames are the same");
+		}
+		
+		if (RetroAchievementsService.apiKey == fileContents.Value){
+			GD.Print("api keys are the same");
+		}
 		RetroAchievementsService.username = fileContents.Key;
 		RetroAchievementsService.apiKey = fileContents.Value;
-	
+		RetroAchievementsService.client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(fileContents.Key, fileContents.Value));
+		
 	}
 	
 	

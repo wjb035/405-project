@@ -18,9 +18,10 @@ public static class RetroAchievementsService
     public static string username;
     
     public static string apiKey;
+    
     const string MediaBaseUrl = "https://retroachievements.org";
 			
-    static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
+    public static RetroAchievementsHttpClient client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(username, apiKey));
     public static async Task Retro(
         
         PlatformConfig? selectedPlatform,

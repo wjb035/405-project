@@ -8,7 +8,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using PGEmu.app;
-
+using RetroAchievements.Api;
+using Godot;
+using RetroAchievements.Api.Response.Users.Records;
 
 public partial class AchievementSettings : Control
 {
@@ -82,6 +84,8 @@ public partial class AchievementSettings : Control
 			
 			RetroAchievementsService.username = _usernameEdit.Text?.Trim();
 			RetroAchievementsService.apiKey = _apiEdit.Text?.Trim();
+			RetroAchievementsService.client = new RetroAchievementsHttpClient(new RetroAchievementsAuthenticationData(RetroAchievementsService.username, RetroAchievementsService.apiKey));
+		
 			GD.Print(RetroAchievementsService.apiKey);
 			//vwhMq54xiImAMo35mdQ20UGgYtktA4pK
 			SaveToJson(new KeyValuePair<string,string>(_usernameEdit.Text?.Trim(),_apiEdit.Text?.Trim()));
