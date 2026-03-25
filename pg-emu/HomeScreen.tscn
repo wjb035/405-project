@@ -42,6 +42,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
+SearchBarText = NodePath("Margin/Root/TopBar/HBoxContainer/Panel/UserSearchBar")
+SearchBarButton = NodePath("Margin/Root/TopBar/HBoxContainer/UserSearchButton")
 CardsPath = NodePath("Margin/Root/CenterArea/CarouselArea/Cards")
 PrevPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnPrev")
 NextPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnNext")
@@ -59,6 +61,7 @@ FriendInboxPopup = NodePath("Inbox")
 CardScene = ExtResource("2")
 
 [node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
+position = Vector2i(545, 0)
 
 [node name="Bg" type="ColorRect" parent="." unique_id=581845523]
 visible = false
@@ -104,6 +107,27 @@ expand_icon = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=1757671387]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Panel" type="Panel" parent="Margin/Root/TopBar/HBoxContainer" unique_id=1712921906]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UserSearchBar" type="TextEdit" parent="Margin/Root/TopBar/HBoxContainer/Panel" unique_id=1821935292]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+placeholder_text = "Search Users"
+
+[node name="UserSearchButton" type="Button" parent="Margin/Root/TopBar/HBoxContainer" unique_id=1909408829]
+layout_mode = 2
+text = "Search"
 
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=1808037778]
 layout_mode = 2

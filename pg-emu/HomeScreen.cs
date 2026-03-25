@@ -2,15 +2,19 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using PGEmu;
 using PGEmu.app;
 using PGEmu.Helpers;
 using PGEmu.Services;
+using PGEmu.Services.Models;
 using System.Linq;
 using System.Diagnostics;
 
 public partial class HomeScreen : Control
 {
 	// Scene wiring (assigned in `HomeScreen.tscn`).
+	[Export] public NodePath SearchBarText;
+	[Export] public NodePath SearchBarButton;
 	[Export] public NodePath CardsPath;
 	[Export] public NodePath PrevPath;
 	[Export] public NodePath NextPath;
@@ -44,6 +48,9 @@ public partial class HomeScreen : Control
 	private Button _settings;
 	private Button _help;
 	private Button _collections;
+	private TextEdit _searchBarText;
+	private Button _searchBarButton;
+
 
 	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
@@ -66,6 +73,11 @@ public partial class HomeScreen : Control
 	private long _leftAxisNextMs;
 	private string? _rememberedPlatformId;
 
+	// for user search
+	public ProfileService _profileService = new ProfileService();
+	private readonly System.Net.Http.HttpClient _client = new();
+	public ProfileService _profile = null!;
+
 	private Tween _tween;
 	
 	private ScreenTransition Transition =>
@@ -82,6 +94,10 @@ public partial class HomeScreen : Control
 		_status = GetNode<Label>(StatusPath);
 		_selectPlatform = GetNode<Button>(SelectPlatformPath);
 
+		_searchBarText = GetNode<TextEdit>(SearchBarText);
+		_searchBarButton = GetNode<Button>(SearchBarButton);
+
+
 		_logout = GetNodeOrNull<Button>(LogoutPath);
 		_inbox = GetNodeOrNull<Button>(InboxPath);
 		_friends = GetNodeOrNull<Button>(FriendsPath);
@@ -95,6 +111,7 @@ public partial class HomeScreen : Control
 		_next.Pressed += () => Step(1);
 		_selectPlatform.Pressed += OpenSelectedPlatform;
 
+		if (_searchBarButton != null) _searchBarButton.Pressed += OnSearchBarPressed;
 		if (_logout != null) _logout.Pressed += OnLogoutPressed;
 		if (_settings != null) _settings.Pressed += OnSettingsPressed;
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
@@ -138,6 +155,22 @@ public partial class HomeScreen : Control
 		await FriendActivity.GetFriendsJson(this);
 		await FriendActivity.GetActivitiesAsync();
 		SetupFriendHover();
+	}
+	
+		private async void OnSearchBarPressed()
+	{
+		string? username = _searchBarText.Text;
+		ProfileResponse profile = await _profileService.GetUserProfile(_searchBarText.Text?.Trim());
+		if (profile != null)
+		{
+			GD.Print("Profile found:");
+			GD.Print(profile.Username);
+			var tree = GetTree();
+			Global.foundProfile = profile;
+			tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+		}
+
 	}
 
 	private void OnLogoutPressed()

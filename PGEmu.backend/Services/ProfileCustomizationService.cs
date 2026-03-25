@@ -18,7 +18,7 @@ public class ProfileCustomizationService : IProfileCustomizationService
         _context = context;
     }
 
-    public async Task<(bool Success, string Message, string? NewUsername)> 
+    public async Task<(bool Success, string Message, string? NewUsername)>
         ChangeUsernameAsync(Guid UserId, string newUsername)
     {
         if (string.IsNullOrWhiteSpace(newUsername))
@@ -31,7 +31,7 @@ public class ProfileCustomizationService : IProfileCustomizationService
             return (false, "Username already taken", null);
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == UserId);
-        
+
         if (user == null)
             return (false, "User not found", null);
 
@@ -94,34 +94,41 @@ public class ProfileCustomizationService : IProfileCustomizationService
 
 
 
-    public async Task<(bool Success, string Message, ProfileCustomizationDTO Profile)> GetUserAsync(Guid UserId)
+    public async Task<(bool Success, string Message, ProfileCustomizationDTO Profile)> GetUserAsync(Guid? UserId, string? username)
     {
-
-        User user = await _context.Users.FindAsync(UserId);
-        UserProfile? userProfile = await _context.UserProfiles.FindAsync(UserId);
-
-        if (user == null) return (false, "User not found.", null);
-        
-        // Create profile row if it doesn't exist
-        if (userProfile == null)
+        User user = null;
+        UserProfile? userProfile = null;
+        if (UserId != null)
         {
-            userProfile = new UserProfile
-            {
-                UserId = UserId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            await _context.UserProfiles.AddAsync(userProfile);
-            await _context.SaveChangesAsync();
+            user = await _context.Users.FindAsync(UserId);
         }
-        
+        else if (username != null)
+        {
+            user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+
+        await _context.Entry(user).Reference(u => u.Profile).LoadAsync();
+
+        if (user.Profile == null)
+        {
+            user.Profile = new UserProfile
+            {
+                UserId = user.Id,
+            };
+        }
+
+        userProfile = user.Profile;
+
+        Console.WriteLine(user.Username);
+        if (user == null) return (false, "User not found.", null);
         return (true, "User found",
             new ProfileCustomizationDTO
-        {
-            UserId = user.Id,
-            Username = user.Username,
-            Bio = userProfile.Bio,
-            AvatarUrl = userProfile.AvatarUrl,
+            {
+                UserId = user.Id,
+                Username = user.Username,
+                Bio = user.Profile.Bio,
+                AvatarUrl = user.Profile.AvatarUrl,
             });
     }
 }

@@ -25,7 +25,7 @@ public class ProfileCustomizationController : ControllerBase
     // Helper to get current user
     protected Guid CurrentUserId =>
         Guid.Parse(User.FindFirst("sub")?.Value ?? throw new Exception("User not authenticated"));
-    
+
 
     [Authorize]
     [HttpPut("username")]
@@ -52,11 +52,23 @@ public class ProfileCustomizationController : ControllerBase
         if (userIdClaim == null)
             return BadRequest("User not authenticated.");
 
-        var user = await _profileCustomizationService.GetUserAsync(Guid.Parse(userIdClaim.Value));
+        var user = await _profileCustomizationService.GetUserAsync(Guid.Parse(userIdClaim.Value), null);
         if (!user.Success)
             return NotFound("Profile not found.");
 
-        return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl});
+        return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
+    }
+
+
+    [Authorize]
+    [HttpGet("{username}")]
+    public async Task<IActionResult> GetUserProfile(string username)
+    {
+        var user = await _profileCustomizationService.GetUserAsync(null, username);
+        if (!user.Success)
+            return NotFound("Profile not found.");
+
+        return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
     }
 
     [Authorize]

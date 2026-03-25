@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -7,7 +8,6 @@ using PGEmu.Services.Models;
 using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
-using PGEmu.Services.Models;
 
 namespace PGEmu.Services;
 
@@ -29,6 +29,28 @@ public partial class ProfileService : Node
 			response.Value.GetRawText(),
 			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 		
+		GD.Print("Username: " + profile.Username);
+		GD.Print("Bio: " + profile.Bio);
+		GD.Print("AvatarUrl: " + profile.AvatarUrl);
+		return profile;
+	}
+	
+	public async Task<ProfileResponse> GetUserProfile(string? username)
+	{
+		var response = await Auth.SendAuthorizedRequest(
+			$"http://localhost:5276/api/profile/{Uri.EscapeDataString(username)}");
+		
+		if (response == null)
+		{
+			GD.Print("Error: GetMyProfile failed or session expired");
+			return null;
+		}
+		
+		
+		var profile = JsonSerializer.Deserialize<ProfileResponse>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+			
 		GD.Print("Username: " + profile.Username);
 		GD.Print("Bio: " + profile.Bio);
 		GD.Print("AvatarUrl: " + profile.AvatarUrl);
