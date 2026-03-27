@@ -270,15 +270,19 @@ public partial class InputMapper : Node
 				break;
 			case LibretroInput.UP:
 				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadUp };
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.LeftY, AxisValue = -1.0f };
 				break;
 			case LibretroInput.DOWN:
 				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadDown };
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.LeftY, AxisValue = 1.0f };
 				break;
 			case LibretroInput.LEFT:
 				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadLeft };
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.LeftX, AxisValue = -1.0f };
 				break;
 			case LibretroInput.RIGHT:
 				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.DpadRight };
+				yield return new InputEventJoypadMotion { Axis = JoyAxis.LeftX, AxisValue = 1.0f };
 				break;
 			case LibretroInput.L:
 				yield return new InputEventJoypadButton { ButtonIndex = JoyButton.LeftShoulder };

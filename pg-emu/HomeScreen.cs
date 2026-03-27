@@ -71,6 +71,12 @@ public partial class HomeScreen : Control
 	private int _leftAxisDir;
 	private long _leftAxisNextMs;
 	private string? _rememberedPlatformId;
+	private int _uiHorizontalAxisDir;
+	private long _uiHorizontalAxisNextMs;
+	private int _uiVerticalAxisDir;
+	private long _uiVerticalAxisNextMs;
+	private int _uiRowIndex = -1;
+	private int _uiColumnIndex = -1;
 
 	// for user search
 	public ProfileService _profileService = new ProfileService();
@@ -127,6 +133,7 @@ public partial class HomeScreen : Control
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
 		InputRoutingService.Instance?.UnlockUiInput();
+		ResetUiNavigationState();
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		RestoreSelectedPlatformSelection();
@@ -612,20 +619,35 @@ private void OnAnyButtonPressed()
 	{
 		if (ShouldIgnoreUiInput()) return;
 
-		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+		if (e is InputEventJoypadMotion jm)
 		{
-			if (Count > 1 &&
-				e is InputEventJoypadMotion jm &&
-				ShouldHandleControllerInput(jm.Device) &&
-				HandleAxisNav(jm))
+			if (!ShouldHandleControllerInput(jm.Device))
+				return;
+
+			if (HandleControllerUiAxis(jm))
+			{
+				MarkInputHandled();
+				return;
+			}
+
+			if (!IsUiNavigationActive() && Count > 1 && HandleAxisNav(jm))
 			{
 				MarkInputHandled();
 			}
 			return;
 		}
 
+		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+			return;
+
 		if (!ShouldHandleControllerInput(jb.Device))
 			return;
+
+		if (HandleControllerUiButton(jb.ButtonIndex))
+		{
+			MarkInputHandled();
+			return;
+		}
 
 		switch (jb.ButtonIndex)
 		{
@@ -646,16 +668,8 @@ private void OnAnyButtonPressed()
 				}
 				break;
 			case JoyButton.A:
-			case JoyButton.X:
 				MarkInputHandled();
 				OpenSelectedPlatform();
-				break;
-			case JoyButton.B:
-				if (_logout != null)
-				{
-					MarkInputHandled();
-					OnLogoutPressed();
-				}
 				break;
 			case JoyButton.Start:
 				if (_settings != null)
@@ -678,6 +692,112 @@ private void OnAnyButtonPressed()
 		}
 	}
 
+	private bool HandleControllerUiButton(JoyButton button)
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (!IsUiNavigationActive())
+		{
+			switch (button)
+			{
+				case JoyButton.DpadUp:
+					_uiRowIndex = 0;
+					_uiColumnIndex = Mathf.Min(1, rows[0].Count - 1);
+					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+				case JoyButton.DpadDown:
+					_uiRowIndex = rows.Count - 1;
+					_uiColumnIndex = Mathf.Min(1, rows[_uiRowIndex].Count - 1);
+					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+			}
+
+			return false;
+		}
+
+		switch (button)
+		{
+			case JoyButton.DpadLeft:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, -1);
+			case JoyButton.DpadRight:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, 1);
+			case JoyButton.DpadUp:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, -1, 0);
+			case JoyButton.DpadDown:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 1, 0);
+			default:
+				if (ControllerService.IsConfirmButton(button))
+					return ControllerService.ActivateRowSelection(rows, _uiRowIndex, _uiColumnIndex);
+				if (ControllerService.IsBackButton(button))
+				{
+					ExitUiNavigation();
+					return true;
+				}
+				return false;
+		}
+	}
+
+	private bool HandleControllerUiAxis(InputEventJoypadMotion jm)
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (jm.Axis == JoyAxis.LeftY)
+		{
+			if (!IsUiNavigationActive())
+			{
+				return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
+				{
+					_uiRowIndex = dir < 0 ? 0 : rows.Count - 1;
+					_uiColumnIndex = Mathf.Min(1, rows[_uiRowIndex].Count - 1);
+					ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+				});
+			}
+
+			return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
+			{
+				ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, dir, 0);
+			});
+		}
+
+		if (!IsUiNavigationActive() || jm.Axis != JoyAxis.LeftX)
+			return false;
+
+		return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs, dir =>
+		{
+			ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, dir);
+		});
+	}
+
+	private List<List<Button>> GetControllerUiRows()
+	{
+		return ControllerService.BuildVisibleRows(
+			new[] { _logout, _searchBarButton, _inbox, _collections, _friends, _chat, _settings, _help },
+			new[] { _prev, _selectPlatform, _next });
+	}
+
+	private bool IsUiNavigationActive()
+	{
+		return _uiRowIndex >= 0 && _uiColumnIndex >= 0;
+	}
+
+	private void ExitUiNavigation()
+	{
+		if (GetViewport()?.GuiGetFocusOwner() is Control focused)
+			focused.ReleaseFocus();
+
+		ResetUiNavigationState();
+	}
+
+	private void ResetUiNavigationState()
+	{
+		_uiRowIndex = -1;
+		_uiColumnIndex = -1;
+		ControllerService.ResetMenuAxis(ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs);
+		ControllerService.ResetMenuAxis(ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs);
+	}
+
 	private void MarkInputHandled()
 	{
 		GetViewport()?.SetInputAsHandled();
@@ -693,26 +813,7 @@ private void OnAnyButtonPressed()
 
 	private bool HandleAxis(float value, ref int heldDir, ref long nextMs)
 	{
-		var dir = 0;
-		if (value <= -AxisDeadzone) dir = -1;
-		else if (value >= AxisDeadzone) dir = 1;
-
-		if (dir == 0)
-		{
-			heldDir = 0;
-			return false;
-		}
-
-		var now = (long)Time.GetTicksMsec();
-		if (dir != heldDir || now >= nextMs)
-		{
-			Step(dir);
-			heldDir = dir;
-			nextMs = now + AxisRepeatMs;
-			return true;
-		}
-
-		return false;
+		return ControllerService.TryHandleMenuAxis(value, ref heldDir, ref nextMs, Step);
 	}
 
 	private void LayoutCards()

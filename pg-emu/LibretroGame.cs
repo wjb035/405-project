@@ -17,6 +17,8 @@ public partial class LibretroGame : Control
 	private Label _title = null!;
 	private LibretroPlayer _player = null!;
 	private string _returnScene = "res://GameSelect.tscn";
+	private readonly Godot.Collections.Array<InputEvent> _originalUiCancelEvents = new();
+	private bool _uiCancelRemapped;
 
 	public override void _Ready()
 	{
@@ -58,9 +60,10 @@ public partial class LibretroGame : Control
 
 		_title.Text = string.IsNullOrWhiteSpace(request.GameTitle) ? "In-App Emulation" : request.GameTitle;
 		SetStatus($"Loading core: {Path.GetFileName(request.CorePath)}");
+		ConfigureGameplayCancelAction();
 		_player.LoadGameWithCore(request.RomPath, request.CorePath, request.CoreId);
 		InputRoutingService.Instance?.UnlockUiInput();
-		SetStatus("Running in-app emulation. Press Esc to return.");
+		SetStatus("Running in-app emulation. Press Esc or Guide to return.");
 	}
 
 	private void ConfigureVideoPresentation()
@@ -81,6 +84,7 @@ public partial class LibretroGame : Control
 
 	public override void _ExitTree()
 	{
+		RestoreGameplayCancelAction();
 		_player?.StopGame();
 	}
 
@@ -94,5 +98,38 @@ public partial class LibretroGame : Control
 	private void SetStatus(string text)
 	{
 		_status.Text = text;
+	}
+
+	private void ConfigureGameplayCancelAction()
+	{
+		if (_uiCancelRemapped)
+			return;
+
+		_originalUiCancelEvents.Clear();
+		var existingEvents = new Godot.Collections.Array<InputEvent>(InputMap.ActionGetEvents("ui_cancel"));
+		foreach (var existingEvent in existingEvents)
+		{
+			_originalUiCancelEvents.Add(existingEvent);
+			InputMap.ActionEraseEvent("ui_cancel", existingEvent);
+		}
+
+		InputMap.ActionAddEvent("ui_cancel", new InputEventKey { Keycode = Key.Escape });
+		InputMap.ActionAddEvent("ui_cancel", new InputEventJoypadButton { ButtonIndex = JoyButton.Guide });
+		_uiCancelRemapped = true;
+	}
+
+	private void RestoreGameplayCancelAction()
+	{
+		if (!_uiCancelRemapped)
+			return;
+
+		var currentEvents = new Godot.Collections.Array<InputEvent>(InputMap.ActionGetEvents("ui_cancel"));
+		foreach (var currentEvent in currentEvents)
+			InputMap.ActionEraseEvent("ui_cancel", currentEvent);
+
+		foreach (var originalEvent in _originalUiCancelEvents)
+			InputMap.ActionAddEvent("ui_cancel", originalEvent);
+
+		_uiCancelRemapped = false;
 	}
 }

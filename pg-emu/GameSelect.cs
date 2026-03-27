@@ -43,7 +43,12 @@ public partial class GameSelect : Control
 	private Button _play = null!;
 	private Button _settings = null!;
 	private Button _friends = null!;
+<<<<<<< Updated upstream
 	private Button _add = null!;
+=======
+	private Button _chat = null!;
+	private Button _help = null!;
+>>>>>>> Stashed changes
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
 	private VBoxContainer _listRows = null!;
@@ -53,6 +58,7 @@ public partial class GameSelect : Control
 	OptionButton _optionButton = new OptionButton();
 	
 	private Button _achievement = null!;
+	private Button _addToCollectionButton = null!;
 
 	// UI instances and data backing the carousel.
 	private readonly List<Control> _cards = new();
@@ -85,6 +91,12 @@ public partial class GameSelect : Control
 	private long _leftAxisNextMs;
 	private int _verticalAxisDir;
 	private long _verticalAxisNextMs;
+	private int _uiHorizontalAxisDir;
+	private long _uiHorizontalAxisNextMs;
+	private int _uiVerticalAxisDir;
+	private long _uiVerticalAxisNextMs;
+	private int _uiRowIndex = -1;
+	private int _uiColumnIndex = -1;
 
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
@@ -110,8 +122,14 @@ public partial class GameSelect : Control
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_friends = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
+		_chat = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
+		_help = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+<<<<<<< Updated upstream
 		_add = GetNode<Button>(AddPath);
+=======
+		_addToCollectionButton = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/HBoxContainer/Button");
+>>>>>>> Stashed changes
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
@@ -149,6 +167,7 @@ public partial class GameSelect : Control
 		ConnectAllButtons(this);
 		GD.Print("IN GAME SELECT");
 		InputRoutingService.Instance?.UnlockUiInput();
+		ResetUiNavigationState();
 		// Load data and build UI.
 		await LoadContextAndGames();
 		SpawnCards();
@@ -201,10 +220,15 @@ private void OnAnyButtonPressed()
 		GD.Print("button has been pressed!!!!!!");
 		if (_optionButton.Visible){
 			_optionButton.Hide();
+			ResetUiNavigationState();
 		}else if (CollectionStorage.collections.Count > 0){
 			
 			_optionButton.Show();
 			_optionButton.Select(-1);
+			var rows = GetControllerUiRows();
+			_uiRowIndex = rows.Count - 1;
+			_uiColumnIndex = 0;
+			ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 		}
 		
 		
@@ -228,6 +252,7 @@ private void OnAnyButtonPressed()
 		
 		
 		_optionButton.Hide();
+		ResetUiNavigationState();
 		
 	}
 	private void OpenVault()
@@ -1021,20 +1046,35 @@ private void OnAnyButtonPressed()
 	{
 		if (ShouldIgnoreUiInput()) return;
 
-		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+		if (e is InputEventJoypadMotion jm)
 		{
-			if (Count > 1 &&
-				e is InputEventJoypadMotion jm &&
-				ShouldHandleControllerInput(jm.Device) &&
-				HandleAxisNav(jm))
+			if (!ShouldHandleControllerInput(jm.Device))
+				return;
+
+			if (HandleControllerUiAxis(jm))
+			{
+				MarkInputHandled();
+				return;
+			}
+
+			if (!IsUiNavigationActive() && Count > 1 && HandleAxisNav(jm))
 			{
 				MarkInputHandled();
 			}
 			return;
 		}
 
+		if (e is not InputEventJoypadButton jb || !jb.Pressed)
+			return;
+
 		if (!ShouldHandleControllerInput(jb.Device))
 			return;
+
+		if (HandleControllerUiButton(jb.ButtonIndex))
+		{
+			MarkInputHandled();
+			return;
+		}
 
 		switch (jb.ButtonIndex)
 		{
@@ -1081,11 +1121,17 @@ private void OnAnyButtonPressed()
 				}
 				break;
 			case JoyButton.A:
-			case JoyButton.X:
 				MarkInputHandled();
 				PlaySelected();
 				break;
 			case JoyButton.B:
+				if (_optionButton.Visible)
+				{
+					_optionButton.Hide();
+					ResetUiNavigationState();
+					MarkInputHandled();
+					break;
+				}
 				MarkInputHandled();
 				GoBack();
 				break;
@@ -1102,6 +1148,142 @@ private void OnAnyButtonPressed()
 				GoHome();
 				break;
 		}
+	}
+
+	private bool HandleControllerUiButton(JoyButton button)
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (!IsUiNavigationActive())
+		{
+			switch (button)
+			{
+				case JoyButton.DpadUp:
+					if (!ShouldEnterUiNavigationFromUp())
+						return false;
+					_uiRowIndex = Mathf.Min(1, rows.Count - 1);
+					_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
+					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+				case JoyButton.DpadDown:
+					if (!ShouldEnterUiNavigationFromDown())
+						return false;
+					_uiRowIndex = Mathf.Min(1, rows.Count - 1);
+					_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
+					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+			}
+
+			return false;
+		}
+
+		switch (button)
+		{
+			case JoyButton.DpadUp:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, -1, 0);
+			case JoyButton.DpadDown:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 1, 0);
+			default:
+				if (ControllerService.IsConfirmButton(button))
+					return ControllerService.ActivateRowSelection(rows, _uiRowIndex, _uiColumnIndex);
+				if (ControllerService.IsBackButton(button))
+				{
+					ExitUiNavigation();
+					return true;
+				}
+				return false;
+		}
+	}
+
+	private bool HandleControllerUiAxis(InputEventJoypadMotion jm)
+	{
+		if (!IsUiNavigationActive())
+			return false;
+
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (jm.Axis == JoyAxis.LeftY)
+		{
+			return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
+			{
+				ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, dir, 0);
+			});
+		}
+
+		if (jm.Axis != JoyAxis.LeftX)
+			return false;
+
+		return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs, dir =>
+		{
+			ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, dir);
+		});
+	}
+
+	private List<List<Button>> GetControllerUiRows()
+	{
+		if (_optionButton.Visible)
+		{
+			return ControllerService.BuildVisibleRows(
+				new[] { _back, _achievement, _friends, _chat, _settings, _help },
+				new[] { _prev, _addToCollectionButton, _play, _next },
+				new[] { _optionButton });
+		}
+
+		return ControllerService.BuildVisibleRows(
+			new[] { _back, _achievement, _friends, _chat, _settings, _help },
+			new[] { _prev, _addToCollectionButton, _play, _next });
+	}
+
+	private int GetPreferredActionColumn(List<Button> row)
+	{
+		var playIndex = row.IndexOf(_play);
+		if (playIndex >= 0)
+			return playIndex;
+
+		return Mathf.Clamp(row.Count / 2, 0, Math.Max(0, row.Count - 1));
+	}
+
+	private bool ShouldEnterUiNavigationFromUp()
+	{
+		return _browseLayout switch
+		{
+			BrowseLayoutMode.Grid => _selectedIndex < GridColumns,
+			BrowseLayoutMode.List => _selectedIndex <= 0,
+			_ => true,
+		};
+	}
+
+	private bool ShouldEnterUiNavigationFromDown()
+	{
+		return _browseLayout switch
+		{
+			BrowseLayoutMode.Grid => _selectedIndex + GridColumns >= Count,
+			BrowseLayoutMode.List => _selectedIndex >= Count - 1,
+			_ => true,
+		};
+	}
+
+	private bool IsUiNavigationActive()
+	{
+		return _uiRowIndex >= 0 && _uiColumnIndex >= 0;
+	}
+
+	private void ExitUiNavigation()
+	{
+		if (GetViewport()?.GuiGetFocusOwner() is Control focused)
+			focused.ReleaseFocus();
+
+		ResetUiNavigationState();
+	}
+
+	private void ResetUiNavigationState()
+	{
+		_uiRowIndex = -1;
+		_uiColumnIndex = -1;
+		ControllerService.ResetMenuAxis(ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs);
+		ControllerService.ResetMenuAxis(ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs);
 	}
 
 	private void MarkInputHandled()
@@ -1129,26 +1311,7 @@ private void OnAnyButtonPressed()
 
 	private bool HandleAxis(float value, ref int heldDir, ref long nextMs, Action<int> stepAction)
 	{
-		var dir = 0;
-		if (value <= -AxisDeadzone) dir = -1;
-		else if (value >= AxisDeadzone) dir = 1;
-
-		if (dir == 0)
-		{
-			heldDir = 0;
-			return false;
-		}
-
-		var now = (long)Time.GetTicksMsec();
-		if (dir != heldDir || now >= nextMs)
-		{
-			stepAction(dir);
-			heldDir = dir;
-			nextMs = now + AxisRepeatMs;
-			return true;
-		}
-
-		return false;
+		return ControllerService.TryHandleMenuAxis(value, ref heldDir, ref nextMs, stepAction);
 	}
 
 	private void LayoutCards()
