@@ -146,7 +146,7 @@ public partial class Carousel3DView : SubViewportContainer
         var mesh = new MeshInstance3D { Name = "Mesh" };
         var boxMesh = new BoxMesh
         {
-            Size = new Vector3(2.6f, 3.6f, 0.5f)
+            Size = new Vector3(2.6f, 3.6f, 0.25f)
         };
         mesh.Mesh = boxMesh;
 

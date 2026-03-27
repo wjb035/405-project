@@ -173,7 +173,7 @@ public partial class WelcomeScreen : Control
 			await FadeRectOut();
 		}
 
-		var tween = CreateTween();
+		var tween = CreateTween().SetParallel(true);
 		tween.TweenProperty(_logo, "modulate:a", 1.0f, 2f)
 			.SetEase(Tween.EaseType.InOut);
 		tween.TweenProperty(_shadow, "modulate:a", 1.0f, 2f)

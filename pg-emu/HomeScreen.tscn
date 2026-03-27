@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="4_psypl"]
 [ext_resource type="Texture2D" uid="uid://bj5hphp8f2kgw" path="res://Images/inbox icon.png" id="5_3272g"]
 [ext_resource type="Texture2D" uid="uid://c4r8y1ivdhsq1" path="res://Images/folders icon.png" id="5_ksj1l"]
@@ -12,6 +13,14 @@
 [ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="10_1lj82"]
 [ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="11_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="12_3gr8a"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oy6yd"]
+shader = ExtResource("3_iw72c")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.05430633, 0.032277793, 0.07422695, 0.4)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend1"]
 bg_color = Color(0.1882353, 0.1882353, 0.1882353, 1)
@@ -60,8 +69,16 @@ CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
 FriendInboxPopup = NodePath("Inbox")
 CardScene = ExtResource("2")
 
+[node name="TopBar" type="ColorRect" parent="." unique_id=2060178397]
+material = SubResource("ShaderMaterial_oy6yd")
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
+
 [node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
-position = Vector2i(545, 0)
+position = Vector2i(237, 0)
 
 [node name="Bg" type="ColorRect" parent="." unique_id=581845523]
 visible = false
@@ -227,20 +244,20 @@ grow_vertical = 2
 
 [node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1665989749]
 layout_mode = 0
-offset_left = 38.0
-offset_top = 490.0
-offset_right = 102.0
-offset_bottom = 554.0
+offset_left = 30.0
+offset_top = 506.0
+offset_right = 94.0
+offset_bottom = 570.0
 icon = ExtResource("11_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1687316739]
 layout_mode = 0
-offset_left = 1014.0
-offset_top = 490.0
-offset_right = 1078.0
-offset_bottom = 554.0
+offset_left = 1020.0
+offset_top = 506.0
+offset_right = 1084.0
+offset_bottom = 570.0
 icon = ExtResource("12_3gr8a")
 icon_alignment = 1
 expand_icon = true

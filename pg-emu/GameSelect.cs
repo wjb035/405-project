@@ -24,6 +24,8 @@ public partial class GameSelect : Control
 	[Export] public NodePath BackPath;
 	[Export] public NodePath PlayPath;
 	[Export] public NodePath SettingsPath;
+	[Export] public NodePath AddPath;
+
 
 	// Prefab for a single carousel card.
 	[Export] public PackedScene CardScene;
@@ -41,6 +43,7 @@ public partial class GameSelect : Control
 	private Button _play = null!;
 	private Button _settings = null!;
 	private Button _friends = null!;
+	private Button _add = null!;
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
 	private VBoxContainer _listRows = null!;
@@ -108,6 +111,7 @@ public partial class GameSelect : Control
 		_settings = GetNode<Button>(SettingsPath);
 		_friends = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+		_add = GetNode<Button>(AddPath);
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
@@ -116,7 +120,7 @@ public partial class GameSelect : Control
 		
 		
 		_optionButton.Name = "test";
-		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/CarouselArea/HBoxContainer");
+		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/HBoxContainer");
    		container.AddChild(_optionButton);
 		//_optionButton.AddItem("Option A", 0);
 		_optionButton.Hide();
@@ -135,6 +139,7 @@ public partial class GameSelect : Control
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
 		_friends.Pressed += OpenProfile;
+		_add.Pressed += addToCollection;
 		ApplyAesthetic();
 		
 
@@ -2516,6 +2521,7 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTitleLabel(_title);
 		UiStyle.StyleMetaLabel(_metaLeft);
 		UiStyle.StyleMetaLabel(_metaRight);
+		UiStyle.StyleNavButton(_add);
 		UiStyle.StyleStatusLabel(_status);
 	}
 }

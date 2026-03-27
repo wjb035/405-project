@@ -87,6 +87,9 @@ public partial class Collections : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 
+		// background transition
+		StartBackgroundTransition();
+		
 		// reset the value if we were in a collection before
 		CollectionStorage.currentCollection = null;
 		ConnectAllButtons(this);
@@ -669,6 +672,27 @@ private void OnAnyButtonPressed()
 		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
 	}
 
+	// BACKGOURND STUFF
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNode<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+		try
+		{
+			bg.StartTransition("GameScreen", 1.5f);
+			GD.Print("Background transition finished!");
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
+		
+	}
+	
 	private void ApplyAesthetic()
 	{
 		// Collections uses the same button/label treatment as Home and GameSelect for consistency.

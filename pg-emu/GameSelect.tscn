@@ -3,13 +3,32 @@
 [ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
 [ext_resource type="PackedScene" path="res://game_cover_card.tscn" id="2"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_8s1q4"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_cja7x"]
 [ext_resource type="Texture2D" uid="uid://bjj1k8ig6w0dr" path="res://Images/trophy icon.png" id="3_ju5ei"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://BottomBar.gdshader" id="4_xj10s"]
 [ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="5_1x65b"]
 [ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="6_cja7x"]
+[ext_resource type="Texture2D" uid="uid://ccdiymcy5p2gx" path="res://Images/collection add icon.png" id="6_scx6q"]
 [ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="7_scx6q"]
 [ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="8_xj10s"]
 [ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="9_xsmlm"]
 [ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="10_2kom7"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scx6q"]
+shader = ExtResource("3_cja7x")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.05430633, 0.032277793, 0.07422695, 0.4)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xsmlm"]
+shader = ExtResource("4_xj10s")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
 
 [node name="GameSelect" type="Control" unique_id=1241405706]
 layout_mode = 3
@@ -29,15 +48,8 @@ StatusPath = NodePath("Margin/Root/Status")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 PlayPath = NodePath("Margin/Root/CenterArea/ActionRow/BtnPlay")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
+AddPath = NodePath("Margin/Root/CenterArea/HBoxContainer/Add")
 CardScene = ExtResource("2")
-
-[node name="TopBar" type="ColorRect" parent="." unique_id=547601973]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 50.0
-grow_horizontal = 2
-color = Color(0.050980393, 0.050980393, 0.078431375, 0.72156864)
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2052701266]
 visible = false
@@ -48,6 +60,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.06666667, 0.047058824, 0.12156863, 1)
+
+[node name="TopBar" type="ColorRect" parent="." unique_id=547601973]
+material = SubResource("ShaderMaterial_scx6q")
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2126406105]
 layout_mode = 1
@@ -78,6 +98,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="BottomBar" type="ColorRect" parent="Margin/Root/CenterArea" unique_id=2014255193]
+material = SubResource("ShaderMaterial_xsmlm")
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 1
 anchors_preset = 12
@@ -90,7 +111,7 @@ offset_right = 18.0
 offset_bottom = 52.63153
 grow_horizontal = 2
 grow_vertical = 0
-color = Color(0.050980393, 0.050980393, 0.078431375, 0.72156864)
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
 
 [node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea" unique_id=1530909692]
 custom_minimum_size = Vector2(1040, 580)
@@ -113,17 +134,6 @@ offset_bottom = 230.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/CenterArea/CarouselArea" unique_id=2006590248]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 99.710526
-offset_right = 87.0
-offset_bottom = 139.71053
-
-[node name="Button" type="Button" parent="Margin/Root/CenterArea/CarouselArea/HBoxContainer" unique_id=757375629]
-layout_mode = 2
-text = "Add"
-
 [node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea" unique_id=833476803]
 layout_mode = 0
 offset_left = 30.0
@@ -142,6 +152,20 @@ offset_top = 520.0
 offset_right = 1084.0
 offset_bottom = 584.0
 icon = ExtResource("10_2kom7")
+icon_alignment = 1
+expand_icon = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=682693177]
+layout_mode = 0
+offset_left = -2.0
+offset_top = 35.684204
+offset_right = 120.0
+offset_bottom = 99.684204
+
+[node name="Add" type="Button" parent="Margin/Root/CenterArea/HBoxContainer" unique_id=1029566633]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+icon = ExtResource("6_scx6q")
 icon_alignment = 1
 expand_icon = true
 
@@ -264,5 +288,4 @@ theme_override_colors/font_color = Color(0, 0, 0, 0.75)
 horizontal_alignment = 1
 clip_text = true
 
-[connection signal="pressed" from="Margin/Root/CenterArea/CarouselArea/HBoxContainer/Button" to="." method="addToCollection"]
 [connection signal="pressed" from="Margin/Root/TopBar/TopIcons/BtnAch" to="." method="GoAch"]
