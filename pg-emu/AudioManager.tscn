@@ -5,6 +5,16 @@
 [node name="AudioManager" type="Node" unique_id=1039156759]
 script = ExtResource("1_2nh25")
 
-[node name="Sfx" type="AudioStreamPlayer" parent="." unique_id=392917724]
+[node name="Ui" type="AudioStreamPlayer" parent="." unique_id=392917724]
+
+[node name="Navigation" type="AudioStreamPlayer" parent="."]
+
+[node name="Spin1" type="AudioStreamPlayer" parent="."]
+
+[node name="Spin2" type="AudioStreamPlayer" parent="."]
+
+[node name="Spin3" type="AudioStreamPlayer" parent="."]
+
+[node name="Spin4" type="AudioStreamPlayer" parent="."]
 
 [node name="Hover" type="AudioStreamPlayer" parent="."]

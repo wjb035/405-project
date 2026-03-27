@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public partial class AudioManager : Node
 {
+	private const int CarouselSpinVoiceCount = 4;
+
 	public const string ClickSfxPath = "res://audio/fwd.mp3";
 	public const string BackSfxPath = "res://audio/bk.mp3";
 	public const string ForwardSfxPath = "res://audio/fwd.mp3";
@@ -11,25 +13,34 @@ public partial class AudioManager : Node
 	public const string AmbientTrackPath = "res://audio/Keygen_1.mp3";
 	public const string CarouselSpinSfxPath = "res://audio/spin.mp3";
 	public const string CarouselHoverSfxPath = "res://audio/hover.mp3";
-	private const float SpinBaseVolumeDb = -3f;
+
+	private const float SpinBaseVolumeDb = -6f;
 	private const float HoverBaseVolumeDb = -4f;
 	private const float HoverFadeOutDb = -40f;
 	private const float HoverFadeOutSeconds = 0.12f;
 
-	private AudioStreamPlayer _sfxPlayer;
-	private AudioStreamPlayer _hoverPlayer;
+	private AudioStreamPlayer _uiPlayer = null!;
+	private AudioStreamPlayer _navigationPlayer = null!;
+	private AudioStreamPlayer _hoverPlayer = null!;
+	private readonly AudioStreamPlayer[] _spinPlayers = new AudioStreamPlayer[CarouselSpinVoiceCount];
+	private int _nextSpinPlayerIndex;
 	private Tween? _hoverFadeTween;
 	private readonly Dictionary<string, AudioStream> _streamCache = new();
-	public static AudioManager Instance { get; private set; }
+
+	public static AudioManager Instance { get; private set; } = null!;
 
 	public override void _Ready()
 	{
 		Instance = this;
-		_sfxPlayer = GetNode<AudioStreamPlayer>("Sfx");
+		_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
+		_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
 		_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
+
+		for (int i = 0; i < _spinPlayers.Length; i++)
+			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
 
-	public void PlaySfx(string path, float volumeDb = 0f)
+	private AudioStream? GetStream(string path)
 	{
 		if (!_streamCache.TryGetValue(path, out var stream))
 		{
@@ -37,38 +48,44 @@ public partial class AudioManager : Node
 			if (stream == null)
 			{
 				GD.PrintErr("SFX not found: " + path);
-				return;
+				return null;
 			}
 
 			_streamCache[path] = stream;
 		}
 
-		_sfxPlayer.VolumeDb = volumeDb;
-		_sfxPlayer.Stream = stream;
-		_sfxPlayer.Play();
+		return stream;
 	}
 
-	public void PlayClick() => PlaySfx(ClickSfxPath);
+	private void PlayOnPlayer(AudioStreamPlayer player, string path, float volumeDb = 0f)
+	{
+		var stream = GetStream(path);
+		if (stream == null)
+			return;
 
-	public void PlaySelect() => PlaySfx(SelectSfxPath);
+		player.VolumeDb = volumeDb;
+		player.Stream = stream;
+		player.Play();
+	}
 
-	public void PlayMessageOpen() => PlaySfx(MessageOpenSfxPath);
+	public void PlayClick() => PlayOnPlayer(_uiPlayer, ClickSfxPath);
 
-	public void PlayCarouselSpin() => PlaySfx(CarouselSpinSfxPath, SpinBaseVolumeDb);
+	public void PlaySelect() => PlayOnPlayer(_uiPlayer, SelectSfxPath);
+
+	public void PlayMessageOpen() => PlayOnPlayer(_uiPlayer, MessageOpenSfxPath);
+
+	public void PlayCarouselSpin()
+	{
+		var player = _spinPlayers[_nextSpinPlayerIndex];
+		_nextSpinPlayerIndex = (_nextSpinPlayerIndex + 1) % _spinPlayers.Length;
+		PlayOnPlayer(player, CarouselSpinSfxPath, SpinBaseVolumeDb);
+	}
 
 	public void PlayCarouselHover()
 	{
-		if (!_streamCache.TryGetValue(CarouselHoverSfxPath, out var stream))
-		{
-			stream = GD.Load<AudioStream>(CarouselHoverSfxPath);
-			if (stream == null)
-			{
-				GD.PrintErr("SFX not found: " + CarouselHoverSfxPath);
-				return;
-			}
-
-			_streamCache[CarouselHoverSfxPath] = stream;
-		}
+		var stream = GetStream(CarouselHoverSfxPath);
+		if (stream == null)
+			return;
 
 		_hoverFadeTween?.Kill();
 		_hoverFadeTween = null;
@@ -104,6 +121,6 @@ public partial class AudioManager : Node
 
 	public void PlayNavigation(int direction)
 	{
-		PlaySfx(direction < 0 ? BackSfxPath : ForwardSfxPath);
+		PlayOnPlayer(_navigationPlayer, direction < 0 ? BackSfxPath : ForwardSfxPath);
 	}
 }
