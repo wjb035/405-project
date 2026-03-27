@@ -24,11 +24,6 @@ public partial class WelcomeScreen : Control
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
-	private Vector2 _welcomeOriginalPos;
-	private float _floatTime = 0f;
-	private bool _floatEnabled = false;
-	private Vector2 _floatBasePos;
-	
 	public override void _Ready()
 	{
 		_continueButton = GetNode<Button>(ContinueButtonPath);
@@ -52,7 +47,6 @@ public partial class WelcomeScreen : Control
 		_fadeRect.Modulate = new Color(0, 0, 0, 1);
 		_welcomeLabel.Modulate = new Color(1, 1, 1, 0);
 		_continue.Modulate = new Color(1, 1, 1, 0);
-		_welcomeOriginalPos = _welcomeLabel.Position;
 		
 		_logo.Modulate = new Color(1, 1, 1, 0);    
 		_shadow.Modulate = new Color(1, 1, 1, 0);    
@@ -158,9 +152,6 @@ public partial class WelcomeScreen : Control
 		// Fade out the label first
 		tween.TweenProperty(_welcomeLabel, "modulate:a", 0.0f, 0.5f)
 			.SetEase(Tween.EaseType.InOut);
-		tween.SetParallel(true);
-		tween.TweenProperty(_continue, "modulate:a", 0.0f, 0.5f)
-			.SetEase(Tween.EaseType.InOut);
 
 		await ToSignal(tween, "finished");
 
@@ -208,52 +199,22 @@ public partial class WelcomeScreen : Control
 		await ToSignal(tween, "finished");
 	}
 	
-	// Fades text in and starts its animation cycle
 	private async Task FadeText()
 	{
-		var startPos = _welcomeOriginalPos - new Vector2(30f, 0f);
-		_welcomeLabel.Position = startPos;
 		_welcomeLabel.Modulate = new Color(1, 1, 1, 0);
-		
-		var tween = _welcomeLabel.CreateTween();
-		tween.TweenProperty(_welcomeLabel, "modulate:a", 1.0f, 1f)
-			.SetEase(Tween.EaseType.InOut);
-		tween.SetParallel(true);
-		tween.TweenProperty(_welcomeLabel, "position", _welcomeOriginalPos, 1f)
-			.SetEase(Tween.EaseType.Out)
-			.SetTrans(Tween.TransitionType.Sine);
+
+		var tween = CreateTween();
+		tween.TweenProperty(_welcomeLabel, "modulate:a", 1.0f, 0.8f);
 
 		await ToSignal(tween, "finished");
-		
-		await Task.Delay(100);
-		
-		_floatBasePos = _welcomeLabel.Position;
-		_floatEnabled = true;
-		
+
 		await Task.Delay(600);
 
 		_continue.Modulate = new Color(1, 1, 1, 0);
 
-		tween = _continue.CreateTween();
+		tween = CreateTween();
 		tween.TweenProperty(_continue, "modulate:a", 1.0f, 1.5f);
 
 		await ToSignal(tween, "finished");
-		
-	}
-	
-	// Subtle bob left and right	
-	public override void _Process(double delta)
-	{
-		if (_welcomeLabel == null || !_floatEnabled) return;
-
-		// Amplitude in pixels and period in seconds
-		float amplitude = 10f;
-		float period = 6f;
-
-		_floatTime += (float)delta;
-
-		// Smooth sine wave motion along X
-		float offsetX = amplitude * Mathf.Sin((_floatTime / period) * Mathf.Tau - Mathf.Pi / 2);
-		_welcomeLabel.Position = _floatBasePos + new Vector2(offsetX, 0);
 	}
 }

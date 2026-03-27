@@ -1008,6 +1008,5 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_collections);
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
-		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }

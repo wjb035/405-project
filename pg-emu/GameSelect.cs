@@ -2910,6 +2910,5 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleMetaLabel(_metaRight);
 		UiStyle.StyleNavButton(_add);
 		UiStyle.StyleStatusLabel(_status);
-		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }

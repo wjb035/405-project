@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 public partial class FoundUserProfile : Control
 {
 	[Export] public NodePath BackPath;
-	[Export] public NodePath TitleGamertagPath;
-	[Export] public NodePath ProfileStatusPath;
 	[Export] public NodePath GamerTagPath;
 	[Export] public NodePath ProfileNotePath;
 	[Export] public NodePath AvatarPath;
@@ -32,8 +30,6 @@ public partial class FoundUserProfile : Control
 	private Button _back = null!;
 	private Label _gamer_tag = null!;
 	private Label _profile_note = null!;
-	private Label _title_gamertag = null!;
-	private Label _profile_status = null!;
 	
 	private Button _addFriend = null;
 	private Button _friends_list = null!;
@@ -85,14 +81,12 @@ public partial class FoundUserProfile : Control
 		}
 		_dropdownOptions.IdPressed += OnDropdownSelected;
 		
-		_profile_status = GetNode<Label>(ProfileStatusPath);
-		_title_gamertag = GetNode<Label>(TitleGamertagPath);
+		
 		_gamer_tag = GetNode<Label>(GamerTagPath);
 		_profile_note = GetNode<Label>(ProfileNotePath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
 
 		// Keep navigation usable while profile data loads.
-		_title_gamertag.Text = $"{profile.Username}'s Profile";
 		_gamer_tag.Text = profile.Username;
 		_profile_note.Text = $"\"{profile.Bio}\"";
 		
@@ -154,11 +148,10 @@ public partial class FoundUserProfile : Control
 
 	private void ApplyThemeAesthetic()
 	{
-		//var title = GetNodeOrNull<Label>(_title_gamertag);
-		UiStyle.StyleTitleLabel(_title_gamertag);
+		var title = GetNodeOrNull<Label>("Margin/Root/TopBar/Title");
+		UiStyle.StyleTitleLabel(title);
 
 		UiStyle.StyleTitleLabel(_gamer_tag);
-		UiStyle.StyleMetaLabel(_profile_status);
 		UiStyle.StyleMetaLabel(_profile_note);
 
 		// Section headers
@@ -175,10 +168,9 @@ public partial class FoundUserProfile : Control
 		ApplyCardStyle("Margin/Root/Body/RecentGamesAndFriends/Friends");
 
 		// Style all list buttons consistently.
-		UiStyle.StyleTopBarButton(_back);
-		UiStyle.StyleTopBarButton(_addFriend);
-		UiStyle.StyleTopBarButton(GetNode<MenuButton>(DropdownOptionsPath));
-		UiStyle.StylePopupMenu(_dropdownOptions);
+		StyleButtonList("Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer");
+		StyleButtonList("Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer");
+		StyleButtonList("Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer");
 
 		// Center "See All" controls so they read as navigation actions.
 		var seeAllRecent = GetNodeOrNull<Button>("Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Button");

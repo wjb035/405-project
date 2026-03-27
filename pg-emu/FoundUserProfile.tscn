@@ -1,11 +1,7 @@
 [gd_scene format=3 uid="uid://cqntk4bavh1tv"]
 
 [ext_resource type="Script" uid="uid://bfm7tjp6di05i" path="res://FoundUserProfile.cs" id="1_kk0or"]
-[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="2_kk0or"]
-[ext_resource type="Texture2D" uid="uid://cejuhmeuqr1a8" path="res://Images/funny desktop icon.png" id="3_ges4a"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ges4a"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+[ext_resource type="Texture2D" uid="uid://dhwqlqt8712qy" path="res://souljaboytellem.jpg" id="2_ges4a"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_by8nc"]
 bg_color = Color(0, 0, 0, 0.47843137)
@@ -25,13 +21,6 @@ corner_radius_bottom_left = 10
 
 [sub_resource type="LabelSettings" id="LabelSettings_5dkcq"]
 font_size = 25
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kk0or"]
-bg_color = Color(0, 0, 0, 0.47843137)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3v0sr"]
 bg_color = Color(0, 0, 0, 0.47843137)
@@ -58,9 +47,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_kk0or")
-BackPath = NodePath("Margin/Root/TopBar/BtnBack2")
-TitleGamertagPath = NodePath("Margin/Root/TopBar/TitleProfileName")
-ProfileStatusPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer/ProfileStatus")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 GamerTagPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/GamerTag")
 ProfileNotePath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/ProfileNote")
 AvatarPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer/TextureRect")
@@ -103,19 +90,11 @@ size_flags_horizontal = 3
 size_flags_vertical = 0
 
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1882471345]
-visible = false
 custom_minimum_size = Vector2(134, 40)
 layout_mode = 2
 text = "← Back"
 
-[node name="BtnBack2" type="Button" parent="Margin/Root/TopBar" unique_id=382273365]
-custom_minimum_size = Vector2(56, 40)
-layout_mode = 2
-icon = ExtResource("2_kk0or")
-icon_alignment = 1
-expand_icon = true
-
-[node name="TitleProfileName" type="Label" parent="Margin/Root/TopBar" unique_id=752426289]
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=752426289]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 32
@@ -123,15 +102,9 @@ text = "Profile"
 horizontal_alignment = 1
 
 [node name="BtnProfileSettings" type="Button" parent="Margin/Root/TopBar" unique_id=1120255192]
-visible = false
 custom_minimum_size = Vector2(134, 40)
 layout_mode = 2
 text = "Edit Profile"
-
-[node name="PanelContainer" type="PanelContainer" parent="Margin/Root/TopBar" unique_id=1846123349]
-custom_minimum_size = Vector2(56, 0)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_ges4a")
 
 [node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=1028701758]
 layout_mode = 2
@@ -166,9 +139,8 @@ size_flags_horizontal = 0
 size_flags_vertical = 0
 
 [node name="TextureRect" type="TextureRect" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer" unique_id=666910897]
-clip_contents = true
 layout_mode = 2
-texture = ExtResource("3_ges4a")
+texture = ExtResource("2_ges4a")
 expand_mode = 4
 stretch_mode = 6
 
@@ -210,30 +182,20 @@ text = "Add Friend"
 layout_mode = 2
 toggle_mode = false
 text = "More Options"
-flat = false
 item_count = 1
 popup/item_0/text = "Message"
 popup/item_0/id = 0
 
-[node name="PanelContainer2" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=85844835]
+[node name="OptionButton" type="OptionButton" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1948750005]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 0
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("StyleBoxFlat_kk0or")
-
-[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer2" unique_id=463546587]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="ProfileStatus" type="Label" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer" unique_id=2121395113]
-layout_mode = 2
-size_flags_vertical = 1
-text = "status placeholder"
-vertical_alignment = 1
+selected = 0
+item_count = 2
+popup/item_0/text = "Appear Online"
+popup/item_0/id = 0
+popup/item_1/text = "Appear Offline"
+popup/item_1/id = 1
 
 [node name="PanelContainer" type="PanelContainer" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=781734850]
 layout_mode = 2

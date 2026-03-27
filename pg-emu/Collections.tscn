@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="5_rlxaj"]
 [ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="6_h06ym"]
 [ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="7_c58cc"]
-[ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="9_fupj7"]
-[ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="10_rlxaj"]
+[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="8_gqrw3"]
+[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="9_jpbjf"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_rlxaj"]
 shader = ExtResource("3_fupj7")
@@ -183,23 +183,23 @@ offset_bottom = 230.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=534126549]
+[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1184659045]
 layout_mode = 0
-offset_left = 15.0
-offset_top = 156.0
-offset_right = 143.0
-offset_bottom = 412.0
-icon = ExtResource("9_fupj7")
+offset_left = 38.0
+offset_top = 198.0
+offset_right = 102.0
+offset_bottom = 262.0
+icon = ExtResource("8_gqrw3")
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=2033288117]
+[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=989224372]
 layout_mode = 0
-offset_left = 975.0
-offset_top = 156.0
-offset_right = 1103.0
-offset_bottom = 412.0
-icon = ExtResource("10_rlxaj")
+offset_left = 1014.0
+offset_top = 198.0
+offset_right = 1078.0
+offset_bottom = 262.0
+icon = ExtResource("9_jpbjf")
 icon_alignment = 1
 expand_icon = true
 
