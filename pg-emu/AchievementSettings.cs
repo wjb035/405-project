@@ -20,7 +20,7 @@ public partial class AchievementSettings : Control
 	[Export] NodePath ApiSaveButtonPath;
 	
 	private LineEdit _usernameEdit;
-	private Button _usernameSave;
+	private Button? _usernameSave;
 	private LineEdit _apiEdit;
 	private Button _apiSave;
 	private LineEdit _avatarEdit;
@@ -126,10 +126,8 @@ public partial class AchievementSettings : Control
 		_apiEdit.PlaceholderText = "RetroAchievements API Key";
 		
 
-		UiStyle.StylePrimaryButton(_usernameSave);
 		UiStyle.StylePrimaryButton(_apiSave);
 		
-		UiStyle.TightenButtonContentPadding(_usernameSave, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_apiSave, horizontal: 6f, vertical: 2f);
 		
 

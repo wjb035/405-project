@@ -11,8 +11,7 @@ public static class FriendActivity
 	private const string BaseUrl = "http://localhost:5276/api/friends";
 	private static List<KeyValuePair<string,string>> friendIds = new();
 	public static Dictionary<KeyValuePair<string,string>, JsonElement> results = new Dictionary<KeyValuePair<string,string>, JsonElement>();
-	
-	private static HomeScreen homeScreen = null;
+
 	public static async Task<Dictionary<KeyValuePair<string,string>, JsonElement>> GetActivitiesAsync()
 {
 	var authService = AuthService.Instance;
@@ -90,7 +89,7 @@ public static class FriendActivity
 
 
 
-	public static async Task<string> GetFriendsJson(HomeScreen homeScreen)
+	public static async Task<string> GetFriendsJson()
 	{
 		var authService = AuthService.Instance;
 		// THIS SEEMS LIKE I SHOULDN'T B E DOING THIS.... MAYBE FIX AFTER THE TOKEN ISSUE IS MERGED???
@@ -126,23 +125,7 @@ public static class FriendActivity
 				tcs.SetResult(json);
 				GD.Print(json);
 				if (!string.IsNullOrEmpty(json))
-{
-	// Convert JSON array into a list of dictionary-like objects
-	var friends = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(json);
-
-	foreach (var friend in friends)
-	{
-		string id = friend["id"];
-		string username = friend["username"];
-
-		GD.Print("Friend ID: " + id);
-		if (!friendIds.Contains(new KeyValuePair<string, string>(username,id))){
-			friendIds.Add(new KeyValuePair<string, string>(username,id));
-		}
-		
-		GD.Print("Friend Username: " + username);
-	}
-}		
+					RegisterFriendsFromJson(json);
 			}
 			else
 			{
@@ -157,6 +140,54 @@ public static class FriendActivity
 		http.Request(BaseUrl, headers, HttpClient.Method.Get);
 		
 		return await tcs.Task;
+	}
+
+	private static void RegisterFriendsFromJson(string json)
+	{
+		JsonElement friendsRoot;
+		try
+		{
+			friendsRoot = JsonSerializer.Deserialize<JsonElement>(json);
+		}
+		catch (JsonException ex)
+		{
+			GD.PrintErr("[FriendActivity] Failed to parse friends JSON: " + ex.Message);
+			return;
+		}
+
+		if (friendsRoot.ValueKind != JsonValueKind.Array)
+			return;
+
+		foreach (var friend in friendsRoot.EnumerateArray())
+		{
+			if (friend.ValueKind != JsonValueKind.Object)
+				continue;
+
+			var id = ReadJsonString(friend, "id");
+			var username = ReadJsonString(friend, "username");
+			if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(username))
+				continue;
+
+			var pair = new KeyValuePair<string, string>(username, id);
+			if (!friendIds.Contains(pair))
+				friendIds.Add(pair);
+
+			GD.Print("Friend ID: " + id);
+			GD.Print("Friend Username: " + username);
+		}
+	}
+
+	private static string ReadJsonString(JsonElement element, string propertyName)
+	{
+		if (!element.TryGetProperty(propertyName, out var property))
+			return string.Empty;
+
+		return property.ValueKind switch
+		{
+			JsonValueKind.String => property.GetString() ?? string.Empty,
+			JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => property.GetRawText(),
+			_ => string.Empty,
+		};
 	}
 	
 	

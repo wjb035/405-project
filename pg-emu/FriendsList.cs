@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using PGEmu.Services;
 
 public partial class FriendsList : Node
 {	
@@ -16,6 +17,14 @@ public partial class FriendsList : Node
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+	}
+	
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
 	}
 	
 	

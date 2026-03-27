@@ -9,6 +9,7 @@ using PGEmu.Services;
 using PGEmu.Services.Models;
 using System.Linq;
 using System.Diagnostics;
+using System.Text.Json;
 
 public partial class HomeScreen : Control
 {
@@ -159,8 +160,14 @@ public partial class HomeScreen : Control
 		}
 		
 		
-		await FriendActivity.GetFriendsJson(this);
+		await FriendActivity.GetFriendsJson();
+		if (!IsScreenAlive())
+			return;
+
 		await FriendActivity.GetActivitiesAsync();
+		if (!IsScreenAlive())
+			return;
+
 		SetupFriendHover();
 	}
 	
@@ -241,116 +248,134 @@ private void ConnectAllButtons(Node node)
 	}
 }
 
-public void SetupFriendHover(){
-		if (FriendActivity.results.Count == 0){
+	private bool IsScreenAlive()
+	{
+		return GodotObject.IsInstanceValid(this) && !IsQueuedForDeletion() && IsInsideTree();
+	}
+
+	public void SetupFriendHover(){
+		if (!IsScreenAlive())
+			return;
+
+		var friendsRow = GetNodeOrNull<Control>("Margin/Root/CenterArea/FriendsRow");
+		if (friendsRow == null)
+			return;
+
+		foreach (Node child in friendsRow.GetChildren())
+		{
+			if (child is not Control control)
+				continue;
+
+			control.Visible = false;
+			control.TooltipText = string.Empty;
+		}
+
+		if (FriendActivity.results.Count == 0)
+		{
 			GD.Print("Oops! Empty!");
-			// hide all children here 
+			return;
 		}
-		else{
-			List<KeyValuePair<string,KeyValuePair<string, DateTime>>> fullList = new();
-			foreach (var p in FriendActivity.results){
-				//GD.Print("frogs");
-				GD.Print(p.Key.Key);
-				var listOfStatus = p.Value.EnumerateObject().ToList();
-				GD.Print(listOfStatus[3].Value);
-				GD.Print(listOfStatus[5].Value);
-				fullList.Add(new KeyValuePair<string, KeyValuePair<string, DateTime>>(p.Key.Key, new KeyValuePair<string, DateTime>(listOfStatus[3].Value.GetString(),listOfStatus[5].Value.GetDateTime(	))));;
-			// OK, we have all the friends and their data! now let's show or hide the icons
-			
-		
-			}
-			GD.Print("count of the list is "+ fullList.Count);
-			GD.Print(DateTime.UtcNow);
-				// Brute forcing it...
-				// If they have 0 friends, hide it all
-				if (fullList.Count == 0){
-					
-				}
-				else if (fullList.Count == 1){
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
-					
-					int k = 0;
-					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
-						if (child.Visible == true){
-							string username = fullList[k].Key;
-							string activity = fullList[k].Value.Key;
-							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
-								activity = "Offline";
-							}
-							child.TooltipText = username + "\n"+ activity;
-							k++;
-							
-						}
-					}
-					
-					
-					
-				}
-				else if (fullList.Count == 2){
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
-					int k = 0;
-					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
-						if (child.Visible == true){
-							string username = fullList[k].Key;
-							string activity = fullList[k].Value.Key;
-							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
-								activity = "Offline";
-							}
-							child.TooltipText = username + "\n"+ activity;
-							k++;
-							
-						}
-					}
-				
-				}
-				else if (fullList.Count == 3){
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend3").Visible = true;
-					int k = 0;
-					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
-						if (child.Visible == true){
-							string username = fullList[k].Key;
-							string activity = fullList[k].Value.Key;
-							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
-								activity = "Offline";
-							}
-							child.TooltipText = username + "\n"+ activity;
-							k++;
-							
-						}
-					}
-				
-				}
-				else{
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend1").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend2").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/Friend3").Visible = true;
-					GetNode<Control>("Margin/Root/CenterArea/FriendsRow/MoreFriends").Visible = true;
-					int realVal = fullList.Count;
-					GetNode<Label>("Margin/Root/CenterArea/FriendsRow/MoreFriends").Text = "+"+ realVal + " more";
-					int k = 0;
-					foreach (Control child in GetNode<Control>("Margin/Root/CenterArea/FriendsRow").GetChildren()){
-						if (child.Visible == true){
-							string username = fullList[k].Key;
-							string activity = fullList[k].Value.Key;
-							if ((DateTime.UtcNow - fullList[k].Value.Value).TotalMinutes > 5){
-								activity = "Offline";
-							}
-							child.TooltipText = username + "\n"+ activity;
-							k++;
-							
-						}
-					}
-					
-					
-					
-				}
-			
+
+		List<KeyValuePair<string, KeyValuePair<string, DateTime>>> fullList = new();
+		foreach (var friend in FriendActivity.results)
+		{
+			if (!TryReadFriendActivity(friend.Value, out var activity, out var updatedAt))
+				continue;
+
+			fullList.Add(new KeyValuePair<string, KeyValuePair<string, DateTime>>(
+				friend.Key.Key,
+				new KeyValuePair<string, DateTime>(activity, updatedAt)));
 		}
-	
-		
+
+		GD.Print("count of the list is " + fullList.Count);
+		GD.Print(DateTime.UtcNow);
+
+		for (int i = 0; i < Mathf.Min(3, fullList.Count); i++)
+		{
+			if (friendsRow.GetNodeOrNull<Control>($"Friend{i + 1}") is not Control friendSlot)
+				continue;
+
+			friendSlot.Visible = true;
+			var statusText = BuildFriendStatusText(fullList[i].Value.Key, fullList[i].Value.Value);
+			friendSlot.TooltipText = BuildFriendTooltip(fullList[i].Key, statusText);
+		}
+
+		if (fullList.Count > 3 && friendsRow.GetNodeOrNull<Label>("MoreFriends") is Label moreFriends)
+		{
+			moreFriends.Visible = true;
+			moreFriends.Text = $"+{fullList.Count - 3} more";
+		}
+	}
+
+	private static bool TryReadFriendActivity(JsonElement activityElement, out string activity, out DateTime updatedAt)
+	{
+		activity = "In the Menus";
+		updatedAt = DateTime.UtcNow;
+
+		if (activityElement.ValueKind != JsonValueKind.Object)
+			return false;
+
+		if (TryReadJsonString(activityElement, "ExternalGameId", out var externalGameId) && !string.IsNullOrWhiteSpace(externalGameId))
+			activity = externalGameId;
+		else if (TryReadJsonString(activityElement, "externalGameId", out externalGameId) && !string.IsNullOrWhiteSpace(externalGameId))
+			activity = externalGameId;
+		else if (TryReadJsonString(activityElement, "ActivityType", out var activityType) && !string.IsNullOrWhiteSpace(activityType))
+			activity = activityType;
+		else if (TryReadJsonString(activityElement, "activityType", out activityType) && !string.IsNullOrWhiteSpace(activityType))
+			activity = activityType;
+
+		if (TryReadJsonDateTime(activityElement, "UpdatedAt", out var parsedUpdatedAt) ||
+			TryReadJsonDateTime(activityElement, "updatedAt", out parsedUpdatedAt))
+		{
+			updatedAt = parsedUpdatedAt;
+		}
+
+		return true;
+	}
+
+	private static bool TryReadJsonString(JsonElement element, string propertyName, out string value)
+	{
+		value = string.Empty;
+		if (!element.TryGetProperty(propertyName, out var property))
+			return false;
+
+		switch (property.ValueKind)
+		{
+			case JsonValueKind.String:
+				value = property.GetString() ?? string.Empty;
+				return true;
+			case JsonValueKind.Number:
+			case JsonValueKind.True:
+			case JsonValueKind.False:
+				value = property.GetRawText();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private static bool TryReadJsonDateTime(JsonElement element, string propertyName, out DateTime value)
+	{
+		value = default;
+		if (!element.TryGetProperty(propertyName, out var property))
+			return false;
+		if (property.ValueKind != JsonValueKind.String)
+			return false;
+
+		return DateTime.TryParse(property.GetString(), out value);
+	}
+
+	private static string BuildFriendStatusText(string activity, DateTime updatedAt)
+	{
+		if ((DateTime.UtcNow - updatedAt).TotalMinutes > 5)
+			return "Offline";
+
+		return string.IsNullOrWhiteSpace(activity) ? "In the Menus" : activity;
+	}
+
+	private static string BuildFriendTooltip(string username, string statusText)
+	{
+		return username + "\n" + statusText;
 	}
 	
 private void OnAnyButtonPressed()

@@ -64,7 +64,16 @@ public partial class GameSelect : Control
 	private static readonly Dictionary<string, Texture2D> CoverArtCache = new(StringComparer.OrdinalIgnoreCase);
 	private BrowseLayoutMode _browseLayout = BrowseLayoutMode.Carousel;
 	private int _selectedIndex;
-	private const int GridColumns = 4;
+	private int _gridColumnCount = 3;
+	private float _gridTileSize = GridPreferredTileSize;
+	private const int MaxGridColumns = 4;
+	private const float GridPreferredTileSize = 248f;
+	private const float GridMinimumTileSize = 188f;
+	private const int GridTileSpacing = 18;
+	private const float BrowseShellSideInset = 120f;
+	private const float BrowseShellTopInset = 72f;
+	private const float BrowseShellBottomInset = 22f;
+	private const float BrowseShellContentPadding = 22f;
 	private const float CarouselCardSpacing = 404f;
 
 	
@@ -83,6 +92,7 @@ public partial class GameSelect : Control
 	// Gamepad navigation (left stick + d-pad)
 	private const float AxisDeadzone = 0.55f;
 	private const int AxisRepeatMs = 180;
+	private const float ControllerRowMergeThreshold = 36f;
 	private int _leftAxisDir;
 	private long _leftAxisNextMs;
 	private int _verticalAxisDir;
@@ -149,6 +159,8 @@ public partial class GameSelect : Control
 		_play.Pressed += PlaySelected;
 		_settings.Pressed += OpenVault;
 		_friends.Pressed += OpenProfile;
+		_chat.Pressed += OnChatPressed;
+		_help.Pressed += OnHelpPressed;
 		_add.Pressed += addToCollection;
 		ApplyAesthetic();
 		
@@ -167,6 +179,7 @@ public partial class GameSelect : Control
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
+		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
 		
 	}
@@ -212,14 +225,16 @@ private void OnAnyButtonPressed()
 		GD.Print("button has been pressed!!!!!!");
 		if (_optionButton.Visible){
 			_optionButton.Hide();
+			RefreshControllerFocusGraph();
 			ResetUiNavigationState();
 		}else if (CollectionStorage.collections.Count > 0){
 			
 			_optionButton.Show();
 			_optionButton.Select(-1);
+			RefreshControllerFocusGraph();
 			var rows = GetControllerUiRows();
-			_uiRowIndex = rows.Count - 1;
-			_uiColumnIndex = 0;
+			_uiRowIndex = FindRowIndexContaining(rows, _optionButton);
+			_uiColumnIndex = GetColumnIndexContaining(rows, _uiRowIndex, _optionButton);
 			ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 		}
 		
@@ -244,6 +259,7 @@ private void OnAnyButtonPressed()
 		
 		
 		_optionButton.Hide();
+		RefreshControllerFocusGraph();
 		ResetUiNavigationState();
 		
 	}
@@ -271,6 +287,16 @@ private void OnAnyButtonPressed()
 			tree.SetMeta("pgemu_config_path", _configPath);
 
 		tree.ChangeSceneToFile("res://profile.tscn");
+	}
+
+	private void OnChatPressed()
+	{
+		GD.Print("Chat pressed");
+	}
+
+	private void OnHelpPressed()
+	{
+		GD.Print("Help pressed");
 	}
 
 	private void GoHome()
@@ -883,7 +909,7 @@ private void OnAnyButtonPressed()
 			BuildCarouselCards();
 		}
 		
-		if (_carousel3D != null)
+		if (_carousel3D != null && _browseLayout == BrowseLayoutMode.ThreeD)
 		{
 			var gameData = _games.Select(g =>
 			{
@@ -949,7 +975,7 @@ private void OnAnyButtonPressed()
 		if (_browseLayout == BrowseLayoutMode.Grid)
 		{
 			AudioManager.Instance?.PlayNavigation(dir);
-			SetSelectedIndex(Mathf.Clamp(_selectedIndex + (dir * GridColumns), 0, Count - 1));
+			SetSelectedIndex(Mathf.Clamp(_selectedIndex + (dir * _gridColumnCount), 0, Count - 1));
 			return;
 		}
 
@@ -1120,6 +1146,7 @@ private void OnAnyButtonPressed()
 				if (_optionButton.Visible)
 				{
 					_optionButton.Hide();
+					RefreshControllerFocusGraph();
 					ResetUiNavigationState();
 					MarkInputHandled();
 					break;
@@ -1155,13 +1182,13 @@ private void OnAnyButtonPressed()
 				case JoyButton.DpadUp:
 					if (!ShouldEnterUiNavigationFromUp())
 						return false;
-					_uiRowIndex = Mathf.Min(1, rows.Count - 1);
+					_uiRowIndex = GetPreferredUiEntryRowIndex(rows);
 					_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
 					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 				case JoyButton.DpadDown:
 					if (!ShouldEnterUiNavigationFromDown())
 						return false;
-					_uiRowIndex = Mathf.Min(1, rows.Count - 1);
+					_uiRowIndex = GetPreferredUiEntryRowIndex(rows);
 					_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
 					return ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 			}
@@ -1180,6 +1207,14 @@ private void OnAnyButtonPressed()
 					return ControllerService.ActivateRowSelection(rows, _uiRowIndex, _uiColumnIndex);
 				if (ControllerService.IsBackButton(button))
 				{
+					if (_optionButton.Visible)
+					{
+						_optionButton.Hide();
+						RefreshControllerFocusGraph();
+						ResetUiNavigationState();
+						return true;
+					}
+
 					ExitUiNavigation();
 					return true;
 				}
@@ -1215,17 +1250,191 @@ private void OnAnyButtonPressed()
 
 	private List<List<Button>> GetControllerUiRows()
 	{
-		if (_optionButton.Visible)
+		var buttons = GetControllerFocusableButtons();
+		buttons.Sort((left, right) =>
 		{
-			return ControllerService.BuildVisibleRows(
-				new[] { _back, _achievement, _friends, _chat, _settings, _help },
-				new[] { _prev, _add, _play, _next },
-				new[] { _optionButton });
+			var yCompare = GetControlCenterY(left).CompareTo(GetControlCenterY(right));
+			if (yCompare != 0)
+				return yCompare;
+
+			return GetControlCenterX(left).CompareTo(GetControlCenterX(right));
+		});
+
+		var rows = new List<List<Button>>();
+		foreach (var button in buttons)
+		{
+			if (rows.Count == 0)
+			{
+				rows.Add(new List<Button> { button });
+				continue;
+			}
+
+			var row = rows[^1];
+			if (Mathf.Abs(GetControlCenterY(button) - GetAverageRowCenterY(row)) <= ControllerRowMergeThreshold)
+			{
+				row.Add(button);
+				continue;
+			}
+
+			rows.Add(new List<Button> { button });
 		}
 
-		return ControllerService.BuildVisibleRows(
-			new[] { _back, _achievement, _friends, _chat, _settings, _help },
-			new[] { _prev, _add, _play, _next });
+		foreach (var row in rows)
+			row.Sort((left, right) => GetControlCenterX(left).CompareTo(GetControlCenterX(right)));
+
+		return rows;
+	}
+
+	private List<Button> GetControllerFocusableButtons()
+	{
+		var buttons = new List<Button>();
+		AddFocusableButton(buttons, _back);
+		AddFocusableButton(buttons, _achievement);
+		AddFocusableButton(buttons, _friends);
+		AddFocusableButton(buttons, _chat);
+		AddFocusableButton(buttons, _settings);
+		AddFocusableButton(buttons, _help);
+		AddFocusableButton(buttons, _add);
+		AddFocusableButton(buttons, _optionButton.Visible ? _optionButton : null);
+		AddFocusableButton(buttons, _prev);
+		AddFocusableButton(buttons, _play);
+		AddFocusableButton(buttons, _next);
+		return buttons;
+	}
+
+	private void AddFocusableButton(List<Button> buttons, Button? button)
+	{
+		if (button == null || !GodotObject.IsInstanceValid(button))
+			return;
+		if (!button.Visible || button.Disabled)
+			return;
+
+		ControllerService.PrepareFocusable(button);
+		buttons.Add(button);
+	}
+
+	private void RefreshControllerFocusGraph()
+	{
+		var rows = GetControllerUiRows();
+		foreach (var row in rows)
+			ResetFocusNeighbors(row);
+
+		foreach (var row in rows)
+			ConfigureHorizontalNeighbors(row);
+
+		for (int i = 0; i < rows.Count - 1; i++)
+			ConfigureVerticalNeighbors(rows[i], rows[i + 1]);
+	}
+
+	private void ResetFocusNeighbors(IReadOnlyList<Button> row)
+	{
+		foreach (var button in row)
+		{
+			var selfPath = button.GetPathTo(button);
+			button.FocusNeighborLeft = selfPath;
+			button.FocusNeighborRight = selfPath;
+			button.FocusNeighborTop = selfPath;
+			button.FocusNeighborBottom = selfPath;
+		}
+	}
+
+	private void ConfigureHorizontalNeighbors(IReadOnlyList<Button> row)
+	{
+		if (row.Count == 0)
+			return;
+
+		for (int i = 0; i < row.Count; i++)
+		{
+			var current = row[i];
+			var left = row[(i - 1 + row.Count) % row.Count];
+			var right = row[(i + 1) % row.Count];
+			current.FocusNeighborLeft = current.GetPathTo(left);
+			current.FocusNeighborRight = current.GetPathTo(right);
+		}
+	}
+
+	private void ConfigureVerticalNeighbors(IReadOnlyList<Button> upperRow, IReadOnlyList<Button> lowerRow)
+	{
+		if (upperRow.Count == 0 || lowerRow.Count == 0)
+			return;
+
+		foreach (var upper in upperRow)
+			upper.FocusNeighborBottom = upper.GetPathTo(FindNearestButtonByX(lowerRow, GetControlCenterX(upper)));
+
+		foreach (var lower in lowerRow)
+			lower.FocusNeighborTop = lower.GetPathTo(FindNearestButtonByX(upperRow, GetControlCenterX(lower)));
+	}
+
+	private static Button FindNearestButtonByX(IReadOnlyList<Button> row, float sourceCenterX)
+	{
+		var nearest = row[0];
+		var nearestDistance = Mathf.Abs(GetControlCenterX(nearest) - sourceCenterX);
+
+		for (int i = 1; i < row.Count; i++)
+		{
+			var candidate = row[i];
+			var distance = Mathf.Abs(GetControlCenterX(candidate) - sourceCenterX);
+			if (distance >= nearestDistance)
+				continue;
+
+			nearest = candidate;
+			nearestDistance = distance;
+		}
+
+		return nearest;
+	}
+
+	private static float GetControlCenterX(Control control)
+	{
+		var rect = control.GetGlobalRect();
+		return rect.Position.X + (rect.Size.X * 0.5f);
+	}
+
+	private static float GetControlCenterY(Control control)
+	{
+		var rect = control.GetGlobalRect();
+		return rect.Position.Y + (rect.Size.Y * 0.5f);
+	}
+
+	private static float GetAverageRowCenterY(IReadOnlyList<Button> row)
+	{
+		if (row.Count == 0)
+			return 0f;
+
+		float total = 0f;
+		foreach (var button in row)
+			total += GetControlCenterY(button);
+
+		return total / row.Count;
+	}
+
+	private static int FindRowIndexContaining(IReadOnlyList<List<Button>> rows, Button button)
+	{
+		for (int i = 0; i < rows.Count; i++)
+		{
+			if (rows[i].Contains(button))
+				return i;
+		}
+
+		return Mathf.Max(0, rows.Count - 1);
+	}
+
+	private static int GetColumnIndexContaining(IReadOnlyList<List<Button>> rows, int rowIndex, Button button)
+	{
+		if (rowIndex < 0 || rowIndex >= rows.Count)
+			return 0;
+
+		var columnIndex = rows[rowIndex].IndexOf(button);
+		return columnIndex >= 0 ? columnIndex : 0;
+	}
+
+	private int GetPreferredUiEntryRowIndex(IReadOnlyList<List<Button>> rows)
+	{
+		var playRowIndex = FindRowIndexContaining(rows, _play);
+		if (playRowIndex >= 0 && playRowIndex < rows.Count)
+			return playRowIndex;
+
+		return Mathf.Max(0, rows.Count - 1);
 	}
 
 	private int GetPreferredActionColumn(List<Button> row)
@@ -1241,7 +1450,7 @@ private void OnAnyButtonPressed()
 	{
 		return _browseLayout switch
 		{
-			BrowseLayoutMode.Grid => _selectedIndex < GridColumns,
+			BrowseLayoutMode.Grid => _selectedIndex < _gridColumnCount,
 			BrowseLayoutMode.List => _selectedIndex <= 0,
 			_ => true,
 		};
@@ -1251,7 +1460,7 @@ private void OnAnyButtonPressed()
 	{
 		return _browseLayout switch
 		{
-			BrowseLayoutMode.Grid => _selectedIndex + GridColumns >= Count,
+			BrowseLayoutMode.Grid => _selectedIndex + _gridColumnCount >= Count,
 			BrowseLayoutMode.List => _selectedIndex >= Count - 1,
 			_ => true,
 		};
@@ -1432,10 +1641,10 @@ private void OnAnyButtonPressed()
 			LayoutMode = 2,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
-			Columns = GridColumns,
+			Columns = _gridColumnCount,
 		};
-		_gridRows.AddThemeConstantOverride("h_separation", 18);
-		_gridRows.AddThemeConstantOverride("v_separation", 18);
+		_gridRows.AddThemeConstantOverride("h_separation", GridTileSpacing);
+		_gridRows.AddThemeConstantOverride("v_separation", GridTileSpacing);
 		_gridScroll.AddChild(_gridRows);
 		_gridShell.AddChild(_gridScroll);
 		
@@ -1461,20 +1670,54 @@ private void OnAnyButtonPressed()
 			MouseFilter = Control.MouseFilterEnum.Stop,
 		};
 		shell.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		shell.OffsetLeft = 120f;
-		shell.OffsetTop = 72f;
-		shell.OffsetRight = -120f;
-		shell.OffsetBottom = -22f;
+		shell.OffsetLeft = BrowseShellSideInset;
+		shell.OffsetTop = BrowseShellTopInset;
+		shell.OffsetRight = -BrowseShellSideInset;
+		shell.OffsetBottom = -BrowseShellBottomInset;
 		shell.AddThemeStyleboxOverride("panel", CreatePanelStyleBox(
 			new Color(0.08f, 0.06f, 0.14f, 0.94f),
 			new Color(0.64f, 0.52f, 0.88f, 0.72f),
 			borderWidth: 2,
 			radius: 28,
-			contentMarginLeft: 22f,
-			contentMarginTop: 22f,
-			contentMarginRight: 22f,
-			contentMarginBottom: 22f));
+			contentMarginLeft: BrowseShellContentPadding,
+			contentMarginTop: BrowseShellContentPadding,
+			contentMarginRight: BrowseShellContentPadding,
+			contentMarginBottom: BrowseShellContentPadding));
 		return shell;
+	}
+
+	private void UpdateGridMetrics()
+	{
+		var availableWidth = Mathf.Max(GridMinimumTileSize, GetGridContentWidth());
+		var columns = Mathf.Clamp(
+			Mathf.FloorToInt((availableWidth + GridTileSpacing) / (GridPreferredTileSize + GridTileSpacing)),
+			1,
+			MaxGridColumns);
+
+		while (columns > 1)
+		{
+			var candidateTileSize = (availableWidth - ((columns - 1) * GridTileSpacing)) / columns;
+			if (candidateTileSize >= GridMinimumTileSize)
+			{
+				_gridColumnCount = columns;
+				_gridTileSize = candidateTileSize;
+				return;
+			}
+
+			columns--;
+		}
+
+		_gridColumnCount = 1;
+		_gridTileSize = availableWidth;
+	}
+
+	private float GetGridContentWidth()
+	{
+		if (_gridShell.Size.X > (BrowseShellContentPadding * 2f))
+			return _gridShell.Size.X - (BrowseShellContentPadding * 2f);
+
+		var fallbackWidth = _carouselArea.Size.X - (BrowseShellSideInset * 2f) - (BrowseShellContentPadding * 2f);
+		return fallbackWidth > 1f ? fallbackWidth : GridPreferredTileSize * 3f;
 	}
 
 	private static StyleBoxFlat CreatePanelStyleBox(
@@ -1756,6 +1999,8 @@ private void OnAnyButtonPressed()
 
 	private void BuildGridTiles()
 	{
+		UpdateGridMetrics();
+
 		if (GetActualGameCount() == 0)
 		{
 			_gridRows.Columns = 1;
@@ -1763,11 +2008,11 @@ private void OnAnyButtonPressed()
 			return;
 		}
 
-		_gridRows.Columns = GridColumns;
+		_gridRows.Columns = _gridColumnCount;
 		for (int i = 0; i < _games.Count; i++)
 		{
 			var tile = CreateSelectableEntry(i, gridStyle: true);
-			tile.CustomMinimumSize = new Vector2(224f, 166f);
+			tile.CustomMinimumSize = new Vector2(_gridTileSize, _gridTileSize);
 			tile.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
 			var margin = new MarginContainer
@@ -1787,7 +2032,7 @@ private void OnAnyButtonPressed()
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
-			stack.AddThemeConstantOverride("separation", 8);
+			stack.AddThemeConstantOverride("separation", 10);
 
 			var topRow = new HBoxContainer
 			{
@@ -1819,52 +2064,45 @@ private void OnAnyButtonPressed()
 				LayoutMode = 2,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
-				CustomMinimumSize = new Vector2(0f, 94f),
 			};
 
 			var screenMargin = new MarginContainer
 			{
 				LayoutMode = 2,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
-			screenMargin.AddThemeConstantOverride("margin_left", 8);
-			screenMargin.AddThemeConstantOverride("margin_top", 7);
-			screenMargin.AddThemeConstantOverride("margin_right", 8);
-			screenMargin.AddThemeConstantOverride("margin_bottom", 7);
+			screenMargin.AddThemeConstantOverride("margin_left", 10);
+			screenMargin.AddThemeConstantOverride("margin_top", 10);
+			screenMargin.AddThemeConstantOverride("margin_right", 10);
+			screenMargin.AddThemeConstantOverride("margin_bottom", 10);
 
-			var titleWrap = new CenterContainer
+			var screenCanvas = new Control
 			{
-				Name = "ScreenWrap",
+				Name = "ScreenCanvas",
 				LayoutMode = 2,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
-
-			var screenStack = new VBoxContainer
-			{
-				LayoutMode = 2,
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			};
-			screenStack.AddThemeConstantOverride("separation", 3);
 
 			var gridArt = new TextureRect
 			{
 				Name = "GridArt",
-				LayoutMode = 2,
-				CustomMinimumSize = new Vector2(0f, 76f),
+				LayoutMode = 1,
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			};
+			gridArt.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 
 			var monogram = new Label
 			{
 				Name = "GridMonogram",
-				LayoutMode = 2,
+				LayoutMode = 1,
 				Text = BuildGameMonogram(_games[i]),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
 			};
+			monogram.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 			monogram.AddThemeColorOverride("font_color", new Color(0.75f, 0.88f, 1f, 0.92f));
 			monogram.AddThemeFontSizeOverride("font_size", 30);
 			BindCoverArt(gridArt, monogram, _games[i]);
@@ -1874,20 +2112,14 @@ private void OnAnyButtonPressed()
 				Name = "GridTitle",
 				LayoutMode = 2,
 				Text = _games[i].Title,
+				CustomMinimumSize = new Vector2(0f, 42f),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			};
 			title.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
-			title.AddThemeFontSizeOverride("font_size", 17);
-
-			var projection = new ColorRect
-			{
-				Name = "ProjectionBar",
-				CustomMinimumSize = new Vector2(0f, 5f),
-				LayoutMode = 2,
-				Color = new Color(0.50f, 0.34f, 0.80f, 0.68f),
-			};
+			title.AddThemeFontSizeOverride("font_size", 18);
 
 			var footerRow = new HBoxContainer
 			{
@@ -1895,6 +2127,7 @@ private void OnAnyButtonPressed()
 				LayoutMode = 2,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			};
+			footerRow.AddThemeConstantOverride("separation", 8);
 
 			var footerLeft = new Label
 			{
@@ -1920,17 +2153,15 @@ private void OnAnyButtonPressed()
 			topRow.AddChild(channelTag);
 			if (readyTag != null)
 				topRow.AddChild(readyTag);
-			screenStack.AddChild(gridArt);
-			screenStack.AddChild(monogram);
-			screenStack.AddChild(title);
-			titleWrap.AddChild(screenStack);
-			screenMargin.AddChild(titleWrap);
+			screenCanvas.AddChild(gridArt);
+			screenCanvas.AddChild(monogram);
+			screenMargin.AddChild(screenCanvas);
 			screenShell.AddChild(screenMargin);
 			footerRow.AddChild(footerLeft);
 			footerRow.AddChild(footerRight);
 			stack.AddChild(topRow);
 			stack.AddChild(screenShell);
-			stack.AddChild(projection);
+			stack.AddChild(title);
 			stack.AddChild(footerRow);
 			margin.AddChild(stack);
 			tile.AddChild(margin);
@@ -1961,8 +2192,9 @@ private void OnAnyButtonPressed()
 
 	private void BuildGridEmptyState()
 	{
+		UpdateGridMetrics();
 		var tile = CreateSelectableEntry(0, gridStyle: true);
-		tile.CustomMinimumSize = new Vector2(0f, 340f);
+		tile.CustomMinimumSize = new Vector2(_gridTileSize, Mathf.Max(_gridTileSize, 340f));
 		tile.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
 		var center = new CenterContainer

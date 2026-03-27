@@ -1,5 +1,6 @@
 using Godot;
 using PGEmu.Services;
+using System;
 
 public partial class AppearanceSettings : Control
 {
@@ -33,17 +34,17 @@ public partial class AppearanceSettings : Control
 
 	public override void _Ready()
 	{
-		_carouselButton = GetNode<Button>(CarouselButtonPath);
-		_threeDButton = GetNode<Button>(ThreeDButtonPath);
-		_listButton = GetNode<Button>(ListButtonPath);
-		_gridButton = GetNode<Button>(GridButtonPath);
-		_descriptionTitle = GetNode<Label>(DescriptionTitlePath);
-		_descriptionBody = GetNode<Label>(DescriptionBodyPath);
-		_status = GetNode<Label>(StatusPath);
-		_carouselPreview = GetNode<Control>(CarouselPreviewPath);
-		_threeDPreview = GetNode<Control>(ThreeDPreviewPath);
-		_listPreview = GetNode<Control>(ListPreviewPath);
-		_gridPreview = GetNode<Control>(GridPreviewPath);
+		_carouselButton = ResolveNode<Button>(CarouselButtonPath, "Margin/Root/Modes/CarouselButton");
+		_threeDButton = ResolveNode<Button>(ThreeDButtonPath, "Margin/Root/Modes/3DCarouselButton");
+		_listButton = ResolveNode<Button>(ListButtonPath, "Margin/Root/Modes/ListButton");
+		_gridButton = ResolveNode<Button>(GridButtonPath, "Margin/Root/Modes/GridButton");
+		_descriptionTitle = ResolveNode<Label>(DescriptionTitlePath, "Margin/Root/Preview/Margin/PreviewRoot/CurrentLayout");
+		_descriptionBody = ResolveNode<Label>(DescriptionBodyPath, "Margin/Root/Preview/Margin/PreviewRoot/CurrentDescription");
+		_status = ResolveNode<Label>(StatusPath, "Margin/Root/Status");
+		_carouselPreview = ResolveNode<Control>(CarouselPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/CarouselPreview");
+		_threeDPreview = ResolveNode<Control>(ThreeDPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ThreeDPreview");
+		_listPreview = ResolveNode<Control>(ListPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ListPreview");
+		_gridPreview = ResolveNode<Control>(GridPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/GridPreview");
 
 
 
@@ -84,6 +85,7 @@ public partial class AppearanceSettings : Control
 		};
 
 		_carouselPreview.Visible = layout == BrowseLayoutMode.Carousel;
+		_threeDPreview.Visible = layout == BrowseLayoutMode.ThreeD;
 		_listPreview.Visible = layout == BrowseLayoutMode.List;
 		_gridPreview.Visible = layout == BrowseLayoutMode.Grid;
 
@@ -100,7 +102,7 @@ public partial class AppearanceSettings : Control
 
 		var title = GetNodeOrNull<Label>("Margin/Root/Title");
 		var hint = GetNodeOrNull<Label>("Margin/Root/Hint");
-		var previewEyebrow = GetNodeOrNull<Label>("Margin/Root/Stage/StageMargin/StageRoot/PreviewEyebrow");
+		var previewEyebrow = GetNodeOrNull<Label>("Margin/Root/Preview/Margin/PreviewRoot/PreviewEyebrow");
 		UiStyle.StyleTitleLabel(title);
 		UiStyle.StyleMetaLabel(hint);
 		UiStyle.StyleMetaLabel(previewEyebrow);
@@ -110,7 +112,7 @@ public partial class AppearanceSettings : Control
 		StyleModeButton(_gridButton);
 		StyleModeButton(_threeDButton); 
 		
-		var preview = GetNodeOrNull<PanelContainer>("Margin/Root/Stage");
+		var preview = GetNodeOrNull<PanelContainer>("Margin/Root/Preview");
 		if (preview != null)
 		{
 			preview.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -158,6 +160,22 @@ public partial class AppearanceSettings : Control
 				ContentMarginBottom = 18,
 			});
 		}
+	}
+
+	private T ResolveNode<T>(NodePath exportedPath, string fallbackPath) where T : Node
+	{
+		if (!string.IsNullOrWhiteSpace(exportedPath?.ToString()))
+		{
+			var fromExport = GetNodeOrNull<T>(exportedPath);
+			if (fromExport != null)
+				return fromExport;
+		}
+
+		var fromFallback = GetNodeOrNull<T>(fallbackPath);
+		if (fromFallback != null)
+			return fromFallback;
+
+		throw new InvalidOperationException($"Couldn't resolve {typeof(T).Name} for '{fallbackPath}'.");
 	}
 
 	private static void StyleModeButton(Button button)

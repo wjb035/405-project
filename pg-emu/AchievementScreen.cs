@@ -148,6 +148,14 @@ if (iconsAndAchData.Count == 0){
 
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void GoBack()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);

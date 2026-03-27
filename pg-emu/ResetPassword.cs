@@ -36,6 +36,14 @@ public partial class ResetPassword : Control
 		_confirmPassword.TextSubmitted += async _ => await AttemptReset();
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void ApplyThemeAesthetic()
 	{
 		var bg = GetNodeOrNull<ColorRect>("Bg");

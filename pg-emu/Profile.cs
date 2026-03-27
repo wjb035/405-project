@@ -57,6 +57,14 @@ public partial class Profile : Control
 		await LoadProfileAsync();
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private async Task LoadProfileAsync()
 	{
 		try

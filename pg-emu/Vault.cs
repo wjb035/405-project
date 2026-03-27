@@ -51,6 +51,14 @@ public partial class Vault : Control
 		LoadConfig();
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void ApplyThemeAesthetic()
 	{
 		var bg = GetNodeOrNull<ColorRect>("Bg");

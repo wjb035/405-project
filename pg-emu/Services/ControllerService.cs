@@ -223,14 +223,48 @@ public partial class ControllerService : Node
 
 		if (rowDelta != 0)
 		{
+			float? sourceCenterX = null;
+			var currentRow = rows[rowIndex];
+			if (columnIndex >= 0 && columnIndex < currentRow.Count)
+				sourceCenterX = GetControlCenter(currentRow[columnIndex]).X;
+
 			rowIndex = WrapIndex(rowIndex + rowDelta, rows.Count);
-			columnIndex = Mathf.Clamp(columnIndex, 0, rows[rowIndex].Count - 1);
+			columnIndex = sourceCenterX.HasValue
+				? FindNearestColumnByX(rows[rowIndex], sourceCenterX.Value)
+				: Mathf.Clamp(columnIndex, 0, rows[rowIndex].Count - 1);
 		}
 
 		if (columnDelta != 0)
 			columnIndex = WrapIndex(columnIndex + columnDelta, rows[rowIndex].Count);
 
 		return FocusRowEntry(rows, ref rowIndex, ref columnIndex);
+	}
+
+	private static int FindNearestColumnByX(IReadOnlyList<Button> row, float sourceCenterX)
+	{
+		if (row.Count == 0)
+			return 0;
+
+		var nearestIndex = 0;
+		var nearestDistance = float.MaxValue;
+
+		for (int i = 0; i < row.Count; i++)
+		{
+			var distance = Mathf.Abs(GetControlCenter(row[i]).X - sourceCenterX);
+			if (distance >= nearestDistance)
+				continue;
+
+			nearestDistance = distance;
+			nearestIndex = i;
+		}
+
+		return nearestIndex;
+	}
+
+	private static Vector2 GetControlCenter(Control control)
+	{
+		var rect = control.GetGlobalRect();
+		return rect.Position + (rect.Size * 0.5f);
 	}
 
 	public static bool ActivateRowSelection(IReadOnlyList<List<Button>> rows, int rowIndex, int columnIndex)
@@ -244,7 +278,24 @@ public partial class ControllerService : Node
 		if (columnIndex < 0 || columnIndex >= row.Count)
 			return false;
 
-		row[columnIndex].EmitSignal(Button.SignalName.Pressed);
+		var button = row[columnIndex];
+		if (button.HasFocus())
+			return true;
+
+		button.EmitSignal(Button.SignalName.Pressed);
+		return true;
+	}
+
+	public static bool TryHandleBackAction(InputEvent @event, Action backAction)
+	{
+		if (@event is not InputEventJoypadButton joypadButton)
+			return false;
+		if (!joypadButton.Pressed || !IsBackButton(joypadButton.ButtonIndex))
+			return false;
+		if (Instance?.ShouldHandleMenuInput(joypadButton.Device) == false)
+			return false;
+
+		backAction();
 		return true;
 	}
 

@@ -62,6 +62,14 @@ public partial class Login : Control
 		
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void ApplyThemeAesthetic()
 	{
 		// Match auth screens to the launcher's neon-dark visual language.

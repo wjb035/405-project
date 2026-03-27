@@ -42,6 +42,14 @@ public partial class Register : Control
 		_back.Pressed += GoBack;
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void ApplyThemeAesthetic()
 	{
 		// Match auth screens to the same launcher aesthetic used by the home screen.

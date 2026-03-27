@@ -94,6 +94,14 @@ public partial class FoundUserProfile : Control
 		LoadProfileAsync();
 	}
 
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+			return;
+
+		GetViewport()?.SetInputAsHandled();
+	}
+
 	private void LoadProfileAsync()
 	{
 		try
