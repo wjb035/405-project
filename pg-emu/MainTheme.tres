@@ -1,0 +1,12 @@
+[gd_resource type="Theme" format=3 uid="uid://0gawd0gdtota"]
+
+[ext_resource type="FontFile" uid="uid://betvu5isk3p5j" path="res://Fonts/DM_Mono/DMMono-Medium.ttf" id="1_4as0w"]
+[ext_resource type="FontFile" uid="uid://b6435y7c26lal" path="res://Fonts/SpaceMono/SpaceMono-Bold.ttf" id="1_rfn4m"]
+[ext_resource type="FontFile" uid="uid://d3vgmm5t7qh6j" path="res://Fonts/DM_Mono/DMMono-LightItalic.ttf" id="2_u23kh"]
+
+[resource]
+default_font = ExtResource("1_4as0w")
+Button/fonts/font = ExtResource("1_rfn4m")
+Label/font_sizes/font_size = 16
+Label/fonts/font = ExtResource("1_4as0w")
+LineEdit/fonts/font = ExtResource("2_u23kh")

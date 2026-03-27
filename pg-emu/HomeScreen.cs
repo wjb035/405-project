@@ -51,7 +51,6 @@ public partial class HomeScreen : Control
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
 
-
 	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
 
@@ -105,6 +104,7 @@ public partial class HomeScreen : Control
 		_settings = GetNodeOrNull<Button>(SettingsPath);
 		_help = GetNodeOrNull<Button>(HelpPath);
 		_collections = GetNodeOrNull<Button>(CollectionsPath);
+		
 		ApplyAesthetic();
 
 		_prev.Pressed += () => Step(-1);
@@ -188,6 +188,7 @@ public partial class HomeScreen : Control
 
 		dialog.PopupCentered();
 	}
+	
 
 	// BACKGOURND STUFF
 	private void StartBackgroundTransition()
@@ -881,5 +882,6 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_collections);
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
+		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }

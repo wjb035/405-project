@@ -1,17 +1,28 @@
 [gd_scene format=3 uid="uid://brh20eurum1p6"]
 
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="4_psypl"]
 [ext_resource type="Texture2D" uid="uid://bj5hphp8f2kgw" path="res://Images/inbox icon.png" id="5_3272g"]
 [ext_resource type="Texture2D" uid="uid://c4r8y1ivdhsq1" path="res://Images/folders icon.png" id="5_ksj1l"]
+[ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
 [ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="7_5aen8"]
 [ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="8_00eno"]
 [ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="9_iw72c"]
 [ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="10_1lj82"]
-[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="11_oy6yd"]
-[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="12_3gr8a"]
+[ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
+[ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oy6yd"]
+shader = ExtResource("3_iw72c")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.05430633, 0.032277793, 0.07422695, 0.4)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend1"]
 bg_color = Color(0.1882353, 0.1882353, 0.1882353, 1)
@@ -41,6 +52,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_iw72c")
 script = ExtResource("1")
 SearchBarText = NodePath("Margin/Root/TopBar/HBoxContainer/Panel/UserSearchBar")
 SearchBarButton = NodePath("Margin/Root/TopBar/HBoxContainer/UserSearchButton")
@@ -60,8 +72,16 @@ CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
 FriendInboxPopup = NodePath("Inbox")
 CardScene = ExtResource("2")
 
+[node name="TopBar" type="ColorRect" parent="." unique_id=2060178397]
+material = SubResource("ShaderMaterial_oy6yd")
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
+
 [node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
-position = Vector2i(545, 0)
+position = Vector2i(237, 0)
 
 [node name="Bg" type="ColorRect" parent="." unique_id=581845523]
 visible = false
@@ -123,6 +143,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_1lj82")
 placeholder_text = "Search Users"
 
 [node name="UserSearchButton" type="Button" parent="Margin/Root/TopBar/HBoxContainer" unique_id=1909408829]
@@ -227,21 +248,21 @@ grow_vertical = 2
 
 [node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1665989749]
 layout_mode = 0
-offset_left = 38.0
-offset_top = 490.0
-offset_right = 102.0
-offset_bottom = 554.0
-icon = ExtResource("11_oy6yd")
+offset_left = 15.0
+offset_top = 156.0
+offset_right = 143.0
+offset_bottom = 412.0
+icon = ExtResource("14_1lj82")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1687316739]
 layout_mode = 0
-offset_left = 1014.0
-offset_top = 490.0
-offset_right = 1078.0
-offset_bottom = 554.0
-icon = ExtResource("12_3gr8a")
+offset_left = 975.0
+offset_top = 156.0
+offset_right = 1103.0
+offset_bottom = 412.0
+icon = ExtResource("15_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
@@ -262,6 +283,7 @@ layout_mode = 2
 text = "Select"
 
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1247734097]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.8)
 horizontal_alignment = 1

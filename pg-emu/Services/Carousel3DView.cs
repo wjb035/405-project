@@ -5,6 +5,7 @@ namespace PGEmu.Services;
 
 public partial class Carousel3DView : SubViewportContainer
 {
+    private const ulong SettleSpinSuppressWindowMs = 90;
     // Physics
     private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
@@ -23,6 +24,7 @@ public partial class Carousel3DView : SubViewportContainer
     private float _spinAudioPos = 0f;
     private float _lastSpinAudioCarouselPos = 0f;
     private int _lastSpinAudioStep = 0;
+    private ulong _lastSpinAudioMs;
 
     // 3D scene internals
     private SubViewport _viewport;
@@ -124,6 +126,7 @@ public partial class Carousel3DView : SubViewportContainer
         _spinAudioPos = CarouselPos;
         _lastSpinAudioCarouselPos = CarouselPos;
         _lastSpinAudioStep = Mathf.RoundToInt(_spinAudioPos);
+        _lastSpinAudioMs = 0;
 
         for (int i = 0; i < games.Count; i++)
         {
@@ -146,7 +149,7 @@ public partial class Carousel3DView : SubViewportContainer
         var mesh = new MeshInstance3D { Name = "Mesh" };
         var boxMesh = new BoxMesh
         {
-            Size = new Vector3(2.6f, 3.6f, 0.5f)
+            Size = new Vector3(2.6f, 3.6f, 0.25f)
         };
         mesh.Mesh = boxMesh;
 
@@ -245,7 +248,7 @@ public partial class Carousel3DView : SubViewportContainer
                 CarouselPos = WrapPos(nearest);
                 SelectionChanged?.Invoke(WrapIndex(Mathf.RoundToInt(CarouselPos)));
                 ElasticSnapSelected();
-                AudioManager.Instance?.PlayCarouselSpin();
+                PlaySpinAudio(suppressIfRecent: true);
             }
         }
 
@@ -497,7 +500,17 @@ public partial class Carousel3DView : SubViewportContainer
             return;
 
         _lastSpinAudioStep = currentStep;
+        PlaySpinAudio();
+    }
+
+    private void PlaySpinAudio(bool suppressIfRecent = false)
+    {
+        var now = Time.GetTicksMsec();
+        if (suppressIfRecent && now - _lastSpinAudioMs < SettleSpinSuppressWindowMs)
+            return;
+
         AudioManager.Instance?.PlayCarouselSpin();
+        _lastSpinAudioMs = now;
     }
 
     private bool IsCarouselMoving()

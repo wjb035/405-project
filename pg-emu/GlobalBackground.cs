@@ -100,6 +100,23 @@ public partial class GlobalBackground : CanvasLayer
 		await ToSignal(tween, Tween.SignalName.Finished);
 		HasFadedIn = true;
 	}
+	
+	public async Task FadeOut(float duration = 1.2f)
+	{
+		if (_mat == null) return;
+
+		var tween = CreateTween();
+		tween.TweenMethod(
+				Callable.From<float>(v => SetOpacity(v)),
+				1f,
+				0f,
+				duration
+			).SetEase(Tween.EaseType.Out)
+			.SetTrans(Tween.TransitionType.Cubic);
+
+		await ToSignal(tween, Tween.SignalName.Finished);
+		HasFadedIn = true;
+	}
 
 	// Transition to a specific screen using stored gradients
 	public void StartTransition(string screenName, float duration = 1.5f)

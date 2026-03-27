@@ -124,26 +124,96 @@ public static class UiStyle
 		StylePrimaryButton(optionButton);
 	}
 
-	// Single helper that keeps radius/border/content margins consistent for all controls.
-	private static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth)
-	{
-		return new StyleBoxFlat
-		{
-			BgColor = background,
-			BorderWidthLeft = borderWidth,
-			BorderWidthTop = borderWidth,
-			BorderWidthRight = borderWidth,
-			BorderWidthBottom = borderWidth,
-			BorderColor = border,
-			BorderBlend = true,
-			CornerRadiusTopLeft = 12,
-			CornerRadiusTopRight = 12,
-			CornerRadiusBottomRight = 12,
-			CornerRadiusBottomLeft = 12,
-			ContentMarginLeft = 10f,
-			ContentMarginTop = 6f,
-			ContentMarginRight = 10f,
-			ContentMarginBottom = 6f,
-		};
-	}
+    // Single helper that keeps radius/border/content margins consistent for all controls.
+    private static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth)
+    {
+        return new StyleBoxFlat
+        {
+            BgColor = background,
+            BorderWidthLeft = borderWidth,
+            BorderWidthTop = borderWidth,
+            BorderWidthRight = borderWidth,
+            BorderWidthBottom = borderWidth,
+            BorderColor = border,
+            BorderBlend = true,
+            CornerRadiusTopLeft = 12,
+            CornerRadiusTopRight = 12,
+            CornerRadiusBottomRight = 12,
+            CornerRadiusBottomLeft = 12,
+            ContentMarginLeft = 10f,
+            ContentMarginTop = 6f,
+            ContentMarginRight = 10f,
+            ContentMarginBottom = 6f,
+        };
+    }
+    
+    // Helper for assigning this in other scenes
+    public static void StyleGhostNav(params Button[] buttons)
+    {
+        foreach (var b in buttons)
+            StyleGhostNavButton(b);
+    }
+    
+    // Nav arrows transparent and animate on hover
+    public static void StyleGhostNavButton(Button? button)
+    {
+        if (button == null) return;
+
+        // Remove all backgrounds
+        var empty = new StyleBoxEmpty();
+        button.AddThemeStyleboxOverride("normal", empty);
+        button.AddThemeStyleboxOverride("hover", empty);
+        button.AddThemeStyleboxOverride("pressed", empty);
+        button.AddThemeStyleboxOverride("focus", empty);
+
+        // Start semi transparent
+        button.Modulate = new Color(0.74f, 0.8f, 1f, 0.25f);
+
+        // Prevent layout stretching
+        button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+        button.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+
+        // Fix pivot after layout and on resize
+        _ = FixPivotNextFrame(button);
+        
+        button.Resized += () =>
+        {
+            button.PivotOffset = button.Size / 2f;
+        };
+
+        ConnectGhostNavHover(button);
+    }
+    
+    // Connects the animation to mouse hover
+    private static void ConnectGhostNavHover(Button button)
+    {
+        button.MouseEntered += () => AnimateGhostNav(button, true);
+        button.MouseExited += () => AnimateGhostNav(button, false);
+    }
+
+    // Animates the arrows 
+    private static void AnimateGhostNav(Button button, bool hovered)
+    {
+        var tween = button.CreateTween();
+        tween.SetParallel(true);
+        tween.SetTrans(Tween.TransitionType.Back);
+        tween.SetEase(Tween.EaseType.Out);
+
+        tween.TweenProperty(button, "scale",
+            hovered ? new Vector2(1.3f, 1.3f) : Vector2.One, 0.2f);
+
+        tween.TweenProperty(button, "modulate",
+            hovered
+                ? new Color(0.9f, 0.85f, 1f, 1f)  
+                : new Color(0.74f, 0.8f, 1f, 0.25f), 
+            0.2f);
+        GD.Print(button.PivotOffset, " vs ", button.Size);
+    }
+    
+    private static async System.Threading.Tasks.Task FixPivotNextFrame(Button button)
+    {
+        await button.ToSignal(button.GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        button.PivotOffset = button.Size / 2f;
+    }
 }

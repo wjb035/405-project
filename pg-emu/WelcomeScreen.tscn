@@ -1,9 +1,12 @@
 [gd_scene format=3 uid="uid://b5q1hxlb6srh4"]
 
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_lgy4w"]
 [ext_resource type="Script" uid="uid://crotbndk3td0j" path="res://WelcomeScreen.cs" id="1_tto14"]
 [ext_resource type="VideoStream" uid="uid://cj02tm65wto52" path="res://Videos/sh2 background larger.ogv" id="2_7kx2i"]
 [ext_resource type="Texture2D" uid="uid://c2xn26rk444xl" path="res://Images/pgemu outline (pink).png" id="3_7kx2i"]
+[ext_resource type="Texture2D" uid="uid://cbe6jiv4kkuip" path="res://Images/pretty good emulator thumbs up pink.png" id="4_xrt5d"]
 [ext_resource type="Shader" uid="uid://buq1ti2e1ebm5" path="res://CRT.gdshader" id="5_xrt5d"]
+[ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="6_7jift"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qlnan"]
 font_size = 70
@@ -39,6 +42,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_lgy4w")
 script = ExtResource("1_tto14")
 ContinueButtonPath = NodePath("ContinueButton")
 WelcomeLabelPath = NodePath("VBoxContainer/Welcome")
@@ -88,11 +92,12 @@ offset_right = 1048.0
 offset_bottom = 448.0
 scale = Vector2(0.9, 0.9)
 mouse_filter = 2
-texture = ExtResource("3_7kx2i")
+texture = ExtResource("4_xrt5d")
 expand_mode = 1
 stretch_mode = 4
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=525613543]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -139,6 +144,7 @@ grow_vertical = 2
 [node name="Welcome" type="Label" parent="VBoxContainer" unique_id=833738248]
 custom_minimum_size = Vector2(600, 195)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("6_7jift")
 text = "Welcome
 "
 label_settings = SubResource("LabelSettings_qlnan")

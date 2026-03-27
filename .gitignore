@@ -28,6 +28,9 @@ config.local.json
 ## Godot editor/runtime cache
 .godot/
 
+## BACKEND CODES
+PGEmu.backend/appsettings.Development.json
+PGEmu.backend/appsettings.json
 
 ## Local emulators + ROMs
 PGEmu/Dolphin.app/
@@ -71,3 +74,4 @@ cores/dolphin-emu/
 cores/*.dylib
 cores/*.zip
 pg-emu/export_presets.cfg
+

@@ -2,13 +2,22 @@
 
 [ext_resource type="Script" uid="uid://dgm0r1qq55ebg" path="res://Collections.cs" id="1_pmjb3"]
 [ext_resource type="PackedScene" path="res://platform_card.tscn" id="2_nbbm3"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_fupj7"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_orb34"]
 [ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="4_fupj7"]
 [ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="5_rlxaj"]
 [ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="6_h06ym"]
 [ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="7_c58cc"]
-[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="8_gqrw3"]
-[ext_resource type="Texture2D" uid="uid://crjkifbp36pxy" path="res://Images/small arrow right icon.png" id="9_jpbjf"]
+[ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="9_fupj7"]
+[ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="10_rlxaj"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlxaj"]
+shader = ExtResource("3_fupj7")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.05430633, 0.032277793, 0.07422695, 0.4)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0
 
 [node name="Collections" type="Control" unique_id=430325591]
 layout_mode = 3
@@ -18,9 +27,29 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pmjb3")
+CardsPath = NodePath("Margin/Root/CenterArea/CarouselArea/Cards")
+PrevPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnPrev")
+NextPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnNext")
+SelectedTitlePath = NodePath("Margin/Root/CenterArea/SelectedTitle")
+StatusPath = NodePath("Margin/Root/Status")
+SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+FriendsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnFriends")
+ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
+SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
+HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
 CardScene = ExtResource("2_nbbm3")
 
+[node name="TopBar" type="ColorRect" parent="." unique_id=1985502935]
+material = SubResource("ShaderMaterial_rlxaj")
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
+
 [node name="Bg" type="ColorRect" parent="." unique_id=107527972]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -154,23 +183,23 @@ offset_bottom = 230.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1184659045]
+[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=534126549]
 layout_mode = 0
-offset_left = 38.0
-offset_top = 198.0
-offset_right = 102.0
-offset_bottom = 262.0
-icon = ExtResource("8_gqrw3")
+offset_left = 15.0
+offset_top = 156.0
+offset_right = 143.0
+offset_bottom = 412.0
+icon = ExtResource("9_fupj7")
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=989224372]
+[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=2033288117]
 layout_mode = 0
-offset_left = 1014.0
-offset_top = 198.0
-offset_right = 1078.0
-offset_bottom = 262.0
-icon = ExtResource("9_jpbjf")
+offset_left = 975.0
+offset_top = 156.0
+offset_right = 1103.0
+offset_bottom = 412.0
+icon = ExtResource("10_rlxaj")
 icon_alignment = 1
 expand_icon = true
 

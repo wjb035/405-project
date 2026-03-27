@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://c3ga1lnpr85ea"]
 
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_6hyr3"]
 [ext_resource type="Script" uid="uid://5meg1c2i140w" path="res://Login.cs" id="1_aidc3"]
+[ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="3_p8x2n"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_aidc3"]
 
@@ -15,6 +17,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_6hyr3")
 script = ExtResource("1_aidc3")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 UsernamePath = NodePath("Margin/Root/Body/GridContainer/UserInput")
@@ -68,7 +71,8 @@ text = "←"
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.94, 1, 0.98)
-theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("3_p8x2n")
+theme_override_font_sizes/font_size = 40
 text = "Sign In"
 horizontal_alignment = 1
 

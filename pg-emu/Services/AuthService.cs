@@ -221,6 +221,11 @@ public partial class AuthService : Node
 				var doc = JsonDocument.Parse(text);
 				tcs.SetResult(doc.RootElement);
 			}
+			else if (code == 401)
+			{
+				// signals refresh needed
+				tcs.SetResult(null);
+			}
 			else
 			{
 				GD.Print($"Request failed: {code} {url}");
@@ -285,7 +290,18 @@ public partial class AuthService : Node
 	
 	public bool IsLoggedIn()
 	{
-		return !string.IsNullOrEmpty(AccessToken);
+		if (string.IsNullOrEmpty(AccessToken)) return false;
+    
+		try
+		{
+			var handler = new JwtSecurityTokenHandler();
+			var token = handler.ReadJwtToken(AccessToken);
+			return token.ValidTo > DateTime.UtcNow;
+		}
+		catch
+		{
+			return false;
+		}
 	}
 	
 	// DOES WHAT IT SAY
