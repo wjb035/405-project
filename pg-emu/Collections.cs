@@ -821,5 +821,6 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
 		UiStyle.StyleLineEdit(_lineEdit);
+		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }
