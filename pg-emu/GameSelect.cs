@@ -43,12 +43,9 @@ public partial class GameSelect : Control
 	private Button _play = null!;
 	private Button _settings = null!;
 	private Button _friends = null!;
-<<<<<<< Updated upstream
 	private Button _add = null!;
-=======
 	private Button _chat = null!;
 	private Button _help = null!;
->>>>>>> Stashed changes
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
 	private VBoxContainer _listRows = null!;
@@ -58,7 +55,6 @@ public partial class GameSelect : Control
 	OptionButton _optionButton = new OptionButton();
 	
 	private Button _achievement = null!;
-	private Button _addToCollectionButton = null!;
 
 	// UI instances and data backing the carousel.
 	private readonly List<Control> _cards = new();
@@ -125,11 +121,7 @@ public partial class GameSelect : Control
 		_chat = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
 		_help = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
-<<<<<<< Updated upstream
 		_add = GetNode<Button>(AddPath);
-=======
-		_addToCollectionButton = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/HBoxContainer/Button");
->>>>>>> Stashed changes
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
@@ -1227,13 +1219,13 @@ private void OnAnyButtonPressed()
 		{
 			return ControllerService.BuildVisibleRows(
 				new[] { _back, _achievement, _friends, _chat, _settings, _help },
-				new[] { _prev, _addToCollectionButton, _play, _next },
+				new[] { _prev, _add, _play, _next },
 				new[] { _optionButton });
 		}
 
 		return ControllerService.BuildVisibleRows(
 			new[] { _back, _achievement, _friends, _chat, _settings, _help },
-			new[] { _prev, _addToCollectionButton, _play, _next });
+			new[] { _prev, _add, _play, _next });
 	}
 
 	private int GetPreferredActionColumn(List<Button> row)
