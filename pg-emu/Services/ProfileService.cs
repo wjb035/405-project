@@ -42,7 +42,7 @@ public partial class ProfileService : Node
 		
 		if (response == null)
 		{
-			GD.Print("Error: GetMyProfile failed or session expired");
+			GD.Print("Error: GetUserProfile failed or session expired");
 			return null;
 		}
 		

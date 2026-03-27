@@ -68,7 +68,7 @@ public class ProfileCustomizationController : ControllerBase
         if (!user.Success)
             return NotFound("Profile not found.");
 
-        return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
+        return Ok(new { Message = user.Message, UserId = user.Profile.UserId, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
     }
 
     [Authorize]

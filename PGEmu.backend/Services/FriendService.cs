@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PGEmuBackend.Data;
 using PGEmuBackend.Models;
 using PGEmuBackend.DTOs.Social;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace PGEmuBackend.Services;
 
@@ -154,7 +155,46 @@ public class FriendService
         await _context.SaveChangesAsync();
         return true;
     }
-    
+
+    // Get Blocked Users
+    public async Task<List<FriendDTO>> GetBlockedAsync(Guid userId)
+    {
+        // Find accoeted fruebdsguos
+        var blocked = await _context.Friends
+            .Where(f =>
+                (f.Status == FriendStatus.Blocked) && (f.SenderId == userId))
+            .ToListAsync();
+
+        // Get IDs of friends
+        var blockedIds = blocked
+            .Select(f => f.ReceiverId)
+            .ToList();
+
+        return await _context.Users
+            .Where(u => blockedIds.Contains(u.Id))
+            .Select(u => new FriendDTO
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Status = FriendStatus.Blocked
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(bool success, bool blocked)> GetIsBlockedAsync(Guid blockerId, Guid blockedId)
+    {
+        var blockRecord = await _context.Friends
+            .FirstOrDefaultAsync(f =>
+                f.ReceiverId == blockedId && f.SenderId == blockerId &&
+                f.Status == FriendStatus.Blocked);
+        if (blockRecord == null)
+        {
+            //System.Print($"No block record found for blockerId: {blockerId} and blockedId: {blockedId}");
+            return (true, false);
+        }
+        return (true, true);
+    }
+
     // Get all friends of user
     public async Task<List<FriendDTO>> GetFriendsAsync(Guid userId)
     {

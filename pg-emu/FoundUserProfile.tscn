@@ -51,7 +51,10 @@ BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 GamerTagPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/GamerTag")
 ProfileNotePath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/ProfileNote")
 AvatarPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2/AspectRatioContainer/TextureRect")
+AddFriendPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/AddFriend")
+DropdownOptionsPath = NodePath("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/MenuButton")
 FriendsListPath = NodePath("Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Button")
+RecentGamesPath = NodePath("Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Button")
 ProfileSettingsShortcutPath = NodePath("Margin/Root/TopBar/BtnProfileSettings")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=1097320952]
@@ -171,7 +174,7 @@ size_flags_horizontal = 3
 label_settings = SubResource("LabelSettings_5dkcq")
 vertical_alignment = 1
 
-[node name="Button" type="Button" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=51091200]
+[node name="AddFriend" type="Button" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=51091200]
 layout_mode = 2
 text = "Add Friend"
 
@@ -179,11 +182,9 @@ text = "Add Friend"
 layout_mode = 2
 toggle_mode = false
 text = "More Options"
-item_count = 2
+item_count = 1
 popup/item_0/text = "Message"
-popup/item_0/id = 1
-popup/item_1/text = "Block"
-popup/item_1/id = 0
+popup/item_0/id = 0
 
 [node name="OptionButton" type="OptionButton" parent="Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1948750005]
 custom_minimum_size = Vector2(0, 38)

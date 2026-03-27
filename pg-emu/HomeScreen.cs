@@ -163,10 +163,11 @@ public partial class HomeScreen : Control
 		ProfileResponse profile = await _profileService.GetUserProfile(_searchBarText.Text?.Trim());
 		if (profile != null)
 		{
+			Global.foundProfile = profile;
 			GD.Print("Profile found:");
 			GD.Print(profile.Username);
 			var tree = GetTree();
-			Global.foundProfile = profile;
+			GD.Print(Global.foundProfile.UserId + Global.foundProfile.Username);
 			tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
 		}

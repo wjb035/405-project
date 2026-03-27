@@ -2,7 +2,9 @@ using Godot;
 using PGEmu.Services;
 using PGEmu.Services.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+
 
 public partial class FoundUserProfile : Control
 {
@@ -10,20 +12,29 @@ public partial class FoundUserProfile : Control
 	[Export] public NodePath GamerTagPath;
 	[Export] public NodePath ProfileNotePath;
 	[Export] public NodePath AvatarPath;
+	[Export] public NodePath AddFriendPath;
+	[Export] public NodePath DropdownOptionsPath;
 	[Export] public NodePath FriendsListPath;
 	[Export] public NodePath RecentGamesPath;
 	[Export] public NodePath ProfileSettingsShortcutPath;
 	
 	public ProfileService _profileService = new ProfileService();
+	public FriendService _friendService = new FriendService();
 	private readonly System.Net.Http.HttpClient _client = new();
 	private ProfileResponse profile = Global.foundProfile;
+	
+	public bool blockedUsers;
+	private bool userBlocked = false;
+	
 	
 	private Button _back = null!;
 	private Label _gamer_tag = null!;
 	private Label _profile_note = null!;
 	
+	private Button _addFriend = null;
 	private Button _friends_list = null!;
 	private Button _profileSettingsShortcut = null!;
+	private PopupMenu _dropdownOptions = null; 
 	
 	private TextureRect _avatar;
 	
@@ -31,12 +42,11 @@ public partial class FoundUserProfile : Control
 	public override async void _Ready()
 	{
 		GD.Print("Recieved username:", profile.Username);
+		GD.Print(profile.UserId);
 		
 		_back = GetNode<Button>(BackPath);
-		if (!_back.IsConnected(Button.SignalName.Pressed, Callable.From(GoBack)))
-		{
+
 			_back.Pressed += GoBack;
-		}
 
 		_profileSettingsShortcut = GetNode<Button>(ProfileSettingsShortcutPath);
 		if (!_profileSettingsShortcut.IsConnected(Button.SignalName.Pressed, Callable.From(GoProfileSettings)))
@@ -50,14 +60,36 @@ public partial class FoundUserProfile : Control
 			_friends_list.Pressed += GoFriendsList;
 		}
 		
+		_addFriend = GetNode<Button>(AddFriendPath);
+		_addFriend.Pressed += AddFriend;
+		
+		// Get the blocked users and check if this one is blocked
+		GD.Print("rbuhghghh;");
+		userBlocked = await _friendService.GetIsBlocked(profile.UserId);
+		GD.Print(userBlocked);
+		GD.Print("blocekds" + blockedUsers);
+		
+		
+		
+		_dropdownOptions = GetNode<MenuButton>(DropdownOptionsPath).GetPopup();
+		if (!userBlocked) 
+		{
+			_dropdownOptions.AddItem("Block", 1);
+		} else
+		{
+			_dropdownOptions.AddItem("Unblock", 1);
+		}
+		_dropdownOptions.IdPressed += OnDropdownSelected;
+		
+		
 		_gamer_tag = GetNode<Label>(GamerTagPath);
 		_profile_note = GetNode<Label>(ProfileNotePath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
 
 		// Keep navigation usable while profile data loads.
-		_gamer_tag.Text = "Profile";
-		_profile_note.Text = "\"Loading profile...\"";
-
+		_gamer_tag.Text = profile.Username;
+		_profile_note.Text = $"\"{profile.Bio}\"";
+		
 		ApplyThemeAesthetic();
 		LoadProfileAsync();
 	}
@@ -191,6 +223,55 @@ public partial class FoundUserProfile : Control
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
 
 		tree.ChangeSceneToFile(returnScene);
+	}
+	
+	private async void AddFriend()
+	{
+		_friendService.SendFriendRequest(profile.UserId);
+		_addFriend.Hide();
+		//_cancelRequest.Show();
+		
+	}
+	
+	private void OnDropdownSelected(long id)
+	{	
+		GD.Print("gungingigngnahgjgidsknfkajhfrekfhrewoi");
+		switch (id)
+		{
+			case 0:
+				// messaging needs to be implemented
+				break;
+			case 1:
+				if (_dropdownOptions.GetItemText(1) == "Block")
+				{	
+					BlockUser();
+				}
+				else if (_dropdownOptions.GetItemText(1) == "Unblock")
+				{
+					UnblockUser();
+				}
+				break;
+			case 2:
+				
+				break;
+		}
+		
+	}
+	
+	public void BlockUser()
+	{
+		GD.Print($"Attempting to block {profile.UserId}");
+		_friendService.Block(profile.UserId);
+		_dropdownOptions.RemoveItem(1);
+		_dropdownOptions.AddItem("UnBlock", 1);
+	}
+	
+		public void UnblockUser()
+	{
+		GD.Print($"Attempting to block {profile.UserId}");
+		_friendService.Unblock(profile.UserId);
+		_dropdownOptions.RemoveItem(1);
+		_dropdownOptions.AddItem("Block", 1);
 	}
 	
 	private void GoFriendsList() 
