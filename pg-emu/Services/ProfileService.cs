@@ -29,6 +29,12 @@ public partial class ProfileService : Node
 			response.Value.GetRawText(),
 			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 		
+		if (profile == null || string.IsNullOrEmpty(profile.Username))
+		{
+			GD.Print("No profile found for this user.");
+			return null;
+		}
+		
 		GD.Print("Username: " + profile.Username);
 		GD.Print("Bio: " + profile.Bio);
 		GD.Print("AvatarUrl: " + profile.AvatarUrl);

@@ -1,8 +1,8 @@
-[gd_resource type="VisualShader" format=3 uid="uid://d3skfih3bcydu"]
+[gd_resource type="VisualShader" format=3 uid="uid://bmjmglswivbt3"]
 
-[ext_resource type="Texture2D" uid="uid://bsjlr0db6rpwn" path="res://ShaderSlop/NoiseTexture.tres" id="1_oamho"]
-[ext_resource type="Texture2D" uid="uid://cyjlmrq0fnof2" path="res://ShaderSlop/BluePurple.tres" id="2_6366u"]
-[ext_resource type="Texture2D" uid="uid://bl4d3fqlk1yml" path="res://ShaderSlop/DarkPurple.tres" id="2_pnama"]
+[ext_resource type="Texture2D" uid="uid://bsjlr0db6rpwn" path="res://ShaderSlop/NoiseTexture.tres" id="1_0iyva"]
+[ext_resource type="Texture2D" uid="uid://bl4d3fqlk1yml" path="res://ShaderSlop/DarkPurple.tres" id="2_u8kac"]
+[ext_resource type="Texture2D" uid="uid://cyjlmrq0fnof2" path="res://ShaderSlop/BluePurple.tres" id="3_dodkc"]
 
 [sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_oamho"]
 input_name = "time"
@@ -122,7 +122,7 @@ op_type = 0
 [sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_pnama"]
 output_port_for_preview = 0
 expanded_output_ports = [0]
-texture = ExtResource("1_oamho")
+texture = ExtResource("1_0iyva")
 
 [sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_yd87s"]
 output_port_for_preview = 0
@@ -138,7 +138,7 @@ op_type = 0
 [sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_ntvrt"]
 output_port_for_preview = 0
 expanded_output_ports = [0]
-texture = ExtResource("1_oamho")
+texture = ExtResource("1_0iyva")
 
 [sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_83ofi"]
 output_port_for_preview = 0
@@ -285,7 +285,7 @@ operator = 2
 
 [sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_vep8v"]
 output_port_for_preview = 0
-texture = ExtResource("2_pnama")
+texture = ExtResource("2_u8kac")
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_pnama"]
 
@@ -295,7 +295,7 @@ texture = SubResource("PlaceholderTexture2D_pnama")
 
 [sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_n1ljw"]
 output_port_for_preview = 0
-texture = ExtResource("2_6366u")
+texture = ExtResource("3_dodkc")
 
 [sub_resource type="Gradient" id="Gradient_pnama"]
 

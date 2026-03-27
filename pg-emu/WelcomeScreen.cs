@@ -2,6 +2,7 @@ using System;
 using Godot;
 using PGEmu.Services;
 using System.Threading.Tasks;
+using PGEmu.Helpers;
 
 public partial class WelcomeScreen : Control
 {
@@ -20,6 +21,8 @@ public partial class WelcomeScreen : Control
 	private TextureRect _logo = null!;
 	private TextureRect _shadow = null!;
 	private GlobalBackground _bg = null!;
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
 	public override void _Ready()
 	{
@@ -35,6 +38,7 @@ public partial class WelcomeScreen : Control
 		Input.JoyConnectionChanged += OnJoyConnectionChanged;
 		UpdateContinuePrompt();
 
+		
 		// background transition
 		StartBackgroundTransition();
 		
@@ -138,7 +142,7 @@ public partial class WelcomeScreen : Control
 			? "res://HomeScreen.tscn" 
 			: "res://LoginScreen.tscn";
 
-		GetTree().ChangeSceneToFile(nextScene);
+		await Transition.ChangeScene(nextScene);
 	}
 	
 	private async Task FadeOut()

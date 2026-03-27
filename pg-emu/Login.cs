@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using System.Threading.Tasks;
 using PGEmu.Services;
@@ -39,11 +40,12 @@ public partial class Login : Control
 		_forgotPanel = GetNode<Control>(ForgotPanelPath);
 		_forgotEmail = GetNode<LineEdit>(ForgotEmailPath);
 		_forgotSubmit = GetNode<Button>(ForgotSubmitPath);
-		
+
 		_forgotPanel.Visible = false;
 		
 		ApplyThemeAesthetic();
 		ConfigureInputBehavior();
+		
 
 		_loginButton.Pressed += async () => await AttemptLogin();
 		_back.Pressed += GoBack;
@@ -210,8 +212,15 @@ public partial class Login : Control
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
-		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+		if (string.IsNullOrWhiteSpace(returnScene))
+		{
+			returnScene = AuthService.Instance.IsLoggedIn()
+				? "res://HomeScreen.tscn"
+				: "res://WelcomeScreen.tscn"; 
+		}
+
 
 		tree.ChangeSceneToFile(returnScene);
 	}
+	
 }
