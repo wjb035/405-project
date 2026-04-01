@@ -6,6 +6,8 @@ using PGEmu.Services;
 
 public partial class Vault : Control
 {
+	private const string LibraryRefreshTokenMeta = "pgemu_library_refresh_token";
+
 	// NodePaths assigned in vault.tscn, keeps UI wiring in-editor instead of hardcoding node strings.
 	[Export] public NodePath BackPath;
 	[Export] public NodePath LibraryPathEditPath;
@@ -67,7 +69,7 @@ public partial class Vault : Control
 
 		var hint = GetNodeOrNull<Label>("Margin/Root/Body/Hint");
 		if (hint != null)
-			hint.Text = "Set your game library folder (LibraryRoot).";
+			hint.Text = "Set your library root or your games folder.";
 		UiStyle.StyleMetaLabel(hint);
 
 		UiStyle.StyleLineEdit(_libraryPathEdit);
@@ -178,8 +180,9 @@ public partial class Vault : Control
 				return;
 			}
 
-			// Update the in-memory config.
-			_config.LibraryRoot = normalized;
+			var normalizedLibraryRoot = LibraryScanner.NormalizeLibraryRoot(normalized, _config.Platforms);
+			_config.LibraryRoot = normalizedLibraryRoot;
+			_libraryPathEdit.Text = normalizedLibraryRoot;
 
 			// If we don't know where config.json is yet, pick a location near the project.
 			_configPath ??= TryFindConfigNearGodotProject(preferCreate: true);
@@ -189,16 +192,43 @@ public partial class Vault : Control
 				return;
 			}
 
-			// Write overrides to config.local.json so config.json can stay shareable in git.
-			_localConfigPath ??= Path.Combine(Path.GetDirectoryName(_configPath)!, "config.local.json");
-			var savePath = _localConfigPath ?? _configPath;
-			_config.Save(savePath);
+			string savePath;
+			if (File.Exists(_configPath))
+			{
+				// Write only the user override to config.local.json so config.json can stay shareable in git.
+				_localConfigPath ??= Path.Combine(Path.GetDirectoryName(_configPath)!, "config.local.json");
+				var localOverride = new AppConfig
+				{
+					LibraryRoot = normalizedLibraryRoot
+				};
+				localOverride.Save(_localConfigPath);
+				savePath = _localConfigPath;
+			}
+			else
+			{
+				// If there is no base config yet, create one so the rest of the app can actually discover it.
+				_config.Save(_configPath);
+				savePath = _configPath;
+			}
 
 			// Keep base config path in metadata so other scenes can reload consistently.
 			var tree = GetTree();
 			tree.SetMeta("pgemu_config_path", _configPath);
+			tree.SetMeta(LibraryRefreshTokenMeta, DateTime.UtcNow.Ticks);
 
-			SetStatus($"Saved: {savePath}");
+			// Force the next library/game screen load to rescan instead of reusing stale process-wide caches.
+			AchievementStorage.gameToString.Clear();
+			AchievementStorage.achievementData = null;
+			AchievementStorage.gameId = -1;
+			AchievementStorage.gameName = string.Empty;
+
+			var librarySummary = SummarizeLibrary(_config);
+			var savedText = string.Equals(normalizedLibraryRoot, normalized, StringComparison.Ordinal)
+				? $"Saved: {savePath}"
+				: $"Saved library root: {normalizedLibraryRoot}";
+			SetStatus(string.IsNullOrWhiteSpace(librarySummary)
+				? savedText
+				: $"{savedText} • {librarySummary}");
 		}
 		catch (Exception ex)
 		{
@@ -210,6 +240,40 @@ public partial class Vault : Control
 	{
 		// Single place to update the status label.
 		_status.Text = text;
+	}
+
+	private static string SummarizeLibrary(AppConfig config)
+	{
+		if (config.Platforms == null || config.Platforms.Count == 0)
+			return "No platforms configured.";
+
+		int platformCount = 0;
+		int gameCount = 0;
+
+		foreach (var platform in config.Platforms)
+		{
+			if (platform == null)
+				continue;
+
+			try
+			{
+				var games = LibraryScanner.Scan(platform, config.LibraryRoot, out _);
+				if (games.Count == 0)
+					continue;
+
+				platformCount++;
+				gameCount += games.Count;
+			}
+			catch
+			{
+				// Ignore broken platform scans in the summary; save already succeeded.
+			}
+		}
+
+		if (gameCount == 0)
+			return "No games detected yet.";
+
+		return $"Found {gameCount} game{(gameCount == 1 ? "" : "s")} across {platformCount} platform{(platformCount == 1 ? "" : "s")}.";
 	}
 
 	private static string? TryFindConfigNearGodotProject(bool preferCreate = false)

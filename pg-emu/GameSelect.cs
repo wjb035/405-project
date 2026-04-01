@@ -1,9 +1,11 @@
 using Godot;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PGEmu.app;
+using System.Threading;
 using System.Threading.Tasks;
 using RetroAchievements.Api;
 using PGEmu.Services;
@@ -61,7 +63,10 @@ public partial class GameSelect : Control
 	private readonly List<Control> _browseEntries = new();
 	private readonly List<GameEntry> _games = new();
 	private static readonly System.Net.Http.HttpClient CoverArtClient = new();
-	private static readonly Dictionary<string, Texture2D> CoverArtCache = new(StringComparer.OrdinalIgnoreCase);
+	private static readonly ConcurrentDictionary<string, Texture2D> CoverArtCache = new(StringComparer.OrdinalIgnoreCase);
+	private static readonly ConcurrentDictionary<string, byte[]> CoverArtDataCache = new(StringComparer.OrdinalIgnoreCase);
+	private static readonly ConcurrentDictionary<string, Task<byte[]?>> CoverArtDownloadTasks = new(StringComparer.OrdinalIgnoreCase);
+	private static readonly SemaphoreSlim CoverArtDownloadThrottle = new(6, 6);
 	private BrowseLayoutMode _browseLayout = BrowseLayoutMode.Carousel;
 	private int _selectedIndex;
 	private int _gridColumnCount = 3;
@@ -109,6 +114,8 @@ public partial class GameSelect : Control
 	
 	// 3D CAROUSEL MODE
 	private Carousel3DView? _carousel3D;
+	private CancellationTokenSource? _coverArtWarmupCts;
+	private int _pendingCoverArtRefresh;
 
 	public override async void _Ready()
 	{
@@ -179,9 +186,18 @@ public partial class GameSelect : Control
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
+		StartCoverArtWarmup();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
 		
+	}
+
+	public override void _ExitTree()
+	{
+		_coverArtWarmupCts?.Cancel();
+		_coverArtWarmupCts?.Dispose();
+		_coverArtWarmupCts = null;
+		base._ExitTree();
 	}
 
 private void ConnectAllButtons(Node node)
@@ -269,7 +285,7 @@ private void OnAnyButtonPressed()
 		// Store return context in SceneTree meta so Settings can return here with the same config.
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
-		tree.SetMeta("pgemu_settings_tab", "appearance");
+		tree.SetMeta("pgemu_settings_tab", "vault");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
@@ -816,9 +832,7 @@ private void OnAnyButtonPressed()
 			
 			
 			
-			await Task.WhenAll(
-				LibretroThumbnailService.PopulateCoverArtAsync(_platform, _games),
-				RetroAchievementsService.Retro(_platform, _games));
+			await RetroAchievementsService.Retro(_platform, _games);
 			
 			
 			
@@ -1011,6 +1025,9 @@ private void OnAnyButtonPressed()
 	{
 		if (_browseLayout == BrowseLayoutMode.Carousel)
 			LayoutCards();
+
+		if (Interlocked.Exchange(ref _pendingCoverArtRefresh, 0) == 1)
+			RefreshCoverArtBindings();
 	}
 
 	public override void _GuiInput(InputEvent e)
@@ -2575,6 +2592,106 @@ private void OnAnyButtonPressed()
 			ApplySelectionToBrowseEntries();
 	}
 
+	private void StartCoverArtWarmup()
+	{
+		_coverArtWarmupCts?.Cancel();
+		_coverArtWarmupCts?.Dispose();
+		_coverArtWarmupCts = null;
+
+		if (_platform == null)
+			return;
+
+		var gamesToWarm = _games
+			.Where(game => !string.IsNullOrWhiteSpace(game.Path))
+			.ToList();
+
+		if (gamesToWarm.Count == 0)
+			return;
+
+		_coverArtWarmupCts = new CancellationTokenSource();
+		_ = WarmCoverArtLibraryAsync(_platform, gamesToWarm, _coverArtWarmupCts.Token);
+	}
+
+	private async Task WarmCoverArtLibraryAsync(PlatformConfig platform, IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await LibretroThumbnailService.PopulateCoverArtAsync(platform, games, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			QueueCoverArtRefresh();
+
+			await PrefetchResolvedCoverArtAsync(games, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			QueueCoverArtRefresh();
+		}
+		catch (OperationCanceledException)
+		{
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Cover art warm-up failed: {ex.Message}");
+		}
+	}
+
+	private async Task PrefetchResolvedCoverArtAsync(IEnumerable<GameEntry> games, CancellationToken cancellationToken)
+	{
+		var coverArtUrls = games
+			.Select(game => game.CoverArtUrl)
+			.Where(static url => !string.IsNullOrWhiteSpace(url))
+			.Cast<string>()
+			.Where(url => !CoverArtCache.ContainsKey(url))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.ToList();
+
+		var tasks = coverArtUrls.Select(async coverArtUrl =>
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			await GetCoverArtBytesAsync(coverArtUrl);
+		});
+
+		await Task.WhenAll(tasks);
+	}
+
+	private void QueueCoverArtRefresh()
+	{
+		Interlocked.Exchange(ref _pendingCoverArtRefresh, 1);
+	}
+
+	private void RefreshCoverArtBindings()
+	{
+		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+			return;
+
+		for (int i = 0; i < _cards.Count && i < _games.Count; i++)
+		{
+			if (!GodotObject.IsInstanceValid(_cards[i]))
+				continue;
+
+			var coverArt = _cards[i].GetNodeOrNull<TextureRect>("Panel/CoverArt");
+			var label = _cards[i].GetNodeOrNull<Label>("Panel/Name");
+			if (coverArt != null && label != null)
+				BindCoverArt(coverArt, label, _games[i]);
+		}
+
+		for (int i = 0; i < _browseEntries.Count && i < _games.Count; i++)
+		{
+			if (!GodotObject.IsInstanceValid(_browseEntries[i]))
+				continue;
+
+			if (_browseEntries[i].FindChild("PosterArt", true, false) is TextureRect posterArt &&
+				_browseEntries[i].FindChild("PosterMonogram", true, false) is Label posterMonogram)
+			{
+				BindCoverArt(posterArt, posterMonogram, _games[i]);
+			}
+
+			if (_browseEntries[i].FindChild("GridArt", true, false) is TextureRect gridArt &&
+				_browseEntries[i].FindChild("GridMonogram", true, false) is Label gridMonogram)
+			{
+				BindCoverArt(gridArt, gridMonogram, _games[i]);
+			}
+		}
+	}
+
 	private static string? BuildGameBadge(GameEntry game)
 	{
 		return string.IsNullOrWhiteSpace(game.Path) ? "Missing" : null;
@@ -2659,9 +2776,17 @@ private void OnAnyButtonPressed()
 	{
 		try
 		{
-			byte[] imageData = await CoverArtClient.GetByteArrayAsync(coverArtUrl);
-			GD.Print($"Downloaded cover art for {coverArtUrl}"); 
-			GD.Print($"Download complete, this valid? {GodotObject.IsInstanceValid(this)}, artRect valid? {GodotObject.IsInstanceValid(artRect)}");
+			if (CoverArtCache.TryGetValue(coverArtUrl, out var cachedTexture))
+			{
+				artRect.Texture = cachedTexture;
+				artRect.Visible = true;
+				fallbackLabel.Visible = false;
+				return;
+			}
+
+			byte[]? imageData = await GetCoverArtBytesAsync(coverArtUrl);
+			if (imageData == null || imageData.Length == 0)
+				return;
 			
 			if (!GodotObject.IsInstanceValid(this) ||
 				!GodotObject.IsInstanceValid(artRect) ||
@@ -2680,9 +2805,8 @@ private void OnAnyButtonPressed()
 				return;
 
 			ImageTexture texture = ImageTexture.CreateFromImage(coverArt);
-			CoverArtCache[coverArtUrl] = texture;
-			GD.Print($"_carousel3D null? {_carousel3D == null}, valid? {GodotObject.IsInstanceValid(_carousel3D)}");
-			GD.Print($"Cached texture for {coverArtUrl}");
+			Texture2D finalTexture = CoverArtCache.GetOrAdd(coverArtUrl, texture);
+			CoverArtDataCache.TryRemove(coverArtUrl, out _);
 			
 			if (_carousel3D != null)
 			{
@@ -2691,7 +2815,7 @@ private void OnAnyButtonPressed()
 					if (string.Equals(_games[i].CoverArtUrl?.Trim(), coverArtUrl.Trim(), 
 							StringComparison.OrdinalIgnoreCase))
 					{
-						_carousel3D.UpdateCoverArt(i, texture);
+						_carousel3D.UpdateCoverArt(i, finalTexture);
 					}
 				}
 			}
@@ -2702,7 +2826,7 @@ private void OnAnyButtonPressed()
 				return;
 			}
 
-			artRect.Texture = texture;
+			artRect.Texture = finalTexture;
 			artRect.Visible = true;
 			fallbackLabel.Visible = false;
 			
@@ -2711,6 +2835,38 @@ private void OnAnyButtonPressed()
 		catch (Exception ex)
 		{
 			GD.PrintErr($"Failed to load cover art: {ex.Message}");
+		}
+	}
+
+	private static Task<byte[]?> GetCoverArtBytesAsync(string coverArtUrl)
+	{
+		if (string.IsNullOrWhiteSpace(coverArtUrl))
+			return Task.FromResult<byte[]?>(null);
+
+		if (CoverArtDataCache.TryGetValue(coverArtUrl, out var cachedBytes))
+			return Task.FromResult<byte[]?>(cachedBytes);
+
+		return CoverArtDownloadTasks.GetOrAdd(coverArtUrl, DownloadCoverArtBytesAsync);
+	}
+
+	private static async Task<byte[]?> DownloadCoverArtBytesAsync(string coverArtUrl)
+	{
+		await CoverArtDownloadThrottle.WaitAsync();
+		try
+		{
+			byte[] imageData = await CoverArtClient.GetByteArrayAsync(coverArtUrl);
+			CoverArtDataCache[coverArtUrl] = imageData;
+			return imageData;
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Failed to download cover art bytes: {ex.Message}");
+			return null;
+		}
+		finally
+		{
+			CoverArtDownloadTasks.TryRemove(coverArtUrl, out _);
+			CoverArtDownloadThrottle.Release();
 		}
 	}
 
