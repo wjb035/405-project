@@ -217,10 +217,20 @@ public partial class Profile : Control
 	{
 		try
 		{
+			if (url.StartsWith("/"))
+				url = $"http://localhost:5276{url}";
+
 			byte[] imageData = await _client.GetByteArrayAsync(url);
 			
-			Image avatar = new Image();
-			Error err = avatar.LoadPngFromBuffer(imageData);
+			// WebP workaround
+			var tempPath = System.IO.Path.Combine(
+				System.IO.Path.GetTempPath(), "pgemu_avatar.webp");
+			await System.IO.File.WriteAllBytesAsync(tempPath, imageData);
+
+			
+			var avatar = new Image();
+			Error err = avatar.Load(tempPath);
+			System.IO.File.Delete(tempPath);
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
 			{
@@ -234,9 +244,7 @@ public partial class Profile : Control
 			}
 			else
 			{
-				avatar.LoadJpgFromBuffer(imageData);
-				ImageTexture texture = ImageTexture.CreateFromImage(avatar);
-				_avatar.Texture = texture;
+				GD.PrintErr("Failed to decode avatar image");
 			}
 		}
 		catch (System.Exception exception)

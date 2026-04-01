@@ -11,18 +11,16 @@ public partial class ProfileSettings : Control
 	[Export] NodePath UsernameSaveButtonPath;
 	[Export] NodePath BioEditPath;
 	[Export] NodePath BioSaveButtonPath;
-	[Export] NodePath AvatarEditPath;
 	[Export] NodePath AvatarSaveButtonPath;
-	
 	private LineEdit _usernameEdit;
 	private Button _usernameSave;
 	private LineEdit _bioEdit;
 	private Button _bioSave;
-	private LineEdit _avatarEdit;
 	private Button _avatarSave;
 	private Label _status = null!;
 	ProfileService _profileService = new ProfileService();
 
+	private FileDialog _fileDialog;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -31,9 +29,16 @@ public partial class ProfileSettings : Control
 		_usernameSave = GetNode<Button>(UsernameSaveButtonPath);
 		_bioEdit = GetNode<LineEdit>(BioEditPath);
 		_bioSave = GetNode<Button>(BioSaveButtonPath);
-		_avatarEdit = GetNode<LineEdit>(AvatarEditPath);
 		_avatarSave = GetNode<Button>(AvatarSaveButtonPath);
 		_status = GetNode<Label>("Margin/Root/Status");
+
+		// File picker for avatar
+		_fileDialog = new FileDialog();
+		_fileDialog.FileMode = FileDialog.FileModeEnum.OpenFile;
+		_fileDialog.Access = FileDialog.AccessEnum.Filesystem;
+		_fileDialog.Filters = ["*.png,*.jpg,*.jpeg,*.webp,*.gif ; Images"];
+		_fileDialog.FileSelected += OnAvatarFileSelected;
+		AddChild(_fileDialog);
 
 		ApplyThemeAesthetic();
 	
@@ -65,11 +70,16 @@ public partial class ProfileSettings : Control
 	{
 		AudioManager.Instance?.PlaySelect();
 		
-		GD.Print(_avatarEdit.Text?.Trim());
-		_profileService.SetAvatar(_avatarEdit.Text?.Trim());
-		_status.Text = "Avatar URL updated.";
+		_fileDialog.PopupCentered(new Vector2I(800, 600));
 	}
 
+	private async void OnAvatarFileSelected(string path)
+	{
+		_status.Text = "Uploading avatar...";
+		var success = await _profileService.SetAvatar(path);
+		_status.Text = success ? "Avatar updated." : "Avatar upload failed.";
+	}
+	
 	private void ApplyThemeAesthetic()
 	{
 		var bg = GetNodeOrNull<ColorRect>("Bg");
@@ -88,17 +98,17 @@ public partial class ProfileSettings : Control
 
 		UiStyle.StyleLineEdit(_usernameEdit);
 		UiStyle.StyleLineEdit(_bioEdit);
-		UiStyle.StyleLineEdit(_avatarEdit);
 		_usernameEdit.PlaceholderText = "New username";
 		_bioEdit.PlaceholderText = "New bio";
-		_avatarEdit.PlaceholderText = "Avatar image URL";
 
 		UiStyle.StylePrimaryButton(_usernameSave);
 		UiStyle.StylePrimaryButton(_bioSave);
 		UiStyle.StylePrimaryButton(_avatarSave);
+
 		UiStyle.TightenButtonContentPadding(_usernameSave, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_bioSave, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_avatarSave, horizontal: 6f, vertical: 2f);
+
 
 		UiStyle.StyleStatusLabel(_status);
 		_status.Text = "";

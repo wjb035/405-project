@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -98,19 +99,81 @@ public partial class ProfileService : Node
 		GD.Print("Bio updated");
 	}
 	
-		public async void SetAvatar(string? newAvatarUrl)
+	public async Task<bool> SetAvatar(string filePath)
+	{
+		try
+		{
+			var token = Auth.AccessToken;
+			
+			
+			if (string.IsNullOrEmpty(token))
+			{
+				GD.Print("Token empty, attempting refresh...");
+				await Auth.Refresh();
+				token = Auth.AccessToken;
+			}
+			
+			if (string.IsNullOrEmpty(token))
+			{
+				GD.PrintErr("SetAvatar: No access token available");
+				return false;
+			}
+			using var client = new System.Net.Http.HttpClient();
+			client.DefaultRequestHeaders.Authorization =
+				new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+			using var form = new System.Net.Http.MultipartFormDataContent();
+			using var fileStream = File.OpenRead(filePath);
+			using var streamContent = new System.Net.Http.StreamContent(fileStream);
+			
+			// Tell the server what kinda file it is
+			var extension = Path.GetExtension(filePath).ToLower();
+			streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(extension switch
+			{
+				".png" => "image/png",
+				".jpg" or ".jpeg" => "image/jpeg",
+				".webp" => "image/webp",
+				".gif" => "image/gif",
+				_ => "application/octet-stream"
+			});
+			
+			form.Add(streamContent, "file", Path.GetFileName(filePath));
+
+			var response = await client.PostAsync(
+				"http://localhost:5276/api/profile/avatar", form);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				GD.PrintErr($"SetAvatar failed: {(int)response.StatusCode}");
+				return false;
+			}
+
+			
+			GD.Print("Avatar updated");
+			return true;
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"SetAvatar error: {ex.Message}");
+			return false;
+		}
+		
+	}
+		
+	public async Task<bool> DeleteAvatar()
 	{
 		var response = await Auth.SendAuthorizedRequest(
 			"http://localhost:5276/api/profile/avatar",
-			new { newAvatarUrl },
-			HttpMethod.Put);
+			null,
+			HttpMethod.Delete);
 
 		if (response == null)
 		{
-			GD.Print("Error: SetAvatar failed");
-			return;
+			GD.PrintErr("DeleteAvatar failed");
+			return false;
 		}
 
-		GD.Print("Avatar updated");
+		GD.Print("Avatar deleted");
+		return true;
 	}
 }

@@ -14,7 +14,6 @@ UsernameEditPath = NodePath("Margin/Root/SetUsernameContainer/UsernameEditBox")
 UsernameSaveButtonPath = NodePath("Margin/Root/SetUsernameContainer/SaveNewUsername")
 BioEditPath = NodePath("Margin/Root/SetBioContainer/BioEditBox")
 BioSaveButtonPath = NodePath("Margin/Root/SetBioContainer/SaveNewBio")
-AvatarEditPath = NodePath("Margin/Root/SetAvatarBox/AvatarEditBox")
 AvatarSaveButtonPath = NodePath("Margin/Root/SetAvatarBox/SaveNewAvatar")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=1350040471]
@@ -44,7 +43,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Margin/Root" unique_id=477975615]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.94, 1, 0.98)
 theme_override_font_sizes/font_size = 24
@@ -99,17 +98,13 @@ text = "Change Avatar"
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="AvatarEditBox" type="LineEdit" parent="Margin/Root/SetAvatarBox" unique_id=1018190085]
-custom_minimum_size = Vector2(320, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-
 [node name="SaveNewAvatar" type="Button" parent="Margin/Root/SetAvatarBox" unique_id=957509475]
 custom_minimum_size = Vector2(92, 36)
 layout_mode = 2
-text = "Save"
+text = "Open Files
+"
 
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1264118236]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.80, 0.88, 0.96, 0.95)
+theme_override_colors/font_color = Color(0.8, 0.88, 0.96, 0.95)
 horizontal_alignment = 1
