@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
-[ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
 [ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="4_psypl"]
@@ -56,7 +55,6 @@ theme = ExtResource("1_iw72c")
 script = ExtResource("1")
 SearchBarText = NodePath("Margin/Root/TopBar/HBoxContainer/Panel/UserSearchBar")
 SearchBarButton = NodePath("Margin/Root/TopBar/HBoxContainer/UserSearchButton")
-CardsPath = NodePath("Margin/Root/CenterArea/CarouselArea/Cards")
 PrevPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnPrev")
 NextPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnNext")
 SelectedTitlePath = NodePath("Margin/Root/CenterArea/SelectedTitle")
@@ -70,7 +68,6 @@ SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
 CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
 FriendInboxPopup = NodePath("Inbox")
-CardScene = ExtResource("2")
 
 [node name="TopBar" type="ColorRect" parent="." unique_id=2060178397]
 material = SubResource("ShaderMaterial_oy6yd")
@@ -195,14 +192,16 @@ icon = ExtResource("10_1lj82")
 icon_alignment = 1
 expand_icon = true
 
-[node name="CenterArea" type="VBoxContainer" parent="Margin/Root" unique_id=1584583215]
+[node name="CenterArea" type="Control" parent="Margin/Root" unique_id=272406048]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-alignment = 1
 
 [node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=1184971161]
-layout_mode = 2
+layout_mode = 0
+offset_top = 27.0
+offset_right = 1116.0
+offset_bottom = 27.0
 alignment = 1
 
 [node name="Friend1" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=2122993267]
@@ -230,7 +229,10 @@ text = "+2 more"
 
 [node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea" unique_id=567589945]
 custom_minimum_size = Vector2(1040, 460)
-layout_mode = 2
+anchors_preset = 0
+offset_top = -52.526
+offset_right = 1116.0
+offset_bottom = 632.474
 
 [node name="Cards" type="Control" parent="Margin/Root/CenterArea/CarouselArea" unique_id=199542670]
 layout_mode = 1
@@ -249,9 +251,9 @@ grow_vertical = 2
 [node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1665989749]
 layout_mode = 0
 offset_left = 15.0
-offset_top = 156.0
+offset_top = 239.0
 offset_right = 143.0
-offset_bottom = 412.0
+offset_bottom = 495.0
 icon = ExtResource("14_1lj82")
 icon_alignment = 1
 expand_icon = true
@@ -259,21 +261,27 @@ expand_icon = true
 [node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1687316739]
 layout_mode = 0
 offset_left = 975.0
-offset_top = 156.0
+offset_top = 239.0
 offset_right = 1103.0
-offset_bottom = 412.0
+offset_bottom = 495.0
 icon = ExtResource("15_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
 [node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea" unique_id=153168735]
-layout_mode = 2
+layout_mode = 0
+offset_top = 495.0
+offset_right = 1116.0
+offset_bottom = 524.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9019608)
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 
 [node name="BottomRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=2077679956]
-layout_mode = 2
+layout_mode = 0
+offset_top = 528.0
+offset_right = 1116.0
+offset_bottom = 572.0
 mouse_filter = 2
 alignment = 1
 

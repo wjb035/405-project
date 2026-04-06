@@ -113,7 +113,7 @@ public partial class GameSelect : Control
 	private Tween? _tween;
 	
 	// 3D CAROUSEL MODE
-	private Carousel3DView? _carousel3D;
+	private GameCarousel3DView? _carousel3D;
 	private CancellationTokenSource? _coverArtWarmupCts;
 	private int _pendingCoverArtRefresh;
 
@@ -1667,7 +1667,7 @@ private void OnAnyButtonPressed()
 		
 		_carouselArea.AddChild(_gridShell);
 		_carouselArea.MoveChild(_gridShell, 2);
-		_carousel3D = new Carousel3DView { Name = "Carousel3D", Visible = false };
+		_carousel3D = new GameCarousel3DView { Name = "Carousel3D", Visible = false };
 		_carousel3D.SelectionChanged += idx => SetSelectedIndex(idx);
 		_carousel3D.LayoutMode = 1;
 		_carousel3D.SetAnchorsPreset(Control.LayoutPreset.FullRect);

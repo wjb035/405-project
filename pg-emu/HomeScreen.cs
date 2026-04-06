@@ -16,7 +16,6 @@ public partial class HomeScreen : Control
 	// Scene wiring (assigned in `HomeScreen.tscn`).
 	[Export] public NodePath SearchBarText;
 	[Export] public NodePath SearchBarButton;
-	[Export] public NodePath CardsPath;
 	[Export] public NodePath PrevPath;
 	[Export] public NodePath NextPath;
 	[Export] public NodePath SelectedTitlePath;
@@ -33,10 +32,9 @@ public partial class HomeScreen : Control
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
 
-	// Card prefab spawned into the carousel.
-	[Export] public PackedScene CardScene;
-
-	private Control _cardsRoot;
+	// New 3d carousel
+	private ConsoleCarousel3DView _carousel = null!;
+	
 	private Button _prev;
 	private Button _next;
 	private Label _selectedTitle;
@@ -51,20 +49,13 @@ public partial class HomeScreen : Control
 	private Button _collections;
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
-
-	private readonly List<Control> _cards = new();
+	
 	private readonly List<PlatformConfig> _platforms = new();
 
 	// Loaded from `config.json`
 	private AppConfig? _config;
 	private string? _configPath;
-
-	// Carousel state. `_carouselPos` is continuous so it feels smooth when dragging
-	private float _carouselPos = 0f;
-	private float _dragStartPos;
-	private float _dragStartCarouselPos;
-	private bool _dragging;
-
+	
 	// Gamepad navigation (left stick + d-pad)
 	private const float AxisDeadzone = 0.55f;
 	private const int AxisRepeatMs = 180;
@@ -83,8 +74,7 @@ public partial class HomeScreen : Control
 	public ProfileService _profileService = new ProfileService();
 	private readonly System.Net.Http.HttpClient _client = new();
 	public ProfileService _profile = null!;
-
-	private Tween _tween;
+	
 	
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
@@ -93,7 +83,6 @@ public partial class HomeScreen : Control
 	public async override void _Ready()
 	{
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
-		_cardsRoot = GetNode<Control>(CardsPath);
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
 		_selectedTitle = GetNode<Label>(SelectedTitlePath);
@@ -114,6 +103,17 @@ public partial class HomeScreen : Control
 		
 		ApplyAesthetic();
 
+		// Build the 3D console carousel
+		_carousel = new ConsoleCarousel3DView();
+		_carousel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		
+		// Put it behind the UI
+		AddChild(_carousel);
+		MoveChild(_carousel, 0);
+
+		_carousel.SelectionChanged += OnCarouselSelectionChanged;
+
+		
 		_prev.Pressed += () => Step(-1);
 		_next.Pressed += () => Step(1);
 		_selectPlatform.Pressed += OpenSelectedPlatform;
@@ -136,9 +136,22 @@ public partial class HomeScreen : Control
 		InputRoutingService.Instance?.UnlockUiInput();
 		ResetUiNavigationState();
 		LoadConfigAndPlatforms();
-		SpawnCards();
+		
+		// Maps loaded platforms to console types
+		var consoleTypes = _platforms.Select(p => p.Id.ToLower() switch
+		{
+			"wii"        => ConsoleCarousel3DView.ConsoleType.Wii,
+			"ps2"        => ConsoleCarousel3DView.ConsoleType.PlayStation2,
+			"psp"        => ConsoleCarousel3DView.ConsoleType.PSP,
+			"gc"   => ConsoleCarousel3DView.ConsoleType.GameCube,
+			"gba"        => ConsoleCarousel3DView.ConsoleType.GBA,
+			_            => ConsoleCarousel3DView.ConsoleType.Wii // fallback
+		}).ToList();
+
+		// Populate carousel
+		_carousel.Populate(consoleTypes);
+		
 		RestoreSelectedPlatformSelection();
-		LayoutCards();
 		UpdateSelectedLabel();
 		
 		// we want to check if any emulator is running when posting the status
@@ -442,9 +455,9 @@ private void OnAnyButtonPressed()
 
 	private void OpenSelectedPlatform()
 	{
-		if (Count == 0) return;
+		if (_platforms.Count == 0) return;
 
-		var idx = Mathf.RoundToInt(_carouselPos);
+		var idx = Mathf.RoundToInt(_carousel.CarouselPos);
 		idx = WrapIndex(idx);
 
 		if (idx < 0 || idx >= _platforms.Count) return;
@@ -478,7 +491,7 @@ private void OnAnyButtonPressed()
 			if (!string.Equals(_platforms[i].Id, platformId, StringComparison.OrdinalIgnoreCase))
 				continue;
 
-			_carouselPos = i;
+			_carousel.CarouselPos = i;
 			_rememberedPlatformId = _platforms[i].Id;
 			return;
 		}
@@ -499,41 +512,16 @@ private void OnAnyButtonPressed()
 		GetTree().SetMeta(SelectedPlatformMetaKey, platformId);
 		_rememberedPlatformId = platformId;
 	}
-
-	private void SpawnCards()
+	
+	private void OnCarouselSelectionChanged(int index)
 	{
-		// Clear old cards (e.g. after a reload).
-		foreach (var c in _cards)
-			c.QueueFree();
-		_cards.Clear();
-		_platforms.Clear();
-
-		if (_config?.Platforms is { Count: > 0 } platforms)
-		{
-			_platforms.AddRange(platforms);
-			PlatformList.platformList = platforms;
-		}
-		else
-		{
-			// Keep the carousel usable even when config is missing/empty.
-			_platforms.Add(new PlatformConfig { Id = "missing", Name = "Missing config.json" });
-		}
-
-		foreach (var p in _platforms)
-		{
-			var card = (Control)CardScene.Instantiate();
-			_cardsRoot.AddChild(card);
-			_cards.Add(card);
-
-			// `platform_card.tscn` includes a `Panel/Name` label.
-			var label = card.GetNodeOrNull<Label>("Panel/Name");
-			if (label != null) label.Text = p.Name;
-		}
-
-		UpdateNavEnabled();
+		if (index < 0 || index >= _platforms.Count) return;
+		_selectedTitle.Text = _platforms[index].Name;
+		RememberSelectedPlatformSelection(index);
 	}
+	
 
-	private int Count => _cards.Count;
+	private int Count => _platforms.Count;
 
 	private int WrapIndex(int i)
 	{
@@ -555,91 +543,21 @@ private void OnAnyButtonPressed()
 
 	private void Step(int dir)
 	{
-		if (Count <= 1) return;
+		if (_platforms.Count <= 1) return;
 		AudioManager.Instance?.PlayNavigation(dir);
-		SnapTo(_carouselPos + dir, true);
+		_carousel.StepDirection(dir);
+		
 	}
-
-	private void SnapTo(float targetPos, bool overshoot)
-	{
-		// Programmatic move (buttons/wheel): tween to the target position and snap to the nearest item.
-		targetPos = WrapPos(targetPos);
-
-		_tween?.Kill();
-		_tween = CreateTween();
-
-		// Cubic out feels like a launcher UI, not a robot
-		_tween.SetTrans(Tween.TransitionType.Cubic);
-		_tween.SetEase(Tween.EaseType.Out);
-
-		if (overshoot)
-		{
-			// Tiny overshoot using Back
-			_tween.SetTrans(Tween.TransitionType.Back);
-			_tween.TweenProperty(this, nameof(_carouselPos), targetPos, 0.25f);
-		}
-		else
-		{
-			_tween.TweenProperty(this, nameof(_carouselPos), targetPos, 0.22f);
-		}
-
-		_tween.TweenCallback(Callable.From(() =>
-		{
-			_carouselPos = WrapPos(_carouselPos);
-			LayoutCards();
-			UpdateSelectedLabel();
-		}));
-	}
+	
 
 	public override void _Process(double delta)
 	{
 		// Keep layout in sync while tweening and while `_carouselPos` is updated by dragging.
-		LayoutCards();
+		UpdateSelectedLabel();
+		
 	}
 
-	public override void _GuiInput(InputEvent e)
-	{
-		if (ShouldIgnoreUiInput()) return;
-		if (Count == 0) return;
-		if (Count == 1) return;
 
-		if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
-		{
-			if (mb.Pressed)
-			{
-				// Start drag gesture (cancel any in-flight tween).
-				_dragging = true;
-				_dragStartPos = mb.Position.X;
-				_dragStartCarouselPos = _carouselPos;
-				_tween?.Kill();
-			}
-			else
-			{
-				if (_dragging)
-				{
-					_dragging = false;
-					// On release, snap to the closest card.
-					var nearest = Mathf.Round(_carouselPos);
-					SnapTo(nearest, false);
-				}
-			}
-		}
-
-		if (_dragging && e is InputEventMouseMotion mm)
-		{
-			var dx = mm.Position.X - _dragStartPos;
-
-			// Tune sensitivity. Bigger divisor means slower drag.
-			_carouselPos = WrapPos(_dragStartCarouselPos - (dx / 520f));
-			UpdateSelectedLabel();
-		}
-
-		if (e is InputEventMouseButton wheel && wheel.Pressed)
-		{
-			if (wheel.ButtonIndex == MouseButton.WheelUp) Step(-1);
-			if (wheel.ButtonIndex == MouseButton.WheelDown) Step(1);
-		}
-	}
 
 	public override void _UnhandledInput(InputEvent e)
 	{
@@ -841,52 +759,14 @@ private void OnAnyButtonPressed()
 	{
 		return ControllerService.TryHandleMenuAxis(value, ref heldDir, ref nextMs, Step);
 	}
-
-	private void LayoutCards()
-	{
-		if (Count == 0) return;
-
-		// Cards are laid out around the container center.
-		// The centered card (d ~= 0) is full size/alpha; others scale down and fade out.
-		var center = _cardsRoot.Size * 0.5f;
-		var spacing = 520f;
-
-		// Render a window around the center, but keep all nodes alive
-		for (int i = 0; i < Count; i++)
-		{
-			var card = _cards[i];
-
-			// Distance from current position, wrapped to [-Count/2, Count/2].
-			var d = i - _carouselPos;
-			if (d > Count * 0.5f) d -= Count;
-			if (d < -Count * 0.5f) d += Count;
-
-			var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.2f);
-
-			var scale = Mathf.Lerp(1.0f, 0.78f, t);
-			var alpha = Mathf.Lerp(1.0f, 0.35f, t);
-
-			var x = center.X + d * spacing;
-			var y = center.Y + t * 40f;
-
-			card.PivotOffset = card.Size * 0.5f;
-			card.Position = new Vector2(x, y) - card.PivotOffset;
-
-			card.Scale = new Vector2(scale, scale);
-			card.Modulate = new Color(1, 1, 1, alpha);
-
-			// Z order so center is on top
-			card.ZIndex = (int)(1000 - Mathf.Abs(d) * 100);
-		}
-	}
-
+	
 	private void UpdateSelectedLabel()
 	{
 		if (_selectedTitle == null) return;
 		if (Count == 0) return;
 
 		// Treat the rounded position as "selected".
-		var idx = Mathf.RoundToInt(_carouselPos);
+		var idx = Mathf.RoundToInt(_carousel.CarouselPos);
 		idx = WrapIndex(idx);
 
 		if (idx >= 0 && idx < _platforms.Count)
@@ -936,6 +816,20 @@ private void OnAnyButtonPressed()
 			_configPath = null;
 			SetStatus($"Config load failed: {ex.Message}");
 		}
+		
+		// Load platforms
+		_platforms.Clear();
+		if (_config?.Platforms is { Count: > 0 } platforms)
+		{
+			_platforms.AddRange(platforms);
+			PlatformList.platformList = platforms;
+		}
+		else
+		{
+			_platforms.Add(new PlatformConfig { Id = "missing", Name = "Missing config.json" });
+		}
+
+		UpdateNavEnabled();
 	}
 
 	private static string? TryFindConfigNearGodotProject()
