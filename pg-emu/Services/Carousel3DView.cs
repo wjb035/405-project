@@ -174,7 +174,7 @@ public partial class Carousel3DView : SubViewportContainer
             Size = new Vector2(2.5f, 3.5f)
         };
         coverMesh.Mesh = quad;
-        coverMesh.Position = new Vector3(0, 0, 0.26f);
+        coverMesh.Position = new Vector3(0, 0, 0.126f);
         
         if (coverArt != null)
         {
