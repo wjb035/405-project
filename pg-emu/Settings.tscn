@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ht73q5hq63an" path="res://ProfileSettings.tscn" id="2_mx4kw"]
 [ext_resource type="PackedScene" uid="uid://5s7f8el1wpuq" path="res://AppearanceSettings.tscn" id="3_appr"]
 [ext_resource type="PackedScene" uid="uid://bruwiv0hm7l0k" path="res://AchievementSettings.tscn" id="5_sfvul"]
+[ext_resource type="PackedScene" uid="uid://biscwj6xfkpvb" path="res://EmulatorScreen.tscn" id="6_blqn1"]
 
 [node name="Settings" type="Control" unique_id=166812288]
 layout_mode = 3
@@ -23,6 +24,8 @@ AppearanceChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBo
 AppearanceScreenPath = NodePath("Margin/HBoxContainer/AppearanceSettings")
 AchievementChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/AchievementChoice")
 AchievementScreenPath = NodePath("Margin/HBoxContainer/AchievementSettings")
+EmulatorChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/EmulatorChoice")
+EmulatorScreenPath = NodePath("Margin/HBoxContainer/EmulatorConfig")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=365426328]
 layout_mode = 1
@@ -86,6 +89,10 @@ text = "Appearance"
 layout_mode = 2
 text = "Achievements"
 
+[node name="EmulatorChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=715596139]
+layout_mode = 2
+text = "Emulators"
+
 [node name="ProfileSettings" parent="Margin/HBoxContainer" unique_id=1173785683 instance=ExtResource("2_mx4kw")]
 visible = false
 layout_mode = 2
@@ -97,6 +104,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="AppearanceSettings" parent="Margin/HBoxContainer" unique_id=2023894246 instance=ExtResource("3_appr")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EmulatorConfig" parent="Margin/HBoxContainer" unique_id=714302454 instance=ExtResource("6_blqn1")]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 

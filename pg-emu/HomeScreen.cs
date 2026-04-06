@@ -511,6 +511,7 @@ private void OnAnyButtonPressed()
 		if (_config?.Platforms is { Count: > 0 } platforms)
 		{
 			_platforms.AddRange(platforms);
+			PlatformList.platformList = platforms;
 		}
 		else
 		{
@@ -925,6 +926,7 @@ private void OnAnyButtonPressed()
 			_config = AppConfig.Load(_configPath);
 			// Your sample config uses `~/` for LibraryRoot; .NET doesn't auto-expand that.
 			_config.LibraryRoot = ExpandHomePath(_config.LibraryRoot);
+			PlatformList._configuration = _config;
 
 			SetStatus($"Loaded config: {_configPath}");
 		}
