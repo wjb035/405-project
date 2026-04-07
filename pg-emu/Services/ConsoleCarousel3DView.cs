@@ -61,6 +61,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
         };
         AddChild(_viewport);
+        _viewport.PositionalShadowAtlasSize = 4096;
+        _viewport.PositionalShadowAtlas16Bits = true;
         Stretch = true;
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
@@ -85,13 +87,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         // Lighting
         var sun = new DirectionalLight3D
         {
-            LightEnergy = 2f,
+            LightEnergy = 1.2f,
             LightColor = new Color(0.95f, 0.90f, 1.0f),
             ShadowEnabled = true,
+            ShadowBlur = 0.5f,
         };
-        sun.ShadowBias = 0.05f;
-        sun.RotateX(Mathf.DegToRad(-60f));
-        sun.RotateY(Mathf.DegToRad(30f));
+        sun.DirectionalShadowMode = DirectionalLight3D.ShadowMode.Orthogonal;
+        sun.DirectionalShadowMaxDistance = 20f;
+        sun.ShadowBias = 0.02f;
+        sun.RotateX(Mathf.DegToRad(-45f));
+        sun.RotateY(Mathf.DegToRad(70f));
         _sceneRoot.AddChild(sun);
 
         var fill = new DirectionalLight3D
@@ -122,18 +127,18 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         
         // Ground for recieving shadows
         var ground = new MeshInstance3D();
-        ground.Mesh = new PlaneMesh { Size = new Vector2(50f, 50f) };
+        ground.Mesh = new PlaneMesh { Size = new Vector2(200f, 50f) };
         // position below the consoles
-        ground.Position = new Vector3(0, -1.05f, 0); 
+        ground.Position = new Vector3(0, -1.2f, 2f); 
+        ground.RotateX(Mathf.DegToRad(-4f));
         
         var groundMat = new StandardMaterial3D
         {
-            AlbedoColor = new Color(1f, 1f, 1f, 1f),
-            Roughness = 0.9f,
-            Metallic = 0f,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
+            AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.3f),
+            Roughness = 1f, 
+            // ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            ShadowToOpacity = true,
+            // ShadowToOpacity = true,
         };
         ground.SetSurfaceOverrideMaterial(0, groundMat);
         ground.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
@@ -199,12 +204,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         var model = scene.Instantiate<Node3D>();
         EnableShadows(model);
         var wrapper = new Node3D { Name = type.ToString() };
-        wrapper.RotateX(Mathf.DegToRad(-20f));
+       //  wrapper.RotateX(Mathf.DegToRad(-20f));
         switch (type)
         {
             case ConsoleType.Wii:
                 model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
-                model.Position = new Vector3(-0.1f, 0, 0);
+                model.Position = new Vector3(-0.1f, 0.1f, 0);
                 model.RotateY(Mathf.DegToRad(-60f));
                 break;
             case ConsoleType.PlayStation2:
@@ -215,12 +220,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
             case ConsoleType.PSP:
                 model.Scale = new Vector3(1.1f, 1.1f, 1.1f);
                 model.Position = new Vector3(0.3f, -1f, 0);
-                model.RotateX(Mathf.DegToRad(-90));
+                model.RotateX(Mathf.DegToRad(-10));
                 model.RotateY(Mathf.DegToRad(30));
                 break;
             case ConsoleType.GameCube:
                 model.Scale = new Vector3(0.030f, 0.030f, 0.030f);
-                model.Position = new Vector3(0, -1f, 0);
+                model.Position = new Vector3(0, -0.7f, 0);
                 model.RotateY(Mathf.DegToRad(30f));
                 break;
             case ConsoleType.GBA:
@@ -349,6 +354,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
     // Handle when the mouse is clicked or draggged, kills velocity so it doesnt drift when you drag
     public override void _GuiInput(InputEvent e)
     {
+        GD.Print($"GuiInput: {e.GetType().Name}");
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {
             if (mb.Pressed)
@@ -522,7 +528,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
             var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.5f);
 
-            box.Position = new Vector3(d * Spacing, 0f, -t * 1.2f);
+            box.Position = new Vector3(d * Spacing, t *0.4f, -t * 1.2f);
             
             // ONLY set scale and rotation if not hovered
             if (i != _hoveredIdx)
