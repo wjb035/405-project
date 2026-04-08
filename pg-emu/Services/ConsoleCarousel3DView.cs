@@ -67,6 +67,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
         MouseFilter = MouseFilterEnum.Pass;
+        ClipContents = false;
         
         // Scene root
         _sceneRoot = new Node3D { Name = "SceneRoot" };
@@ -94,7 +95,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         };
         sun.DirectionalShadowMode = DirectionalLight3D.ShadowMode.Orthogonal;
         sun.DirectionalShadowMaxDistance = 20f;
-        sun.ShadowBias = 0.02f;
+        sun.ShadowBias = 0.2f;
         sun.RotateX(Mathf.DegToRad(-45f));
         sun.RotateY(Mathf.DegToRad(70f));
         _sceneRoot.AddChild(sun);
@@ -134,7 +135,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         
         var groundMat = new StandardMaterial3D
         {
-            AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.3f),
+            AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.5f),
             Roughness = 1f, 
             // ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -147,8 +148,9 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         // Shadows
         _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
         // Aliasing
+        _viewport.UseTaa = false;
         _viewport.Msaa3D = Viewport.Msaa.Msaa8X;
-        _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
+        //_viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
         
     }
 
@@ -296,7 +298,18 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
     private void EnableShadows(Node node)
     {
         if (node is MeshInstance3D mesh)
+        {
             mesh.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
+            //anistropic filtering
+            for (int s = 0; s < mesh.GetSurfaceOverrideMaterialCount(); s++)
+            {
+                var mat = mesh.GetSurfaceOverrideMaterial(s) as StandardMaterial3D;
+                if (mat != null)
+                {
+                    mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+                }
+            }
+        }
 
         foreach (var child in node.GetChildren())
             if (child is Node3D childNode)
@@ -357,18 +370,23 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         GD.Print($"GuiInput: {e.GetType().Name}");
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {
+            if (mb.Position.Y < 70f)
+            {
+                MouseFilter = MouseFilterEnum.Pass;
+                return;
+            }
+            
             if (mb.Pressed)
             {
-                if (mb.Position.Y < 70f)
-                    return;
-                MouseFilter = MouseFilterEnum.Stop;
                 _dragging = true;
+                MouseFilter = MouseFilterEnum.Stop;
                 AudioManager.Instance?.StopCarouselHover();
                 _dragStartX = mb.Position.X;
                 _dragStartPos = CarouselPos;
                 _lastDragX = mb.Position.X;
                 _lastDragVelocity = 0f;
                 _velocity = 0f;
+                GetViewport().SetInputAsHandled();
             }
             else if (_dragging)
             {
@@ -646,5 +664,4 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         
         _velocity = dir * 3.5f;
     }
-    
 }

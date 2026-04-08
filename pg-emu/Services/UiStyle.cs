@@ -204,8 +204,8 @@ public static class UiStyle
 
         tween.TweenProperty(button, "modulate",
             hovered
-                ? new Color(0.9f, 0.85f, 1f, 1f)  
-                : new Color(0.74f, 0.8f, 1f, 0.25f), 
+                ? new Color(0.92f, 0.85f, 1f, 1f)  
+                : new Color(0.78f, 0.7f, 0.8f, 0.15f), 
             0.2f);
         GD.Print(button.PivotOffset, " vs ", button.Size);
     }

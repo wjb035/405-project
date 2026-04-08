@@ -28,6 +28,7 @@ public partial class HomeScreen : Control
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath HelpPath;
 	[Export] public NodePath CollectionsPath;
+	[Export] public NodePath CarouselAreaPath;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -49,6 +50,7 @@ public partial class HomeScreen : Control
 	private Button _collections;
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
+	private Control _carouselArea;
 	
 	private readonly List<PlatformConfig> _platforms = new();
 
@@ -104,12 +106,13 @@ public partial class HomeScreen : Control
 		ApplyAesthetic();
 
 		// Build the 3D console carousel
+		_carouselArea = GetNode<Control>(CarouselAreaPath);
 		_carousel = new ConsoleCarousel3DView();
 		_carousel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		
 		// Put it behind the UI
-		AddChild(_carousel);
-		MoveChild(_carousel, 0);
+		_carouselArea.AddChild(_carousel);
+		MoveChild(_carousel, -1);
 
 		_carousel.SelectionChanged += OnCarouselSelectionChanged;
 

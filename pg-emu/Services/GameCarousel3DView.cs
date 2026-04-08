@@ -33,6 +33,7 @@ public partial class GameCarousel3DView : SubViewportContainer
     private readonly List<Node3D> _boxes = new();
     private readonly List<MeshInstance3D> _meshes = new();
     private readonly List<StandardMaterial3D> _baseMaterials = new();
+    private readonly List<StandardMaterial3D?> _coverMaterials = new();
     
     // Card spacing in 3D units
     private const float Spacing = 2.2f;
@@ -182,14 +183,18 @@ public partial class GameCarousel3DView : SubViewportContainer
             var coverMat = new StandardMaterial3D
             {
                 AlbedoTexture = coverArt,
-                AlbedoColor = new Color(1, 1, 1, 1),
+                AlbedoColor = coverArt != null ? new Color(1,1,1,1) : new Color(1,1,1,0),
                 Roughness = 0.5f,
                 Metallic = 0.1f,
                 Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             };
             
             coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
-            
+            _coverMaterials.Add(coverMat);
+        }
+        else
+        {
+            _coverMaterials.Add(null!);
         }
         root.AddChild(coverMesh);
         
@@ -462,6 +467,15 @@ public partial class GameCarousel3DView : SubViewportContainer
                     _baseMaterials[i].AlbedoColor.R,
                     _baseMaterials[i].AlbedoColor.G,
                     _baseMaterials[i].AlbedoColor.B,
+                    alpha);
+            }
+            if (i < _coverMaterials.Count && _coverMaterials[i] != null)
+            {
+                var coverMat = _coverMaterials[i];
+                coverMat.AlbedoColor = new Color(
+                    coverMat.AlbedoColor.R,
+                    coverMat.AlbedoColor.G,
+                    coverMat.AlbedoColor.B,
                     alpha);
             }
         }

@@ -3,7 +3,7 @@
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_uds70"]
 noise_type = 0
 seed = 46
-frequency = 0.0007
+frequency = 0.0008
 offset = Vector3(220.35, 0, 0)
 domain_warp_fractal_lacunarity = 6.665
 domain_warp_fractal_gain = 2.54
