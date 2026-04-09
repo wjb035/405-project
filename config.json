@@ -43,6 +43,16 @@
       }
     },
     {
+      "id": "gba",
+      "name": "Game Boy Advance",
+      "romPath": "GBA",
+      "extensions": [
+        ".gba"
+      ],
+      "defaultEmulatorId": "mgba",
+      "retroachievementsPlatformID": -1
+    },
+    {
       "id": "wii",
       "name": "Nintendo Wii",
       "romPath": "games/Wii",
@@ -125,6 +135,19 @@
       "name": "PPSSPP",
       "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
       "argsTemplate": "  \"{ROM}\""
+    },
+    {
+      "id": "mgba",
+      "name": "mGBA",
+      "exePath": "",
+      "argsTemplate": null,
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "cores/mgba_libretro.dylib",
+      "corePathLinux": null
     }
   ]
 }
