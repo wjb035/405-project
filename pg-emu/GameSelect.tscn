@@ -2,17 +2,17 @@
 
 [ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
 [ext_resource type="PackedScene" path="res://game_cover_card.tscn" id="2"]
-[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="3_8s1q4"]
 [ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_cja7x"]
-[ext_resource type="Texture2D" uid="uid://bjj1k8ig6w0dr" path="res://Images/trophy icon.png" id="3_ju5ei"]
 [ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://BottomBar.gdshader" id="4_xj10s"]
-[ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="5_1x65b"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="5_xj10s"]
-[ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="6_cja7x"]
-[ext_resource type="Texture2D" uid="uid://ccdiymcy5p2gx" path="res://Images/collection add icon.png" id="6_scx6q"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="6_xsmlm"]
-[ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="7_scx6q"]
-[ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="8_xj10s"]
+[ext_resource type="Texture2D" uid="uid://blcik6cd3n77a" path="res://Images/collection add icon thin.png" id="7_scx6q"]
+[ext_resource type="Texture2D" uid="uid://bmueo5w7d0ujy" path="res://Images/flip icon.png" id="7_xj10s"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="8_xj10s"]
+[ext_resource type="Texture2D" uid="uid://bobd3jxfhdbun" path="res://Images/trophy icon thin.png" id="9_xsmlm"]
+[ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="10_2kom7"]
+[ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="11_rhyj1"]
+[ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="12_ak8ya"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_scx6q"]
 shader = ExtResource("3_cja7x")
@@ -49,6 +49,7 @@ BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 PlayPath = NodePath("Margin/Root/CenterArea/ActionRow/BtnPlay")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 AddPath = NodePath("Margin/Root/CenterArea/HBoxContainer/Add")
+FlipPath = NodePath("Margin/Root/CenterArea/BtnFlip")
 CardScene = ExtResource("2")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2052701266]
@@ -154,6 +155,19 @@ icon = ExtResource("6_xsmlm")
 icon_alignment = 1
 expand_icon = true
 
+[node name="BtnFlip" type="Button" parent="Margin/Root/CenterArea" unique_id=889116861]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 0
+offset_left = 1050.0
+offset_top = 35.684
+offset_right = 1114.0
+offset_bottom = 99.684
+tooltip_text = "Flip the game on its back to see information. 
+Hotkey: F"
+icon = ExtResource("7_xj10s")
+icon_alignment = 1
+expand_icon = true
+
 [node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=682693177]
 layout_mode = 0
 offset_left = -2.0
@@ -164,7 +178,8 @@ offset_bottom = 99.684204
 [node name="Add" type="Button" parent="Margin/Root/CenterArea/HBoxContainer" unique_id=1029566633]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
-icon = ExtResource("6_scx6q")
+tooltip_text = "Add a game to a collection."
+icon = ExtResource("7_scx6q")
 icon_alignment = 1
 expand_icon = true
 
@@ -228,7 +243,7 @@ custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
 text = "
 "
-icon = ExtResource("3_8s1q4")
+icon = ExtResource("8_xj10s")
 icon_alignment = 1
 expand_icon = true
 
@@ -243,28 +258,28 @@ layout_mode = 2
 [node name="BtnAch" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=514724767]
 layout_mode = 2
 text = "         "
-icon = ExtResource("3_ju5ei")
+icon = ExtResource("9_xsmlm")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=430120503]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("5_1x65b")
+icon = ExtResource("10_2kom7")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1002384540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("6_cja7x")
+icon = ExtResource("11_rhyj1")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2026026780]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("7_scx6q")
+icon = ExtResource("12_ak8ya")
 icon_alignment = 1
 expand_icon = true
 
@@ -272,7 +287,7 @@ expand_icon = true
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
 text = " "
-icon = ExtResource("8_xj10s")
+icon = ExtResource("10_2kom7")
 icon_alignment = 1
 expand_icon = true
 

@@ -145,13 +145,13 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         ground.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
         _sceneRoot.AddChild(ground);
         
-        // Shadows
-        _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
         // Aliasing
-        _viewport.UseTaa = false;
         _viewport.Msaa3D = Viewport.Msaa.Msaa8X;
-        //_viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
-        
+        _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
+        _viewport.Scaling3DMode = SubViewport.Scaling3DModeEnum.Fsr;
+        _viewport.Scaling3DScale = 1.0f; 
+        _viewport.FsrSharpness = 0.3f;
+
     }
 
     // Call this from GameSelect after loading games to clear everything and rebuild
@@ -292,7 +292,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 }
 
     private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
-        new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic };
+        new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic, SpecularMode = BaseMaterial3D.SpecularModeEnum.Disabled, };
     
     
     private void EnableShadows(Node node)
@@ -307,6 +307,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
                 if (mat != null)
                 {
                     mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+                    mat.Roughness = Mathf.Max(mat.Roughness, 0.25f);
                 }
             }
         }
@@ -577,6 +578,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
                     {
                         mat = (StandardMaterial3D)baseMat.Duplicate();
                         mesh.SetSurfaceOverrideMaterial(s, mat);
+                        _originalColors[mat] = mat.AlbedoColor;
                     }
                     else continue;
                 }

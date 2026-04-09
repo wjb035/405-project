@@ -71,7 +71,6 @@ CarouselAreaPath = NodePath("Margin/Root/CenterArea/CarouselArea")
 FriendInboxPopup = NodePath("Inbox")
 
 [node name="TopBar" type="ColorRect" parent="." unique_id=2060178397]
-visible = false
 material = SubResource("ShaderMaterial_oy6yd")
 layout_mode = 1
 anchors_preset = 10

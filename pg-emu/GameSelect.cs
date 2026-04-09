@@ -27,6 +27,7 @@ public partial class GameSelect : Control
 	[Export] public NodePath PlayPath;
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath AddPath;
+	[Export] public NodePath FlipPath;
 
 
 	// Prefab for a single carousel card.
@@ -48,6 +49,7 @@ public partial class GameSelect : Control
 	private Button _add = null!;
 	private Button _chat = null!;
 	private Button _help = null!;
+	private Button _flip = null!;
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
 	private VBoxContainer _listRows = null!;
@@ -139,6 +141,8 @@ public partial class GameSelect : Control
 		_help = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
 		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
 		_add = GetNode<Button>(AddPath);
+		_flip = GetNode<Button>(FlipPath);
+		
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
@@ -169,6 +173,8 @@ public partial class GameSelect : Control
 		_chat.Pressed += OnChatPressed;
 		_help.Pressed += OnHelpPressed;
 		_add.Pressed += addToCollection;
+		_flip.Pressed += () => _carousel3D?.FlipSelected();
+
 		ApplyAesthetic();
 		
 
@@ -935,6 +941,20 @@ private void OnAnyButtonPressed()
 				return (g.Title, tex);
 			}).ToList();
 			_carousel3D.Populate(gameData, _carouselPos);
+			
+			// Apply metadata to all the games
+			for (int i = 0; i < _games.Count; i++)
+			{
+				var g = _games[i];
+				_carousel3D.SetBackFaceData(
+					i,
+					g.Title,
+					"No description yet.",
+					_platform?.Name ?? "Unknown",
+					"",
+					g.AchievementNum ?? ""
+				);
+			}
 		}
 
 		UpdateNavEnabled();
@@ -1080,6 +1100,18 @@ private void OnAnyButtonPressed()
 	public override void _UnhandledInput(InputEvent e)
 	{
 		if (ShouldIgnoreUiInput()) return;
+		
+		// Keyboard hotkey
+		if (e is InputEventKey f && f.Pressed && !f.Echo)
+		{
+			if (Input.IsActionJustPressed("game_flip") && 
+			    _browseLayout == BrowseLayoutMode.ThreeD)
+			{
+				_carousel3D?.FlipSelected();
+				MarkInputHandled();
+				return;
+			}
+		}
 
 		if (e is InputEventJoypadMotion jm)
 		{
@@ -1184,6 +1216,7 @@ private void OnAnyButtonPressed()
 				GoHome();
 				break;
 		}
+		
 	}
 
 	private bool HandleControllerUiButton(JoyButton button)
@@ -2353,6 +2386,8 @@ private void OnAnyButtonPressed()
 		_gridShell.Visible = _browseLayout == BrowseLayoutMode.Grid;
 		if (_carousel3D != null)
 			_carousel3D.Visible = _browseLayout == BrowseLayoutMode.ThreeD;
+		if (_flip != null)
+			_flip.Visible = _browseLayout == BrowseLayoutMode.ThreeD;
 		ApplySelectionToBrowseEntries();
 		UpdateNavEnabled();
 	}
@@ -3065,6 +3100,7 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleMetaLabel(_metaLeft);
 		UiStyle.StyleMetaLabel(_metaRight);
 		UiStyle.StyleNavButton(_add);
+		UiStyle.StyleNavButton(_flip);
 		UiStyle.StyleStatusLabel(_status);
 		UiStyle.StyleGhostNav(_prev, _next);
 	}

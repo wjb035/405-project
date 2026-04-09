@@ -45,6 +45,8 @@ public partial class GameCarousel3DView : SubViewportContainer
     private Tween? _hoverTween;
     private double _mouseIdleTime = 0f;
     private const double MouseIdleThreshold = 1.0; 
+    private readonly HashSet<int> _flippedBoxes = new();
+    private readonly HashSet<int> _animatingBoxes = new();
     
     public event System.Action<int>? SelectionChanged;
 
@@ -106,9 +108,20 @@ public partial class GameCarousel3DView : SubViewportContainer
         };
         _sceneRoot.AddChild(rim);
         
+        var env = new Environment();
+        env.AmbientLightSource = Godot.Environment.AmbientSource.Color;
+        env.AmbientLightColor = new Color(0.3f, 0.2f, 0.5f);
+        env.AmbientLightEnergy = 0.2f;
+
+        var worldEnv = new WorldEnvironment { Environment = env };
+        _sceneRoot.AddChild(worldEnv);
+        
         // Aliasing
-        _viewport.Msaa3D = Viewport.Msaa.Msaa4X;
+        _viewport.Msaa3D = Viewport.Msaa.Msaa8X;
         _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
+        _viewport.Scaling3DMode = SubViewport.Scaling3DModeEnum.Fsr;
+        _viewport.Scaling3DScale = 1.0f;
+        _viewport.FsrSharpness = 0.2f;
         
     }
 
@@ -187,6 +200,7 @@ public partial class GameCarousel3DView : SubViewportContainer
                 Roughness = 0.5f,
                 Metallic = 0.1f,
                 Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
             };
             
             coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
@@ -194,9 +208,43 @@ public partial class GameCarousel3DView : SubViewportContainer
         }
         else
         {
-            _coverMaterials.Add(null!);
+            // placeholder for if nothing loads
+            var placeholderMat = new StandardMaterial3D
+            {
+                AlbedoColor = new Color(0.75f, 0.72f, 0.85f, 1f), 
+                Roughness = 0.6f,
+                Metallic = 0.05f,
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+            };
+            coverMesh.SetSurfaceOverrideMaterial(0, placeholderMat);
+            _coverMaterials.Add(placeholderMat);
         }
         root.AddChild(coverMesh);
+        
+        // Back face label mesh and quad
+        var backMesh = new MeshInstance3D { Name = "BackMesh" };
+        var backQuad = new QuadMesh
+        {
+            Size = new Vector2(2.5f, 3.5f)
+        };
+        
+        backMesh.Mesh = backQuad;
+        backMesh.Position = new Vector3(0, 0, -0.126f);
+        
+        // Flip it so it faces outwards
+        backMesh.RotateY(Mathf.DegToRad(180f));
+        
+        var backMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(1, 1, 1, 1),
+            Roughness = 0.5f,
+            Metallic = 0.05f,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+        };
+        backMesh.SetSurfaceOverrideMaterial(0, backMat);
+        root.AddChild(backMesh);
         
         // DEBUG
         if (coverArt != null)
@@ -205,6 +253,7 @@ public partial class GameCarousel3DView : SubViewportContainer
             GD.Print($"No cover art for: {title}");
         
         return root;
+        
     }
     
     // Updates a box's texture,c all it from gameselect
@@ -223,10 +272,138 @@ public partial class GameCarousel3DView : SubViewportContainer
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
         };
         coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+        if (index < _coverMaterials.Count)
+            _coverMaterials[index] = coverMat;
         
     }
     
-    
+    // Build the texture on the back
+    private void BuildBackFaceTexture(int index, string title, string description, string genre, string releaseYear, string rating)
+    {
+        var box = _boxes[index];
+        var backMesh = box.GetNodeOrNull<MeshInstance3D>("BackMesh");
+        if (backMesh == null) return;
+
+        // Subviewport for rendering text
+        var vp = new SubViewport
+        {
+            Size = new Vector2I(2048, 2896),
+            TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
+            Msaa2D = Viewport.Msaa.Msaa8X,
+            ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa,
+        };
+        _sceneRoot.AddChild(vp);
+        
+        // Root panel
+        var panel = new PanelContainer();
+        var style = new StyleBoxFlat()
+        {
+            BgColor = new Color(0.06f, 0.04f, 0.12f, 0.97f),
+            BorderColor = new Color(0.55f, 0.42f, 0.80f, 0.8f),
+            BorderWidthLeft = 12,
+            BorderWidthTop = 12,
+            BorderWidthRight = 12,
+            BorderWidthBottom = 12,
+            CornerRadiusTopLeft = 72,
+            CornerRadiusTopRight = 72,
+            CornerRadiusBottomLeft = 72,
+            CornerRadiusBottomRight = 72,
+            ContentMarginLeft = 120,
+            ContentMarginTop = 120,
+            ContentMarginRight = 120,
+            ContentMarginBottom = 120,
+        };
+        panel.AddThemeStyleboxOverride("panel", style);
+        panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        vp.AddChild(panel);
+
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 40);
+        panel.AddChild(column);
+
+        // Title
+        var titleLabel = new Label
+        {
+            Text = title,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        titleLabel.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 1f));
+        titleLabel.AddThemeFontSizeOverride("font_size", 96);
+        column.AddChild(titleLabel);
+
+        // Divider
+        var divider = new ColorRect
+        {
+            CustomMinimumSize = new Vector2(0, 6),
+            Color = new Color(0.55f, 0.42f, 0.80f, 0.6f),
+        };
+        column.AddChild(divider);
+        
+        // Metadata
+        AddMetaRow(column, "GENRE", genre);
+        AddMetaRow(column, "RELEASED", releaseYear);
+        AddMetaRow(column, "RATING", rating);
+        
+        // Description
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            var spacer = new Control { CustomMinimumSize = new Vector2(0, 8) };
+            column.AddChild(spacer);
+
+            var desc = new Label
+            {
+                Text = description,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            };
+            desc.AddThemeColorOverride("font_color", new Color(0.82f, 0.80f, 0.94f, 0.90f));
+            desc.AddThemeFontSizeOverride("font_size", 58);
+            column.AddChild(desc);
+        }
+        
+        // Apply this viewport to the back face
+        var mat = backMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
+        if (mat != null)
+            mat.AlbedoTexture = vp.GetTexture();
+        mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+    }
+
+    // Function for adding metadata
+    private static void AddMetaRow(VBoxContainer parent, string label, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 40);
+        parent.AddChild(row);
+        
+        var keyLabel = new Label { Text = label };
+        keyLabel.AddThemeColorOverride("font_color", new Color(0.62f, 0.74f, 0.94f, 0.88f));
+        keyLabel.AddThemeFontSizeOverride("font_size", 52);
+        keyLabel.CustomMinimumSize = new Vector2(380, 0);
+        row.AddChild(keyLabel);
+
+        var valueLabel = new Label
+        {
+            Text = value,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        valueLabel.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.96f));
+        valueLabel.AddThemeFontSizeOverride("font_size", 52);
+        row.AddChild(valueLabel);
+        
+    }
+
+    // Public method for setting the data with IGDB api
+    public void SetBackFaceData(int index, string title, string description,
+        string genre, string releaseYear, string rating)
+    {
+        if (index >= _boxes.Count) return;
+        BuildBackFaceTexture(index, title, description, genre, releaseYear, rating);
+    }
+
     // Physics processing for the spin
     public override void _Process(double delta)
     {
@@ -252,6 +429,7 @@ public partial class GameCarousel3DView : SubViewportContainer
                 var nearest = Mathf.Round(CarouselPos);
                 CarouselPos = WrapPos(nearest);
                 SelectionChanged?.Invoke(WrapIndex(Mathf.RoundToInt(CarouselPos)));
+                UnflipSelected();
                 ElasticSnapSelected();
                 PlaySpinAudio(suppressIfRecent: true);
             }
@@ -261,7 +439,7 @@ public partial class GameCarousel3DView : SubViewportContainer
         var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
         for (int i = 0; i < _boxes.Count; i++)
         {
-            if (i == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold)
+            if (i == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold && !_flippedBoxes.Contains(i))
                 _boxes[i].RotateY((float)delta * 0.4f);
         }
 
@@ -304,6 +482,10 @@ public partial class GameCarousel3DView : SubViewportContainer
         if (_dragging && e is InputEventMouseMotion mm)
         {
             var dx = mm.Position.X - _dragStartX;
+            
+            if (Mathf.Abs(dx) > 8f)
+                UnflipSelected();
+            
             CarouselPos = WrapPos(_dragStartPos - dx * DragScale * 5f);
             UpdateSpinAudioFromMotion();
 
@@ -325,6 +507,7 @@ public partial class GameCarousel3DView : SubViewportContainer
     // Handle when the mouse hovers over the box
     public override void _Input(InputEvent e)
     {
+        if (e is InputEventKey) return;
         if (_boxes.Count == 0) return;
         if (e is InputEventMouseMotion mm)
         {
@@ -390,9 +573,16 @@ public partial class GameCarousel3DView : SubViewportContainer
             new Vector3(SelectedScale, SelectedScale, SelectedScale),
             0.6f);
         // Reset tilt
-        _hoverTween.TweenProperty(box, "rotation",
-            new Vector3(0f, 0f, 0f),
-            0.4f);
+        if (!_flippedBoxes.Contains(idx))
+        {
+            _animatingBoxes.Add(idx);
+            _hoverTween.TweenProperty(box, "rotation",
+                new Vector3(0f, 0f, 0f), 0.4f);
+            
+            var capturedIdx = idx;
+            _hoverTween.TweenCallback(Callable.From(() =>
+                _animatingBoxes.Remove(capturedIdx)));
+        }
     }
 
     private void UpdateHoverTilt(int idx, Vector2 mousePos)
@@ -407,11 +597,18 @@ public partial class GameCarousel3DView : SubViewportContainer
         var tiltX = Mathf.DegToRad(-ny * 12f);  // tilt up/down
         var tiltY = Mathf.DegToRad( nx * 12f);  // tilt left/right
 
+        // Handled differently on flipped box
+        if (_flippedBoxes.Contains(idx))
+            tiltY = -tiltY;
+
+        // Target rotation for flip offset
+        var baseY = _flippedBoxes.Contains(idx) ? Mathf.DegToRad(180f) : 0f;
+        
         // Smoothly interpolate current rotation toward target
         var currentRot = box.Rotation;
         box.Rotation = new Vector3(
             Mathf.Lerp(currentRot.X, tiltX, 0.15f),
-            Mathf.Lerp(currentRot.Y, tiltY, 0.15f),
+            Mathf.Lerp(currentRot.Y, baseY + tiltY, 0.15f),
             currentRot.Z
         );
     }
@@ -458,7 +655,8 @@ public partial class GameCarousel3DView : SubViewportContainer
             {
                 var scale = Mathf.Lerp(SelectedScale, UnselectedScale, t);
                 box.Scale = new Vector3(scale, scale, scale);
-                box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
+                if (!_flippedBoxes.Contains(i) && !_animatingBoxes.Contains(i))
+                    box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
             }
 
             if (i < _baseMaterials.Count)
@@ -550,4 +748,55 @@ public partial class GameCarousel3DView : SubViewportContainer
         _velocity = dir * 3.5f;
     }
     
+    // FLIPPING THE GAME
+    public void FlipSelected()
+    {
+        var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+        if (idx >= _boxes.Count) return;
+        
+        var box = _boxes[idx];
+        
+        var isFlipped = _flippedBoxes.Contains(idx);
+        if (isFlipped)
+            _flippedBoxes.Remove(idx);
+        else
+            _flippedBoxes.Add(idx);
+
+        var targetY = isFlipped ? 0f : Mathf.DegToRad(180f);
+        
+        var currentRot = box.Rotation;
+        
+        _animatingBoxes.Add(idx);
+        _hoverTween?.Kill();
+        _hoverTween = CreateTween();
+        _hoverTween.SetTrans(Tween.TransitionType.Cubic);
+        _hoverTween.SetEase(Tween.EaseType.InOut);
+        _hoverTween.TweenProperty(box, "rotation",
+            new Vector3(currentRot.X, targetY, currentRot.Z), 0.5f);
+        var capturedIdx = idx;
+        _hoverTween.TweenCallback(Callable.From(() =>
+            _animatingBoxes.Remove(capturedIdx)));
+    }
+
+    private void UnflipSelected()
+    {
+        foreach (var idx in _flippedBoxes)
+        {
+            if (idx >= _boxes.Count) continue;
+            
+            _animatingBoxes.Add(idx);
+            var currentRot = _boxes[idx].Rotation;
+            
+            var tween = CreateTween();
+            tween.SetTrans(Tween.TransitionType.Cubic);
+            tween.SetEase(Tween.EaseType.InOut);
+            tween.TweenProperty(_boxes[idx], "rotation",
+                new Vector3(currentRot.X, 0f, currentRot.Z), 0.4f);
+            
+            var capturedIdx = idx;
+            tween.TweenCallback(Callable.From(() => 
+                _animatingBoxes.Remove(capturedIdx)));
+        }
+        _flippedBoxes.Clear();
+    }
 }
