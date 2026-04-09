@@ -29,8 +29,8 @@ config.local.json
 .godot/
 
 ## BACKEND CODES
-PGEmu.backend/appsettings.Development.json
-PGEmu.backend/appsettings.json
+*/PGEmu.backend/appsettings.Development.json
+*/PGEmu.backend/appsettings.json
 
 ## Local emulators + ROMs
 PGEmu/Dolphin.app/
