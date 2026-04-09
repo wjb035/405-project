@@ -11,9 +11,7 @@ public class ProfileCustomizationDTO
     public string? Bio { get; set; }
 
     public string? NewUsername { get; set; }
-
-    public string? NewAvatarUrl { get; set; }
-
+    
     public string? NewBio { get; set; }
     //public DateTime CreatedAt { get; }
 }

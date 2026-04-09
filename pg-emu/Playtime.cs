@@ -13,6 +13,8 @@ public partial class Playtime : Node
 	private Process runningGame;
 	private int totalSecondsPlayed = 0;
 	private GameEntry currentRunningGame = null;
+	private string currentPlatform;
+	
 	
 	public override void _Ready()
 	{

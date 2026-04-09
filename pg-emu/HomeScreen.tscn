@@ -2,17 +2,16 @@
 
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
-[ext_resource type="PackedScene" path="res://platform_card.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
 [ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_iw72c"]
-[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="4_psypl"]
-[ext_resource type="Texture2D" uid="uid://bj5hphp8f2kgw" path="res://Images/inbox icon.png" id="5_3272g"]
-[ext_resource type="Texture2D" uid="uid://c4r8y1ivdhsq1" path="res://Images/folders icon.png" id="5_ksj1l"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_iw72c"]
 [ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
-[ext_resource type="Texture2D" uid="uid://cr42jtmshqpsy" path="res://Images/profile icon.png" id="7_5aen8"]
-[ext_resource type="Texture2D" uid="uid://kn8on0yl4fns" path="res://Images/chat icon.png" id="8_00eno"]
-[ext_resource type="Texture2D" uid="uid://ca1g7yj40dy4s" path="res://Images/settings icon.png" id="9_iw72c"]
-[ext_resource type="Texture2D" uid="uid://b5ma6w355kjrq" path="res://Images/question icon.png" id="10_1lj82"]
+[ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
+[ext_resource type="Texture2D" uid="uid://bq07ny6383rl0" path="res://Images/folders icon thin.png" id="8_1lj82"]
+[ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="9_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="10_iw72c"]
+[ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="11_1lj82"]
+[ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="12_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
 
@@ -56,9 +55,8 @@ theme = ExtResource("1_iw72c")
 script = ExtResource("1")
 SearchBarText = NodePath("Margin/Root/TopBar/HBoxContainer/Panel/UserSearchBar")
 SearchBarButton = NodePath("Margin/Root/TopBar/HBoxContainer/UserSearchButton")
-CardsPath = NodePath("Margin/Root/CenterArea/CarouselArea/Cards")
-PrevPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnPrev")
-NextPath = NodePath("Margin/Root/CenterArea/CarouselArea/BtnNext")
+PrevPath = NodePath("Margin/Root/CenterArea/BtnPrev")
+NextPath = NodePath("Margin/Root/CenterArea/BtnNext")
 SelectedTitlePath = NodePath("Margin/Root/CenterArea/SelectedTitle")
 StatusPath = NodePath("Margin/Root/Status")
 SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
@@ -69,10 +67,11 @@ ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
 CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
+CarouselAreaPath = NodePath("Margin/Root/CenterArea/CarouselArea")
 FriendInboxPopup = NodePath("Inbox")
-CardScene = ExtResource("2")
 
 [node name="TopBar" type="ColorRect" parent="." unique_id=2060178397]
+visible = false
 material = SubResource("ShaderMaterial_oy6yd")
 layout_mode = 1
 anchors_preset = 10
@@ -119,7 +118,7 @@ size_flags_vertical = 0
 [node name="BtnLogout" type="Button" parent="Margin/Root/TopBar" unique_id=1639146064]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-icon = ExtResource("4_psypl")
+icon = ExtResource("5_iw72c")
 icon_alignment = 1
 expand_icon = true
 
@@ -156,53 +155,55 @@ layout_mode = 2
 [node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=401324041]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("5_3272g")
+icon = ExtResource("7_iw72c")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnCollections" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1554411540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("5_ksj1l")
+icon = ExtResource("8_1lj82")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnFriends" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=794538155]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("7_5aen8")
+icon = ExtResource("9_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnChat" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1562664367]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("8_00eno")
+icon = ExtResource("10_iw72c")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnSettings" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1055238928]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("9_iw72c")
+icon = ExtResource("11_1lj82")
 icon_alignment = 1
 expand_icon = true
 
 [node name="BtnHelp" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=804603786]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-icon = ExtResource("10_1lj82")
+icon = ExtResource("12_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
-[node name="CenterArea" type="VBoxContainer" parent="Margin/Root" unique_id=1584583215]
+[node name="CenterArea" type="Control" parent="Margin/Root" unique_id=272406048]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-alignment = 1
 
 [node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=1184971161]
-layout_mode = 2
+layout_mode = 0
+offset_top = 27.0
+offset_right = 1116.0
+offset_bottom = 27.0
 alignment = 1
 
 [node name="Friend1" type="Panel" parent="Margin/Root/CenterArea/FriendsRow" unique_id=2122993267]
@@ -230,7 +231,11 @@ text = "+2 more"
 
 [node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea" unique_id=567589945]
 custom_minimum_size = Vector2(1040, 460)
-layout_mode = 2
+anchors_preset = 0
+offset_left = -18.0
+offset_top = 2.2105255
+offset_right = 1137.0
+offset_bottom = 632.474
 
 [node name="Cards" type="Control" parent="Margin/Root/CenterArea/CarouselArea" unique_id=199542670]
 layout_mode = 1
@@ -246,34 +251,40 @@ offset_bottom = 230.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1665989749]
+[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea" unique_id=1665989749]
 layout_mode = 0
 offset_left = 15.0
-offset_top = 156.0
+offset_top = 160.15816
 offset_right = 143.0
-offset_bottom = 412.0
+offset_bottom = 416.15808
 icon = ExtResource("14_1lj82")
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/CarouselArea" unique_id=1687316739]
+[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea" unique_id=1687316739]
 layout_mode = 0
 offset_left = 975.0
-offset_top = 156.0
+offset_top = 160.15816
 offset_right = 1103.0
-offset_bottom = 412.0
+offset_bottom = 416.15808
 icon = ExtResource("15_oy6yd")
 icon_alignment = 1
 expand_icon = true
 
 [node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea" unique_id=153168735]
-layout_mode = 2
+layout_mode = 0
+offset_top = 495.0
+offset_right = 1116.0
+offset_bottom = 524.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9019608)
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 
 [node name="BottomRow" type="HBoxContainer" parent="Margin/Root/CenterArea" unique_id=2077679956]
-layout_mode = 2
+layout_mode = 0
+offset_top = 528.0
+offset_right = 1116.0
+offset_bottom = 572.0
 mouse_filter = 2
 alignment = 1
 

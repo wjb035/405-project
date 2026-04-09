@@ -33,6 +33,8 @@ public class AppConfig
             }
         }
 
+        cfg.LibraryRoot = LibraryScanner.NormalizeLibraryRoot(cfg.LibraryRoot, cfg.Platforms);
+
         return cfg;
     }
 

@@ -48,6 +48,28 @@ public static class Launcher
 
         Process.Start(psi)?.Dispose();
     }
+    
+    
+    // this is a secondary one for launching the emulator by itself 
+    public static void LaunchEmulator(AppConfig cfg, PlatformConfig platform)
+    {
+        var emulatorId = platform.DefaultEmulatorId ?? cfg.Emulators.FirstOrDefault()?.Id;
+        var emu = cfg.Emulators.FirstOrDefault(e => e.Id == emulatorId);
+        if (emu == null)
+            throw new InvalidOperationException("No emulator configured for platform");
+        var configuredExePath = SelectPlatformPath(
+            emu.ExePath,
+            emu.ExePathWindows,
+            emu.ExePathMac,
+            emu.ExePathLinux);
+        var fullExe = ResolvePath(cfg, configuredExePath, allowDirectory: true);
+        if (fullExe == null)
+            throw new FileNotFoundException($"Emulator executable not found. exePath='{configuredExePath ?? "(not configured)"}'.");
+        var args = emu.ArgsTemplate ?? string.Empty;
+        args = args.Replace("{ROM}", "");
+        var psi = BuildProcessStartInfo(fullExe, args);
+        Process.Start(psi)?.Dispose();
+    }
 
     private static ProcessStartInfo BuildProcessStartInfo(string exePath, string args)
     {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +17,7 @@ public static class LibretroThumbnailService
 
     private static readonly HttpClient Client = new();
     private static readonly SemaphoreSlim LookupThrottle = new(6, 6);
-    private static readonly Dictionary<string, string?> UrlCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string?> UrlCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Regex InvalidThumbnailChars = new(@"[&*/:`<>?\\|]", RegexOptions.Compiled);
     private static readonly Regex TrailingSquareBracketTags = new(@"\s*\[[^\]]*\]\s*$", RegexOptions.Compiled);
     private static readonly string[] ThumbnailTypes = { "Named_Boxarts", "Named_Titles" };
@@ -39,7 +40,7 @@ public static class LibretroThumbnailService
         ["Playstation Portable"] = "Sony - PlayStation Portable",
     };
 
-    public static async Task PopulateCoverArtAsync(PlatformConfig? platform, IEnumerable<GameEntry> games)
+    public static async Task PopulateCoverArtAsync(PlatformConfig? platform, IEnumerable<GameEntry> games, CancellationToken cancellationToken = default)
     {
         if (platform == null || games == null)
         {
@@ -54,13 +55,15 @@ public static class LibretroThumbnailService
 
         var tasks = games
             .Where(game => !string.IsNullOrWhiteSpace(game.Path))
-            .Select(game => PopulateCoverArtAsync(playlistName, game));
+            .Select(game => PopulateCoverArtAsync(playlistName, game, cancellationToken));
 
         await Task.WhenAll(tasks);
     }
 
-    private static async Task PopulateCoverArtAsync(string playlistName, GameEntry game)
+    private static async Task PopulateCoverArtAsync(string playlistName, GameEntry game, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (!ShouldResolveCoverArt(game))
         {
             return;
@@ -79,7 +82,9 @@ public static class LibretroThumbnailService
 
         foreach (var candidateUrl in BuildCandidateUrls(playlistName, game))
         {
-            if (!await UrlExistsAsync(candidateUrl))
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!await UrlExistsAsync(candidateUrl, cancellationToken))
             {
                 continue;
             }
@@ -196,13 +201,13 @@ public static class LibretroThumbnailService
         return trimmed;
     }
 
-    private static async Task<bool> UrlExistsAsync(string url)
+    private static async Task<bool> UrlExistsAsync(string url, CancellationToken cancellationToken)
     {
-        await LookupThrottle.WaitAsync();
+        await LookupThrottle.WaitAsync(cancellationToken);
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Head, url);
-            using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 return true;
@@ -214,8 +219,12 @@ public static class LibretroThumbnailService
             }
 
             using var fallbackRequest = new HttpRequestMessage(HttpMethod.Get, url);
-            using var fallbackResponse = await Client.SendAsync(fallbackRequest, HttpCompletionOption.ResponseHeadersRead);
+            using var fallbackResponse = await Client.SendAsync(fallbackRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             return fallbackResponse.IsSuccessStatusCode;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {

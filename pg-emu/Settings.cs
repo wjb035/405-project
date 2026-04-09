@@ -16,18 +16,22 @@ public partial class Settings : Control
 	[Export] public NodePath AppearanceScreenPath;
 	[Export] public NodePath AchievementChoicePath;
 	[Export] public NodePath AchievementScreenPath;
+	[Export] public NodePath EmulatorChoicePath;
+	[Export] public NodePath EmulatorScreenPath;
 	
 	
 	private Control _profileScreen;
 	private Control _vaultScreen;
 	private Control _appearanceScreen;
 	private Control _achievementScreen;
+	private Control _emulatorScreen;
 	
 	private Button _back;
 	private Button _profileChoice;
 	private Button _vaultChoice;
 	private Button _appearanceChoice;
 	private Button _achievementChoice;
+	private Button _emulatorChoice;
 	private string _visibleScreen = "appearance";
 	private int _controllerEntryHorizontalAxisDir;
 	private long _controllerEntryHorizontalAxisNextMs;
@@ -44,16 +48,21 @@ public partial class Settings : Control
 		_vaultScreen = GetNode<Control>(VaultScreenPath);
 		_appearanceScreen = GetNode<Control>(AppearanceScreenPath);
 		_achievementScreen = GetNode<Control>(AchievementScreenPath);
+		_emulatorScreen = GetNode<Control>(EmulatorScreenPath);
+		
 		_profileChoice = GetNode<Button>(ProfileChoicePath);
 		_vaultChoice = GetNode<Button>(VaultChoicePath);
 		_appearanceChoice = GetNode<Button>(AppearanceChoicePath);
 		_achievementChoice = GetNode<Button>(AchievementChoicePath);
+		_emulatorChoice = GetNode<Button>(EmulatorChoicePath);
+		
 		
 		_back.Pressed += GoBack;
 		_profileChoice.Pressed += ShowProfileScreen;
 		_vaultChoice.Pressed += ShowVaultScreen;
 		_appearanceChoice.Pressed += ShowAppearanceScreen;
 		_achievementChoice.Pressed += ShowAchievementScreen;
+		_emulatorChoice.Pressed += ShowEmulatorScreen;
 		ApplyThemeAesthetic();
 		ShowRequestedScreen();
 	}
@@ -120,6 +129,12 @@ public partial class Settings : Control
 		AudioManager.Instance?.PlaySelect();
 		SetVisibleScreen("appearance");
 	}
+	
+	public void ShowEmulatorScreen()
+	{
+		AudioManager.Instance?.PlaySelect();
+		SetVisibleScreen("emulator");
+	}
 
 	private void ShowRequestedScreen()
 	{
@@ -138,11 +153,13 @@ public partial class Settings : Control
 		_vaultScreen.Visible = screen == "vault";
 		_appearanceScreen.Visible = screen == "appearance";
 		_achievementScreen.Visible = screen == "achievement";
+		_emulatorScreen.Visible = screen == "emulator";
 
 		_profileChoice.ButtonPressed = screen == "profile";
 		_vaultChoice.ButtonPressed = screen == "vault";
 		_appearanceChoice.ButtonPressed = screen == "appearance";
 		_achievementChoice.ButtonPressed = screen == "achievement";
+		_emulatorChoice.ButtonPressed = screen == "emulator";
 
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		CallDeferred(nameof(EnsureVisibleControllerFocus));
@@ -164,6 +181,7 @@ public partial class Settings : Control
 		StyleSectionButton(_vaultChoice);
 		StyleSectionButton(_appearanceChoice);
 		StyleSectionButton(_achievementChoice);
+		StyleSectionButton(_emulatorChoice);
 	}
 
 	private static void StyleSectionButton(Button button)
@@ -245,6 +263,7 @@ public partial class Settings : Control
 			"profile" => _profileChoice,
 			"vault" => _vaultChoice,
 			"achievement" => _achievementChoice,
+			"emulator" => _emulatorChoice,
 			_ => _appearanceChoice,
 		};
 	}

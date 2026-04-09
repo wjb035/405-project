@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 public partial class FoundUserProfile : Control
 {
+	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
+
 	[Export] public NodePath BackPath;
 	[Export] public NodePath TitleGamertagPath;
 	[Export] public NodePath ProfileStatusPath;
@@ -236,7 +238,19 @@ public partial class FoundUserProfile : Control
 		// Return to the scene we came from if provided, otherwise go home.
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
+
+		if (string.Equals(returnScene, "res://profile.tscn", StringComparison.OrdinalIgnoreCase) &&
+			tree.HasMeta(SettingsParentReturnSceneMeta))
+		{
+			var parentScene = tree.GetMeta(SettingsParentReturnSceneMeta).AsString();
+			if (!string.IsNullOrWhiteSpace(parentScene))
+				returnScene = parentScene;
+
+			tree.RemoveMeta(SettingsParentReturnSceneMeta);
+		}
+
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+		tree.SetMeta("pgemu_return_scene", returnScene);
 
 		tree.ChangeSceneToFile(returnScene);
 	}
@@ -299,6 +313,10 @@ public partial class FoundUserProfile : Control
 	private void GoProfileSettings()
 	{
 		var tree = GetTree();
+		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
+		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+
+		tree.SetMeta(SettingsParentReturnSceneMeta, returnScene);
 		tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
 		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
@@ -307,33 +325,58 @@ public partial class FoundUserProfile : Control
 	{
 		try
 		{
-			byte[] imageData = await _client.GetByteArrayAsync(url);
-			
 			Image avatar = new Image();
-			Error err = avatar.LoadPngFromBuffer(imageData);
+			Error err = Error.Failed;
+
+			var localAvatarPath = TryResolveLocalAvatarPath(url);
+			if (!string.IsNullOrWhiteSpace(localAvatarPath) && System.IO.File.Exists(localAvatarPath))
+			{
+				err = avatar.Load(localAvatarPath);
+			}
+			else
+			{
+				if (url.StartsWith("/"))
+					url = $"http://localhost:5276{url}";
+
+				byte[] imageData = await _client.GetByteArrayAsync(url);
+				err = avatar.LoadPngFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = avatar.LoadJpgFromBuffer(imageData);
+			}
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
 			{
 				return;
 			}
 			
-			if (err == Error.Ok)
+			if (err != Error.Ok)
 			{
-				ImageTexture texture = ImageTexture.CreateFromImage(avatar);
-				_avatar.Texture = texture;
+				GD.PrintErr("Failed to decode avatar image");
+				return;
 			}
-			else
-			{
-				avatar.LoadJpgFromBuffer(imageData);
-				ImageTexture texture = ImageTexture.CreateFromImage(avatar);
-				_avatar.Texture = texture;
-			}
+
+			ImageTexture texture = ImageTexture.CreateFromImage(avatar);
+			_avatar.Texture = texture;
 		}
 		catch (System.Exception exception)
 		{
 			GD.PrintErr("Failed to load image: " + exception.Message);
 		}
 		
+	}
+
+	private static string? TryResolveLocalAvatarPath(string avatarReference)
+	{
+		if (string.IsNullOrWhiteSpace(avatarReference))
+			return null;
+
+		var cleanReference = avatarReference.Split('?', 2)[0];
+		if (!cleanReference.StartsWith("/uploads/avatars/", StringComparison.OrdinalIgnoreCase))
+			return null;
+
+		var projectDir = ProjectSettings.GlobalizePath("res://");
+		var relativePath = cleanReference.TrimStart('/').Replace('/', System.IO.Path.DirectorySeparatorChar);
+		return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, "..", "PGEmu.backend", relativePath));
 	}
 	
 }

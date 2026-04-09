@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace PGEmu.Services;
 
-public partial class Carousel3DView : SubViewportContainer
+public partial class ConsoleCarousel3DView : SubViewportContainer
 {
     private const ulong SettleSpinSuppressWindowMs = 90;
     // Physics
     private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
-    private const float Friction = 4.5f;
+    private const float Friction = 3.5f;
     private const float DragScale = 0.004f;
     private const float FlingMultiplier = 15f; 
     private float _dragStartX;
@@ -19,7 +19,7 @@ public partial class Carousel3DView : SubViewportContainer
     private float _lastDragVelocity;
 
     // Carousel state (mirrors GameSelect._carouselPos)
-    public float CarouselPos { get; private set; } = 0f;
+    public float CarouselPos { get; set; } = 0f;
     private int _count = 0;
     private float _spinAudioPos = 0f;
     private float _lastSpinAudioCarouselPos = 0f;
@@ -31,8 +31,6 @@ public partial class Carousel3DView : SubViewportContainer
     private Node3D _sceneRoot;
     private Camera3D _camera;
     private readonly List<Node3D> _boxes = new();
-    private readonly List<MeshInstance3D> _meshes = new();
-    private readonly List<StandardMaterial3D> _baseMaterials = new();
     
     // Card spacing in 3D units
     private const float Spacing = 2.2f;
@@ -45,8 +43,14 @@ public partial class Carousel3DView : SubViewportContainer
     private double _mouseIdleTime = 0f;
     private const double MouseIdleThreshold = 1.0; 
     
+    // Console colors
+    private Dictionary<StandardMaterial3D, Color> _originalColors = new();
+    
     public event System.Action<int>? SelectionChanged;
 
+    // Types of consoles we support
+    public enum ConsoleType { Wii, PlayStation2, PSP, GameCube, GBA }
+    
     public override void _Ready()
     {
         // Builds the SubViewport, which basically renders a 3d sub scene in a 2d UI.
@@ -57,10 +61,13 @@ public partial class Carousel3DView : SubViewportContainer
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
         };
         AddChild(_viewport);
+        _viewport.PositionalShadowAtlasSize = 4096;
+        _viewport.PositionalShadowAtlas16Bits = true;
         Stretch = true;
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
         MouseFilter = MouseFilterEnum.Pass;
+        ClipContents = false;
         
         // Scene root
         _sceneRoot = new Node3D { Name = "SceneRoot" };
@@ -71,154 +78,242 @@ public partial class Carousel3DView : SubViewportContainer
         _camera = new Camera3D
         {
             Name = "Camera",
-            Position = new Vector3(0, 0f, 2.5f),
+            Position = new Vector3(0, 0.8f, 5f),
             
         };
-        _camera.Fov = 90f;
+        _camera.RotateX(Mathf.DegToRad(-8f));
+        _camera.Fov = 60f;
         _sceneRoot.AddChild(_camera);
         
         // Lighting
         var sun = new DirectionalLight3D
         {
-            Position = new Vector3(2, 4, 3),
-            LightEnergy = 1.1f,
-            LightColor = new Color(0.85f, 0.80f, 1.0f),
+            LightEnergy = 1.2f,
+            LightColor = new Color(0.95f, 0.90f, 1.0f),
+            ShadowEnabled = true,
+            ShadowBlur = 0.5f,
         };
+        sun.DirectionalShadowMode = DirectionalLight3D.ShadowMode.Orthogonal;
+        sun.DirectionalShadowMaxDistance = 20f;
+        sun.ShadowBias = 0.2f;
         sun.RotateX(Mathf.DegToRad(-45f));
+        sun.RotateY(Mathf.DegToRad(70f));
         _sceneRoot.AddChild(sun);
 
-        var ambient = new OmniLight3D
+        var fill = new DirectionalLight3D
         {
-            Position = new Vector3(0, 2, 4),
-            LightEnergy = 0.5f,
-            OmniRange = 20f,
+            LightEnergy = 0.4f,
             LightColor = new Color(0.62f, 0.52f, 0.90f),
         };
-        _sceneRoot.AddChild(ambient);
+        fill.RotateX(Mathf.DegToRad(20f));
+        fill.RotateY(Mathf.DegToRad(-120f));
+        _sceneRoot.AddChild(fill);
         
         var rim = new OmniLight3D
         {
-            Position = new Vector3(0, 1f, -3f),
-            LightEnergy = 0.4f,
-            OmniRange = 12f,
-            LightColor = new Color(0.70f, 0.88f, 1.0f), 
+            Position = new Vector3(0, 3f, -4f),
+            LightEnergy = 1.2f,
+            OmniRange = 15f,
+            LightColor = new Color(0.70f, 0.60f, 1.0f), 
         };
         _sceneRoot.AddChild(rim);
         
+        var env = new Environment();
+        env.AmbientLightSource = Godot.Environment.AmbientSource.Color;
+        env.AmbientLightColor = new Color(0.3f, 0.2f, 0.5f);
+        env.AmbientLightEnergy = 0.3f;
+
+        var worldEnv = new WorldEnvironment { Environment = env };
+        _sceneRoot.AddChild(worldEnv);
+        
+        // Ground for recieving shadows
+        var ground = new MeshInstance3D();
+        ground.Mesh = new PlaneMesh { Size = new Vector2(200f, 50f) };
+        // position below the consoles
+        ground.Position = new Vector3(0, -1.2f, 2f); 
+        ground.RotateX(Mathf.DegToRad(-4f));
+        
+        var groundMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.5f),
+            Roughness = 1f, 
+            // ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            // ShadowToOpacity = true,
+        };
+        ground.SetSurfaceOverrideMaterial(0, groundMat);
+        ground.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        _sceneRoot.AddChild(ground);
+        
+        // Shadows
+        _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
         // Aliasing
-        _viewport.Msaa3D = Viewport.Msaa.Msaa4X;
-        _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
+        _viewport.UseTaa = false;
+        _viewport.Msaa3D = Viewport.Msaa.Msaa8X;
+        //_viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
         
     }
 
     // Call this from GameSelect after loading games to clear everything and rebuild
-    public void Populate(List<(string title, Texture2D? coverArt)> games, float initialPos)
+    public void Populate(List<ConsoleType> consoles, float initialPos = 0f)
     {
         // Clear old boxes
         foreach (var b in _boxes)
             b.QueueFree();
         _boxes.Clear();
-        _meshes.Clear();
-        _baseMaterials.Clear();
+
         
-        _count = games.Count;
+        _count = consoles.Count;
         CarouselPos = WrapPos(initialPos);
         _spinAudioPos = CarouselPos;
         _lastSpinAudioCarouselPos = CarouselPos;
         _lastSpinAudioStep = Mathf.RoundToInt(_spinAudioPos);
         _lastSpinAudioMs = 0;
 
-        for (int i = 0; i < games.Count; i++)
+        for (int i = 0; i < consoles.Count; i++)
         {
-            var (title, coverArt) = games[i];
-            var box = BuildBox(title, coverArt);
+            var box = BuildConsole(consoles[i]);
             _sceneRoot.AddChild(box);
             _boxes.Add(box);
-            _meshes.Add(box.GetNode<MeshInstance3D>("Mesh"));
         }
 
         LayoutBoxes();
     }
     
     // Builds actual 3d geometry of the cases
-    private Node3D BuildBox(string title, Texture2D? coverArt)
+    private Node3D BuildConsole(ConsoleType type)
     {
-        var root = new Node3D();
+        
+        var modelPath = type switch
+        {
+            ConsoleType.Wii          => "res://Models/wii_console.glb",
+            ConsoleType.PlayStation2 => "res://Models/ps2.glb",
+            ConsoleType.PSP          => "res://Models/psp.glb",
+            ConsoleType.GameCube     => "res://Models/gamecube.glb",
+            // ConsoleType.GBA          => "res://Models/gba.glb",
+            _                        => null
+        };
+        
+        // GD.Print($"Looking for model at: {modelPath} — exists: {ResourceLoader.Exists(modelPath)}");
 
-        // Box mesh 
-        var mesh = new MeshInstance3D { Name = "Mesh" };
-        var boxMesh = new BoxMesh
+        if (modelPath == null || !ResourceLoader.Exists(modelPath))
         {
-            Size = new Vector3(2.6f, 3.6f, 0.25f)
-        };
-        mesh.Mesh = boxMesh;
-
-        // Material — dark base + cover art on the front
-        var mat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.08f, 0.06f, 0.14f),
-            RoughnessTexture = null,
-            Roughness = 0.6f,
-            Metallic = 0.2f,
-        };
-        
-        _baseMaterials.Add(mat);
-        mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
-        mesh.SetSurfaceOverrideMaterial(0, mat);
-        root.AddChild(mesh);
-        
-        // Cover art as a separate quad on the front face
-        var coverMesh = new MeshInstance3D { Name = "CoverMesh" };
-        var quad = new QuadMesh
-        {
-            Size = new Vector2(2.5f, 3.5f)
-        };
-        coverMesh.Mesh = quad;
-        coverMesh.Position = new Vector3(0, 0, 0.26f);
-        
-        if (coverArt != null)
-        {
-            // Front face material with cover art
-            var coverMat = new StandardMaterial3D
-            {
-                AlbedoTexture = coverArt,
-                AlbedoColor = new Color(1, 1, 1, 1),
-                Roughness = 0.5f,
-                Metallic = 0.1f,
-                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            };
-            
-            coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
-            
+            GD.PrintErr($"Model not found for {type}, using placeholder");
+            return BuildPlaceholder(type); // fall back to box geometry
         }
-        root.AddChild(coverMesh);
+
+        var scene = GD.Load<PackedScene>(modelPath);
+        var model = scene.Instantiate<Node3D>();
+        EnableShadows(model);
+        var wrapper = new Node3D { Name = type.ToString() };
+       //  wrapper.RotateX(Mathf.DegToRad(-20f));
+        switch (type)
+        {
+            case ConsoleType.Wii:
+                model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
+                model.Position = new Vector3(-0.1f, 0.1f, 0);
+                model.RotateY(Mathf.DegToRad(-60f));
+                break;
+            case ConsoleType.PlayStation2:
+                model.Scale = new Vector3(0.15f, 0.15f, 0.15f);
+                model.Position = new Vector3(0.05f, -1f, 0);
+                model.RotateY(Mathf.DegToRad(30f));
+                break;
+            case ConsoleType.PSP:
+                model.Scale = new Vector3(1.1f, 1.1f, 1.1f);
+                model.Position = new Vector3(0.3f, -1f, 0);
+                model.RotateX(Mathf.DegToRad(-10));
+                model.RotateY(Mathf.DegToRad(30));
+                break;
+            case ConsoleType.GameCube:
+                model.Scale = new Vector3(0.030f, 0.030f, 0.030f);
+                model.Position = new Vector3(0, -0.7f, 0);
+                model.RotateY(Mathf.DegToRad(30f));
+                break;
+            case ConsoleType.GBA:
+                model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
+                model.RotateY(Mathf.DegToRad(30f));
+                break;
+        }
+
+        wrapper.AddChild(model);
+        return wrapper;
         
-        // DEBUG
-        if (coverArt != null)
-            GD.Print($"Cover art found for: {title}");
-        else
-            GD.Print($"No cover art for: {title}");
-        
-        return root;
     }
     
-    // Updates a box's texture,c all it from gameselect
-    public void UpdateCoverArt(int index, Texture2D texture)
+    //  Fallback for if the console doesnt have a model
+    private Node3D BuildPlaceholder(ConsoleType type)
+{
+    var root = new Node3D();
+    var mesh = new MeshInstance3D { Name = "Mesh" };
+
+    switch (type)
     {
-        if (index >= _meshes.Count) return;
-        var coverMesh = _boxes[index].GetNodeOrNull<MeshInstance3D>("CoverMesh");
-        if (coverMesh == null) return;
+        case ConsoleType.Wii:
+            mesh.Mesh = new BoxMesh { Size = new Vector3(0.8f, 3.2f, 0.4f) };
+            mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.92f, 0.92f, 0.90f)));
+            break;
+        case ConsoleType.PlayStation2:
+            mesh.Mesh = new BoxMesh { Size = new Vector3(1.2f, 3.0f, 0.7f) };
+            mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.05f, 0.08f)));
+            break;
+        case ConsoleType.PSP:
+            mesh.Mesh = new BoxMesh { Size = new Vector3(3.2f, 1.5f, 0.3f) };
+            mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.16f)));
+            var screen = new MeshInstance3D();
+            screen.Mesh = new QuadMesh { Size = new Vector2(1.8f, 1.1f) };
+            screen.Position = new Vector3(-0.4f, 0.1f, 0.16f);
+            screen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
+            root.AddChild(screen);
+            break;
+        case ConsoleType.GameCube:
+            mesh.Mesh = new BoxMesh { Size = new Vector3(2.2f, 2.2f, 2.2f) };
+            mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.25f, 0.22f, 0.35f)));
+            var lid = new MeshInstance3D();
+            lid.Mesh = new CylinderMesh { TopRadius = 0.7f, BottomRadius = 0.7f, Height = 0.05f };
+            lid.Position = new Vector3(0.2f, 0.6f, 1.12f);
+            lid.RotateX(Mathf.DegToRad(90f));
+            lid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.18f, 0.16f, 0.26f)));
+            root.AddChild(lid);
+            break;
+        case ConsoleType.GBA:
+            mesh.Mesh = new BoxMesh { Size = new Vector3(2.8f, 1.4f, 0.25f) };
+            mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.55f, 0.50f, 0.70f)));
+            var gbaScreen = new MeshInstance3D();
+            gbaScreen.Mesh = new QuadMesh { Size = new Vector2(1.2f, 0.9f) };
+            gbaScreen.Position = new Vector3(0f, 0.1f, 0.13f);
+            gbaScreen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
+            root.AddChild(gbaScreen);
+            break;
+    }
+
+    root.AddChild(mesh);
+    return root;
+}
+
+    private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
+        new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic };
     
-        var coverMat = new StandardMaterial3D
+    
+    private void EnableShadows(Node node)
+    {
+        if (node is MeshInstance3D mesh)
         {
-            AlbedoTexture = texture,
-            AlbedoColor = new Color(1, 1, 1, 1),
-            Roughness = 0.5f,
-            Metallic = 0.1f,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-        };
-        coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
-        
+            mesh.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
+            //anistropic filtering
+            for (int s = 0; s < mesh.GetSurfaceOverrideMaterialCount(); s++)
+            {
+                var mat = mesh.GetSurfaceOverrideMaterial(s) as StandardMaterial3D;
+                if (mat != null)
+                {
+                    mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+                }
+            }
+        }
+
+        foreach (var child in node.GetChildren())
+            if (child is Node3D childNode)
+                EnableShadows(childNode);
     }
     
     
@@ -272,20 +367,26 @@ public partial class Carousel3DView : SubViewportContainer
     // Handle when the mouse is clicked or draggged, kills velocity so it doesnt drift when you drag
     public override void _GuiInput(InputEvent e)
     {
+        GD.Print($"GuiInput: {e.GetType().Name}");
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {
+            if (mb.Position.Y < 70f)
+            {
+                MouseFilter = MouseFilterEnum.Pass;
+                return;
+            }
+            
             if (mb.Pressed)
             {
-                if (mb.Position.Y < 70f)
-                    return;
-                MouseFilter = MouseFilterEnum.Stop;
                 _dragging = true;
+                MouseFilter = MouseFilterEnum.Stop;
                 AudioManager.Instance?.StopCarouselHover();
                 _dragStartX = mb.Position.X;
                 _dragStartPos = CarouselPos;
                 _lastDragX = mb.Position.X;
                 _lastDragVelocity = 0f;
                 _velocity = 0f;
+                GetViewport().SetInputAsHandled();
             }
             else if (_dragging)
             {
@@ -307,6 +408,13 @@ public partial class Carousel3DView : SubViewportContainer
             _lastDragX = mm.Position.X;
 
             SelectionChanged?.Invoke(WrapIndex(Mathf.RoundToInt(CarouselPos)));
+        }
+        
+        // Mouse wheel stepping
+        if (e is InputEventMouseButton wheel && wheel.Pressed)
+        {
+            if (wheel.ButtonIndex == MouseButton.WheelUp) StepDirection(-1);
+            if (wheel.ButtonIndex == MouseButton.WheelDown) StepDirection(1);
         }
     }
     
@@ -437,9 +545,8 @@ public partial class Carousel3DView : SubViewportContainer
             if (d < -_count * 0.5f) d += _count;
 
             var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.5f);
-            var alpha = Mathf.Lerp(1.0f, 0.4f, t);
 
-            box.Position = new Vector3(d * Spacing, 0f, -t * 1.2f);
+            box.Position = new Vector3(d * Spacing, t *0.4f, -t * 1.2f);
             
             // ONLY set scale and rotation if not hovered
             if (i != _hoveredIdx)
@@ -448,16 +555,45 @@ public partial class Carousel3DView : SubViewportContainer
                 box.Scale = new Vector3(scale, scale, scale);
                 box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
             }
-
-            if (i < _baseMaterials.Count)
+            
+            var brightness = Mathf.Lerp(1.0f, 0.5f, t);
+            DimMeshes(box, brightness);
+            
+        }
+    }
+    
+    // Dims the models that are in the background
+    private void DimMeshes(Node node, float brightness)
+    {
+        if (node is MeshInstance3D mesh)
+        {
+            for (int s = 0; s < mesh.GetSurfaceOverrideMaterialCount(); s++)
             {
-                _baseMaterials[i].AlbedoColor = new Color(
-                    _baseMaterials[i].AlbedoColor.R,
-                    _baseMaterials[i].AlbedoColor.G,
-                    _baseMaterials[i].AlbedoColor.B,
-                    alpha);
+                // Get or create an override material per surface
+                if (mesh.GetSurfaceOverrideMaterial(s) is not StandardMaterial3D mat)
+                {
+                    // Duplicate the base material 
+                    if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMat)
+                    {
+                        mat = (StandardMaterial3D)baseMat.Duplicate();
+                        mesh.SetSurfaceOverrideMaterial(s, mat);
+                    }
+                    else continue;
+                }
+                if (!_originalColors.ContainsKey(mat))
+                    _originalColors[mat] = mat.AlbedoColor;
+                
+                var original = _originalColors[mat];
+                
+                mat.AlbedoColor = new Color(
+                    original.R * brightness,
+                    original.G * brightness,
+                    original.B * brightness, 
+                    original.A);
             }
         }
+        foreach (Node child in node.GetChildren())
+            DimMeshes(child, brightness);
     }
 
     private float WrapPos(float p)
@@ -521,7 +657,11 @@ public partial class Carousel3DView : SubViewportContainer
     public void StepDirection(int dir)
     {
         AudioManager.Instance?.StopCarouselHover();
-        _velocity = dir * -8f; 
+        var current = Mathf.RoundToInt(CarouselPos);
+        var target = WrapPos(current + dir);
+        _velocity = 0f;
+        CarouselPos = WrapPos(current);
+        
+        _velocity = dir * 3.5f;
     }
-    
 }

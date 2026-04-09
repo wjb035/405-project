@@ -16,10 +16,13 @@ namespace PGEmuBackend.Controllers;
 public class ProfileCustomizationController : ControllerBase
 {
     private readonly IProfileCustomizationService _profileCustomizationService;
-
-    public ProfileCustomizationController(IProfileCustomizationService profileCustomizationService)
+    private readonly AvatarService _avatarService;
+    
+    public ProfileCustomizationController(IProfileCustomizationService profileCustomizationService,
+        AvatarService avatarService)
     {
         _profileCustomizationService = profileCustomizationService;
+        _avatarService = avatarService;
     }
 
     // Helper to get current user
@@ -89,20 +92,51 @@ public class ProfileCustomizationController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("avatar")]
-    public async Task<IActionResult> ChangeAvatar([FromBody] ProfileCustomizationDTO request)
+    [HttpPost("avatar")]
+    [RequestSizeLimit(2 * 1024 * 1024)]
+    public async Task<IActionResult> ChangeAvatar(IFormFile file)
     {
-        // authorize user
+        // Checck auth
         var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
         if (userIdClaim == null)
             return BadRequest("User not authenticated.");
 
+        var userId = Guid.Parse(userIdClaim.Value);
 
-        var result = await _profileCustomizationService.ChangeAvatarAsync(Guid.Parse(userIdClaim.Value), request.NewAvatarUrl);
+        string avatarUrl;
+        try
+        {
+            avatarUrl = await _avatarService.SaveAvatarAsync(userId, file);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+
+        var result = await _profileCustomizationService.ChangeAvatarAsync(userId, avatarUrl);
         if (!result.Success)
             return BadRequest(result.Message);
 
         return Ok(new { message = result.Message, Avatar = result.NewAvatarUrl });
+    }
+    
+    [Authorize]
+    [HttpDelete("avatar")]
+    public async Task<IActionResult> DeleteAvatar()
+    {
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null)
+            return BadRequest("User not authenticated.");
+
+        var userId = Guid.Parse(userIdClaim.Value);
+
+        _avatarService.DeleteAvatar(userId);
+
+        var result = await _profileCustomizationService.ChangeAvatarAsync(userId, null);
+        if (!result.Success)
+            return BadRequest(result.Message);
+
+        return NoContent();
     }
 
 }

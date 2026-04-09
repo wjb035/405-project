@@ -35,6 +35,11 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 // JWT Service
 builder.Services.AddScoped<JwtService>();
 
+// PFP Storage
+builder.Services.Configure<Storage>(
+    builder.Configuration.GetSection("Storage"));
+builder.Services.AddScoped<AvatarService>();
+
 // Email Service
 builder.Services.AddScoped<EmailService>();
 
@@ -108,6 +113,20 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+// For the avatar storage folder
+var avatarPath = Path.Combine(
+    Directory.GetCurrentDirectory(),
+    builder.Configuration["Storage:AvatarPath"]!);
+
+Directory.CreateDirectory(avatarPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(avatarPath),
+    RequestPath = "/uploads/avatars"
+});
+
 
 app.UseAuthentication();
 
