@@ -75,3 +75,5 @@ cores/*.dylib
 cores/*.zip
 pg-emu/export_presets.cfg
 
+PGEmu.backend/appsettings.Development.json
+PGEmu.backend/appsettings.json
