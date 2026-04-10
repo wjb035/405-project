@@ -6,15 +6,24 @@ namespace PGEmu.Services;
 public partial class ConsoleCarousel3DView : SubViewportContainer
 {
     private const ulong SettleSpinSuppressWindowMs = 90;
+    private const string GbaScreenLogoPath = "res://Models/gba_logo2.png";
+    private const float GbaScreenUvScaleU = 3.074675f;
+    private const float GbaScreenUvScaleV = -4.6753664f;
+    private const float GbaScreenUvOffsetU = -1.825017f;
+    private const float GbaScreenUvOffsetV = 3.91563f;
+    private const double GbaOpen = 1.2;
     // Physics
     private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
     private const float Friction = 3.5f;
     private const float DragScale = 0.004f;
     private const float FlingMultiplier = 15f; 
+    private const float ClickDragThreshold = 14f;
     private float _dragStartX;
     private float _dragStartPos;
+    private Vector2 _dragStartMousePos;
     private bool _dragging;
+    private bool _dragMoved;
     private float _lastDragX;
     private float _lastDragVelocity;
 
@@ -45,6 +54,13 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
     
     // Console colors
     private Dictionary<StandardMaterial3D, Color> _originalColors = new();
+    private readonly Dictionary<Node3D, AnimationPlayer> _consoleAnimations = new();
+    private readonly Dictionary<Node3D, string> _consoleAnimationNames = new();
+    private readonly Dictionary<Node3D, double> _consoleAnimationLengths = new();
+    private readonly Dictionary<Node3D, double> _consoleAnimationHoldTimes = new();
+    private readonly HashSet<Node3D> _openAnimatedConsoles = new();
+    private readonly HashSet<Node3D> _manuallyClosedAnimatedConsoles = new();
+    private Texture2D? _gbaScreenLogoTexture;
     
     public event System.Action<int>? SelectionChanged;
 
@@ -161,6 +177,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         foreach (var b in _boxes)
             b.QueueFree();
         _boxes.Clear();
+        _consoleAnimations.Clear();
+        _consoleAnimationNames.Clear();
+        _consoleAnimationLengths.Clear();
+        _consoleAnimationHoldTimes.Clear();
+        _openAnimatedConsoles.Clear();
+        _manuallyClosedAnimatedConsoles.Clear();
 
         
         _count = consoles.Count;
@@ -190,7 +212,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
             ConsoleType.PlayStation2 => "res://Models/ps2.glb",
             ConsoleType.PSP          => "res://Models/psp.glb",
             ConsoleType.GameCube     => "res://Models/gamecube.glb",
-            // ConsoleType.GBA          => "res://Models/gba.glb",
+            ConsoleType.GBA          => "res://Models/gba.glb",
             _                        => null
         };
         
@@ -204,6 +226,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
         var scene = GD.Load<PackedScene>(modelPath);
         var model = scene.Instantiate<Node3D>();
+        if (type == ConsoleType.GBA)
+            ApplyGbaScreenLogo(model);
         EnableShadows(model);
         var wrapper = new Node3D { Name = type.ToString() };
        //  wrapper.RotateX(Mathf.DegToRad(-20f));
@@ -231,12 +255,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
                 model.RotateY(Mathf.DegToRad(30f));
                 break;
             case ConsoleType.GBA:
-                model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
-                model.RotateY(Mathf.DegToRad(30f));
+                CenterNode3D(model);
+                model.Scale = new Vector3(0.20f, 0.20f, 0.20f);
+                model.Position = new Vector3(0.08f, -0.22f, 0f);
+                model.RotateX(Mathf.DegToRad(14f));
+                model.RotateY(Mathf.DegToRad(-18f));
                 break;
         }
 
         wrapper.AddChild(model);
+        ConfigureConsoleAnimation(wrapper, model, type);
         return wrapper;
         
     }
@@ -293,6 +321,74 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
     private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
         new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic, SpecularMode = BaseMaterial3D.SpecularModeEnum.Disabled, };
+
+    private static void CenterNode3D(Node3D root)
+    {
+        if (!TryGetNodeBounds(root, Transform3D.Identity, out var bounds))
+            return;
+
+        root.Position -= bounds.GetCenter();
+    }
+
+    private static bool TryGetNodeBounds(Node3D node, Transform3D accumulatedTransform, out Aabb bounds)
+    {
+        var hasBounds = false;
+        bounds = new Aabb();
+        var currentTransform = accumulatedTransform * node.Transform;
+
+        if (node is MeshInstance3D mesh && mesh.Mesh != null)
+        {
+            foreach (var corner in GetCorners(mesh.Mesh.GetAabb()))
+            {
+                var transformedCorner = currentTransform * corner;
+                if (!hasBounds)
+                {
+                    bounds = new Aabb(transformedCorner, Vector3.Zero);
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds = bounds.Expand(transformedCorner);
+                }
+            }
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            if (child is not Node3D childNode || !TryGetNodeBounds(childNode, currentTransform, out var childBounds))
+                continue;
+
+            foreach (var corner in GetCorners(childBounds))
+            {
+                if (!hasBounds)
+                {
+                    bounds = new Aabb(corner, Vector3.Zero);
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds = bounds.Expand(corner);
+                }
+            }
+        }
+
+        return hasBounds;
+    }
+
+    private static IEnumerable<Vector3> GetCorners(Aabb aabb)
+    {
+        var position = aabb.Position;
+        var end = aabb.End;
+
+        yield return new Vector3(position.X, position.Y, position.Z);
+        yield return new Vector3(end.X, position.Y, position.Z);
+        yield return new Vector3(position.X, end.Y, position.Z);
+        yield return new Vector3(end.X, end.Y, position.Z);
+        yield return new Vector3(position.X, position.Y, end.Z);
+        yield return new Vector3(end.X, position.Y, end.Z);
+        yield return new Vector3(position.X, end.Y, end.Z);
+        yield return new Vector3(end.X, end.Y, end.Z);
+    }
     
     
     private void EnableShadows(Node node)
@@ -315,6 +411,266 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         foreach (var child in node.GetChildren())
             if (child is Node3D childNode)
                 EnableShadows(childNode);
+    }
+
+    private void ApplyGbaScreenLogo(Node node)
+    {
+        var screenTexture = GetGbaScreenLogoTexture();
+        if (screenTexture == null)
+            return;
+
+        ApplyGbaScreenLogoRecursive(node, screenTexture);
+    }
+
+    private Texture2D? GetGbaScreenLogoTexture()
+    {
+        if (_gbaScreenLogoTexture != null)
+            return _gbaScreenLogoTexture;
+
+        var absolutePath = ProjectSettings.GlobalizePath(GbaScreenLogoPath);
+        if (!FileAccess.FileExists(absolutePath))
+        {
+            GD.PrintErr($"Missing GBA screen logo at {absolutePath}");
+            return null;
+        }
+
+        var image = Image.LoadFromFile(absolutePath);
+        if (image.GetWidth() == 0 || image.GetHeight() == 0)
+        {
+            GD.PrintErr($"Unable to load GBA screen logo from {absolutePath}");
+            return null;
+        }
+
+        _gbaScreenLogoTexture = ImageTexture.CreateFromImage(image);
+        return _gbaScreenLogoTexture;
+    }
+
+    private void ApplyGbaScreenLogoRecursive(Node node, Texture2D screenTexture)
+    {
+        if (node is MeshInstance3D mesh && mesh.Name.ToString().Contains("Screen"))
+        {
+            var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
+            for (int s = 0; s < surfaceCount; s++)
+            {
+                StandardMaterial3D? material = null;
+
+                if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
+                {
+                    material = overrideMaterial;
+                }
+                else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
+                {
+                    material = (StandardMaterial3D)baseMaterial.Duplicate();
+                    mesh.SetSurfaceOverrideMaterial(s, material);
+                }
+
+                if (material == null)
+                    continue;
+
+                material.AlbedoColor = Colors.White;
+                material.AlbedoTexture = screenTexture;
+                material.Uv1Scale = new Vector3(GbaScreenUvScaleU, GbaScreenUvScaleV, 1f);
+                material.Uv1Offset = new Vector3(GbaScreenUvOffsetU, GbaScreenUvOffsetV, 0f);
+                material.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+            }
+        }
+
+        foreach (var child in node.GetChildren())
+            ApplyGbaScreenLogoRecursive((Node)child, screenTexture);
+    }
+
+    private void ConfigureConsoleAnimation(Node3D wrapper, Node3D model, ConsoleType type)
+    {
+        var animationPlayer = FindAnimationPlayer(model);
+        if (animationPlayer == null)
+            return;
+
+        var animationName = string.Empty;
+        foreach (var candidate in animationPlayer.GetAnimationList())
+        {
+            animationName = candidate.ToString();
+            if (!string.IsNullOrEmpty(animationName))
+                break;
+        }
+
+        if (string.IsNullOrEmpty(animationName))
+            return;
+
+        var animation = animationPlayer.GetAnimation(animationName);
+        if (animation == null)
+            return;
+
+        animation.LoopMode = Animation.LoopModeEnum.None;
+        animationPlayer.Play(animationName);
+        animationPlayer.Seek(0.0, true);
+        animationPlayer.Stop(true);
+
+        _consoleAnimations[wrapper] = animationPlayer;
+        _consoleAnimationNames[wrapper] = animationName;
+        _consoleAnimationLengths[wrapper] = animation.Length;
+        _consoleAnimationHoldTimes[wrapper] = type == ConsoleType.GBA
+            ? Mathf.Min((float)animation.Length, (float)GbaOpen)
+            : animation.Length;
+    }
+
+    private static AnimationPlayer? FindAnimationPlayer(Node node)
+    {
+        if (node is AnimationPlayer animationPlayer)
+            return animationPlayer;
+
+        foreach (Node child in node.GetChildren())
+        {
+            var nestedPlayer = FindAnimationPlayer(child);
+            if (nestedPlayer != null)
+                return nestedPlayer;
+        }
+
+        return null;
+    }
+
+    private void UpdateAnimatedConsoleStates(int selectedIdx)
+    {
+        if (_boxes.Count == 0)
+            return;
+
+        var selectedBox = selectedIdx >= 0 && selectedIdx < _boxes.Count
+            ? _boxes[selectedIdx]
+            : null;
+
+        foreach (var box in _boxes)
+        {
+            if (!_consoleAnimations.ContainsKey(box))
+                continue;
+
+            if (box != selectedBox)
+                _manuallyClosedAnimatedConsoles.Remove(box);
+
+            var shouldBeOpen =
+                box == selectedBox &&
+                !_manuallyClosedAnimatedConsoles.Contains(box);
+            var isOpen = _openAnimatedConsoles.Contains(box);
+            if (shouldBeOpen == isOpen)
+                continue;
+
+            if (shouldBeOpen)
+            {
+                OpenAnimatedConsole(box);
+            }
+            else
+            {
+                CloseAnimatedConsole(box);
+            }
+        }
+    }
+
+    private void UpdateAnimatedConsolePlayback()
+    {
+        foreach (var (box, animationPlayer) in _consoleAnimations)
+        {
+            if (!_consoleAnimationLengths.TryGetValue(box, out var animationLength) || animationLength <= 0.0)
+                continue;
+
+            var holdTime = _consoleAnimationHoldTimes.TryGetValue(box, out var configuredHoldTime)
+                ? configuredHoldTime
+                : animationLength;
+
+            if (_openAnimatedConsoles.Contains(box))
+            {
+                if (!animationPlayer.IsPlaying() ||
+                    animationPlayer.CurrentAnimationPosition >= holdTime - 0.02)
+                {
+                    SetConsoleAnimationPose(box, holdTime, holdPose: true);
+                }
+                continue;
+            }
+
+            if (!animationPlayer.IsPlaying() ||
+                animationPlayer.CurrentAnimationPosition <= 0.02)
+            {
+                SetConsoleAnimationPose(box, 0.0, holdPose: false);
+            }
+        }
+    }
+
+    private void SetConsoleAnimationPose(Node3D box, double animationPosition, bool holdPose)
+    {
+        if (!_consoleAnimations.TryGetValue(box, out var animationPlayer) ||
+            !_consoleAnimationNames.TryGetValue(box, out var animationName))
+        {
+            return;
+        }
+
+        animationPlayer.Play(animationName);
+        animationPlayer.Seek(animationPosition, true);
+        if (holdPose)
+        {
+            animationPlayer.Pause();
+        }
+        else
+        {
+            animationPlayer.Stop(true);
+        }
+    }
+
+    private void OpenAnimatedConsole(Node3D box)
+    {
+        if (!_consoleAnimations.TryGetValue(box, out var animationPlayer) ||
+            !_consoleAnimationNames.TryGetValue(box, out var animationName))
+        {
+            return;
+        }
+
+        _manuallyClosedAnimatedConsoles.Remove(box);
+        animationPlayer.Play(animationName);
+        _openAnimatedConsoles.Add(box);
+    }
+
+    private void CloseAnimatedConsole(Node3D box, bool manual = false)
+    {
+        if (!_consoleAnimations.TryGetValue(box, out var animationPlayer) ||
+            !_consoleAnimationNames.TryGetValue(box, out var animationName))
+        {
+            return;
+        }
+
+        if (manual)
+            _manuallyClosedAnimatedConsoles.Add(box);
+        else
+            _manuallyClosedAnimatedConsoles.Remove(box);
+
+        if (_consoleAnimationHoldTimes.TryGetValue(box, out var holdTime))
+            animationPlayer.Seek(holdTime, true);
+        animationPlayer.PlayBackwards(animationName);
+        _openAnimatedConsoles.Remove(box);
+    }
+
+    private bool TryToggleSelectedConsole(Vector2 localPos)
+    {
+        if (IsCarouselMoving() ||
+            localPos.X < Size.X * 0.2f || localPos.X > Size.X * 0.8f ||
+            localPos.Y < Size.Y * 0.15f || localPos.Y > Size.Y * 0.9f)
+        {
+            return false;
+        }
+
+        var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+        if (selectedIdx < 0 || selectedIdx >= _boxes.Count)
+            return false;
+
+        var selectedBox = _boxes[selectedIdx];
+        if (!_consoleAnimations.ContainsKey(selectedBox))
+            return false;
+
+        if (_openAnimatedConsoles.Contains(selectedBox))
+        {
+            CloseAnimatedConsole(selectedBox, manual: true);
+        }
+        else
+        {
+            OpenAnimatedConsole(selectedBox);
+        }
+
+        return true;
     }
     
     
@@ -350,6 +706,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
         // Idle spin on selected cartridge
         var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+        UpdateAnimatedConsoleStates(selectedIdx);
+        UpdateAnimatedConsolePlayback();
         for (int i = 0; i < _boxes.Count; i++)
         {
             if (i == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold)
@@ -384,6 +742,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
                 AudioManager.Instance?.StopCarouselHover();
                 _dragStartX = mb.Position.X;
                 _dragStartPos = CarouselPos;
+                _dragStartMousePos = mb.Position;
+                _dragMoved = false;
                 _lastDragX = mb.Position.X;
                 _lastDragVelocity = 0f;
                 _velocity = 0f;
@@ -391,8 +751,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
             }
             else if (_dragging)
             {
+                var wasClick = !_dragMoved && mb.Position.DistanceTo(_dragStartMousePos) <= ClickDragThreshold;
                 _dragging = false;
                 MouseFilter = MouseFilterEnum.Pass;
+                if (wasClick && TryToggleSelectedConsole(mb.Position))
+                {
+                    _velocity = 0f;
+                    GetViewport().SetInputAsHandled();
+                    return;
+                }
+
                 // Transfer drag velocity to physics
                 _velocity = _lastDragVelocity;
             }
@@ -401,6 +769,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         if (_dragging && e is InputEventMouseMotion mm)
         {
             var dx = mm.Position.X - _dragStartX;
+            if (!_dragMoved && mm.Position.DistanceTo(_dragStartMousePos) > ClickDragThreshold)
+                _dragMoved = true;
             CarouselPos = WrapPos(_dragStartPos - dx * DragScale * 5f);
             UpdateSpinAudioFromMotion();
 

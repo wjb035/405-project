@@ -6,6 +6,12 @@ namespace PGEmu.Services;
 public partial class GameCarousel3DView : SubViewportContainer
 {
     private const ulong SettleSpinSuppressWindowMs = 90;
+    private const string GbaCartridgeModelPath = "res://Models/gbaCart.glb";
+    private const string GbaCartridgeLogoPath = "res://Models/gba_logo2.png";
+    private const float GbaCartridgeUvScaleU = 1.4593054f;
+    private const float GbaCartridgeUvOffsetU = -0.23596f;
+    private const float GbaCartridgeUvScaleV = -2.8823564f;
+    private const float GbaCartridgeUvOffsetV = 1.874445f;
     // Physics
     private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
@@ -31,9 +37,10 @@ public partial class GameCarousel3DView : SubViewportContainer
     private Node3D _sceneRoot;
     private Camera3D _camera;
     private readonly List<Node3D> _boxes = new();
-    private readonly List<MeshInstance3D> _meshes = new();
-    private readonly List<StandardMaterial3D> _baseMaterials = new();
+    private readonly List<List<StandardMaterial3D>> _baseMaterials = new();
     private readonly List<StandardMaterial3D?> _coverMaterials = new();
+    private bool _isGba;
+    private Texture2D? _gbaCartridgeLogoTexture;
     
     // Card spacing in 3D units
     private const float Spacing = 2.2f;
@@ -126,16 +133,18 @@ public partial class GameCarousel3DView : SubViewportContainer
     }
 
     // Call this from GameSelect after loading games to clear everything and rebuild
-    public void Populate(List<(string title, Texture2D? coverArt)> games, float initialPos)
+    public void Populate(List<(string title, Texture2D? coverArt)> games, float initialPos,
+        bool isGba = false)
     {
         // Clear old boxes
         foreach (var b in _boxes)
             b.QueueFree();
         _boxes.Clear();
-        _meshes.Clear();
         _baseMaterials.Clear();
-        
+        _coverMaterials.Clear();
+
         _count = games.Count;
+        _isGba = isGba;
         CarouselPos = WrapPos(initialPos);
         _spinAudioPos = CarouselPos;
         _lastSpinAudioCarouselPos = CarouselPos;
@@ -145,10 +154,11 @@ public partial class GameCarousel3DView : SubViewportContainer
         for (int i = 0; i < games.Count; i++)
         {
             var (title, coverArt) = games[i];
-            var box = BuildBox(title, coverArt);
+            var box = _isGba
+                ? BuildGbaCartridge(title, coverArt)
+                : BuildBox(title, coverArt);
             _sceneRoot.AddChild(box);
             _boxes.Add(box);
-            _meshes.Add(box.GetNode<MeshInstance3D>("Mesh"));
         }
 
         LayoutBoxes();
@@ -176,7 +186,7 @@ public partial class GameCarousel3DView : SubViewportContainer
             Metallic = 0.2f,
         };
         
-        _baseMaterials.Add(mat);
+        _baseMaterials.Add(new List<StandardMaterial3D> { mat });
         mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
         mesh.SetSurfaceOverrideMaterial(0, mat);
         root.AddChild(mesh);
@@ -255,25 +265,93 @@ public partial class GameCarousel3DView : SubViewportContainer
         return root;
         
     }
-    
+
+    private Node3D BuildGbaCartridge(string title, Texture2D? coverArt)
+    {
+        if (!ResourceLoader.Exists(GbaCartridgeModelPath))
+        {
+            GD.PrintErr($"GBA cartridge model not found at {GbaCartridgeModelPath}, falling back to box geometry");
+            return BuildBox(title, coverArt);
+        }
+
+        var scene = GD.Load<PackedScene>(GbaCartridgeModelPath);
+        var model = scene.Instantiate<Node3D>();
+        CenterNode3D(model);
+        model.Scale = new Vector3(2.8f, 2.8f, 2.8f);
+        model.RotateY(Mathf.DegToRad(-90f));
+
+        var root = new Node3D();
+        root.AddChild(model);
+
+        var materials = new List<StandardMaterial3D>();
+        MeshInstance3D? labelMesh = null;
+        CollectImportedMaterials(model, materials, ref labelMesh);
+        _baseMaterials.Add(materials);
+
+        if (labelMesh != null)
+        {
+            labelMesh.Name = "CoverMesh";
+            var template = labelMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
+            StandardMaterial3D? coverMaterial = template;
+
+            if (coverArt != null)
+            {
+                coverMaterial = ApplyCoverTexture(labelMesh, coverArt, template);
+            }
+            else if (title == "No games found")
+            {
+                var logoTexture = GetGbaCartridgeLogoTexture();
+                if (logoTexture != null)
+                    coverMaterial = ApplyGbaPlaceholderTexture(labelMesh, logoTexture, template);
+            }
+
+            _coverMaterials.Add(coverMaterial);
+        }
+        else
+        {
+            GD.PrintErr($"Could not locate a label mesh for GBA cartridge: {title}");
+            _coverMaterials.Add(null);
+        }
+
+        var backMesh = new MeshInstance3D { Name = "BackMesh" };
+        backMesh.Mesh = new QuadMesh { Size = new Vector2(2.4f, 3.0f) };
+        backMesh.Position = new Vector3(0f, 0f, -0.42f);
+        backMesh.RotateY(Mathf.DegToRad(180f));
+
+        var backMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(1, 1, 1, 1),
+            Roughness = 0.5f,
+            Metallic = 0.05f,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+        };
+        backMesh.SetSurfaceOverrideMaterial(0, backMat);
+        root.AddChild(backMesh);
+
+        return root;
+    }
+
     // Updates a box's texture,c all it from gameselect
     public void UpdateCoverArt(int index, Texture2D texture)
     {
-        if (index >= _meshes.Count) return;
-        var coverMesh = _boxes[index].GetNodeOrNull<MeshInstance3D>("CoverMesh");
+        if (index >= _boxes.Count) return;
+        var coverMesh = FindMeshByName(_boxes[index], "CoverMesh");
         if (coverMesh == null) return;
-    
-        var coverMat = new StandardMaterial3D
-        {
-            AlbedoTexture = texture,
-            AlbedoColor = new Color(1, 1, 1, 1),
-            Roughness = 0.5f,
-            Metallic = 0.1f,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-        };
-        coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+
+        var previousMaterial = index < _coverMaterials.Count ? _coverMaterials[index] : null;
+        var coverMat = ApplyCoverTexture(coverMesh, texture, previousMaterial);
+
         if (index < _coverMaterials.Count)
             _coverMaterials[index] = coverMat;
+
+        if (index < _baseMaterials.Count && previousMaterial != null)
+        {
+            var baseMaterials = _baseMaterials[index];
+            var previousIdx = baseMaterials.IndexOf(previousMaterial);
+            if (previousIdx >= 0)
+                baseMaterials[previousIdx] = coverMat;
+        }
         
     }
     
@@ -281,7 +359,7 @@ public partial class GameCarousel3DView : SubViewportContainer
     private void BuildBackFaceTexture(int index, string title, string description, string genre, string releaseYear, string rating)
     {
         var box = _boxes[index];
-        var backMesh = box.GetNodeOrNull<MeshInstance3D>("BackMesh");
+        var backMesh = FindMeshByName(box, "BackMesh");
         if (backMesh == null) return;
 
         // Subviewport for rendering text
@@ -661,20 +739,26 @@ public partial class GameCarousel3DView : SubViewportContainer
 
             if (i < _baseMaterials.Count)
             {
-                _baseMaterials[i].AlbedoColor = new Color(
-                    _baseMaterials[i].AlbedoColor.R,
-                    _baseMaterials[i].AlbedoColor.G,
-                    _baseMaterials[i].AlbedoColor.B,
-                    alpha);
+                foreach (var material in _baseMaterials[i])
+                {
+                    material.AlbedoColor = new Color(
+                        material.AlbedoColor.R,
+                        material.AlbedoColor.G,
+                        material.AlbedoColor.B,
+                        alpha);
+                }
             }
             if (i < _coverMaterials.Count && _coverMaterials[i] != null)
             {
                 var coverMat = _coverMaterials[i];
-                coverMat.AlbedoColor = new Color(
-                    coverMat.AlbedoColor.R,
-                    coverMat.AlbedoColor.G,
-                    coverMat.AlbedoColor.B,
-                    alpha);
+                if (i >= _baseMaterials.Count || !_baseMaterials[i].Contains(coverMat))
+                {
+                    coverMat.AlbedoColor = new Color(
+                        coverMat.AlbedoColor.R,
+                        coverMat.AlbedoColor.G,
+                        coverMat.AlbedoColor.B,
+                        alpha);
+                }
             }
         }
     }
@@ -798,5 +882,171 @@ public partial class GameCarousel3DView : SubViewportContainer
                 _animatingBoxes.Remove(capturedIdx)));
         }
         _flippedBoxes.Clear();
+    }
+
+    private static StandardMaterial3D ApplyCoverTexture(MeshInstance3D coverMesh, Texture2D texture,
+        StandardMaterial3D? template)
+    {
+        var coverMat = template != null
+            ? (StandardMaterial3D)template.Duplicate()
+            : new StandardMaterial3D();
+
+        coverMat.AlbedoTexture = texture;
+        coverMat.AlbedoColor = new Color(1, 1, 1, 1);
+        coverMat.Roughness = template?.Roughness ?? 0.5f;
+        coverMat.Metallic = template?.Metallic ?? 0.1f;
+        coverMat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+        coverMat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+        coverMat.ResourceLocalToScene = true;
+        coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+        return coverMat;
+    }
+
+    private Texture2D? GetGbaCartridgeLogoTexture()
+    {
+        if (_gbaCartridgeLogoTexture != null)
+            return _gbaCartridgeLogoTexture;
+
+        var absolutePath = ProjectSettings.GlobalizePath(GbaCartridgeLogoPath);
+        if (!FileAccess.FileExists(absolutePath))
+        {
+            GD.PrintErr($"Missing GBA cartridge logo at {absolutePath}");
+            return null;
+        }
+
+        var image = Image.LoadFromFile(absolutePath);
+        if (image.GetWidth() == 0 || image.GetHeight() == 0)
+        {
+            GD.PrintErr($"Unable to load GBA cartridge logo from {absolutePath}");
+            return null;
+        }
+
+        _gbaCartridgeLogoTexture = ImageTexture.CreateFromImage(image);
+        return _gbaCartridgeLogoTexture;
+    }
+
+    private static StandardMaterial3D ApplyGbaPlaceholderTexture(MeshInstance3D coverMesh, Texture2D texture,
+        StandardMaterial3D? template)
+    {
+        var coverMat = ApplyCoverTexture(coverMesh, texture, template);
+        coverMat.Uv1Scale = new Vector3(GbaCartridgeUvScaleU, GbaCartridgeUvScaleV, 1f);
+        coverMat.Uv1Offset = new Vector3(GbaCartridgeUvOffsetU, GbaCartridgeUvOffsetV, 0f);
+        coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+        return coverMat;
+    }
+
+    private static MeshInstance3D? FindMeshByName(Node node, string name)
+    {
+        if (node is MeshInstance3D mesh && mesh.Name == name)
+            return mesh;
+
+        foreach (Node child in node.GetChildren())
+        {
+            var found = FindMeshByName(child, name);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static void CollectImportedMaterials(Node node, List<StandardMaterial3D> materials,
+        ref MeshInstance3D? labelMesh)
+    {
+        if (node is MeshInstance3D mesh && mesh.Mesh != null)
+        {
+            for (int surface = 0; surface < mesh.Mesh.GetSurfaceCount(); surface++)
+            {
+                if (mesh.Mesh.SurfaceGetMaterial(surface) is not StandardMaterial3D baseMat)
+                    continue;
+
+                var duplicate = (StandardMaterial3D)baseMat.Duplicate();
+                duplicate.ResourceLocalToScene = true;
+                duplicate.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+                duplicate.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+                mesh.SetSurfaceOverrideMaterial(surface, duplicate);
+                materials.Add(duplicate);
+
+                if (labelMesh == null && MaterialLooksLikeGbaLabel(baseMat, mesh))
+                    labelMesh = mesh;
+            }
+        }
+
+        foreach (Node child in node.GetChildren())
+            CollectImportedMaterials(child, materials, ref labelMesh);
+    }
+
+    private static bool MaterialLooksLikeGbaLabel(StandardMaterial3D material, MeshInstance3D mesh)
+    {
+        var descriptor = $"{material.ResourceName} {material.ResourcePath} {mesh.Name}".ToLowerInvariant();
+        return descriptor.Contains("label") || descriptor.Contains("sticker");
+    }
+
+    private static void CenterNode3D(Node3D root)
+    {
+        if (!TryGetNodeBounds(root, Transform3D.Identity, out var bounds))
+            return;
+
+        root.Position -= bounds.GetCenter();
+    }
+
+    private static bool TryGetNodeBounds(Node3D node, Transform3D accumulatedTransform, out Aabb bounds)
+    {
+        var hasBounds = false;
+        bounds = new Aabb();
+        var currentTransform = accumulatedTransform * node.Transform;
+
+        if (node is MeshInstance3D mesh && mesh.Mesh != null)
+        {
+            foreach (var corner in GetCorners(mesh.Mesh.GetAabb()))
+            {
+                var transformedCorner = currentTransform * corner;
+                if (!hasBounds)
+                {
+                    bounds = new Aabb(transformedCorner, Vector3.Zero);
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds = bounds.Expand(transformedCorner);
+                }
+            }
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            if (child is not Node3D childNode || !TryGetNodeBounds(childNode, currentTransform, out var childBounds))
+                continue;
+
+            foreach (var corner in GetCorners(childBounds))
+            {
+                if (!hasBounds)
+                {
+                    bounds = new Aabb(corner, Vector3.Zero);
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds = bounds.Expand(corner);
+                }
+            }
+        }
+
+        return hasBounds;
+    }
+
+    private static IEnumerable<Vector3> GetCorners(Aabb aabb)
+    {
+        var position = aabb.Position;
+        var end = aabb.End;
+
+        yield return new Vector3(position.X, position.Y, position.Z);
+        yield return new Vector3(end.X, position.Y, position.Z);
+        yield return new Vector3(position.X, end.Y, position.Z);
+        yield return new Vector3(end.X, end.Y, position.Z);
+        yield return new Vector3(position.X, position.Y, end.Z);
+        yield return new Vector3(end.X, position.Y, end.Z);
+        yield return new Vector3(position.X, end.Y, end.Z);
+        yield return new Vector3(end.X, end.Y, end.Z);
     }
 }

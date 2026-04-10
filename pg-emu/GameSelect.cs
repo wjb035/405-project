@@ -940,7 +940,8 @@ private void OnAnyButtonPressed()
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
 				return (g.Title, tex);
 			}).ToList();
-			_carousel3D.Populate(gameData, _carouselPos);
+			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
+			_carousel3D.Populate(gameData, _carouselPos, isGba);
 			
 			// Apply metadata to all the games
 			for (int i = 0; i < _games.Count; i++)

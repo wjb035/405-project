@@ -1,5 +1,7 @@
 ﻿using Godot;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -14,12 +16,23 @@ public partial class AuthService : Node
 {
 	public static AuthService Instance { get; private set; }
 	
-	private const string BaseUrl = "http://localhost:5276/api/auth/";
+	private const string BackendOrigin = "http://localhost:5276";
+	private static string BaseUrl => $"{BackendOrigin}/api/auth/";
+	private const int BackendStartupTimeoutMs = 10000;
 	private const string SavePath = "user://auth.json";
+	private static readonly object BackendStartLock = new();
+	private static readonly System.Net.Http.HttpClient BackendProbeClient = new()
+	{
+		Timeout = TimeSpan.FromSeconds(1.5)
+	};
+	private static Process? _backendProcess;
+	private static Task<bool>? _backendEnsureTask;
+	private static string? _backendLaunchFailure;
 
 	public string AccessToken { get; private set; } = "";
 	public string RefreshToken { get; private set; } = "";
 	public string Username { get; private set; } = "";
+	public string LastErrorMessage { get; private set; } = "";
 	public Guid UserId { get; private set; }
 	
 	public void SetTokens(string accessToken, string refreshToken, string username)
@@ -50,6 +63,7 @@ public partial class AuthService : Node
 	{
 		Instance = this;
 		LoadTokensFromDisk();
+		_ = EnsureBackendAvailableAsync();
 		ParseUserIdFromToken();
 		if (!string.IsNullOrEmpty(AccessToken))
 		{
@@ -187,7 +201,16 @@ public partial class AuthService : Node
 		bool authorized = false,
 		HttpMethod? method = null)
 	{
+		LastErrorMessage = "";
 		method ??= body != null ? HttpMethod.Post : HttpMethod.Get;
+
+		if (!await EnsureBackendAvailableAsync())
+		{
+			LastErrorMessage = string.IsNullOrWhiteSpace(_backendLaunchFailure)
+				? $"Could not reach backend at {BaseUrl.TrimEnd('/')}. Start PGEmu.backend and make sure MySQL is available."
+				: $"Backend failed to start: {_backendLaunchFailure}";
+			return null;
+		}
 		
 		// convert HttpMethod to Godot's enum
 		var godotMethod = method == HttpMethod.Put    ? HttpClient.Method.Put
@@ -215,7 +238,15 @@ public partial class AuthService : Node
 
 		http.RequestCompleted += (result, code, h, b) =>
 		{
-			if (code == 200)
+			if (result != (long)HttpRequest.Result.Success)
+			{
+				LastErrorMessage = string.IsNullOrWhiteSpace(_backendLaunchFailure)
+					? $"Could not reach backend at {BaseUrl.TrimEnd('/')}."
+					: $"Could not reach backend at {BaseUrl.TrimEnd('/')}. {_backendLaunchFailure}";
+				GD.Print($"Request transport failed: result={result} url={url}");
+				tcs.SetResult(null);
+			}
+			else if (code >= 200 && code < 300)
 			{
 				var text = Encoding.UTF8.GetString(b);
 				var doc = JsonDocument.Parse(text);
@@ -223,11 +254,15 @@ public partial class AuthService : Node
 			}
 			else if (code == 401)
 			{
-				// signals refresh needed
+				LastErrorMessage = "Invalid username or password.";
 				tcs.SetResult(null);
 			}
 			else
 			{
+				var text = b.Length > 0 ? Encoding.UTF8.GetString(b) : "";
+				LastErrorMessage = string.IsNullOrWhiteSpace(text)
+					? $"Request failed ({code})."
+					: text;
 				GD.Print($"Request failed: {code} {url}");
 				tcs.SetResult(null);
 			}
@@ -235,14 +270,163 @@ public partial class AuthService : Node
 			http.QueueFree();
 		};
 
-		http.Request(
+		var requestError = http.Request(
 			url,
 			headers.ToArray(),
 			godotMethod, 
 			json
 		);
 
+		if (requestError != Error.Ok)
+		{
+			LastErrorMessage = $"Could not start request to backend ({requestError}).";
+			http.QueueFree();
+			return null;
+		}
+
 		return await tcs.Task;
+	}
+
+	private static async Task<bool> EnsureBackendAvailableAsync()
+	{
+		if (await IsBackendReachableAsync())
+			return true;
+
+		Task<bool> pendingTask;
+		lock (BackendStartLock)
+		{
+			if (_backendEnsureTask == null || _backendEnsureTask.IsCompleted)
+				_backendEnsureTask = EnsureBackendAvailableCoreAsync();
+			pendingTask = _backendEnsureTask;
+		}
+
+		return await pendingTask;
+	}
+
+	private static async Task<bool> EnsureBackendAvailableCoreAsync()
+	{
+		if (await IsBackendReachableAsync())
+			return true;
+
+		TryStartBackendProcess();
+
+		var stopwatch = Stopwatch.StartNew();
+		while (stopwatch.ElapsedMilliseconds < BackendStartupTimeoutMs)
+		{
+			if (await IsBackendReachableAsync())
+				return true;
+
+			if (_backendProcess != null && _backendProcess.HasExited)
+				break;
+
+			await Task.Delay(250);
+		}
+
+		return await IsBackendReachableAsync();
+	}
+
+	private static async Task<bool> IsBackendReachableAsync()
+	{
+		try
+		{
+			using var response = await BackendProbeClient.GetAsync($"{BackendOrigin}/swagger/index.html");
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	private static void TryStartBackendProcess()
+	{
+		if (_backendProcess != null && !_backendProcess.HasExited)
+			return;
+
+		if (!TryCreateBackendStartInfo(out var startInfo))
+			return;
+
+		try
+		{
+			var process = Process.Start(startInfo);
+			if (process == null)
+			{
+				_backendLaunchFailure = "Process start returned no handle.";
+				return;
+			}
+
+			process.OutputDataReceived += (_, args) =>
+			{
+				if (!string.IsNullOrWhiteSpace(args.Data))
+					GD.Print($"[backend] {args.Data}");
+			};
+			process.ErrorDataReceived += (_, args) =>
+			{
+				if (!string.IsNullOrWhiteSpace(args.Data))
+				{
+					_backendLaunchFailure = args.Data;
+					GD.PushWarning($"[backend] {args.Data}");
+				}
+			};
+			process.BeginOutputReadLine();
+			process.BeginErrorReadLine();
+			_backendLaunchFailure = null;
+			_backendProcess = process;
+		}
+		catch (Exception ex)
+		{
+			_backendLaunchFailure = ex.Message;
+		}
+	}
+
+	private static bool TryCreateBackendStartInfo(out ProcessStartInfo startInfo)
+	{
+		var backendProjectDir = ResolveBackendProjectDir();
+		var backendBinDir = Path.Combine(backendProjectDir, "bin", "Debug", "net10.0");
+		var backendDllPath = Path.Combine(backendBinDir, "PGEmu.backend.dll");
+
+		if (File.Exists(backendDllPath))
+		{
+			startInfo = CreateBaseStartInfo(backendBinDir);
+			startInfo.ArgumentList.Add(backendDllPath);
+			return true;
+		}
+
+		var backendProjectPath = Path.Combine(backendProjectDir, "PGEmu.backend.csproj");
+		if (File.Exists(backendProjectPath))
+		{
+			startInfo = CreateBaseStartInfo(backendProjectDir);
+			startInfo.ArgumentList.Add("run");
+			startInfo.ArgumentList.Add("--project");
+			startInfo.ArgumentList.Add(backendProjectPath);
+			startInfo.ArgumentList.Add("--no-launch-profile");
+			return true;
+		}
+
+		startInfo = new ProcessStartInfo();
+		_backendLaunchFailure = $"Could not find PGEmu.backend under {backendProjectDir}.";
+		return false;
+	}
+
+	private static ProcessStartInfo CreateBaseStartInfo(string workingDirectory)
+	{
+		var startInfo = new ProcessStartInfo("dotnet")
+		{
+			WorkingDirectory = workingDirectory,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+		startInfo.Environment["ASPNETCORE_URLS"] = BackendOrigin;
+		return startInfo;
+	}
+
+	private static string ResolveBackendProjectDir()
+	{
+		var projectDir = ProjectSettings.GlobalizePath("res://");
+		return Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend"));
 	}
 	
 	// PERSISTENCE
@@ -256,15 +440,15 @@ public partial class AuthService : Node
 		};
 
 		var json = JsonSerializer.Serialize(data);
-		using var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
+		using var file = Godot.FileAccess.Open(SavePath, Godot.FileAccess.ModeFlags.Write);
 		file.StoreString(json);    
 	}
 	private void LoadTokensFromDisk()
 	{
-		if (!FileAccess.FileExists(SavePath))
+		if (!Godot.FileAccess.FileExists(SavePath))
 			return;
 
-		var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Read);
+		var file = Godot.FileAccess.Open(SavePath, Godot.FileAccess.ModeFlags.Read);
 		var text = file.GetAsText();
 
 		var doc = JsonDocument.Parse(text);
@@ -282,7 +466,7 @@ public partial class AuthService : Node
 		
 		AccessToken = "";
 		RefreshToken = "";
-		if (FileAccess.FileExists(SavePath))
+		if (Godot.FileAccess.FileExists(SavePath))
 		{
 			DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(SavePath));
 		}

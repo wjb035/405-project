@@ -157,7 +157,9 @@ public partial class Login : Control
 
 		if (!success)
 		{
-			_error.Text = "Invalid username or password";
+			_error.Text = string.IsNullOrWhiteSpace(AuthService.Instance.LastErrorMessage)
+				? "Invalid username or password"
+				: AuthService.Instance.LastErrorMessage;
 			return;
 		}
 
@@ -205,7 +207,9 @@ public partial class Login : Control
 
 		if (!success)
 		{
-			_error.Text = "Something went wrong, please try again";
+			_error.Text = string.IsNullOrWhiteSpace(AuthService.Instance.LastErrorMessage)
+				? "Something went wrong, please try again"
+				: AuthService.Instance.LastErrorMessage;
 			return;
 		}
 
