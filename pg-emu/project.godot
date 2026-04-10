@@ -39,6 +39,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="PGEmu"
 
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
+
 [input]
 
 game_flip={

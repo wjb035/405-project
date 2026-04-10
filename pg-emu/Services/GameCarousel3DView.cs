@@ -12,6 +12,16 @@ public partial class GameCarousel3DView : SubViewportContainer
     private const float GbaCartridgeUvOffsetU = -0.23596f;
     private const float GbaCartridgeUvScaleV = -2.8823564f;
     private const float GbaCartridgeUvOffsetV = 1.874445f;
+    private const int GbaFrontLabelViewportWidth = 1280;
+    private const int GbaFrontLabelViewportHeight = 760;
+    private const int GbaBackLabelViewportWidth = 4096;
+    private const int GbaBackLabelViewportHeight = 3072;
+    private const float GbaBackLabelWidthFactor = 0.94f;
+    private const float GbaBackLabelHeightFactor = 0.78f;
+    private const float GbaBackLabelYOffsetFactor = 0.02f;
+    private const float GbaBackLabelDepthOffset = 0.016f;
+    private static readonly Vector2 GbaExpandedBackPanelSize = new(2.5f, 3.5f);
+    private const float GbaExpandedBackDepthOffset = 0.03f;
     // Physics
     private const float HoverMotionThreshold = 0.001f;
     private float _velocity = 0f;
@@ -54,6 +64,7 @@ public partial class GameCarousel3DView : SubViewportContainer
     private const double MouseIdleThreshold = 1.0; 
     private readonly HashSet<int> _flippedBoxes = new();
     private readonly HashSet<int> _animatingBoxes = new();
+    private readonly HashSet<int> _expandedGbaBacks = new();
     
     public event System.Action<int>? SelectionChanged;
 
@@ -125,7 +136,7 @@ public partial class GameCarousel3DView : SubViewportContainer
         
         // Aliasing
         _viewport.Msaa3D = Viewport.Msaa.Msaa8X;
-        _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
+        _viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled;
         _viewport.Scaling3DMode = SubViewport.Scaling3DModeEnum.Fsr;
         _viewport.Scaling3DScale = 1.0f;
         _viewport.FsrSharpness = 0.2f;
@@ -142,6 +153,9 @@ public partial class GameCarousel3DView : SubViewportContainer
         _boxes.Clear();
         _baseMaterials.Clear();
         _coverMaterials.Clear();
+        _flippedBoxes.Clear();
+        _animatingBoxes.Clear();
+        _expandedGbaBacks.Clear();
 
         _count = games.Count;
         _isGba = isGba;
@@ -279,8 +293,10 @@ public partial class GameCarousel3DView : SubViewportContainer
         CenterNode3D(model);
         model.Scale = new Vector3(2.8f, 2.8f, 2.8f);
         model.RotateY(Mathf.DegToRad(-90f));
+        var hasModelBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
 
         var root = new Node3D();
+        root.SetMeta("pgemu_title", title);
         root.AddChild(model);
 
         var materials = new List<StandardMaterial3D>();
@@ -292,19 +308,7 @@ public partial class GameCarousel3DView : SubViewportContainer
         {
             labelMesh.Name = "CoverMesh";
             var template = labelMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
-            StandardMaterial3D? coverMaterial = template;
-
-            if (coverArt != null)
-            {
-                coverMaterial = ApplyCoverTexture(labelMesh, coverArt, template);
-            }
-            else if (title == "No games found")
-            {
-                var logoTexture = GetGbaCartridgeLogoTexture();
-                if (logoTexture != null)
-                    coverMaterial = ApplyGbaPlaceholderTexture(labelMesh, logoTexture, template);
-            }
-
+            var coverMaterial = ApplyGbaLabelTexture(labelMesh, title, coverArt, template);
             _coverMaterials.Add(coverMaterial);
         }
         else
@@ -314,8 +318,18 @@ public partial class GameCarousel3DView : SubViewportContainer
         }
 
         var backMesh = new MeshInstance3D { Name = "BackMesh" };
-        backMesh.Mesh = new QuadMesh { Size = new Vector2(2.4f, 3.0f) };
-        backMesh.Position = new Vector3(0f, 0f, -0.42f);
+        var backLabelSize = hasModelBounds
+            ? new Vector2(modelBounds.Size.X * GbaBackLabelWidthFactor, modelBounds.Size.Y * GbaBackLabelHeightFactor)
+            : new Vector2(2.15f, 1.55f);
+        backMesh.Mesh = new QuadMesh { Size = backLabelSize };
+
+        var backLabelPosition = hasModelBounds
+            ? new Vector3(
+                modelBounds.GetCenter().X,
+                modelBounds.GetCenter().Y + modelBounds.Size.Y * GbaBackLabelYOffsetFactor,
+                modelBounds.Position.Z - GbaBackLabelDepthOffset)
+            : new Vector3(0f, -0.12f, -0.32f);
+        backMesh.Position = backLabelPosition;
         backMesh.RotateY(Mathf.DegToRad(180f));
 
         var backMat = new StandardMaterial3D
@@ -329,6 +343,30 @@ public partial class GameCarousel3DView : SubViewportContainer
         backMesh.SetSurfaceOverrideMaterial(0, backMat);
         root.AddChild(backMesh);
 
+        var detailBackMesh = new MeshInstance3D
+        {
+            Name = "DetailBackMesh",
+            Visible = false,
+        };
+        detailBackMesh.Mesh = new QuadMesh { Size = GbaExpandedBackPanelSize };
+        detailBackMesh.Position = hasModelBounds
+            ? new Vector3(
+                modelBounds.GetCenter().X,
+                modelBounds.GetCenter().Y,
+                modelBounds.Position.Z - GbaExpandedBackDepthOffset)
+            : new Vector3(0f, 0f, -0.36f);
+        detailBackMesh.RotateY(Mathf.DegToRad(180f));
+        var detailBackMat = new StandardMaterial3D
+        {
+            AlbedoColor = Colors.White,
+            Roughness = 0.9f,
+            Metallic = 0f,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+        };
+        detailBackMesh.SetSurfaceOverrideMaterial(0, detailBackMat);
+        root.AddChild(detailBackMesh);
+
         return root;
     }
 
@@ -340,7 +378,13 @@ public partial class GameCarousel3DView : SubViewportContainer
         if (coverMesh == null) return;
 
         var previousMaterial = index < _coverMaterials.Count ? _coverMaterials[index] : null;
-        var coverMat = ApplyCoverTexture(coverMesh, texture, previousMaterial);
+        var coverMat = _isGba
+            ? ApplyGbaLabelTexture(
+                coverMesh,
+                _boxes[index].HasMeta("pgemu_title") ? _boxes[index].GetMeta("pgemu_title").AsString() : string.Empty,
+                texture,
+                previousMaterial)
+            : ApplyCoverTexture(coverMesh, texture, previousMaterial);
 
         if (index < _coverMaterials.Count)
             _coverMaterials[index] = coverMat;
@@ -362,7 +406,22 @@ public partial class GameCarousel3DView : SubViewportContainer
         var backMesh = FindMeshByName(box, "BackMesh");
         if (backMesh == null) return;
 
-        // Subviewport for rendering text
+        if (_isGba)
+        {
+            BuildGbaCompactBackFaceTexture(backMesh, title, genre, releaseYear, rating);
+
+            var detailBackMesh = FindMeshByName(box, "DetailBackMesh");
+            if (detailBackMesh != null)
+                BuildBoxStyleBackFaceTexture(detailBackMesh, title, description, genre, releaseYear, rating);
+            return;
+        }
+
+        BuildBoxStyleBackFaceTexture(backMesh, title, description, genre, releaseYear, rating);
+    }
+
+    private void BuildBoxStyleBackFaceTexture(MeshInstance3D backMesh, string title, string description,
+        string genre, string releaseYear, string rating)
+    {
         var vp = new SubViewport
         {
             Size = new Vector2I(2048, 2896),
@@ -443,8 +502,105 @@ public partial class GameCarousel3DView : SubViewportContainer
         // Apply this viewport to the back face
         var mat = backMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
         if (mat != null)
+        {
             mat.AlbedoTexture = vp.GetTexture();
-        mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+            mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+        }
+    }
+
+    private void BuildGbaCompactBackFaceTexture(MeshInstance3D backMesh, string title,
+        string genre, string releaseYear, string rating)
+    {
+        var vp = new SubViewport
+        {
+            Size = new Vector2I(GbaBackLabelViewportWidth, GbaBackLabelViewportHeight),
+            TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            Msaa2D = Viewport.Msaa.Disabled,
+            ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
+        };
+        _sceneRoot.AddChild(vp);
+
+        var margin = new MarginContainer();
+        margin.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        margin.AddThemeConstantOverride("margin_left", 12);
+        margin.AddThemeConstantOverride("margin_top", 12);
+        margin.AddThemeConstantOverride("margin_right", 12);
+        margin.AddThemeConstantOverride("margin_bottom", 12);
+        vp.AddChild(margin);
+
+        var panel = new PanelContainer();
+        panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        var style = new StyleBoxFlat
+        {
+            BgColor = new Color(0.985f, 0.985f, 0.965f, 1f),
+            BorderColor = new Color(0.06f, 0.06f, 0.07f, 1f),
+            BorderWidthLeft = 8,
+            BorderWidthTop = 8,
+            BorderWidthRight = 8,
+            BorderWidthBottom = 8,
+            CornerRadiusTopLeft = 22,
+            CornerRadiusTopRight = 22,
+            CornerRadiusBottomLeft = 22,
+            CornerRadiusBottomRight = 22,
+            ContentMarginLeft = 34,
+            ContentMarginTop = 28,
+            ContentMarginRight = 34,
+            ContentMarginBottom = 24,
+        };
+        panel.AddThemeStyleboxOverride("panel", style);
+        margin.AddChild(panel);
+
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 14);
+        panel.AddChild(column);
+
+        var titleLabel = new Label
+        {
+            Text = BuildCompactGbaTitle(title),
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        titleLabel.AddThemeColorOverride("font_color", new Color(0.04f, 0.04f, 0.05f, 1f));
+        titleLabel.AddThemeFontSizeOverride("font_size", 168);
+        column.AddChild(titleLabel);
+
+        var divider = new ColorRect
+        {
+            CustomMinimumSize = new Vector2(0, 6),
+            Color = new Color(0.08f, 0.08f, 0.09f, 0.75f),
+        };
+        column.AddChild(divider);
+
+        var metaLabel = new Label
+        {
+            Text = BuildCompactGbaMetaLine(genre, releaseYear, rating),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        metaLabel.AddThemeColorOverride("font_color", new Color(0.16f, 0.16f, 0.18f, 0.88f));
+        metaLabel.AddThemeFontSizeOverride("font_size", 104);
+        column.AddChild(metaLabel);
+
+        var hintLabel = new Label
+        {
+            Text = "Double-click for details",
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        hintLabel.AddThemeColorOverride("font_color", new Color(0.24f, 0.24f, 0.26f, 0.80f));
+        hintLabel.AddThemeFontSizeOverride("font_size", 56);
+        column.AddChild(hintLabel);
+
+        var mat = backMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
+        if (mat != null)
+        {
+            mat.AlbedoTexture = vp.GetTexture();
+            mat.AlbedoColor = Colors.White;
+            mat.Roughness = 0.98f;
+            mat.Metallic = 0f;
+            mat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
+            mat.TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest;
+        }
     }
 
     // Function for adding metadata
@@ -472,6 +628,227 @@ public partial class GameCarousel3DView : SubViewportContainer
         valueLabel.AddThemeFontSizeOverride("font_size", 52);
         row.AddChild(valueLabel);
         
+    }
+
+    private static void AddGbaMetaPair(GridContainer parent, string label, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+
+        var keyLabel = new Label { Text = label };
+        keyLabel.AddThemeColorOverride("font_color", new Color(0.24f, 0.24f, 0.26f, 0.88f));
+        keyLabel.AddThemeFontSizeOverride("font_size", 30);
+        parent.AddChild(keyLabel);
+
+        var valueLabel = new Label
+        {
+            Text = value,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        valueLabel.AddThemeColorOverride("font_color", new Color(0.08f, 0.08f, 0.10f, 0.98f));
+        valueLabel.AddThemeFontSizeOverride("font_size", 30);
+        parent.AddChild(valueLabel);
+    }
+
+    private static void AddGbaMetaChip(HBoxContainer parent, string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var chip = new PanelContainer();
+        var chipStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.12f, 0.12f, 0.14f, 1f),
+            CornerRadiusTopLeft = 18,
+            CornerRadiusTopRight = 18,
+            CornerRadiusBottomLeft = 18,
+            CornerRadiusBottomRight = 18,
+            ContentMarginLeft = 18,
+            ContentMarginTop = 10,
+            ContentMarginRight = 18,
+            ContentMarginBottom = 10,
+        };
+        chip.AddThemeStyleboxOverride("panel", chipStyle);
+        parent.AddChild(chip);
+
+        var label = new Label
+        {
+            Text = text,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        label.AddThemeColorOverride("font_color", new Color(0.99f, 0.99f, 1f, 1f));
+        label.AddThemeFontSizeOverride("font_size", 42);
+        chip.AddChild(label);
+    }
+
+    private static string BuildCompactGbaMetaLine(string genre, string releaseYear, string rating)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(genre))
+            parts.Add(AbbreviateCompactGbaGenre(genre));
+        parts.Add(string.IsNullOrWhiteSpace(releaseYear) ? "YEAR TBD" : releaseYear);
+        parts.Add(string.IsNullOrWhiteSpace(rating) ? "ACH 0/0" : $"ACH {rating}");
+
+        return string.Join(" • ", parts);
+    }
+
+    private static string BuildCompactGbaTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return string.Empty;
+
+        var parentheticalIndex = title.IndexOf(" (", System.StringComparison.Ordinal);
+        return parentheticalIndex > 0 ? title[..parentheticalIndex].TrimEnd() : title.Trim();
+    }
+
+    private static string AbbreviateCompactGbaGenre(string genre)
+    {
+        if (string.Equals(genre.Trim(), "Game Boy Advance", System.StringComparison.OrdinalIgnoreCase))
+            return "GBA";
+
+        return genre.Trim();
+    }
+
+    private static string CompactGbaDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description) || description == "No description yet.")
+            return string.Empty;
+
+        var compact = description.Replace('\n', ' ').Replace('\r', ' ').Trim();
+        if (compact.Length <= 110)
+            return compact;
+
+        return $"{compact[..107].TrimEnd()}...";
+    }
+
+    private StandardMaterial3D ApplyGbaLabelTexture(MeshInstance3D coverMesh, string title, Texture2D? coverTexture,
+        StandardMaterial3D? template)
+    {
+        var labelTexture = BuildGbaFrontLabelTexture(title, coverTexture) ?? coverTexture ?? GetGbaCartridgeLogoTexture();
+
+        var coverMat = template != null
+            ? (StandardMaterial3D)template.Duplicate()
+            : new StandardMaterial3D();
+
+        if (labelTexture != null)
+            coverMat.AlbedoTexture = labelTexture;
+
+        coverMat.AlbedoColor = Colors.White;
+        coverMat.Roughness = 0.98f;
+        coverMat.Metallic = 0f;
+        coverMat.Transparency = template?.Transparency ?? BaseMaterial3D.TransparencyEnum.Disabled;
+        coverMat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+        coverMat.ResourceLocalToScene = true;
+        coverMat.Uv1Scale = new Vector3(GbaCartridgeUvScaleU, GbaCartridgeUvScaleV, 1f);
+        coverMat.Uv1Offset = new Vector3(GbaCartridgeUvOffsetU, GbaCartridgeUvOffsetV, 0f);
+        coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+        return coverMat;
+    }
+
+    private Texture2D? BuildGbaFrontLabelTexture(string title, Texture2D? coverTexture)
+    {
+        var displayTexture = coverTexture ?? GetGbaCartridgeLogoTexture();
+        if (displayTexture == null)
+            return null;
+
+        var vp = new SubViewport
+        {
+            Size = new Vector2I(GbaFrontLabelViewportWidth, GbaFrontLabelViewportHeight),
+            TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            Msaa2D = Viewport.Msaa.Msaa8X,
+            ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa,
+        };
+        _sceneRoot.AddChild(vp);
+
+        var panel = new PanelContainer();
+        panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        var shellStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.94f, 0.93f, 0.96f, 1f),
+            BorderColor = new Color(0.12f, 0.12f, 0.13f, 0.92f),
+            BorderWidthLeft = 8,
+            BorderWidthTop = 8,
+            BorderWidthRight = 8,
+            BorderWidthBottom = 8,
+            CornerRadiusTopLeft = 28,
+            CornerRadiusTopRight = 28,
+            CornerRadiusBottomLeft = 28,
+            CornerRadiusBottomRight = 28,
+            ContentMarginLeft = 24,
+            ContentMarginTop = 24,
+            ContentMarginRight = 24,
+            ContentMarginBottom = 24,
+        };
+        panel.AddThemeStyleboxOverride("panel", shellStyle);
+        vp.AddChild(panel);
+
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 18);
+        panel.AddChild(column);
+
+        var artFrame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(0, 470),
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        var artFrameStyle = new StyleBoxFlat
+        {
+            BgColor = coverTexture != null
+                ? new Color(0.09f, 0.09f, 0.11f, 1f)
+                : new Color(0f, 0f, 0f, 1f),
+            CornerRadiusTopLeft = 18,
+            CornerRadiusTopRight = 18,
+            CornerRadiusBottomLeft = 18,
+            CornerRadiusBottomRight = 18,
+            ContentMarginLeft = 16,
+            ContentMarginTop = 16,
+            ContentMarginRight = 16,
+            ContentMarginBottom = 16,
+        };
+        artFrame.AddThemeStyleboxOverride("panel", artFrameStyle);
+        column.AddChild(artFrame);
+
+        var art = new TextureRect
+        {
+            Texture = displayTexture,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = coverTexture != null
+                ? TextureRect.StretchModeEnum.KeepAspectCovered
+                : TextureRect.StretchModeEnum.KeepAspectCentered,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        art.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        artFrame.AddChild(art);
+
+        var footer = new PanelContainer();
+        var footerStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.16f, 0.13f, 0.24f, 0.98f),
+            CornerRadiusTopLeft = 16,
+            CornerRadiusTopRight = 16,
+            CornerRadiusBottomLeft = 16,
+            CornerRadiusBottomRight = 16,
+            ContentMarginLeft = 20,
+            ContentMarginTop = 12,
+            ContentMarginRight = 20,
+            ContentMarginBottom = 12,
+        };
+        footer.AddThemeStyleboxOverride("panel", footerStyle);
+        column.AddChild(footer);
+
+        var titleLabel = new Label
+        {
+            Text = title,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        titleLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.97f, 1f, 1f));
+        titleLabel.AddThemeFontSizeOverride("font_size", 42);
+        footer.AddChild(titleLabel);
+
+        return vp.GetTexture();
     }
 
     // Public method for setting the data with IGDB api
@@ -539,6 +916,13 @@ public partial class GameCarousel3DView : SubViewportContainer
             {
                 if (mb.Position.Y < 70f)
                     return;
+
+                if (mb.DoubleClick && TryToggleSelectedGbaBackDetail(mb.Position))
+                {
+                    AcceptEvent();
+                    return;
+                }
+
                 MouseFilter = MouseFilterEnum.Stop;
                 _dragging = true;
                 AudioManager.Instance?.StopCarouselHover();
@@ -824,6 +1208,7 @@ public partial class GameCarousel3DView : SubViewportContainer
     public void StepDirection(int dir)
     {
         AudioManager.Instance?.StopCarouselHover();
+        CollapseExpandedGbaBacks();
         var current = Mathf.RoundToInt(CarouselPos);
         var target = WrapPos(current + dir);
         _velocity = 0f;
@@ -842,7 +1227,10 @@ public partial class GameCarousel3DView : SubViewportContainer
         
         var isFlipped = _flippedBoxes.Contains(idx);
         if (isFlipped)
+        {
             _flippedBoxes.Remove(idx);
+            CollapseExpandedGbaBack(idx);
+        }
         else
             _flippedBoxes.Add(idx);
 
@@ -864,6 +1252,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 
     private void UnflipSelected()
     {
+        CollapseExpandedGbaBacks();
+
         foreach (var idx in _flippedBoxes)
         {
             if (idx >= _boxes.Count) continue;
@@ -884,6 +1274,60 @@ public partial class GameCarousel3DView : SubViewportContainer
         _flippedBoxes.Clear();
     }
 
+    private bool TryToggleSelectedGbaBackDetail(Vector2 mousePosition)
+    {
+        if (!_isGba || _boxes.Count == 0 || IsCarouselMoving())
+            return false;
+
+        if (mousePosition.X < Size.X * 0.2f || mousePosition.X > Size.X * 0.8f)
+            return false;
+
+        var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+        if (!_flippedBoxes.Contains(idx))
+            return false;
+
+        ToggleGbaBackDetail(idx, !_expandedGbaBacks.Contains(idx));
+        return true;
+    }
+
+    private void ToggleGbaBackDetail(int index, bool expanded)
+    {
+        if (!_isGba || index < 0 || index >= _boxes.Count)
+            return;
+
+        var box = _boxes[index];
+        var compactBackMesh = FindMeshByName(box, "BackMesh");
+        var detailBackMesh = FindMeshByName(box, "DetailBackMesh");
+        if (compactBackMesh == null || detailBackMesh == null)
+            return;
+
+        compactBackMesh.Visible = !expanded;
+        detailBackMesh.Visible = expanded;
+
+        if (expanded)
+            _expandedGbaBacks.Add(index);
+        else
+            _expandedGbaBacks.Remove(index);
+    }
+
+    private void CollapseExpandedGbaBack(int index)
+    {
+        if (!_expandedGbaBacks.Contains(index))
+            return;
+
+        ToggleGbaBackDetail(index, false);
+    }
+
+    private void CollapseExpandedGbaBacks()
+    {
+        if (_expandedGbaBacks.Count == 0)
+            return;
+
+        var expandedIndices = new List<int>(_expandedGbaBacks);
+        foreach (var index in expandedIndices)
+            ToggleGbaBackDetail(index, false);
+    }
+
     private static StandardMaterial3D ApplyCoverTexture(MeshInstance3D coverMesh, Texture2D texture,
         StandardMaterial3D? template)
     {
@@ -895,7 +1339,9 @@ public partial class GameCarousel3DView : SubViewportContainer
         coverMat.AlbedoColor = new Color(1, 1, 1, 1);
         coverMat.Roughness = template?.Roughness ?? 0.5f;
         coverMat.Metallic = template?.Metallic ?? 0.1f;
-        coverMat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+        // Preserve the source material's render mode so opaque imported meshes stay in
+        // Godot's opaque pass instead of breaking from alpha depth sorting.
+        coverMat.Transparency = template?.Transparency ?? BaseMaterial3D.TransparencyEnum.Disabled;
         coverMat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
         coverMat.ResourceLocalToScene = true;
         coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
@@ -962,7 +1408,6 @@ public partial class GameCarousel3DView : SubViewportContainer
 
                 var duplicate = (StandardMaterial3D)baseMat.Duplicate();
                 duplicate.ResourceLocalToScene = true;
-                duplicate.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
                 duplicate.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
                 mesh.SetSurfaceOverrideMaterial(surface, duplicate);
                 materials.Add(duplicate);
