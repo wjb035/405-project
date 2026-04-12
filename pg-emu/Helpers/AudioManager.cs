@@ -19,6 +19,7 @@ public partial class AudioManager : Node
 	private const float HoverFadeOutDb = -40f;
 	private const float HoverFadeOutSeconds = 0.12f;
 
+	private AudioStreamPlayer _musicPlayer;
 	private AudioStreamPlayer _uiPlayer = null!;
 	private AudioStreamPlayer _navigationPlayer = null!;
 	private AudioStreamPlayer _hoverPlayer = null!;
@@ -32,6 +33,16 @@ public partial class AudioManager : Node
 	public override void _Ready()
 	{
 		Instance = this;
+		
+		
+		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
+		AudioStream newTrack = GD.Load<AudioStream>("res://Helpers/Logos.mp3");
+		 _musicPlayer.Stream = newTrack;
+		
+		// loop whatever is currently playing 
+		_musicPlayer.Finished += OnMusicFinished;
+		_musicPlayer.Play();
+		
 		_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
 		_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
 		_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
@@ -39,6 +50,11 @@ public partial class AudioManager : Node
 		for (int i = 0; i < _spinPlayers.Length; i++)
 			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
+	
+	private void OnMusicFinished(){
+		_musicPlayer.Play();
+	}
+
 
 	private AudioStream? GetStream(string path)
 	{

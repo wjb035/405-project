@@ -7,14 +7,16 @@ script = ExtResource("1_2nh25")
 
 [node name="Ui" type="AudioStreamPlayer" parent="." unique_id=392917724]
 
-[node name="Navigation" type="AudioStreamPlayer" parent="."]
+[node name="Navigation" type="AudioStreamPlayer" parent="." unique_id=1815554170]
 
-[node name="Spin1" type="AudioStreamPlayer" parent="."]
+[node name="Spin1" type="AudioStreamPlayer" parent="." unique_id=1603033559]
 
-[node name="Spin2" type="AudioStreamPlayer" parent="."]
+[node name="Spin2" type="AudioStreamPlayer" parent="." unique_id=1403347836]
 
-[node name="Spin3" type="AudioStreamPlayer" parent="."]
+[node name="Spin3" type="AudioStreamPlayer" parent="." unique_id=1890005857]
 
-[node name="Spin4" type="AudioStreamPlayer" parent="."]
+[node name="Spin4" type="AudioStreamPlayer" parent="." unique_id=1675208512]
 
-[node name="Hover" type="AudioStreamPlayer" parent="."]
+[node name="Hover" type="AudioStreamPlayer" parent="." unique_id=697862265]
+
+[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1667825122]
