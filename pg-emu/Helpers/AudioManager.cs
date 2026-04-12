@@ -15,7 +15,7 @@ public partial class AudioManager : Node
 	public const string CarouselHoverSfxPath = "res://audio/hover.mp3";
 
 	private const float SpinBaseVolumeDb = -6f;
-	private const float HoverBaseVolumeDb = -4f;
+	private const float HoverBaseVolumeDb = -8f;
 	private const float HoverFadeOutDb = -40f;
 	private const float HoverFadeOutSeconds = 0.12f;
 
@@ -92,6 +92,15 @@ public partial class AudioManager : Node
 		_hoverPlayer.VolumeDb = HoverBaseVolumeDb;
 		_hoverPlayer.Stream = stream;
 		_hoverPlayer.Play();
+		
+		_hoverFadeTween = CreateTween();
+		_hoverFadeTween.TweenInterval(2.0f);
+		_hoverFadeTween.TweenProperty(
+			_hoverPlayer,
+			"volume_db",
+			-20f,  
+			0.5f   
+		);
 	}
 
 	public void StopCarouselHover(bool fadeOut = true)

@@ -151,17 +151,17 @@ text = "Search"
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/TopBar" unique_id=1808037778]
 layout_mode = 2
 
-[node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=401324041]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-icon = ExtResource("7_iw72c")
-icon_alignment = 1
-expand_icon = true
-
 [node name="BtnCollections" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1554411540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
 icon = ExtResource("8_1lj82")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=401324041]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("7_iw72c")
 icon_alignment = 1
 expand_icon = true
 

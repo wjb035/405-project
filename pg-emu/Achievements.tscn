@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://d4nir8xtcs6rk"]
 
 [ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dsana"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="2_uqn2r"]
 
 [node name="Achievements" type="Control" unique_id=1415120403]
@@ -10,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_dsana")
 script = ExtResource("1_dpmwc")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=465082784]

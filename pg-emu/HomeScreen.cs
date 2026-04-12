@@ -895,18 +895,48 @@ private void OnAnyButtonPressed()
 	private void ApplyAesthetic()
 	{
 		// Keep all home controls on the same visual language as the dark launcher theme.
+		// Nav buttons
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
+		UiStyle.StyleGhostNav(_prev, _next);
+
+		// Primary actions
 		UiStyle.StylePrimaryButton(_selectPlatform);
+		UiStyle.AddHoverFeedback(_selectPlatform);
+		UiStyle.ApplyDropShadow(_selectPlatform);
+
+		// Top bar buttons
 		UiStyle.StyleTopBarButton(_logout);
+		UiStyle.AddHoverFeedback(_logout);
+		UiStyle.ApplyDropShadow(_logout);
+
 		UiStyle.StyleTopBarButton(_inbox);
+		UiStyle.AddHoverFeedback(_inbox);
+		UiStyle.ApplyDropShadow(_inbox);
+
 		UiStyle.StyleTopBarButton(_friends);
+		UiStyle.AddHoverFeedback(_friends);
+		UiStyle.ApplyDropShadow(_friends);
+
 		UiStyle.StyleTopBarButton(_chat);
+		UiStyle.AddHoverFeedback(_chat);
+		UiStyle.ApplyDropShadow(_chat);
+
 		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.AddHoverFeedback(_settings);
+		UiStyle.ApplyDropShadow(_settings);
+
 		UiStyle.StyleTopBarButton(_help);
+		UiStyle.AddHoverFeedback(_help);
+		UiStyle.ApplyDropShadow(_help);
+
 		UiStyle.StyleTopBarButton(_collections);
+		UiStyle.AddHoverFeedback(_collections);
+		UiStyle.ApplyDropShadow(_collections);
+
+		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
-		UiStyle.StyleGhostNav(_prev, _next);
+		
 	}
 }

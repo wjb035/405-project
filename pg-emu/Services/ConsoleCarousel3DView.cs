@@ -726,7 +726,6 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
     // Handle when the mouse is clicked or draggged, kills velocity so it doesnt drift when you drag
     public override void _GuiInput(InputEvent e)
     {
-        GD.Print($"GuiInput: {e.GetType().Name}");
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {
             if (mb.Position.Y < 70f)

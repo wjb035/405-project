@@ -31,11 +31,15 @@ public partial class Collections : Control
 	private Button _selectPlatform;
 	private Button _back;
 	private Button _friends;
+	private Button _inbox = null!;
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
 	private Button _collectionPrompt;
 	private LineEdit _lineEdit;
+	
+	// Friend Inbox popup
+	[Export] public FriendInbox FriendInboxPopup;
 
 	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
@@ -74,6 +78,7 @@ public partial class Collections : Control
 		_selectedTitle = GetNode<Label>("Margin/Root/CenterArea/SelectedTitle");
 		_status = GetNode<Label>("Margin/Root/Status");
 		_selectPlatform = GetNode<Button>("Margin/Root/CenterArea/BottomRow/BtnSelect");
+		_inbox = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnInbox");
 		_collectionPrompt = GetNode<Button>("Margin/Root/CenterArea/FriendsRow/CollectionPrompt");
 		_lineEdit = GetNode<LineEdit>("Margin/Root/CenterArea/CarouselArea/LineEdit");
 		_lineEdit.Visible = false;
@@ -94,6 +99,7 @@ public partial class Collections : Control
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
+		_inbox.Pressed += OnInboxPressed;
 
 		// background transition
 		StartBackgroundTransition();
@@ -205,6 +211,11 @@ private void OnAnyButtonPressed()
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://profile.tscn");
+	}
+	
+	private void OnInboxPressed()
+	{
+		FriendInboxPopup.ShowPopup();
 	}
 	
 	private void OnAchPressed(){
@@ -809,18 +820,51 @@ private void OnAnyButtonPressed()
 	private void ApplyAesthetic()
 	{
 		// Collections uses the same button/label treatment as Home and GameSelect for consistency.
+		// Nav buttons
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
+		UiStyle.StyleGhostNav(_prev, _next);
+
+		// Primary actions
 		UiStyle.StylePrimaryButton(_selectPlatform);
-		UiStyle.StylePrimaryButton(GetNodeOrNull<Button>("Margin/Root/CenterArea/FriendsRow/CollectionPrompt"));
+		UiStyle.AddHoverFeedback(_selectPlatform);
+		UiStyle.ApplyDropShadow(_selectPlatform);
+
+		var collectionPrompt = GetNodeOrNull<Button>("Margin/Root/CenterArea/FriendsRow/CollectionPrompt");
+		UiStyle.StylePrimaryButton(collectionPrompt);
+		UiStyle.AddHoverFeedback(collectionPrompt);
+		UiStyle.ApplyDropShadow(collectionPrompt);
+
+		// Top bar buttons
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyDropShadow(_back);
+
 		UiStyle.StyleTopBarButton(_friends);
+		UiStyle.AddHoverFeedback(_friends);
+		UiStyle.ApplyDropShadow(_friends);
+
 		UiStyle.StyleTopBarButton(_chat);
+		UiStyle.AddHoverFeedback(_chat);
+		UiStyle.ApplyDropShadow(_chat);
+
 		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.AddHoverFeedback(_settings);
+		UiStyle.ApplyDropShadow(_settings);
+
+		UiStyle.StyleTopBarButton(_inbox);
+		UiStyle.AddHoverFeedback(_inbox);
+		UiStyle.ApplyDropShadow(_inbox);
+
 		UiStyle.StyleTopBarButton(_help);
+		UiStyle.AddHoverFeedback(_help);
+		UiStyle.ApplyDropShadow(_help);
+
+		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
+
+		// Input
 		UiStyle.StyleLineEdit(_lineEdit);
-		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }

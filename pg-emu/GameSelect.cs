@@ -29,7 +29,6 @@ public partial class GameSelect : Control
 	[Export] public NodePath AddPath;
 	[Export] public NodePath FlipPath;
 
-
 	// Prefab for a single carousel card.
 	[Export] public PackedScene CardScene;
 
@@ -46,6 +45,8 @@ public partial class GameSelect : Control
 	private Button _play = null!;
 	private Button _settings = null!;
 	private Button _friends = null!;
+	private Button _inbox = null!;
+	private Button _collections = null;
 	private Button _add = null!;
 	private Button _chat = null!;
 	private Button _help = null!;
@@ -57,6 +58,9 @@ public partial class GameSelect : Control
 	private ScrollContainer _gridScroll = null!;
 	private GridContainer _gridRows = null!;
 	OptionButton _optionButton = new OptionButton();
+	
+	// Friend Inbox popup
+	[Export] public FriendInbox FriendInboxPopup;
 	
 	private Button _achievement = null!;
 
@@ -136,6 +140,8 @@ public partial class GameSelect : Control
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
+		_collections = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnCollections");
+		_inbox = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnInbox");
 		_friends = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
 		_chat = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
 		_help = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
@@ -174,6 +180,8 @@ public partial class GameSelect : Control
 		_help.Pressed += OnHelpPressed;
 		_add.Pressed += addToCollection;
 		_flip.Pressed += () => _carousel3D?.FlipSelected();
+		_inbox.Pressed += OnInboxPressed;
+		_collections.Pressed += OnCollectionsPressed;
 
 		ApplyAesthetic();
 		
@@ -333,6 +341,20 @@ private void OnAnyButtonPressed()
 		AchievementStorage.gameName = GetSelectedGame().Name;
 		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
 		GetTree().ChangeSceneToFile("res://Achievements.tscn");
+	}
+	
+	private void OnCollectionsPressed(){
+		AudioManager.Instance?.PlayNavigation(1);
+		
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+		tree.ChangeSceneToFile("res://Collections.tscn");
+		
+	}
+	
+	private void OnInboxPressed()
+	{
+		FriendInboxPopup.ShowPopup();
 	}
 
 	private void PlaySelected()
@@ -3088,21 +3110,65 @@ private void OnAnyButtonPressed()
 	private void ApplyAesthetic()
 	{
 		// Match game selection controls to the same launcher palette and contrast rules.
+		// Nav buttons
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
+		UiStyle.StyleGhostNav(_prev, _next);
+
+		// Primary actions
 		UiStyle.StylePrimaryButton(_play);
+		UiStyle.AddHoverFeedback(_play);
+		UiStyle.ApplyDropShadow(_play);
+
+		// Top bar buttons
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyDropShadow(_back);
+
 		UiStyle.StyleTopBarButton(_settings);
+		UiStyle.AddHoverFeedback(_settings);
+		UiStyle.ApplyDropShadow(_settings);
+
 		UiStyle.StyleTopBarButton(_achievement);
-		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnFriends"));
-		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnChat"));
-		UiStyle.StyleTopBarButton(GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnHelp"));
+		UiStyle.AddHoverFeedback(_achievement);
+		UiStyle.ApplyDropShadow(_achievement);
+
+		var friends = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
+		UiStyle.StyleTopBarButton(friends);
+		UiStyle.AddHoverFeedback(friends);
+		UiStyle.ApplyDropShadow(friends);
+
+		var chat = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
+		UiStyle.StyleTopBarButton(chat);
+		UiStyle.AddHoverFeedback(chat);
+		UiStyle.ApplyDropShadow(chat);
+
+		var help = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
+		UiStyle.StyleTopBarButton(help);
+		UiStyle.AddHoverFeedback(help);
+		UiStyle.ApplyDropShadow(help);
+
+		UiStyle.StyleTopBarButton(_collections);
+		UiStyle.AddHoverFeedback(_collections);
+		UiStyle.ApplyDropShadow(_collections);
+
+		UiStyle.StyleTopBarButton(_inbox);
+		UiStyle.AddHoverFeedback(_inbox);
+		UiStyle.ApplyDropShadow(_inbox);
+
+		// Nav action buttons
+		UiStyle.StyleNavButton(_add);
+		UiStyle.AddHoverFeedback(_add);
+		UiStyle.ApplyDropShadow(_add);
+
+		UiStyle.StyleNavButton(_flip);
+		UiStyle.AddHoverFeedback(_flip);
+		UiStyle.ApplyDropShadow(_flip);
+
+		// Labels
 		UiStyle.StyleTitleLabel(_title);
 		UiStyle.StyleMetaLabel(_metaLeft);
 		UiStyle.StyleMetaLabel(_metaRight);
-		UiStyle.StyleNavButton(_add);
-		UiStyle.StyleNavButton(_flip);
 		UiStyle.StyleStatusLabel(_status);
-		UiStyle.StyleGhostNav(_prev, _next);
 	}
 }

@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://cwnetad1wffaa"]
 
 [ext_resource type="Script" uid="uid://c0le7af1n38k6" path="res://GameSelect.cs" id="1"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_ak8ya"]
 [ext_resource type="PackedScene" path="res://game_cover_card.tscn" id="2"]
 [ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://TopBar.gdshader" id="3_cja7x"]
+[ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="4_rhyj1"]
 [ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://BottomBar.gdshader" id="4_xj10s"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="5_xj10s"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="6_xsmlm"]
@@ -11,8 +13,10 @@
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="8_xj10s"]
 [ext_resource type="Texture2D" uid="uid://bobd3jxfhdbun" path="res://Images/trophy icon thin.png" id="9_xsmlm"]
 [ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="10_2kom7"]
+[ext_resource type="Texture2D" uid="uid://bq07ny6383rl0" path="res://Images/folders icon thin.png" id="11_2kom7"]
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="11_rhyj1"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="12_ak8ya"]
+[ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="12_rhyj1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_scx6q"]
 shader = ExtResource("3_cja7x")
@@ -30,13 +34,14 @@ shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
 shader_parameter/fade_strength = 0.47200002242
 shader_parameter/highlight_thickness = 0.02
 
-[node name="GameSelect" type="Control" unique_id=1241405706]
+[node name="GameSelect" type="Control" unique_id=1241405706 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_ak8ya")
 script = ExtResource("1")
 CardsPath = NodePath("Margin/Root/CenterArea/CarouselArea/Cards")
 PrevPath = NodePath("Margin/Root/CenterArea/BtnPrev")
@@ -51,6 +56,7 @@ SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 AddPath = NodePath("Margin/Root/CenterArea/HBoxContainer/Add")
 FlipPath = NodePath("Margin/Root/CenterArea/BtnFlip")
 CardScene = ExtResource("2")
+FriendInboxPopup = NodePath("Inbox")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2052701266]
 visible = false
@@ -69,6 +75,9 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 52.0
 grow_horizontal = 2
+
+[node name="Inbox" parent="." unique_id=873650772 instance=ExtResource("4_rhyj1")]
+position = Vector2i(237, 0)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2126406105]
 layout_mode = 1
@@ -259,6 +268,20 @@ layout_mode = 2
 layout_mode = 2
 text = "         "
 icon = ExtResource("9_xsmlm")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnCollections" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=2129456490]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("11_2kom7")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnInbox" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1627789945]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("12_rhyj1")
 icon_alignment = 1
 expand_icon = true
 

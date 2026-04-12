@@ -210,6 +210,103 @@ public static class UiStyle
         GD.Print(button.PivotOffset, " vs ", button.Size);
     }
     
+    // Drop shadow
+    public static void ApplyDropShadow(Control control, 
+	    float offsetX = 0f, float offsetY = 4f,
+	    float blur = 2, Color? color = null)
+    {
+	    var shadowColor = color ?? new Color(0.01f, 0.01f, 0.03f, 0.4f);
+	    
+	    string[] states = { "normal", "hover", "pressed", "focus", "disabled" };
+	    
+	    if (control is Button button)
+	    {
+		    foreach (var state in states)
+		    {
+			    if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
+				    continue;
+			    var styled = (StyleBoxFlat)flat.Duplicate();
+			    styled.ShadowColor = shadowColor;
+			    styled.ShadowSize = (int)blur;
+			    styled.ShadowOffset = new Vector2(offsetX, offsetY);
+			    button.AddThemeStyleboxOverride(state, styled);
+		    }
+		    return;
+
+	    }
+	    if (control.GetThemeStylebox("panel") is StyleBoxFlat panelFlat)
+	    {
+		    var styled = (StyleBoxFlat)panelFlat.Duplicate();
+		    styled.ShadowColor = shadowColor;
+		    styled.ShadowSize = (int)blur;
+		    styled.ShadowOffset = new Vector2(offsetX, offsetY);
+		    control.AddThemeStyleboxOverride("panel", styled);
+	    }
+    }
+    
+    // Feedback on hover, wil adjust as needed
+    public static void AddHoverFeedback(Button button, 
+	    float scaleUp = 1.08f, float duration = 0.12f)
+    
+    {
+	    _ = FixPivotNextFrame(button);
+	    button.Resized += () => button.PivotOffset = button.Size / 2f;
+	    
+	    Tween? activeTween = null;
+	    
+	    button.MouseEntered += () =>
+	    {
+		    activeTween?.Kill();
+		    activeTween = button.CreateTween();
+		    activeTween.SetTrans(Tween.TransitionType.Cubic);
+		    activeTween.SetEase(Tween.EaseType.Out);
+		    activeTween.TweenProperty(button, "scale", 
+			    new Vector2(scaleUp, scaleUp), duration);
+	    };
+
+	    button.MouseExited += () =>
+	    {
+		    activeTween?.Kill();
+		    activeTween = button.CreateTween();
+		    activeTween.SetTrans(Tween.TransitionType.Elastic);
+		    activeTween.SetEase(Tween.EaseType.InOut);
+		    activeTween.TweenProperty(button, "scale", 
+			    Vector2.One, 0.3f);
+	    };
+
+	    button.ButtonDown += () =>
+	    {
+		    activeTween?.Kill();
+		    activeTween = button.CreateTween();
+		    activeTween.SetTrans(Tween.TransitionType.Cubic);
+		    activeTween.SetEase(Tween.EaseType.Out);
+		    activeTween.TweenProperty(button, "scale",
+			    new Vector2(scaleUp * 0.9f, scaleUp * 0.9f), 0.08f);
+	    };
+
+	    button.ButtonUp += () =>
+	    {
+		    activeTween?.Kill();
+		    activeTween = button.CreateTween();
+		    activeTween.SetTrans(Tween.TransitionType.Cubic);
+		    activeTween.SetEase(Tween.EaseType.Out);
+		    activeTween.TweenProperty(button, "scale", new Vector2(scaleUp, scaleUp), duration);
+	    };
+    }
+    
+    // Keeps the shaodw from growing
+    private static void UpdateShadow(Button button, float offsetX, float offsetY)
+    {
+	    string[] states = { "normal", "hover", "pressed", "focus", "disabled" };
+	    foreach (var state in states)
+	    {
+		    if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
+			    continue;
+		    flat.ShadowOffset = new Vector2(offsetX, offsetY);
+		    button.AddThemeStyleboxOverride(state, flat);
+	    }
+    }
+    
     private static async System.Threading.Tasks.Task FixPivotNextFrame(Button button)
     {
         await button.ToSignal(button.GetTree(), SceneTree.SignalName.ProcessFrame);

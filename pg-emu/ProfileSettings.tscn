@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://ht73q5hq63an"]
 
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dydam"]
 [ext_resource type="Script" uid="uid://dt84s428syeu" path="res://ProfileSettings.cs" id="1_vlvp3"]
 
 [node name="ProfileSettings" type="Control" unique_id=1173785683]
@@ -9,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_dydam")
 script = ExtResource("1_vlvp3")
 UsernameEditPath = NodePath("Margin/Root/SetUsernameContainer/UsernameEditBox")
 UsernameSaveButtonPath = NodePath("Margin/Root/SetUsernameContainer/SaveNewUsername")
