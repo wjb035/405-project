@@ -949,6 +949,10 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_searchBarButton);
 		UiStyle.AddHoverFeedback(_searchBarButton);
 		UiStyle.ApplyParallaxShadow(_searchBarButton);
+		
+		UiStyle.StyleTopBarButton(_music);
+		UiStyle.AddHoverFeedback(_music);
+		UiStyle.ApplyParallaxShadow(_music);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);

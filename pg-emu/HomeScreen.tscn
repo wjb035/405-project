@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
 [ext_resource type="Texture2D" uid="uid://b3x0d5xxdxg5b" path="res://Images/search icon thin.png" id="7_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://bq07ny6383rl0" path="res://Images/folders icon thin.png" id="8_1lj82"]
+[ext_resource type="Texture2D" uid="uid://5v7pvjfws8vk" path="res://Images/music icon.png" id="9_3gr8a"]
 [ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="9_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="10_iw72c"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="11_1lj82"]
@@ -55,24 +56,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_iw72c")
 script = ExtResource("1")
-<<<<<<< Updated upstream
-SearchBarText = NodePath("Margin/Root/TopBar/HBoxContainer/Panel/UserSearchBar")
-SearchBarButton = NodePath("Margin/Root/TopBar/HBoxContainer/UserSearchButton")
-PrevPath = NodePath("Margin/Root/CenterArea/BtnPrev")
-NextPath = NodePath("Margin/Root/CenterArea/BtnNext")
-SelectedTitlePath = NodePath("Margin/Root/CenterArea/SelectedTitle")
-StatusPath = NodePath("Margin/Root/Status")
-SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
-LogoutPath = NodePath("Margin/Root/TopBar/BtnLogout")
-FriendsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnFriends")
-InboxPath = NodePath("Margin/Root/TopBar/TopIcons/BtnInbox")
-MusicPath = NodePath("Margin/Root/TopBar/TopIcons/BtnMusic")
-ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
-SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
-HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
-CollectionsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnCollections")
-CarouselAreaPath = NodePath("Margin/Root/CenterArea/CarouselArea")
-=======
 SearchBarText = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/SearchPanel/UserSearchBar")
 SearchBarButton = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/UserSearchButton")
 PrevPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnPrev")
@@ -83,12 +66,12 @@ SelectPlatformPath = NodePath("Margin/Root/CenterArea/Mid2/BottomRow/BtnSelect")
 LogoutPath = NodePath("Margin/Root/Foreground1/TopBar/BtnLogout")
 FriendsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnFriends")
 InboxPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnInbox")
+MusicPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnMusic")
 ChatPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnChat")
 SettingsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnHelp")
 CollectionsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnCollections")
 CarouselAreaPath = NodePath("Margin/Root/CenterArea/Mid1/CarouselArea")
->>>>>>> Stashed changes
 FriendInboxPopup = NodePath("Inbox")
 
 [node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
@@ -192,6 +175,13 @@ size_flags_vertical = 0
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/Foreground1/TopBar" unique_id=1808037778]
 layout_mode = 2
 
+[node name="BtnMusic" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1136499750]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+icon = ExtResource("9_3gr8a")
+icon_alignment = 1
+expand_icon = true
+
 [node name="BtnCollections" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1554411540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
@@ -233,10 +223,6 @@ layout_mode = 2
 icon = ExtResource("12_oy6yd")
 icon_alignment = 1
 expand_icon = true
-
-[node name="BtnMusic" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1136499750]
-layout_mode = 2
-text = "Music"
 
 [node name="CenterArea" type="Control" parent="Margin/Root" unique_id=272406048]
 anchors_preset = 0
