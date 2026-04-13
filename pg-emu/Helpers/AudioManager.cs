@@ -51,6 +51,14 @@ public partial class AudioManager : Node
 			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
 	
+	public void MusicPlay(string path){
+		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
+		AudioStream newTrack = GD.Load<AudioStream>(path);
+		 _musicPlayer.Stream = newTrack;
+		_musicPlayer.Play();
+	}
+	
+	
 	private void OnMusicFinished(){
 		_musicPlayer.Play();
 	}

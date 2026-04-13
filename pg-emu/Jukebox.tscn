@@ -11,6 +11,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_u3ngx")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+PrevPath = NodePath("Margin/Root/Body/Prev")
+NextPath = NodePath("Margin/Root/Body/Next")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2051625939]
 layout_mode = 1
@@ -52,6 +54,17 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 alignment = 1
+
+[node name="Prev" type="Button" parent="Margin/Root/Body" unique_id=91526355]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Prev"
+
+[node name="Next" type="Button" parent="Margin/Root/Body" unique_id=198910844]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Next
+"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body" unique_id=2054835221]
 layout_mode = 2

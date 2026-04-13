@@ -4,6 +4,7 @@ using System.IO;
 using PGEmu.app;
 using PGEmu.Services;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 public partial class Jukebox : Control
 {
@@ -11,53 +12,53 @@ public partial class Jukebox : Control
 
 	// NodePaths assigned in vault.tscn, keeps UI wiring in-editor instead of hardcoding node strings.
 	[Export] public NodePath BackPath;
-	[Export] public NodePath LibraryPathEditPath;
-	[Export] public NodePath BrowsePath;
-	[Export] public NodePath SavePath;
-	[Export] public NodePath StatusPath;
-	[Export] public NodePath FileDialogPath;
+	[Export] public NodePath PrevPath;
+	[Export] public NodePath NextPath;
 
 	// Cached scene nodes, resolved in _Ready().
 	private Button _back = null!;
-	private LineEdit _libraryPathEdit = null!;
-	private Button _browse = null!;
-	private Button _save = null!;
-	private Label _status = null!;
-	private FileDialog _fileDialog = null!;
-
-	// Config data and paths.
-	private AppConfig _config = new();          // In-memory config (loaded or default).
-	private string? _configPath;                // Base config.json path (shared).
-	private string? _localConfigPath;           // config.local.json path (user overrides).
-
+	private Button _prev= null!;
+	private Button _next = null!;
+	public int currentIndex = -1;
+	public List<String> results = null;
+	private AudioManager audioMan;
 	public override void _Ready()
 	{
 		
 		
 		// Resolve NodePaths into actual nodes.
 		_back = GetNode<Button>(BackPath);
-		_libraryPathEdit = GetNode<LineEdit>(LibraryPathEditPath);
-		_browse = GetNode<Button>(BrowsePath);
-		_save = GetNode<Button>(SavePath);
-		_status = GetNode<Label>(StatusPath);
-		_fileDialog = GetNode<FileDialog>(FileDialogPath);
+		_prev = GetNode<Button>(PrevPath);
+		_next = GetNode<Button>(NextPath);
 
 		VBoxContainer container = GetNode<VBoxContainer>("Margin/Root/Body/ScrollContainer/ButtonContainer");
 		GD.Print("hi from after container");
 
 		ApplyThemeAesthetic();
-
+		audioMan = GetNode<AudioManager>("/root/AudioManager");
 		if (_back != null) _back.Pressed += GoBack;
-
-		for (int i = 0; i < PlatformList.platformList.Count; i++)
+		if (_next != null) _next.Pressed += NextSong;
+		if (_prev != null) _prev.Pressed += PrevSong;
+		results = FindMusic();
+		
+		
+		//int currentIndex = -1;
+		for (int i = 0; i < results.Count; i++)
 		{
 			Button btn = new Button();
-			var platform = PlatformList.platformList[i];
-			btn.Text = platform.Name;
+			var title = results[i];
+			int index = i;
+			
+			btn.Text = Regex.Replace(title, ".mp3$", "");
 			btn.CustomMinimumSize = new Vector2(300, 80);
 
 			UiStyle.StyleTopBarButton(btn);  
-			btn.Pressed += () => Launcher.LaunchEmulator(PlatformList._configuration, platform);
+			btn.Pressed += () => 
+			{
+				currentIndex = index;
+				audioMan.MusicPlay("res://JukeboxMusic/" + title);
+			};
+			
 			container.AddChild(btn);
 		}
 
@@ -65,20 +66,27 @@ public partial class Jukebox : Control
 		foreach (var p in PlatformList.platformList){
 			GD.Print(p.Name);
 		}
-		FindMusic();
-
-
-
-
-		
-GD.Print("Container children: ", container.GetChildCount());
-		// Load existing config (or initialize defaults) and populate the UI.
-		
-		
 		
 	}
 
-	public void FindMusic(){
+	public void NextSong(){
+		if (currentIndex != -1){
+			currentIndex+=1;
+			currentIndex = currentIndex % results.Count;
+			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
+		}
+	}
+	public void PrevSong(){
+		if (currentIndex != -1){
+			currentIndex=currentIndex+results.Count-1;
+			currentIndex = currentIndex % results.Count;
+			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
+		}
+	}
+
+	public List<String> FindMusic(){
+		
+		List<String> result = new();
 		using var dir = DirAccess.Open("res://JukeboxMusic/");
 		if (dir != null)
 	{
@@ -89,13 +97,15 @@ GD.Print("Container children: ", container.GetChildCount());
 		{
 			
 			if (Regex.IsMatch(fileName, @"^.*\.mp3$", RegexOptions.IgnoreCase)){
-				GD.Print($"Found file: {fileName}");
+				//GD.Print($"Found file: {fileName}");
+				result.Add(fileName);
 			}
 			
 			
 			fileName = dir.GetNext();
 		}
 	}
+		return result;
 	}
 
 
@@ -119,12 +129,6 @@ GD.Print("Container children: ", container.GetChildCount());
 			hint.Text = "Set your library root or your games folder.";
 		UiStyle.StyleMetaLabel(hint);
 
-		UiStyle.StyleLineEdit(_libraryPathEdit);
-		UiStyle.StylePrimaryButton(_browse);
-		UiStyle.StylePrimaryButton(_save);
-		UiStyle.TightenButtonContentPadding(_browse, horizontal: 6f, vertical: 2f);
-		UiStyle.TightenButtonContentPadding(_save, horizontal: 6f, vertical: 2f);
-		UiStyle.StyleStatusLabel(_status);
 	}
 
 	private void GoBack()
