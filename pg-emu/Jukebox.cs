@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using PGEmu.app;
 using PGEmu.Services;
+using System.Text.RegularExpressions;
 
 public partial class Jukebox : Control
 {
@@ -64,7 +65,7 @@ public partial class Jukebox : Control
 		foreach (var p in PlatformList.platformList){
 			GD.Print(p.Name);
 		}
-
+		FindMusic();
 
 
 
@@ -76,6 +77,28 @@ GD.Print("Container children: ", container.GetChildCount());
 		
 		
 	}
+
+	public void FindMusic(){
+		using var dir = DirAccess.Open("res://JukeboxMusic/");
+		if (dir != null)
+	{
+		dir.ListDirBegin();
+		string fileName = dir.GetNext();
+		 
+		while (fileName != "")
+		{
+			
+			if (Regex.IsMatch(fileName, @"^.*\.mp3$", RegexOptions.IgnoreCase)){
+				GD.Print($"Found file: {fileName}");
+			}
+			
+			
+			fileName = dir.GetNext();
+		}
+	}
+	}
+
+
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
