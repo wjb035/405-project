@@ -63,6 +63,7 @@ SelectPlatformPath = NodePath("Margin/Root/CenterArea/BottomRow/BtnSelect")
 LogoutPath = NodePath("Margin/Root/TopBar/BtnLogout")
 FriendsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnFriends")
 InboxPath = NodePath("Margin/Root/TopBar/TopIcons/BtnInbox")
+MusicPath = NodePath("Margin/Root/TopBar/TopIcons/BtnMusic")
 ChatPath = NodePath("Margin/Root/TopBar/TopIcons/BtnChat")
 SettingsPath = NodePath("Margin/Root/TopBar/TopIcons/BtnSettings")
 HelpPath = NodePath("Margin/Root/TopBar/TopIcons/BtnHelp")
@@ -192,6 +193,10 @@ layout_mode = 2
 icon = ExtResource("12_oy6yd")
 icon_alignment = 1
 expand_icon = true
+
+[node name="BtnMusic" type="Button" parent="Margin/Root/TopBar/TopIcons" unique_id=1136499750]
+layout_mode = 2
+text = "Music"
 
 [node name="CenterArea" type="Control" parent="Margin/Root" unique_id=272406048]
 layout_mode = 2

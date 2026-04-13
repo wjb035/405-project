@@ -24,6 +24,7 @@ public partial class HomeScreen : Control
 	[Export] public NodePath LogoutPath;
 	[Export] public NodePath FriendsPath;
 	[Export] public NodePath InboxPath;
+	[Export] public NodePath MusicPath;
 	[Export] public NodePath ChatPath;
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath HelpPath;
@@ -48,6 +49,7 @@ public partial class HomeScreen : Control
 	private Button _settings;
 	private Button _help;
 	private Button _collections;
+	private Button _music;
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
 	private Control _carouselArea;
@@ -102,6 +104,7 @@ public partial class HomeScreen : Control
 		_settings = GetNodeOrNull<Button>(SettingsPath);
 		_help = GetNodeOrNull<Button>(HelpPath);
 		_collections = GetNodeOrNull<Button>(CollectionsPath);
+		_music = GetNodeOrNull<Button>(MusicPath);
 		
 		ApplyAesthetic();
 
@@ -128,6 +131,7 @@ public partial class HomeScreen : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
+		if (_music != null) _music.Pressed += OnMusicPressed;
 		if (_collections != null && !_collections.IsConnected(Button.SignalName.Pressed, Callable.From(OnCollectionsPressed)))
 			_collections.Pressed += OnCollectionsPressed;
 		
@@ -420,6 +424,14 @@ private void OnAnyButtonPressed()
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		tree.ChangeSceneToFile("res://profile.tscn");
+	}
+	
+	private void OnMusicPressed()
+	{
+		AudioManager.Instance?.PlayNavigation(1);
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+		tree.ChangeSceneToFile("res://Jukebox.tscn");
 	}
 	
 	private void OnAchPressed(){
