@@ -596,14 +596,20 @@ public partial class Profile : Control
 		var separatorColor = new Color(0.70f, 0.62f, 0.90f, 0.24f);
 
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyParallaxShadow(_back);
 		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
 		UiStyle.StylePopupMenu(_visibilityToggle.GetPopup());
 		UiStyle.StyleTopBarButton(_profileSettingsShortcut);
+		UiStyle.AddHoverFeedback(_profileSettingsShortcut);
+		UiStyle.ApplyParallaxShadow(_profileSettingsShortcut);
 		UiStyle.TightenButtonContentPadding(_profileSettingsShortcut, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_profileSettingsShortcut, chipSurface, friendsAccent, isChip: true);
 
 		UiStyle.StyleOptionButton(_visibilityToggle);
+		UiStyle.AddHoverFeedback(_visibilityToggle);
+		UiStyle.ApplyParallaxShadow(_visibilityToggle);
 		UiStyle.TightenButtonContentPadding(_visibilityToggle, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_visibilityToggle, chipSurface, chipAccent, isChip: true);
 

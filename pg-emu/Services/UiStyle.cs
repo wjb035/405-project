@@ -35,10 +35,10 @@ public static class UiStyle
 	public static void StyleTopBarButton(Button? button)
 	{
 		if (button == null) return;
-		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(new Color(0.18f, 0.14f, 0.27f, 0.75f), new Color(0.64f, 0.54f, 0.82f, 0.7f), 1));
+		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(new Color(0.18f, 0.14f, 0.27f, 0.75f), new Color(0.64f, 0.54f, 0.82f, 0.7f), 2));
 		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(new Color(0.24f, 0.19f, 0.35f, 0.9f), new Color(0.88f, 0.72f, 1f, 0.95f), 2));
 		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(new Color(0.15f, 0.12f, 0.23f, 0.92f), new Color(0.79f, 0.62f, 1f, 1f), 2));
-		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(new Color(0.22f, 0.17f, 0.31f, 0.92f), new Color(0.76f, 0.90f, 1f, 1f), 2));
+		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(new Color(0.22f, 0.17f, 0.31f, 0.92f), new Color(0.76f, 0.90f, 1f, 1f), 3));
 		button.AddThemeStyleboxOverride("disabled", CreateButtonStyle(new Color(0.20f, 0.20f, 0.23f, 0.55f), new Color(0.52f, 0.52f, 0.56f, 0.5f), 1));
 		button.AddThemeColorOverride("font_color", TextColor);
 		button.AddThemeColorOverride("font_hover_color", TextColor);
@@ -118,10 +118,26 @@ public static class UiStyle
 		lineEdit.AddThemeColorOverride("caret_color", new Color(0.89f, 0.84f, 1f, 1f));
 	}
 
+	public static void StyleTextEdit(TextEdit? textEdit)
+	{
+		if (textEdit == null) return;
+		textEdit.AddThemeStyleboxOverride("normal", CreateButtonStyle(new Color(0.10f, 0.10f, 0.16f, 0.9f), new Color(0.66f, 0.60f, 0.85f, 0.8f), 1));
+		textEdit.AddThemeStyleboxOverride("focus", CreateButtonStyle(new Color(0.12f, 0.11f, 0.18f, 0.95f), new Color(0.76f, 0.90f, 1f, 1f), 2));
+		textEdit.AddThemeStyleboxOverride("read_only", CreateButtonStyle(new Color(0.08f, 0.08f, 0.12f, 0.7f), new Color(0.42f, 0.40f, 0.55f, 0.5f), 1));
+		textEdit.AddThemeColorOverride("font_color", TextColor);
+		textEdit.AddThemeColorOverride("font_placeholder_color", new Color(0.78f, 0.76f, 0.88f, 0.45f));
+		textEdit.AddThemeColorOverride("caret_color", new Color(0.89f, 0.84f, 1f, 1f));
+		textEdit.AddThemeColorOverride("selection_color", new Color(0.44f, 0.31f, 0.70f, 0.45f));
+		textEdit.AddThemeColorOverride("font_readonly_color", new Color(0.72f, 0.70f, 0.82f, 0.6f));
+	}
+	
 	public static void StyleOptionButton(OptionButton? optionButton)
 	{
 		if (optionButton == null) return;
 		StylePrimaryButton(optionButton);
+		optionButton.AddThemeColorOverride("font_color", TextColor);
+		optionButton.AddThemeIconOverride("arrow", 
+			optionButton.GetThemeIcon("arrow"));
 	}
 
     // Single helper that keeps radius/border/content margins consistent for all controls.
@@ -215,9 +231,9 @@ public static class UiStyle
 	    float offsetX = 0f, float offsetY = 4f,
 	    float blur = 2, Color? color = null)
     {
-	    var shadowColor = color ?? new Color(0.01f, 0.01f, 0.03f, 0.4f);
+	    var shadowColor = color ?? new Color(0.01f, 0.01f, 0.03f, 0.36f);
 	    
-	    string[] states = { "normal", "hover", "pressed", "focus", "disabled" };
+	    string[] states = { "normal", "hover", "pressed", "focus", "disabled", "normal_mirrored", "hover_mirrored" };
 	    
 	    if (control is Button button)
 	    {
@@ -244,11 +260,30 @@ public static class UiStyle
 	    }
     }
     
+    public static void ApplyParallaxShadow(Control control, float blur = 2f, float offsetY = 3f, Color? color = null)
+    {
+	    async void Apply()
+	    {
+		    await control.ToSignal(control.GetTree(), SceneTree.SignalName.ProcessFrame);
+        
+		    var screenWidth = control.GetViewport().GetVisibleRect().Size.X;
+		    var centerX = control.GlobalPosition.X + control.Size.X * 0.5f;
+		    var t = (centerX / screenWidth) * 2f - 1f; // -1 left, +1 right
+		    
+		    var offsetX = t * 3f;
+        
+		    ApplyDropShadow(control, offsetX, offsetY, blur, color);
+	    }
+	    Apply();
+    }
+    
+    
     // Feedback on hover, wil adjust as needed
     public static void AddHoverFeedback(Button button, 
 	    float scaleUp = 1.08f, float duration = 0.12f)
     
     {
+	    
 	    _ = FixPivotNextFrame(button);
 	    button.Resized += () => button.PivotOffset = button.Size / 2f;
 	    
@@ -271,7 +306,7 @@ public static class UiStyle
 		    activeTween.SetTrans(Tween.TransitionType.Elastic);
 		    activeTween.SetEase(Tween.EaseType.InOut);
 		    activeTween.TweenProperty(button, "scale", 
-			    Vector2.One, 0.3f);
+			    Vector2.One, 0.16f);
 	    };
 
 	    button.ButtonDown += () =>
@@ -294,18 +329,6 @@ public static class UiStyle
 	    };
     }
     
-    // Keeps the shaodw from growing
-    private static void UpdateShadow(Button button, float offsetX, float offsetY)
-    {
-	    string[] states = { "normal", "hover", "pressed", "focus", "disabled" };
-	    foreach (var state in states)
-	    {
-		    if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
-			    continue;
-		    flat.ShadowOffset = new Vector2(offsetX, offsetY);
-		    button.AddThemeStyleboxOverride(state, flat);
-	    }
-    }
     
     private static async System.Threading.Tasks.Task FixPivotNextFrame(Button button)
     {

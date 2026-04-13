@@ -1108,7 +1108,7 @@ public partial class GameCarousel3DView : SubViewportContainer
             if (d < -_count * 0.5f) d += _count;
 
             var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.5f);
-            var alpha = Mathf.Lerp(1.0f, 0.4f, t);
+            var alpha = Mathf.Lerp(1.0f, 0.55f, t);
 
             box.Position = new Vector3(d * Spacing, 0f, -t * 1.2f);
             

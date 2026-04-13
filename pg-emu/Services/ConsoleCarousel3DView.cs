@@ -144,21 +144,23 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         
         // Ground for recieving shadows
         var ground = new MeshInstance3D();
-        ground.Mesh = new PlaneMesh { Size = new Vector2(200f, 50f) };
+        ground.Mesh = new PlaneMesh { Size = new Vector2(250f, 50f) };
         // position below the consoles
-        ground.Position = new Vector3(0, -1.2f, 2f); 
+        ground.Position = new Vector3(-30f, -1.2f, 2f); 
         ground.RotateX(Mathf.DegToRad(-4f));
-        
+
         var groundMat = new StandardMaterial3D
         {
             AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.5f),
-            Roughness = 1f, 
+            Roughness = 1f,
             // ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha
             // ShadowToOpacity = true,
         };
+           
         ground.SetSurfaceOverrideMaterial(0, groundMat);
         ground.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        ground.MaterialOverlay = null;
         _sceneRoot.AddChild(ground);
         
         // Aliasing

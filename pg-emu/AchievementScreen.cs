@@ -226,5 +226,7 @@ if (iconsAndAchData.Count == 0){
 		var title = GetNodeOrNull<Label>("Bg/Margin/Root/TopBar/Title");
 		UiStyle.StyleTitleLabel(title);
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyParallaxShadow(_back);
 	}
 }

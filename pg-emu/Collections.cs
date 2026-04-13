@@ -72,18 +72,18 @@ public partial class Collections : Control
 	{
 		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
-		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/CarouselArea/Cards");
-		_prev = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnPrev");
-		_next = GetNode<Button>("Margin/Root/CenterArea/CarouselArea/BtnNext");
-		_selectedTitle = GetNode<Label>("Margin/Root/CenterArea/SelectedTitle");
-		_status = GetNode<Label>("Margin/Root/Status");
-		_selectPlatform = GetNode<Button>("Margin/Root/CenterArea/BottomRow/BtnSelect");
-		_inbox = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnInbox");
-		_collectionPrompt = GetNode<Button>("Margin/Root/CenterArea/FriendsRow/CollectionPrompt");
-		_lineEdit = GetNode<LineEdit>("Margin/Root/CenterArea/CarouselArea/LineEdit");
+		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/Mid1/CarouselArea/Cards");
+		_prev = GetNode<Button>("Margin/Root/CenterArea/Foreground2/BtnPrev");
+		_next = GetNode<Button>("Margin/Root/CenterArea/Foreground2/BtnNext");
+		_selectedTitle = GetNode<Label>("Margin/Root/CenterArea/Mid2/SelectedTitle");
+		_status = GetNode<Label>("Margin/Root/CenterArea/Mid2/Status");
+		_selectPlatform = GetNode<Button>("Margin/Root/CenterArea/Mid2/BottomRow/BtnSelect");
+		_inbox = GetNode<Button>("Margin/Root/Foreground1/TopBar/TopIcons/BtnInbox");
+		_collectionPrompt = GetNode<Button>("Margin/Root/CenterArea/Mid1/FriendsRow/CollectionPrompt");
+		_lineEdit = GetNode<LineEdit>("Margin/Root/CenterArea/Mid1/CarouselArea/LineEdit");
 		_lineEdit.Visible = false;
 
-		_back = GetNodeOrNull<Button>("Margin/Root/TopBar/BtnBack");
+		_back = GetNodeOrNull<Button>("Margin/Root/Foreground1/TopBar/BtnBack");
 		_friends = GetNodeOrNull<Button>(FriendsPath);
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
@@ -828,37 +828,36 @@ private void OnAnyButtonPressed()
 		// Primary actions
 		UiStyle.StylePrimaryButton(_selectPlatform);
 		UiStyle.AddHoverFeedback(_selectPlatform);
-		UiStyle.ApplyDropShadow(_selectPlatform);
-
-		var collectionPrompt = GetNodeOrNull<Button>("Margin/Root/CenterArea/FriendsRow/CollectionPrompt");
-		UiStyle.StylePrimaryButton(collectionPrompt);
-		UiStyle.AddHoverFeedback(collectionPrompt);
-		UiStyle.ApplyDropShadow(collectionPrompt);
+		UiStyle.ApplyParallaxShadow(_selectPlatform);
+		
+		UiStyle.StylePrimaryButton(_collectionPrompt);
+		UiStyle.AddHoverFeedback(_collectionPrompt);
+		UiStyle.ApplyParallaxShadow(_collectionPrompt);
 
 		// Top bar buttons
 		UiStyle.StyleTopBarButton(_back);
 		UiStyle.AddHoverFeedback(_back);
-		UiStyle.ApplyDropShadow(_back);
+		UiStyle.ApplyParallaxShadow(_back);
 
 		UiStyle.StyleTopBarButton(_friends);
 		UiStyle.AddHoverFeedback(_friends);
-		UiStyle.ApplyDropShadow(_friends);
+		UiStyle.ApplyParallaxShadow(_friends);
 
 		UiStyle.StyleTopBarButton(_chat);
 		UiStyle.AddHoverFeedback(_chat);
-		UiStyle.ApplyDropShadow(_chat);
+		UiStyle.ApplyParallaxShadow(_chat);
 
 		UiStyle.StyleTopBarButton(_settings);
 		UiStyle.AddHoverFeedback(_settings);
-		UiStyle.ApplyDropShadow(_settings);
+		UiStyle.ApplyParallaxShadow(_settings);
 
 		UiStyle.StyleTopBarButton(_inbox);
 		UiStyle.AddHoverFeedback(_inbox);
-		UiStyle.ApplyDropShadow(_inbox);
+		UiStyle.ApplyParallaxShadow(_inbox);
 
 		UiStyle.StyleTopBarButton(_help);
 		UiStyle.AddHoverFeedback(_help);
-		UiStyle.ApplyDropShadow(_help);
+		UiStyle.ApplyParallaxShadow(_help);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);

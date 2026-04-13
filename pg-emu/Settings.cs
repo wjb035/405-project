@@ -177,11 +177,29 @@ public partial class Settings : Control
 			sideBg.Color = new Color(0.115f, 0.093f, 0.182f, 0.94f);
 
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.ApplyParallaxShadow(_back);
+		UiStyle.AddHoverFeedback(_back);
+		
 		StyleSectionButton(_profileChoice);
+		UiStyle.ApplyParallaxShadow(_profileChoice);
+		UiStyle.AddHoverFeedback(_profileChoice);
+		
 		StyleSectionButton(_vaultChoice);
+		UiStyle.ApplyParallaxShadow(_vaultChoice);
+		UiStyle.AddHoverFeedback(_vaultChoice);
+		
 		StyleSectionButton(_appearanceChoice);
+		UiStyle.ApplyParallaxShadow(_appearanceChoice);
+		UiStyle.AddHoverFeedback(_appearanceChoice);
+		
 		StyleSectionButton(_achievementChoice);
+		UiStyle.ApplyParallaxShadow(_achievementChoice);
+		UiStyle.AddHoverFeedback(_achievementChoice);
+		
 		StyleSectionButton(_emulatorChoice);
+		UiStyle.ApplyParallaxShadow(_emulatorChoice);
+		UiStyle.AddHoverFeedback(_emulatorChoice);
+
 	}
 
 	private static void StyleSectionButton(Button button)

@@ -915,40 +915,47 @@ private void OnAnyButtonPressed()
 		// Primary actions
 		UiStyle.StylePrimaryButton(_selectPlatform);
 		UiStyle.AddHoverFeedback(_selectPlatform);
-		UiStyle.ApplyDropShadow(_selectPlatform);
+		UiStyle.ApplyParallaxShadow(_selectPlatform, offsetY: 5f);
 
 		// Top bar buttons
 		UiStyle.StyleTopBarButton(_logout);
 		UiStyle.AddHoverFeedback(_logout);
-		UiStyle.ApplyDropShadow(_logout);
+		UiStyle.ApplyParallaxShadow(_logout);
 
 		UiStyle.StyleTopBarButton(_inbox);
 		UiStyle.AddHoverFeedback(_inbox);
-		UiStyle.ApplyDropShadow(_inbox);
+		UiStyle.ApplyParallaxShadow(_inbox);
 
 		UiStyle.StyleTopBarButton(_friends);
 		UiStyle.AddHoverFeedback(_friends);
-		UiStyle.ApplyDropShadow(_friends);
+		UiStyle.ApplyParallaxShadow(_friends);
 
 		UiStyle.StyleTopBarButton(_chat);
 		UiStyle.AddHoverFeedback(_chat);
-		UiStyle.ApplyDropShadow(_chat);
+		UiStyle.ApplyParallaxShadow(_chat);
 
 		UiStyle.StyleTopBarButton(_settings);
 		UiStyle.AddHoverFeedback(_settings);
-		UiStyle.ApplyDropShadow(_settings);
+		UiStyle.ApplyParallaxShadow(_settings);
 
 		UiStyle.StyleTopBarButton(_help);
 		UiStyle.AddHoverFeedback(_help);
-		UiStyle.ApplyDropShadow(_help);
+		UiStyle.ApplyParallaxShadow(_help);
 
 		UiStyle.StyleTopBarButton(_collections);
 		UiStyle.AddHoverFeedback(_collections);
-		UiStyle.ApplyDropShadow(_collections);
+		UiStyle.ApplyParallaxShadow(_collections);
+		
+		UiStyle.StyleTopBarButton(_searchBarButton);
+		UiStyle.AddHoverFeedback(_searchBarButton);
+		UiStyle.ApplyParallaxShadow(_searchBarButton);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);
+		
+		UiStyle.StyleTextEdit(_searchBarText);
+		UiStyle.ApplyParallaxShadow(_searchBarText);
 		
 	}
 }

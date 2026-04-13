@@ -102,9 +102,16 @@ public partial class ProfileSettings : Control
 		_bioEdit.PlaceholderText = "New bio";
 
 		UiStyle.StylePrimaryButton(_usernameSave);
-		UiStyle.StylePrimaryButton(_bioSave);
-		UiStyle.StylePrimaryButton(_avatarSave);
+		UiStyle.AddHoverFeedback(_usernameSave);
+		UiStyle.ApplyParallaxShadow(_usernameSave);
 
+		UiStyle.StylePrimaryButton(_bioSave);
+		UiStyle.AddHoverFeedback(_bioSave);
+		UiStyle.ApplyParallaxShadow(_bioSave);
+
+		UiStyle.StylePrimaryButton(_avatarSave);
+		UiStyle.AddHoverFeedback(_avatarSave);
+		UiStyle.ApplyParallaxShadow(_avatarSave);
 		UiStyle.TightenButtonContentPadding(_usernameSave, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_bioSave, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_avatarSave, horizontal: 6f, vertical: 2f);

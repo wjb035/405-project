@@ -127,7 +127,7 @@ public partial class GameSelect : Control
 	{
 		
 		// Resolve exported node paths into actual nodes.
-		_carouselArea = GetNode<Control>("Margin/Root/CenterArea/CarouselArea");
+		_carouselArea = GetNode<Control>("Margin/Root/CenterArea/Mid1/CarouselArea");
 		_cardsRoot = GetNode<Control>(CardsPath);
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
@@ -140,12 +140,12 @@ public partial class GameSelect : Control
 		_back = GetNode<Button>(BackPath);
 		_play = GetNode<Button>(PlayPath);
 		_settings = GetNode<Button>(SettingsPath);
-		_collections = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnCollections");
-		_inbox = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnInbox");
-		_friends = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
-		_chat = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
-		_help = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
-		_achievement = GetNode<Button>("Margin/Root/TopBar/TopIcons/BtnAch");
+		_collections = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnCollections");
+		_inbox = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnInbox");
+		_friends = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends");
+		_chat = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat");
+		_help = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp");
+		_achievement = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnAch");
 		_add = GetNode<Button>(AddPath);
 		_flip = GetNode<Button>(FlipPath);
 		
@@ -157,7 +157,7 @@ public partial class GameSelect : Control
 		
 		
 		_optionButton.Name = "test";
-		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/HBoxContainer");
+		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/Foreground1/HBoxContainer");
    		container.AddChild(_optionButton);
 		//_optionButton.AddItem("Option A", 0);
 		_optionButton.Hide();
@@ -3118,52 +3118,52 @@ private void OnAnyButtonPressed()
 		// Primary actions
 		UiStyle.StylePrimaryButton(_play);
 		UiStyle.AddHoverFeedback(_play);
-		UiStyle.ApplyDropShadow(_play);
+		UiStyle.ApplyParallaxShadow(_play);
 
 		// Top bar buttons
 		UiStyle.StyleTopBarButton(_back);
 		UiStyle.AddHoverFeedback(_back);
-		UiStyle.ApplyDropShadow(_back);
+		UiStyle.ApplyParallaxShadow(_back);
 
 		UiStyle.StyleTopBarButton(_settings);
 		UiStyle.AddHoverFeedback(_settings);
-		UiStyle.ApplyDropShadow(_settings);
+		UiStyle.ApplyParallaxShadow(_settings);
 
 		UiStyle.StyleTopBarButton(_achievement);
 		UiStyle.AddHoverFeedback(_achievement);
-		UiStyle.ApplyDropShadow(_achievement);
+		UiStyle.ApplyParallaxShadow(_achievement);
 
-		var friends = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnFriends");
+		var friends = GetNodeOrNull<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends");
 		UiStyle.StyleTopBarButton(friends);
 		UiStyle.AddHoverFeedback(friends);
-		UiStyle.ApplyDropShadow(friends);
+		UiStyle.ApplyParallaxShadow(friends);
 
-		var chat = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnChat");
+		var chat = GetNodeOrNull<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat");
 		UiStyle.StyleTopBarButton(chat);
 		UiStyle.AddHoverFeedback(chat);
-		UiStyle.ApplyDropShadow(chat);
+		UiStyle.ApplyParallaxShadow(chat);
 
-		var help = GetNodeOrNull<Button>("Margin/Root/TopBar/TopIcons/BtnHelp");
+		var help = GetNodeOrNull<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp");
 		UiStyle.StyleTopBarButton(help);
 		UiStyle.AddHoverFeedback(help);
-		UiStyle.ApplyDropShadow(help);
+		UiStyle.ApplyParallaxShadow(help);
 
 		UiStyle.StyleTopBarButton(_collections);
 		UiStyle.AddHoverFeedback(_collections);
-		UiStyle.ApplyDropShadow(_collections);
+		UiStyle.ApplyParallaxShadow(_collections);
 
 		UiStyle.StyleTopBarButton(_inbox);
 		UiStyle.AddHoverFeedback(_inbox);
-		UiStyle.ApplyDropShadow(_inbox);
+		UiStyle.ApplyParallaxShadow(_inbox);
 
 		// Nav action buttons
 		UiStyle.StyleNavButton(_add);
 		UiStyle.AddHoverFeedback(_add);
-		UiStyle.ApplyDropShadow(_add);
+		UiStyle.ApplyParallaxShadow(_add);
 
 		UiStyle.StyleNavButton(_flip);
 		UiStyle.AddHoverFeedback(_flip);
-		UiStyle.ApplyDropShadow(_flip);
+		UiStyle.ApplyParallaxShadow(_flip);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_title);

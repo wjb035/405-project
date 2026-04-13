@@ -36,6 +36,7 @@ public partial class AudioManager : Node
 		
 		
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
+		_musicPlayer.VolumeDb = -100f;
 		AudioStream newTrack = GD.Load<AudioStream>("res://Helpers/Logos.mp3");
 		 _musicPlayer.Stream = newTrack;
 		

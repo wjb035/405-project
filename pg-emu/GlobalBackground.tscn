@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://btstrdwj4rrp8"]
 
 [ext_resource type="Script" uid="uid://bkbntobikh6hi" path="res://GlobalBackground.cs" id="1_o4xgy"]
-[ext_resource type="Shader" uid="uid://d3skfih3bcydu" path="res://BackgroundVisual.tres" id="1_xpfep"]
+[ext_resource type="Shader" uid="uid://d3skfih3bcydu" path="res://ShaderSlop/BackgroundVisual.tres" id="1_xpfep"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_o4xgy"]
 shader = ExtResource("1_xpfep")
