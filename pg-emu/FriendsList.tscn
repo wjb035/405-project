@@ -1,5 +1,8 @@
 [gd_scene format=3 uid="uid://1o5jd8p0jhve"]
 
+[ext_resource type="Script" path="res://FriendsList.cs" id="1_script"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="2_theme"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d4x60"]
 bg_color = Color(1, 1, 1, 0)
 
@@ -20,6 +23,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=1053093090]
 layout_mode = 1
@@ -51,6 +56,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
+theme_override_constants/separation = 8
 
 [node name="Panel" type="Panel" parent="Bg/Margin/Root/TopBar" unique_id=891709625]
 clip_contents = true
@@ -83,6 +89,14 @@ theme_override_font_sizes/font_size = 40
 text = "Friends"
 horizontal_alignment = 1
 
+[node name="FriendSearchDropdown" type="OptionButton" parent="Bg/Margin/Root/TopBar" unique_id=135719881]
+custom_minimum_size = Vector2(188, 36)
+layout_mode = 2
+selected = 0
+item_count = 1
+popup/item_0/text = "All Friends"
+popup/item_0/id = 0
+
 [node name="PanelContainer2" type="PanelContainer" parent="Bg/Margin/Root" unique_id=679833764]
 clip_contents = true
 custom_minimum_size = Vector2(175, 175)
@@ -98,8 +112,10 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Bg/Margin/Root/PanelContainer2/MarginContainer" unique_id=541507784]
-visible = false
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
 [node name="Button5" type="Button" parent="Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer" unique_id=1778214814]
 custom_minimum_size = Vector2(0, 60)

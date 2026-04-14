@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 public partial class Profile : Control
 {
 	private const int MaxTileCount = 4;
+	private const float ControllerRowMergeThreshold = 36f;
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
 	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
 	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
@@ -30,6 +31,7 @@ public partial class Profile : Control
 	private Button _back = null!;
 	private Button _friendsList = null!;
 	private Button _profileSettingsShortcut = null!;
+	private ScrollContainer _bodyScroll = null!;
 	private Label _gamerTag = null!;
 	private Label _profileNote = null!;
 	private OptionButton _visibilityToggle = null!;
@@ -37,11 +39,18 @@ public partial class Profile : Control
 
 	private ProfileResponse? _profile;
 	private bool _openingFriendProfile;
+	private int _uiHorizontalAxisDir;
+	private long _uiHorizontalAxisNextMs;
+	private int _uiVerticalAxisDir;
+	private long _uiVerticalAxisNextMs;
+	private int _uiRowIndex = -1;
+	private int _uiColumnIndex = -1;
 
 	public override async void _Ready()
 	{
 		_back = GetNode<Button>(BackPath);
 		_profileSettingsShortcut = GetNode<Button>(ProfileSettingsShortcutPath);
+		_bodyScroll = GetNode<ScrollContainer>("Margin/Root/BodyScroll");
 		_friendsList = GetNode<Button>("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button");
 		_gamerTag = GetNode<Label>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/GamerTag");
 		_profileNote = GetNode<Label>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/ProfileNote");
@@ -58,14 +67,241 @@ public partial class Profile : Control
 		await Task.WhenAll(
 			LoadProfileAsync(),
 			LoadSectionDataAsync());
+		CallDeferred(nameof(RefreshControllerFocusGraph));
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (!ControllerService.TryHandleBackAction(@event, GoBack))
+		if (ControllerService.TryHandleBackAction(@event, GoBack))
+		{
+			GetViewport()?.SetInputAsHandled();
+			return;
+		}
+
+		if (@event is InputEventJoypadMotion joypadMotion)
+		{
+			if (!ShouldHandleControllerInput(joypadMotion.Device))
+				return;
+
+			if (!HandleControllerUiAxis(joypadMotion))
+				return;
+
+			GetViewport()?.SetInputAsHandled();
+			return;
+		}
+
+		if (@event is not InputEventJoypadButton joypadButton || !joypadButton.Pressed)
+			return;
+
+		if (!ShouldHandleControllerInput(joypadButton.Device))
+			return;
+
+		if (!HandleControllerUiButton(joypadButton.ButtonIndex))
 			return;
 
 		GetViewport()?.SetInputAsHandled();
+	}
+
+	private bool HandleControllerUiButton(JoyButton button)
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (!IsUiNavigationActive())
+		{
+			switch (button)
+			{
+				case JoyButton.DpadUp:
+					_uiRowIndex = 0;
+					_uiColumnIndex = 0;
+					return FocusControllerRowEntry(rows);
+				case JoyButton.DpadDown:
+					_uiRowIndex = rows.Count - 1;
+					_uiColumnIndex = 0;
+					return FocusControllerRowEntry(rows);
+				default:
+					return false;
+			}
+		}
+
+		switch (button)
+		{
+			case JoyButton.DpadLeft:
+				return MoveControllerSelection(rows, 0, -1);
+			case JoyButton.DpadRight:
+				return MoveControllerSelection(rows, 0, 1);
+			case JoyButton.DpadUp:
+				return MoveControllerSelection(rows, -1, 0);
+			case JoyButton.DpadDown:
+				return MoveControllerSelection(rows, 1, 0);
+			default:
+				return ControllerService.IsConfirmButton(button) &&
+					ControllerService.ActivateRowSelection(rows, _uiRowIndex, _uiColumnIndex);
+		}
+	}
+
+	private bool HandleControllerUiAxis(InputEventJoypadMotion joypadMotion)
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return false;
+
+		if (joypadMotion.Axis == JoyAxis.LeftY)
+		{
+			if (!IsUiNavigationActive())
+			{
+				return ControllerService.TryHandleMenuAxis(joypadMotion.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
+				{
+					_uiRowIndex = dir < 0 ? 0 : rows.Count - 1;
+					_uiColumnIndex = 0;
+					FocusControllerRowEntry(rows);
+				});
+			}
+
+			return ControllerService.TryHandleMenuAxis(joypadMotion.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
+			{
+				MoveControllerSelection(rows, dir, 0);
+			});
+		}
+
+		if (!IsUiNavigationActive() || joypadMotion.Axis != JoyAxis.LeftX)
+			return false;
+
+		return ControllerService.TryHandleMenuAxis(joypadMotion.AxisValue, ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs, dir =>
+		{
+			MoveControllerSelection(rows, 0, dir);
+		});
+	}
+
+	private List<List<Button>> GetControllerUiRows()
+	{
+		return ControllerService.BuildVisibleRows(
+			new Button?[] { _back, _profileSettingsShortcut },
+			new Button?[] { _visibilityToggle },
+			GetTileButtons(FriendsTileGridPath).Select(button => (Button?)button),
+			new Button?[] { _friendsList });
+	}
+
+	private bool FocusControllerRowEntry(IReadOnlyList<List<Button>> rows)
+	{
+		var focused = ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+		if (focused)
+			EnsureFocusedControlVisible();
+		return focused;
+	}
+
+	private bool MoveControllerSelection(IReadOnlyList<List<Button>> rows, int rowDelta, int columnDelta)
+	{
+		var moved = ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, rowDelta, columnDelta);
+		if (moved)
+			EnsureFocusedControlVisible();
+		return moved;
+	}
+
+	private bool IsUiNavigationActive()
+	{
+		return _uiRowIndex >= 0 && _uiColumnIndex >= 0;
+	}
+
+	private void ResetUiNavigationState()
+	{
+		_uiRowIndex = -1;
+		_uiColumnIndex = -1;
+		ControllerService.ResetMenuAxis(ref _uiHorizontalAxisDir, ref _uiHorizontalAxisNextMs);
+		ControllerService.ResetMenuAxis(ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs);
+	}
+
+	private void RefreshControllerFocusGraph()
+	{
+		var rows = GetControllerUiRows();
+		foreach (var row in rows)
+			ResetFocusNeighbors(row);
+
+		foreach (var row in rows)
+			ConfigureHorizontalNeighbors(row);
+
+		for (int index = 0; index < rows.Count - 1; index++)
+			ConfigureVerticalNeighbors(rows[index], rows[index + 1]);
+	}
+
+	private void ResetFocusNeighbors(IReadOnlyList<Button> row)
+	{
+		foreach (var button in row)
+		{
+			var selfPath = button.GetPathTo(button);
+			button.FocusNeighborLeft = selfPath;
+			button.FocusNeighborRight = selfPath;
+			button.FocusNeighborTop = selfPath;
+			button.FocusNeighborBottom = selfPath;
+		}
+	}
+
+	private void ConfigureHorizontalNeighbors(IReadOnlyList<Button> row)
+	{
+		if (row.Count == 0)
+			return;
+
+		for (int index = 0; index < row.Count; index++)
+		{
+			var current = row[index];
+			var left = row[(index - 1 + row.Count) % row.Count];
+			var right = row[(index + 1) % row.Count];
+			current.FocusNeighborLeft = current.GetPathTo(left);
+			current.FocusNeighborRight = current.GetPathTo(right);
+		}
+	}
+
+	private void ConfigureVerticalNeighbors(IReadOnlyList<Button> upperRow, IReadOnlyList<Button> lowerRow)
+	{
+		if (upperRow.Count == 0 || lowerRow.Count == 0)
+			return;
+
+		foreach (var upper in upperRow)
+			upper.FocusNeighborBottom = upper.GetPathTo(FindNearestButtonByX(lowerRow, GetControlCenterX(upper)));
+
+		foreach (var lower in lowerRow)
+			lower.FocusNeighborTop = lower.GetPathTo(FindNearestButtonByX(upperRow, GetControlCenterX(lower)));
+	}
+
+	private static Button FindNearestButtonByX(IReadOnlyList<Button> row, float sourceCenterX)
+	{
+		var nearest = row[0];
+		var nearestDistance = Mathf.Abs(GetControlCenterX(nearest) - sourceCenterX);
+
+		for (int index = 1; index < row.Count; index++)
+		{
+			var candidate = row[index];
+			var distance = Mathf.Abs(GetControlCenterX(candidate) - sourceCenterX);
+			if (distance >= nearestDistance)
+				continue;
+
+			nearest = candidate;
+			nearestDistance = distance;
+		}
+
+		return nearest;
+	}
+
+	private static float GetControlCenterX(Control control)
+	{
+		var rect = control.GetGlobalRect();
+		return rect.Position.X + (rect.Size.X * 0.5f);
+	}
+
+	private void EnsureFocusedControlVisible()
+	{
+		if (GetViewport()?.GuiGetFocusOwner() is not Control focused)
+			return;
+		if (!GodotObject.IsInstanceValid(focused))
+			return;
+
+		_bodyScroll.EnsureControlVisible(focused);
+	}
+
+	private bool ShouldHandleControllerInput(int device)
+	{
+		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
 	}
 
 	private static void ConnectIfNeeded(Button button, Action handler)
@@ -143,6 +379,7 @@ public partial class Profile : Control
 
 			SetFooterVisible(RecentGamesFooterPath, false);
 			SetFooterVisible(FriendsFooterPath, true);
+			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 		catch (Exception exception)
 		{
@@ -156,6 +393,7 @@ public partial class Profile : Control
 			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
 			SetFooterVisible(RecentGamesFooterPath, false);
 			SetFooterVisible(FriendsFooterPath, true);
+			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 	}
 
@@ -716,11 +954,11 @@ public partial class Profile : Control
 		button.Flat = false;
 		button.Alignment = HorizontalAlignment.Left;
 		button.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		button.AddThemeFontSizeOverride("font_size", 15);
-		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, border, 2, 16, 12f, 11f));
-		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, tileAccent, 2, 16, 12f, 11f));
-		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, tileAccent, 2, 16, 12f, 11f));
-		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 3, 16, 12f, 11f));
+			button.AddThemeFontSizeOverride("font_size", 14);
+			button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, border, 2, 16, 10f, 9f));
+			button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, tileAccent, 2, 16, 10f, 9f));
+			button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, tileAccent, 2, 16, 10f, 9f));
+			button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 3, 16, 10f, 9f));
 		button.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_hover_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_pressed_color", new Color(0.97f, 0.95f, 1f, 0.98f));
@@ -829,6 +1067,7 @@ public partial class Profile : Control
 
 	private void GoBack()
 	{
+		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
@@ -851,6 +1090,7 @@ public partial class Profile : Control
 
 	private void GoFriendsList()
 	{
+		ResetUiNavigationState();
 		AudioManager.Instance?.PlaySelect();
 		GetTree().ChangeSceneToFile("res://FriendsList.tscn");
 	}
@@ -894,6 +1134,7 @@ public partial class Profile : Control
 
 	private void GoProfileSettings()
 	{
+		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;

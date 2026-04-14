@@ -121,7 +121,9 @@ public partial class GameSelect : Control
 	// 3D CAROUSEL MODE
 	private GameCarousel3DView? _carousel3D;
 	private CancellationTokenSource? _coverArtWarmupCts;
+	private CancellationTokenSource? _metadataWarmupCts;
 	private int _pendingCoverArtRefresh;
+	private int _pendingMetadataRefresh;
 
 	public override async void _Ready()
 	{
@@ -201,6 +203,7 @@ public partial class GameSelect : Control
 		UpdateSelectionUI();
 		_achievement.Show();
 		StartCoverArtWarmup();
+		StartMetadataWarmup();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
 		
@@ -211,6 +214,9 @@ public partial class GameSelect : Control
 		_coverArtWarmupCts?.Cancel();
 		_coverArtWarmupCts?.Dispose();
 		_coverArtWarmupCts = null;
+		_metadataWarmupCts?.Cancel();
+		_metadataWarmupCts?.Dispose();
+		_metadataWarmupCts = null;
 		base._ExitTree();
 	}
 
@@ -858,12 +864,6 @@ private void OnAnyButtonPressed()
 			// Keep ordering stable and predictable.
 			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
 			
-			
-			
-			await RetroAchievementsService.Retro(_platform, _games);
-			
-			
-			
 			if (_games.Count == 0)
 			{
 				GD.Print($"No games found for {_platform.Name}. Dir='{scanDir}', Extensions=[{string.Join(", ", _platform.Extensions)}].");
@@ -965,19 +965,7 @@ private void OnAnyButtonPressed()
 			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
 			_carousel3D.Populate(gameData, _carouselPos, isGba);
 			
-			// Apply metadata to all the games
-			for (int i = 0; i < _games.Count; i++)
-			{
-				var g = _games[i];
-				_carousel3D.SetBackFaceData(
-					i,
-					g.Title,
-					"No description yet.",
-					_platform?.Name ?? "Unknown",
-					"",
-					g.AchievementNum ?? ""
-				);
-			}
+			ApplyThreeDBackFaceData();
 		}
 
 		UpdateNavEnabled();
@@ -1071,6 +1059,9 @@ private void OnAnyButtonPressed()
 
 		if (Interlocked.Exchange(ref _pendingCoverArtRefresh, 0) == 1)
 			RefreshCoverArtBindings();
+
+		if (Interlocked.Exchange(ref _pendingMetadataRefresh, 0) == 1)
+			RefreshMetadataBindings();
 	}
 
 	public override void _GuiInput(InputEvent e)
@@ -1212,7 +1203,7 @@ private void OnAnyButtonPressed()
 				break;
 			case JoyButton.A:
 				MarkInputHandled();
-				PlaySelected();
+				FocusPreferredActionButton();
 				break;
 			case JoyButton.B:
 				if (_optionButton.Visible)
@@ -1271,6 +1262,10 @@ private void OnAnyButtonPressed()
 
 		switch (button)
 		{
+			case JoyButton.DpadLeft:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, -1);
+			case JoyButton.DpadRight:
+				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, 0, 1);
 			case JoyButton.DpadUp:
 				return ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, -1, 0);
 			case JoyButton.DpadDown:
@@ -1297,15 +1292,27 @@ private void OnAnyButtonPressed()
 
 	private bool HandleControllerUiAxis(InputEventJoypadMotion jm)
 	{
-		if (!IsUiNavigationActive())
-			return false;
-
 		var rows = GetControllerUiRows();
 		if (rows.Count == 0)
 			return false;
 
 		if (jm.Axis == JoyAxis.LeftY)
 		{
+			if (!IsUiNavigationActive())
+			{
+				if (jm.AxisValue <= -ControllerService.MenuAxisDeadzone && !ShouldEnterUiNavigationFromUp())
+					return false;
+				if (jm.AxisValue >= ControllerService.MenuAxisDeadzone && !ShouldEnterUiNavigationFromDown())
+					return false;
+
+				return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, _ =>
+				{
+					_uiRowIndex = GetPreferredUiEntryRowIndex(rows);
+					_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
+					ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
+				});
+			}
+
 			return ControllerService.TryHandleMenuAxis(jm.AxisValue, ref _uiVerticalAxisDir, ref _uiVerticalAxisNextMs, dir =>
 			{
 				ControllerService.MoveRowSelection(rows, ref _uiRowIndex, ref _uiColumnIndex, dir, 0);
@@ -1362,12 +1369,15 @@ private void OnAnyButtonPressed()
 	{
 		var buttons = new List<Button>();
 		AddFocusableButton(buttons, _back);
+		AddFocusableButton(buttons, _inbox);
+		AddFocusableButton(buttons, _collections);
 		AddFocusableButton(buttons, _achievement);
 		AddFocusableButton(buttons, _friends);
 		AddFocusableButton(buttons, _chat);
 		AddFocusableButton(buttons, _settings);
 		AddFocusableButton(buttons, _help);
 		AddFocusableButton(buttons, _add);
+		AddFocusableButton(buttons, _flip);
 		AddFocusableButton(buttons, _optionButton.Visible ? _optionButton : null);
 		AddFocusableButton(buttons, _prev);
 		AddFocusableButton(buttons, _play);
@@ -1542,6 +1552,17 @@ private void OnAnyButtonPressed()
 	private bool IsUiNavigationActive()
 	{
 		return _uiRowIndex >= 0 && _uiColumnIndex >= 0;
+	}
+
+	private void FocusPreferredActionButton()
+	{
+		var rows = GetControllerUiRows();
+		if (rows.Count == 0)
+			return;
+
+		_uiRowIndex = GetPreferredUiEntryRowIndex(rows);
+		_uiColumnIndex = GetPreferredActionColumn(rows[_uiRowIndex]);
+		ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 	}
 
 	private void ExitUiNavigation()
@@ -2670,6 +2691,26 @@ private void OnAnyButtonPressed()
 		_ = WarmCoverArtLibraryAsync(_platform, gamesToWarm, _coverArtWarmupCts.Token);
 	}
 
+	private void StartMetadataWarmup()
+	{
+		_metadataWarmupCts?.Cancel();
+		_metadataWarmupCts?.Dispose();
+		_metadataWarmupCts = null;
+
+		if (_platform == null)
+			return;
+
+		var gamesToWarm = _games
+			.Where(game => !string.IsNullOrWhiteSpace(game.Path))
+			.ToList();
+
+		if (gamesToWarm.Count == 0)
+			return;
+
+		_metadataWarmupCts = new CancellationTokenSource();
+		_ = WarmGameMetadataAsync(_platform, gamesToWarm, _metadataWarmupCts.Token);
+	}
+
 	private async Task WarmCoverArtLibraryAsync(PlatformConfig platform, IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
 	{
 		try
@@ -2688,6 +2729,28 @@ private void OnAnyButtonPressed()
 		catch (Exception ex)
 		{
 			GD.PrintErr($"Cover art warm-up failed: {ex.Message}");
+		}
+	}
+
+	private async Task WarmGameMetadataAsync(PlatformConfig platform, IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await RetroAchievementsService.Retro(platform, games);
+			cancellationToken.ThrowIfCancellationRequested();
+			QueueMetadataRefresh();
+			QueueCoverArtRefresh();
+
+			await PrefetchResolvedCoverArtAsync(games, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			QueueCoverArtRefresh();
+		}
+		catch (OperationCanceledException)
+		{
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Game metadata warm-up failed: {ex.Message}");
 		}
 	}
 
@@ -2713,6 +2776,11 @@ private void OnAnyButtonPressed()
 	private void QueueCoverArtRefresh()
 	{
 		Interlocked.Exchange(ref _pendingCoverArtRefresh, 1);
+	}
+
+	private void QueueMetadataRefresh()
+	{
+		Interlocked.Exchange(ref _pendingMetadataRefresh, 1);
 	}
 
 	private void RefreshCoverArtBindings()
@@ -2747,6 +2815,34 @@ private void OnAnyButtonPressed()
 			{
 				BindCoverArt(gridArt, gridMonogram, _games[i]);
 			}
+		}
+	}
+
+	private void RefreshMetadataBindings()
+	{
+		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+			return;
+
+		UpdateSelectionUI();
+		ApplyThreeDBackFaceData();
+	}
+
+	private void ApplyThreeDBackFaceData()
+	{
+		if (_carousel3D == null || _browseLayout != BrowseLayoutMode.ThreeD)
+			return;
+
+		for (int i = 0; i < _games.Count; i++)
+		{
+			var game = _games[i];
+			_carousel3D.SetBackFaceData(
+				i,
+				game.Title,
+				"No description yet.",
+				_platform?.Name ?? "Unknown",
+				"",
+				game.AchievementNum ?? ""
+			);
 		}
 	}
 
@@ -2791,7 +2887,7 @@ private void OnAnyButtonPressed()
 
 	private static string BuildActionHint(bool selected)
 	{
-		return selected ? "Press A or double-click" : "Select to preview";
+		return selected ? "Select Play or double-click" : "Select to preview";
 	}
 
 	private static string FormatPlaytime(int totalSeconds)
