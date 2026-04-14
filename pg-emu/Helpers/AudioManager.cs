@@ -37,12 +37,12 @@ public partial class AudioManager : Node
 		
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
 		_musicPlayer.VolumeDb = -100f;
-		AudioStream newTrack = GD.Load<AudioStream>("res://Helpers/Logos.mp3");
-		 _musicPlayer.Stream = newTrack;
+		//AudioStream newTrack = GD.Load<AudioStream>("res://Helpers/Logos.mp3");
+		// _musicPlayer.Stream = newTrack;
 		
 		// loop whatever is currently playing 
 		_musicPlayer.Finished += OnMusicFinished;
-		_musicPlayer.Play();
+		//_musicPlayer.Play();
 		
 		_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
 		_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
@@ -51,7 +51,16 @@ public partial class AudioManager : Node
 		for (int i = 0; i < _spinPlayers.Length; i++)
 			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
+	public bool MusicPlaying(){
+		return _musicPlayer.Playing;
+	}
 	
+	public void PauseMusic(){
+		 _musicPlayer.StreamPaused = true;
+	}
+	public void UnpauseMusic(){
+		 _musicPlayer.StreamPaused = false;
+	}
 	public void MusicPlay(string path){
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
 		AudioStream newTrack = GD.Load<AudioStream>(path);

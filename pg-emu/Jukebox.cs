@@ -14,11 +14,13 @@ public partial class Jukebox : Control
 	[Export] public NodePath BackPath;
 	[Export] public NodePath PrevPath;
 	[Export] public NodePath NextPath;
+	[Export] public NodePath PausePath;
 
 	// Cached scene nodes, resolved in _Ready().
 	private Button _back = null!;
 	private Button _prev= null!;
 	private Button _next = null!;
+	private Button _pause = null!;
 	public int currentIndex = -1;
 	public List<String> results = null;
 	private AudioManager audioMan;
@@ -30,6 +32,7 @@ public partial class Jukebox : Control
 		_back = GetNode<Button>(BackPath);
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
+		_pause = GetNode<Button>(PausePath);
 
 		VBoxContainer container = GetNode<VBoxContainer>("Margin/Root/Body/ScrollContainer/ButtonContainer");
 		GD.Print("hi from after container");
@@ -39,6 +42,7 @@ public partial class Jukebox : Control
 		if (_back != null) _back.Pressed += GoBack;
 		if (_next != null) _next.Pressed += NextSong;
 		if (_prev != null) _prev.Pressed += PrevSong;
+		if (_pause != null) _pause.Pressed += Pause;
 		results = FindMusic();
 		
 		
@@ -68,6 +72,16 @@ public partial class Jukebox : Control
 		}
 		
 	}
+
+	public void Pause(){
+		if (audioMan.MusicPlaying()){
+			GD.Print("music is playing in the hall");
+		}
+		else{
+			GD.Print("no music");
+		}
+	}
+
 
 	public void NextSong(){
 		if (currentIndex != -1){
