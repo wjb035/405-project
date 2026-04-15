@@ -16,4 +16,7 @@ public interface IProfileCustomizationService
 
     Task<(bool Success, string Message, ProfileCustomizationDTO Profile)>
         GetUserAsync(Guid? UserId, string? username);
+
+    Task<IReadOnlyList<UserSearchResultDTO>>
+        SearchUsersBySimilarityAsync(Guid currentUserId, string query, int limit);
 }

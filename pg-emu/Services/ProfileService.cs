@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -8,7 +9,6 @@ using PGEmu.Services;
 using PGEmu.Services.Models;
 using System.Threading.Tasks;
 using System.Text;
-using System.Text.Json;
 
 namespace PGEmu.Services;
 
@@ -62,6 +62,29 @@ public partial class ProfileService : Node
 		GD.Print("Bio: " + profile.Bio);
 		GD.Print("AvatarUrl: " + profile.AvatarUrl);
 		return profile;
+	}
+
+	public async Task<IReadOnlyList<UserSearchResultResponse>> SearchUsersBySimilarity(string? query, int limit = 12)
+	{
+		var trimmedQuery = query?.Trim();
+		if (string.IsNullOrWhiteSpace(trimmedQuery))
+			return Array.Empty<UserSearchResultResponse>();
+
+		var clampedLimit = Math.Clamp(limit, 1, 25);
+		var response = await Auth.SendAuthorizedRequest(
+			$"http://localhost:5276/api/profile/search?query={Uri.EscapeDataString(trimmedQuery)}&limit={clampedLimit}");
+
+		if (response == null)
+		{
+			GD.Print("Error: SearchUsersBySimilarity failed or session expired");
+			return Array.Empty<UserSearchResultResponse>();
+		}
+
+		var users = JsonSerializer.Deserialize<List<UserSearchResultResponse>>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+		return users ?? new List<UserSearchResultResponse>();
 	}
 	
 		public async Task SetUsername(string? newUsername)

@@ -19,6 +19,12 @@ public partial class Profile : Control
 	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
 	private const string RecentGamesFooterPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow";
 	private const string FriendsFooterPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow";
+	private const string FriendSearchDropdownPath = "Margin/Root/TopBar/FriendSearchDropdown";
+	private const int FriendSearchPlaceholderId = -1;
+	private const int FriendSearchUsernamePromptId = -2;
+	private const int FriendSearchFriendIdBase = 1000;
+	private const int FriendSearchMaxResults = 12;
+	private const int FriendSearchHintResults = 3;
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath AvatarPath;
@@ -27,6 +33,9 @@ public partial class Profile : Control
 	private readonly ProfileService _profileService = new();
 	private readonly System.Net.Http.HttpClient _client = new();
 	private readonly Dictionary<Button, string> _friendTileUsernames = new();
+	private readonly Dictionary<int, string> _friendSearchEntries = new();
+	private readonly List<string> _allFriendSearchUsernames = new();
+	private readonly List<string> _friendSearchResultUsernames = new();
 
 	private Button _back = null!;
 	private Button _friendsList = null!;
@@ -35,7 +44,11 @@ public partial class Profile : Control
 	private Label _gamerTag = null!;
 	private Label _profileNote = null!;
 	private OptionButton _visibilityToggle = null!;
+	private OptionButton? _friendSearchDropdown = null;
 	private TextureRect _avatar = null!;
+	private ConfirmationDialog _friendSearchDialog = null!;
+	private LineEdit _friendSearchInput = null!;
+	private ItemList _friendSearchResultsList = null!;
 
 	private ProfileResponse? _profile;
 	private bool _openingFriendProfile;
@@ -45,6 +58,9 @@ public partial class Profile : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
+	private int _friendSearchHintRequestId;
+	private int _friendSearchOptionsRequestId;
+	private int _friendSearchResultsRequestId;
 
 	public override async void _Ready()
 	{
@@ -55,12 +71,17 @@ public partial class Profile : Control
 		_gamerTag = GetNode<Label>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/GamerTag");
 		_profileNote = GetNode<Label>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/ProfileNote");
 		_visibilityToggle = GetNode<OptionButton>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/OptionButton");
+		_friendSearchDropdown = GetNodeOrNull<OptionButton>(FriendSearchDropdownPath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
 
 		ConnectIfNeeded(_back, GoBack);
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
 		ConnectIfNeeded(_friendsList, GoFriendsList);
 		ConnectFriendTileButtons();
+		if (_friendSearchDropdown != null)
+			_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
+		SetupFriendSearchDialog();
+		ConfigureFriendSearchDropdown(Array.Empty<string>());
 
 		ApplyThemeAesthetic();
 		SetLoadingState();
@@ -176,8 +197,13 @@ public partial class Profile : Control
 
 	private List<List<Button>> GetControllerUiRows()
 	{
+		var topRow = new List<Button> { _back };
+		if (_friendSearchDropdown != null)
+			topRow.Add(_friendSearchDropdown);
+		topRow.Add(_profileSettingsShortcut);
+
 		return ControllerService.BuildVisibleRows(
-			new Button?[] { _back, _profileSettingsShortcut },
+			topRow,
 			new Button?[] { _visibilityToggle },
 			GetTileButtons(FriendsTileGridPath).Select(button => (Button?)button),
 			new Button?[] { _friendsList });
@@ -316,6 +342,280 @@ public partial class Profile : Control
 			button.Pressed += () => OpenFriendProfileAsync(button);
 	}
 
+	private void SetupFriendSearchDialog()
+	{
+		_friendSearchDialog = new ConfirmationDialog
+		{
+			Title = "Find Friend",
+			DialogText = "Enter a username to view profile:",
+			Exclusive = true
+		};
+
+		_friendSearchInput = new LineEdit
+		{
+			PlaceholderText = "Username",
+			ClearButtonEnabled = true,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+		};
+		UiStyle.StyleLineEdit(_friendSearchInput);
+
+		_friendSearchDialog.GetOkButton().Text = "Search";
+		_friendSearchDialog.GetCancelButton().Text = "Cancel";
+		_friendSearchDialog.GetOkButton().Disabled = true;
+		_friendSearchInput.TextChanged += value =>
+		{
+			_friendSearchDialog.GetOkButton().Disabled = string.IsNullOrWhiteSpace(value);
+			_ = UpdateFriendSearchDialogHintAsync(value);
+			_ = PopulateFriendSearchOptionsAsync(value);
+			_ = UpdateFriendSearchResultsListAsync(value);
+		};
+		_friendSearchInput.TextSubmitted += text => _ = TriggerFriendSearchFromInputAsync();
+
+		_friendSearchResultsList = new ItemList
+		{
+			CustomMinimumSize = new Vector2(0, 140),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			Visible = false
+		};
+		_friendSearchResultsList.ItemSelected += OnFriendSearchResultSelected;
+		_friendSearchResultsList.ItemActivated += OnFriendSearchResultActivated;
+
+		var content = new VBoxContainer();
+		content.AddChild(_friendSearchInput);
+		content.AddChild(_friendSearchResultsList);
+		_friendSearchDialog.AddChild(content);
+
+		_friendSearchDialog.Confirmed += () => _ = TriggerFriendSearchFromInputAsync();
+
+		AddChild(_friendSearchDialog);
+	}
+
+	private void ConfigureFriendSearchDropdown(IReadOnlyList<string> usernames)
+	{
+		if (_friendSearchDropdown == null)
+			return;
+
+		_allFriendSearchUsernames.Clear();
+		_allFriendSearchUsernames.AddRange(
+			usernames
+				.Select(name => name?.Trim())
+				.Where(name => !string.IsNullOrWhiteSpace(name))
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.Cast<string>());
+
+		PopulateFriendSearchOptionsFromCandidates(
+			_allFriendSearchUsernames
+				.OrderBy(username => username, StringComparer.OrdinalIgnoreCase)
+				.Take(FriendSearchMaxResults));
+	}
+
+	private void OnFriendSearchSelected(long selectedIndex)
+	{
+		if (_friendSearchDropdown == null)
+			return;
+
+		if (selectedIndex < 0 || selectedIndex >= _friendSearchDropdown.ItemCount)
+			return;
+
+		int id = _friendSearchDropdown.GetItemId((int)selectedIndex);
+		_friendSearchDropdown.Select(0);
+
+		switch (id)
+		{
+			case FriendSearchPlaceholderId:
+				return;
+			case FriendSearchUsernamePromptId:
+				_friendSearchInput.Text = string.Empty;
+				_friendSearchDialog.GetOkButton().Disabled = true;
+				ClearFriendSearchResultsList();
+				_ = UpdateFriendSearchDialogHintAsync(string.Empty);
+				_friendSearchDialog.PopupCentered(new Vector2I(360, 150));
+				_friendSearchInput.GrabFocus();
+				return;
+			default:
+				if (_friendSearchEntries.TryGetValue(id, out var username))
+					_ = OpenFriendProfileByUsernameAsync(username);
+				return;
+		}
+	}
+
+	private async Task PopulateFriendSearchOptionsAsync(string? query)
+	{
+		var search = query?.Trim() ?? string.Empty;
+
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			PopulateFriendSearchOptionsFromCandidates(
+				_allFriendSearchUsernames
+					.OrderBy(username => username, StringComparer.OrdinalIgnoreCase)
+					.Take(FriendSearchMaxResults));
+			return;
+		}
+
+		var requestId = ++_friendSearchOptionsRequestId;
+		var similarUsers = await _profileService.SearchUsersBySimilarity(search, FriendSearchMaxResults);
+		if (requestId != _friendSearchOptionsRequestId || !GodotObject.IsInstanceValid(this) || !IsInsideTree())
+			return;
+
+		var usernames = similarUsers
+			.Select(user => user.Username?.Trim())
+			.Where(username => !string.IsNullOrWhiteSpace(username))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Cast<string>();
+
+		PopulateFriendSearchOptionsFromCandidates(usernames);
+	}
+
+	private void PopulateFriendSearchOptionsFromCandidates(IEnumerable<string> candidates)
+	{
+		if (_friendSearchDropdown == null)
+			return;
+
+		_friendSearchEntries.Clear();
+		_friendSearchDropdown.Clear();
+		_friendSearchDropdown.AddItem("Friend Search", FriendSearchPlaceholderId);
+		_friendSearchDropdown.AddItem("Search Username...", FriendSearchUsernamePromptId);
+
+		int index = 0;
+		foreach (var username in candidates.Take(FriendSearchMaxResults))
+		{
+			var trimmed = username?.Trim();
+			if (string.IsNullOrWhiteSpace(trimmed))
+				continue;
+
+			int id = FriendSearchFriendIdBase + index;
+			_friendSearchDropdown.AddItem(trimmed, id);
+			_friendSearchEntries[id] = trimmed;
+			index++;
+		}
+
+		_friendSearchDropdown.Select(0);
+	}
+
+	private async Task UpdateFriendSearchDialogHintAsync(string? query)
+	{
+		var search = query?.Trim() ?? string.Empty;
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			_friendSearchDialog.DialogText = "Enter a username to view profile:";
+			return;
+		}
+
+		var requestId = ++_friendSearchHintRequestId;
+		var similarUsers = await _profileService.SearchUsersBySimilarity(search, FriendSearchHintResults);
+		if (requestId != _friendSearchHintRequestId || !GodotObject.IsInstanceValid(this) || !IsInsideTree())
+			return;
+
+		var similar = similarUsers
+			.Select(user => user.Username?.Trim())
+			.Where(username => !string.IsNullOrWhiteSpace(username))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Cast<string>()
+			.ToArray();
+
+		_friendSearchDialog.DialogText = similar.Length == 0
+			? "No similar usernames found. Try a broader search."
+			: $"Similar: {string.Join(", ", similar)}";
+	}
+
+	private async Task UpdateFriendSearchResultsListAsync(string? query)
+	{
+		var search = query?.Trim() ?? string.Empty;
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			ClearFriendSearchResultsList();
+			return;
+		}
+
+		var requestId = ++_friendSearchResultsRequestId;
+		var similarUsers = await _profileService.SearchUsersBySimilarity(search, FriendSearchMaxResults);
+		if (requestId != _friendSearchResultsRequestId || !GodotObject.IsInstanceValid(this) || !IsInsideTree())
+			return;
+
+		var usernames = similarUsers
+			.Select(user => user.Username?.Trim())
+			.Where(username => !string.IsNullOrWhiteSpace(username))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Cast<string>();
+
+		PopulateFriendSearchResultsList(usernames);
+	}
+
+	private async Task TriggerFriendSearchFromInputAsync()
+	{
+		var username = ResolveFriendSearchUsername();
+		await PopulateFriendSearchOptionsAsync(username);
+		var opened = await OpenFriendProfileByUsernameAsync(username);
+		if (!opened)
+			await UpdateFriendSearchDialogHintAsync(username);
+	}
+
+	private void PopulateFriendSearchResultsList(IEnumerable<string> usernames)
+	{
+		_friendSearchResultUsernames.Clear();
+		_friendSearchResultsList.Clear();
+
+		foreach (var username in usernames.Take(FriendSearchMaxResults))
+		{
+			var trimmed = username?.Trim();
+			if (string.IsNullOrWhiteSpace(trimmed))
+				continue;
+
+			_friendSearchResultUsernames.Add(trimmed);
+			_friendSearchResultsList.AddItem(trimmed);
+		}
+
+		_friendSearchResultsList.Visible = _friendSearchResultUsernames.Count > 0;
+		if (_friendSearchResultUsernames.Count > 0)
+			_friendSearchResultsList.Select(0);
+	}
+
+	private void ClearFriendSearchResultsList()
+	{
+		_friendSearchResultUsernames.Clear();
+		_friendSearchResultsList.Clear();
+		_friendSearchResultsList.Visible = false;
+	}
+
+	private void OnFriendSearchResultSelected(long index)
+	{
+		if (index < 0 || index >= _friendSearchResultUsernames.Count)
+			return;
+
+		var username = _friendSearchResultUsernames[(int)index];
+		_friendSearchInput.Text = username;
+		_friendSearchInput.CaretColumn = username.Length;
+		_friendSearchDialog.GetOkButton().Disabled = false;
+	}
+
+	private async void OnFriendSearchResultActivated(long index)
+	{
+		if (index < 0 || index >= _friendSearchResultUsernames.Count)
+			return;
+
+		var username = _friendSearchResultUsernames[(int)index];
+		var opened = await OpenFriendProfileByUsernameAsync(username);
+		if (opened && GodotObject.IsInstanceValid(_friendSearchDialog))
+			_friendSearchDialog.Hide();
+	}
+
+	private string ResolveFriendSearchUsername()
+	{
+		if (GodotObject.IsInstanceValid(_friendSearchResultsList))
+		{
+			var selected = _friendSearchResultsList.GetSelectedItems();
+			if (selected.Length > 0)
+			{
+				var selectedIndex = selected[0];
+				if (selectedIndex >= 0 && selectedIndex < _friendSearchResultUsernames.Count)
+					return _friendSearchResultUsernames[selectedIndex];
+			}
+		}
+
+		return _friendSearchInput.Text?.Trim() ?? string.Empty;
+	}
+
 	private async Task LoadProfileAsync()
 	{
 		try
@@ -373,12 +673,13 @@ public partial class Profile : Control
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 
-			ApplyTileContent(ShowcaseTileGridPath, showcaseItems, "No collections yet");
-			ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
-			ApplyFriendTileContent(friendItems, "No friends yet");
+				ApplyTileContent(ShowcaseTileGridPath, showcaseItems, "No collections yet");
+				ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
+				ApplyFriendTileContent(friendItems, "No friends yet");
+				ConfigureFriendSearchDropdown(friendItems);
 
-			SetFooterVisible(RecentGamesFooterPath, false);
-			SetFooterVisible(FriendsFooterPath, true);
+				SetFooterVisible(RecentGamesFooterPath, false);
+				SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 		catch (Exception exception)
@@ -388,11 +689,12 @@ public partial class Profile : Control
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 
-			ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "No collections yet");
-			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
-			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
-			SetFooterVisible(RecentGamesFooterPath, false);
-			SetFooterVisible(FriendsFooterPath, true);
+				ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "No collections yet");
+				ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
+				ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
+				ConfigureFriendSearchDropdown(Array.Empty<string>());
+				SetFooterVisible(RecentGamesFooterPath, false);
+				SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 	}
@@ -839,6 +1141,8 @@ public partial class Profile : Control
 		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
 		UiStyle.StylePopupMenu(_visibilityToggle.GetPopup());
+		if (_friendSearchDropdown != null)
+			UiStyle.StylePopupMenu(_friendSearchDropdown.GetPopup());
 		UiStyle.StyleTopBarButton(_profileSettingsShortcut);
 		UiStyle.AddHoverFeedback(_profileSettingsShortcut);
 		UiStyle.ApplyParallaxShadow(_profileSettingsShortcut);
@@ -850,6 +1154,15 @@ public partial class Profile : Control
 		UiStyle.ApplyParallaxShadow(_visibilityToggle);
 		UiStyle.TightenButtonContentPadding(_visibilityToggle, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_visibilityToggle, chipSurface, chipAccent, isChip: true);
+
+		if (_friendSearchDropdown != null)
+		{
+			UiStyle.StyleOptionButton(_friendSearchDropdown);
+			UiStyle.AddHoverFeedback(_friendSearchDropdown);
+			UiStyle.ApplyParallaxShadow(_friendSearchDropdown);
+			UiStyle.TightenButtonContentPadding(_friendSearchDropdown, horizontal: 8f, vertical: 3f);
+			ApplyButtonTheme(_friendSearchDropdown, chipSurface, friendsAccent, isChip: true);
+		}
 
 		if (GetNodeOrNull<Label>("Margin/Root/TopBar/Title") is Label title)
 		{
@@ -1072,17 +1385,25 @@ public partial class Profile : Control
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 
-		if (string.Equals(returnScene, "res://profile.tscn", StringComparison.OrdinalIgnoreCase) &&
-			tree.HasMeta(SettingsParentReturnSceneMeta))
+		if (string.Equals(returnScene, "res://profile.tscn", StringComparison.OrdinalIgnoreCase))
 		{
-			var parentScene = tree.GetMeta(SettingsParentReturnSceneMeta).AsString();
-			if (!string.IsNullOrWhiteSpace(parentScene))
-				returnScene = parentScene;
+			if (tree.HasMeta(SettingsParentReturnSceneMeta))
+			{
+				var parentScene = tree.GetMeta(SettingsParentReturnSceneMeta).AsString();
+				if (!string.IsNullOrWhiteSpace(parentScene))
+					returnScene = parentScene;
 
-			tree.RemoveMeta(SettingsParentReturnSceneMeta);
+				tree.RemoveMeta(SettingsParentReturnSceneMeta);
+			}
+			else
+			{
+				returnScene = "res://HomeScreen.tscn";
+			}
 		}
 
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+		if (string.Equals(returnScene, "res://profile.tscn", StringComparison.OrdinalIgnoreCase))
+			returnScene = "res://HomeScreen.tscn";
 		tree.SetMeta("pgemu_return_scene", returnScene);
 
 		tree.ChangeSceneToFile(returnScene);
@@ -1097,34 +1418,43 @@ public partial class Profile : Control
 
 	private async void OpenFriendProfileAsync(Button button)
 	{
-		if (_openingFriendProfile)
-			return;
-
 		if (!_friendTileUsernames.TryGetValue(button, out var username) || string.IsNullOrWhiteSpace(username))
 			return;
+
+		await OpenFriendProfileByUsernameAsync(username);
+	}
+
+	private async Task<bool> OpenFriendProfileByUsernameAsync(string username)
+	{
+		if (_openingFriendProfile)
+			return false;
+		if (string.IsNullOrWhiteSpace(username))
+			return false;
 
 		_openingFriendProfile = true;
 		try
 		{
 			AudioManager.Instance?.PlaySelect();
-			var profile = await _profileService.GetUserProfile(username);
+			var profile = await _profileService.GetUserProfile(username.Trim());
 			if (profile == null)
 			{
 				GD.PrintErr($"Could not load friend profile for {username}.");
-				return;
+				return false;
 			}
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
-				return;
+				return false;
 
 			Global.foundProfile = profile;
 			var tree = GetTree();
 			tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
 			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+			return true;
 		}
 		catch (Exception exception)
 		{
 			GD.PrintErr($"Friend profile open failed: {exception.Message}");
+			return false;
 		}
 		finally
 		{
@@ -1166,6 +1496,8 @@ public partial class Profile : Control
 				err = avatar.LoadPngFromBuffer(imageData);
 				if (err != Error.Ok)
 					err = avatar.LoadJpgFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = avatar.LoadWebpFromBuffer(imageData);
 			}
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
@@ -1197,6 +1529,19 @@ public partial class Profile : Control
 
 		var projectDir = ProjectSettings.GlobalizePath("res://");
 		var relativePath = cleanReference.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-		return Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", relativePath));
+		var candidates = new[]
+		{
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", relativePath)),
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Debug", "net10.0", relativePath)),
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Release", "net10.0", relativePath))
+		};
+
+		foreach (var candidate in candidates)
+		{
+			if (File.Exists(candidate))
+				return candidate;
+		}
+
+		return candidates[0];
 	}
 }

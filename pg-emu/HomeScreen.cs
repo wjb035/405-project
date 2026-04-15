@@ -10,6 +10,7 @@ using PGEmu.Services.Models;
 using System.Linq;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 public partial class HomeScreen : Control
 {
@@ -53,6 +54,13 @@ public partial class HomeScreen : Control
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
 	private Control _carouselArea;
+	private PopupPanel _userSearchResultsPopup = null!;
+	private Panel _userSearchResultsContent = null!;
+	private ScrollContainer _userSearchResultsScroll = null!;
+	private VBoxContainer _userSearchResultsList = null!;
+	private readonly List<string> _userSearchResultUsernames = new();
+	private readonly List<Button> _userSearchResultButtons = new();
+	private int _selectedUserSearchResultIndex = -1;
 	
 	private readonly List<PlatformConfig> _platforms = new();
 
@@ -78,6 +86,7 @@ public partial class HomeScreen : Control
 	public ProfileService _profileService = new ProfileService();
 	private readonly System.Net.Http.HttpClient _client = new();
 	public ProfileService _profile = null!;
+	private int _userSearchRequestId;
 	
 	
 	private ScreenTransition Transition =>
@@ -107,15 +116,16 @@ public partial class HomeScreen : Control
 		_music = GetNodeOrNull<Button>(MusicPath);
 		
 		ApplyAesthetic();
+		SetupUserSearchResultsPopup();
 
 		// Build the 3D console carousel
 		_carouselArea = GetNode<Control>(CarouselAreaPath);
 		_carousel = new ConsoleCarousel3DView();
 		_carousel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		
-		// Put it behind the UI
+		// Put it behind the UI inside the carousel container.
 		_carouselArea.AddChild(_carousel);
-		MoveChild(_carousel, -1);
+		_carouselArea.MoveChild(_carousel, -1);
 
 		_carousel.SelectionChanged += OnCarouselSelectionChanged;
 
@@ -125,6 +135,11 @@ public partial class HomeScreen : Control
 		_selectPlatform.Pressed += OpenSelectedPlatform;
 
 		if (_searchBarButton != null) _searchBarButton.Pressed += OnSearchBarPressed;
+		if (_searchBarText != null)
+		{
+			_searchBarText.TextChanged += OnSearchBarTextChanged;
+			_searchBarText.GuiInput += OnSearchBarGuiInput;
+		}
 		if (_logout != null) _logout.Pressed += OnLogoutPressed;
 		if (_settings != null) _settings.Pressed += OnSettingsPressed;
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
@@ -191,21 +206,313 @@ public partial class HomeScreen : Control
 		SetupFriendHover();
 	}
 	
-		private async void OnSearchBarPressed()
+	private async void OnSearchBarPressed()
 	{
-		string? username = _searchBarText.Text;
-		ProfileResponse profile = await _profileService.GetUserProfile(_searchBarText.Text?.Trim());
-		if (profile != null)
+		await TriggerUserSearchFromInputAsync();
+	}
+
+	private void SetupUserSearchResultsPopup()
+	{
+		_userSearchResultsPopup = new PopupPanel
 		{
-			Global.foundProfile = profile;
-			GD.Print("Profile found:");
-			GD.Print(profile.Username);
-			var tree = GetTree();
-			GD.Print(Global.foundProfile.UserId + Global.foundProfile.Username);
-			tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+			Visible = false
+		};
+		_userSearchResultsPopup.Hide();
+		_userSearchResultsPopup.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+		{
+			BgColor = new Color(0.12f, 0.10f, 0.20f, 0.96f),
+			BorderColor = new Color(0.66f, 0.55f, 0.86f, 0.90f),
+			BorderWidthLeft = 1,
+			BorderWidthTop = 1,
+			BorderWidthRight = 1,
+			BorderWidthBottom = 1,
+			CornerRadiusTopLeft = 10,
+			CornerRadiusTopRight = 10,
+			CornerRadiusBottomLeft = 10,
+			CornerRadiusBottomRight = 10
+		});
+
+		_userSearchResultsContent = new Panel
+		{
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill
+		};
+		_userSearchResultsContent.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_userSearchResultsContent.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+		{
+			BgColor = new Color(0.15f, 0.12f, 0.24f, 0.97f),
+			BorderColor = new Color(0.72f, 0.62f, 0.92f, 0.88f),
+			BorderWidthLeft = 1,
+			BorderWidthTop = 1,
+			BorderWidthRight = 1,
+			BorderWidthBottom = 1,
+			CornerRadiusTopLeft = 10,
+			CornerRadiusTopRight = 10,
+			CornerRadiusBottomLeft = 10,
+			CornerRadiusBottomRight = 10
+		});
+
+		_userSearchResultsScroll = new ScrollContainer
+		{
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill
+		};
+		_userSearchResultsScroll.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_userSearchResultsScroll.OffsetLeft = 8;
+		_userSearchResultsScroll.OffsetTop = 8;
+		_userSearchResultsScroll.OffsetRight = -8;
+		_userSearchResultsScroll.OffsetBottom = -8;
+		_userSearchResultsContent.AddChild(_userSearchResultsScroll);
+
+		_userSearchResultsList = new VBoxContainer
+		{
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill
+		};
+		_userSearchResultsList.AddThemeConstantOverride("separation", 4);
+		_userSearchResultsScroll.AddChild(_userSearchResultsList);
+
+		_userSearchResultsPopup.AddChild(_userSearchResultsContent);
+		AddChild(_userSearchResultsPopup);
+	}
+
+	private void OnSearchBarTextChanged()
+	{
+		var currentText = _searchBarText.Text ?? string.Empty;
+		if (currentText.Contains('\n') || currentText.Contains('\r'))
+		{
+			_searchBarText.Text = NormalizeSearchInput(currentText);
+			_ = TriggerUserSearchFromInputAsync();
+			return;
 		}
 
+		_ = UpdateUserSearchResultsAsync(_searchBarText.Text);
+	}
+
+	private void OnSearchBarGuiInput(InputEvent @event)
+	{
+		if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+			return;
+
+		switch (keyEvent.Keycode)
+		{
+			case Key.Down:
+				if (_userSearchResultsPopup.Visible)
+				{
+					MoveUserSearchSelection(1);
+					AcceptEvent();
+				}
+				return;
+			case Key.Up:
+				if (_userSearchResultsPopup.Visible)
+				{
+					MoveUserSearchSelection(-1);
+					AcceptEvent();
+				}
+				return;
+			case Key.Escape:
+				HideUserSearchResultsPopup();
+				return;
+			case Key.Enter:
+			case Key.KpEnter:
+				AcceptEvent();
+				_ = TriggerUserSearchFromInputAsync();
+				return;
+		}
+	}
+
+	private async Task TriggerUserSearchFromInputAsync()
+	{
+		var username = ResolveUserSearchUsername();
+		if (string.IsNullOrWhiteSpace(username))
+			return;
+
+		HideUserSearchResultsPopup();
+		await OpenUserProfileByUsernameAsync(username);
+	}
+
+	private string ResolveUserSearchUsername()
+	{
+		if (_userSearchResultsPopup.Visible &&
+			_selectedUserSearchResultIndex >= 0 &&
+			_selectedUserSearchResultIndex < _userSearchResultUsernames.Count)
+			return _userSearchResultUsernames[_selectedUserSearchResultIndex];
+
+		return NormalizeSearchInput(_searchBarText.Text);
+	}
+
+	private async Task UpdateUserSearchResultsAsync(string? query)
+	{
+		var search = NormalizeSearchInput(query);
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			HideUserSearchResultsPopup();
+			return;
+		}
+
+		var requestId = ++_userSearchRequestId;
+		var similarUsers = await _profileService.SearchUsersBySimilarity(search, 10);
+		if (requestId != _userSearchRequestId || !IsScreenAlive())
+			return;
+
+		var usernames = similarUsers
+			.Select(user => NormalizeSearchInput(user.Username))
+			.Where(username => !string.IsNullOrWhiteSpace(username))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Cast<string>();
+
+		PopulateUserSearchResults(usernames);
+	}
+
+	private void PopulateUserSearchResults(IEnumerable<string> usernames)
+	{
+		foreach (Node child in _userSearchResultsList.GetChildren().ToArray())
+			child.QueueFree();
+
+		_userSearchResultUsernames.Clear();
+		_userSearchResultButtons.Clear();
+		_selectedUserSearchResultIndex = -1;
+
+		foreach (var username in usernames.Take(10))
+		{
+			var trimmedUsername = NormalizeSearchInput(username);
+			if (string.IsNullOrWhiteSpace(trimmedUsername))
+				continue;
+
+			var index = _userSearchResultUsernames.Count;
+			_userSearchResultUsernames.Add(trimmedUsername);
+			var itemButton = CreateUserSearchResultButton(trimmedUsername, index);
+			_userSearchResultButtons.Add(itemButton);
+			_userSearchResultsList.AddChild(itemButton);
+
+			itemButton.Modulate = new Color(1, 1, 1, 0);
+			var tween = CreateTween();
+			tween.TweenProperty(itemButton, "modulate:a", 1f, 0.08f);
+		}
+
+		if (_userSearchResultUsernames.Count == 0)
+		{
+			HideUserSearchResultsPopup();
+			return;
+		}
+
+		SetSelectedUserSearchResult(0, updateSearchField: false);
+		ShowUserSearchResultsPopup();
+	}
+
+	private void ShowUserSearchResultsPopup()
+	{
+		if (_userSearchResultUsernames.Count == 0)
+			return;
+
+		var textRect = _searchBarText.GetGlobalRect();
+		var buttonRect = _searchBarButton.GetGlobalRect();
+
+		var minX = Mathf.Min(textRect.Position.X, buttonRect.Position.X);
+		var maxX = Mathf.Max(textRect.End.X, buttonRect.End.X);
+		var popupWidth = Math.Max(260, (int)Mathf.Ceil(maxX - minX));
+		var popupHeight = Mathf.Clamp((_userSearchResultUsernames.Count * 38) + 14, 74, 260);
+		var popupY = (int)Mathf.Ceil(textRect.End.Y + 4f);
+		var popupRect = new Rect2I((int)Mathf.Floor(minX), popupY, popupWidth, popupHeight);
+
+		_userSearchResultsPopup.Popup(popupRect);
+	}
+
+	private void HideUserSearchResultsPopup()
+	{
+		_selectedUserSearchResultIndex = -1;
+		foreach (var button in _userSearchResultButtons)
+			button.SetPressedNoSignal(false);
+
+		if (GodotObject.IsInstanceValid(_userSearchResultsPopup) && _userSearchResultsPopup.Visible)
+			_userSearchResultsPopup.Hide();
+	}
+
+	private Button CreateUserSearchResultButton(string username, int index)
+	{
+		var button = new Button
+		{
+			Text = username,
+			Alignment = HorizontalAlignment.Left,
+			ClipText = true,
+			CustomMinimumSize = new Vector2(0, 32),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			ToggleMode = true,
+			FocusMode = Control.FocusModeEnum.None
+		};
+		UiStyle.StyleTopBarButton(button);
+		UiStyle.TightenButtonContentPadding(button, horizontal: 8f, vertical: 4f);
+
+		button.MouseEntered += () => SetSelectedUserSearchResult(index, updateSearchField: true);
+		button.Pressed += () => _ = OnUserSearchResultPressedAsync(index);
+		return button;
+	}
+
+	private void SetSelectedUserSearchResult(int index, bool updateSearchField)
+	{
+		if (index < 0 || index >= _userSearchResultUsernames.Count || index >= _userSearchResultButtons.Count)
+			return;
+
+		_selectedUserSearchResultIndex = index;
+		for (int i = 0; i < _userSearchResultButtons.Count; i++)
+			_userSearchResultButtons[i].SetPressedNoSignal(i == index);
+
+		if (!updateSearchField)
+			return;
+
+		var username = _userSearchResultUsernames[index];
+		_searchBarText.Text = username;
+		_searchBarText.SetCaretColumn(username.Length);
+	}
+
+	private void MoveUserSearchSelection(int direction)
+	{
+		if (_userSearchResultUsernames.Count == 0)
+			return;
+
+		var nextIndex = _selectedUserSearchResultIndex;
+		if (nextIndex < 0)
+			nextIndex = 0;
+		else
+			nextIndex = Mathf.Wrap(nextIndex + direction, 0, _userSearchResultUsernames.Count);
+
+		SetSelectedUserSearchResult(nextIndex, updateSearchField: true);
+	}
+
+	private async Task OnUserSearchResultPressedAsync(int index)
+	{
+		if (index < 0 || index >= _userSearchResultUsernames.Count)
+			return;
+
+		SetSelectedUserSearchResult(index, updateSearchField: true);
+		var username = _userSearchResultUsernames[index];
+		HideUserSearchResultsPopup();
+		await OpenUserProfileByUsernameAsync(username);
+	}
+
+	private async Task<bool> OpenUserProfileByUsernameAsync(string username)
+	{
+		if (string.IsNullOrWhiteSpace(username))
+			return false;
+
+		var profile = await _profileService.GetUserProfile(username.Trim());
+		if (profile == null)
+			return false;
+
+		Global.foundProfile = profile;
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
+		tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+		return true;
+	}
+
+	private static string NormalizeSearchInput(string? text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return string.Empty;
+
+		return text.Replace("\r", " ").Replace("\n", " ").Trim();
 	}
 
 	private void OnLogoutPressed()

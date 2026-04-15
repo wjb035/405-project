@@ -19,17 +19,20 @@ public static class ActivityManager
 		if (!timerRunning){
 			checkTimer = new Timer();
 			checkTimer.WaitTime = 60;
-			checkTimer.Autostart = false;
+			checkTimer.Autostart = true;
 			checkTimer.OneShot = false;
 
-			 var root = Engine.GetMainLoop() as SceneTree;
-				if (root != null)
-				{
-					root.Root.AddChild(checkTimer);
-				}
+			var root = Engine.GetMainLoop() as SceneTree;
+			if (root?.Root == null)
+			{
+				GD.PrintErr("[ActivityManager] Scene root not available, cannot start activity timer.");
+				return;
+			}
+
+			// HomeScreen calls this during _Ready; defer add to avoid "parent busy setting up children".
+			root.Root.CallDeferred(Node.MethodName.AddChild, checkTimer);
 
 			checkTimer.Timeout += OnTimerTimeout;
-			checkTimer.Start();
 			timerRunning = true;
 		}
 	}
@@ -66,7 +69,11 @@ public static class ActivityManager
 
 		var http = new HttpRequest();
 		var root = Engine.GetMainLoop() as SceneTree; // get root to add HttpRequest
-		root.Root.AddChild(http);
+		if (root?.Root == null)
+		{
+			GD.PrintErr("[ActivityManager] Scene root not available, cannot create HTTP request.");
+			return;
+		}
 
 		string[] headers = new string[]
 		{
@@ -89,7 +96,26 @@ public static class ActivityManager
 		};
 
 		GD.Print("[ActivityManager] Sending activity request: " + json);
-		http.Request(BaseUrl, headers, HttpClient.Method.Post, json);
+		// Defer add/request so we don't call Request before the node is in-tree.
+		root.Root.CallDeferred(Node.MethodName.AddChild, http);
+		Callable.From(() =>
+		{
+			if (!http.IsInsideTree())
+			{
+				GD.PrintErr("[ActivityManager] HttpRequest is not inside tree.");
+				http.QueueFree();
+				tcs.TrySetResult(false);
+				return;
+			}
+
+			var requestError = http.Request(BaseUrl, headers, HttpClient.Method.Post, json);
+			if (requestError != Error.Ok)
+			{
+				GD.PrintErr($"[ActivityManager] Request failed to start: {requestError}");
+				http.QueueFree();
+				tcs.TrySetResult(false);
+			}
+		}).CallDeferred();
 
 		await tcs.Task;
 	}

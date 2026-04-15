@@ -62,6 +62,22 @@ public class ProfileCustomizationController : ControllerBase
         return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
     }
 
+    [Authorize]
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchUsersBySimilarity([FromQuery] string query, [FromQuery] int limit = 12)
+    {
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null)
+            return BadRequest("User not authenticated.");
+
+        if (string.IsNullOrWhiteSpace(query))
+            return Ok(Array.Empty<UserSearchResultDTO>());
+
+        var currentUserId = Guid.Parse(userIdClaim.Value);
+        var searchResults = await _profileCustomizationService.SearchUsersBySimilarityAsync(currentUserId, query, limit);
+        return Ok(searchResults);
+    }
+
 
     [Authorize]
     [HttpGet("{username}")]

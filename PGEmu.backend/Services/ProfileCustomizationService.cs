@@ -12,6 +12,8 @@ namespace PGEmuBackend.Services;
 public class ProfileCustomizationService : IProfileCustomizationService
 {
     private readonly AppDbContext _context;
+    private const int MaximumSearchLimit = 25;
+    private const int CandidateFetchCount = 250;
 
     public ProfileCustomizationService(AppDbContext context)
     {
@@ -107,6 +109,7 @@ public class ProfileCustomizationService : IProfileCustomizationService
             user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
+        if (user == null) return (false, "User not found.", null);
 
         await _context.Entry(user).Reference(u => u.Profile).LoadAsync();
 
@@ -121,7 +124,6 @@ public class ProfileCustomizationService : IProfileCustomizationService
         userProfile = user.Profile;
 
         Console.WriteLine(user.Username);
-        if (user == null) return (false, "User not found.", null);
         return (true, "User found",
             new ProfileCustomizationDTO
             {
@@ -130,5 +132,115 @@ public class ProfileCustomizationService : IProfileCustomizationService
                 Bio = user.Profile.Bio,
                 AvatarUrl = user.Profile.AvatarUrl,
             });
+    }
+
+    public async Task<IReadOnlyList<UserSearchResultDTO>> SearchUsersBySimilarityAsync(Guid currentUserId, string query, int limit)
+    {
+        var normalizedQuery = query?.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedQuery))
+            return Array.Empty<UserSearchResultDTO>();
+
+        var resolvedLimit = Math.Clamp(limit, 1, MaximumSearchLimit);
+        var containsPattern = $"%{normalizedQuery}%";
+        var prefixPattern = $"{normalizedQuery}%";
+        var maxLengthDiff = Math.Max(2, normalizedQuery.Length / 2);
+
+        var candidates = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id != currentUserId)
+            .Select(u => new
+            {
+                u.Id,
+                u.Username,
+                AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null,
+                LowerUsername = u.Username.ToLower(),
+                LengthDiff = Math.Abs(u.Username.Length - normalizedQuery.Length)
+            })
+            .Where(user =>
+                EF.Functions.Like(user.LowerUsername, prefixPattern) ||
+                EF.Functions.Like(user.LowerUsername, containsPattern) ||
+                user.LengthDiff <= maxLengthDiff)
+            .OrderByDescending(user => EF.Functions.Like(user.LowerUsername, prefixPattern))
+            .ThenByDescending(user => EF.Functions.Like(user.LowerUsername, containsPattern))
+            .ThenBy(user => user.LengthDiff)
+            .ThenBy(user => user.Username)
+            .Take(CandidateFetchCount)
+            .ToListAsync();
+
+        var rankedUsers = candidates
+            .Select(candidate => new
+            {
+                candidate.Id,
+                candidate.Username,
+                candidate.AvatarUrl,
+                Score = ComputeSearchSimilarity(candidate.Username, normalizedQuery)
+            })
+            .Where(candidate => candidate.Score > 0f)
+            .OrderByDescending(candidate => candidate.Score)
+            .ThenBy(candidate => candidate.Username, StringComparer.OrdinalIgnoreCase)
+            .Take(resolvedLimit)
+            .Select(candidate => new UserSearchResultDTO
+            {
+                UserId = candidate.Id,
+                Username = candidate.Username,
+                AvatarUrl = candidate.AvatarUrl
+            })
+            .ToArray();
+
+        return rankedUsers;
+    }
+
+    private static float ComputeSearchSimilarity(string candidate, string query)
+    {
+        if (string.IsNullOrWhiteSpace(candidate) || string.IsNullOrWhiteSpace(query))
+            return 0f;
+
+        var candidateLower = candidate.Trim().ToLowerInvariant();
+        var queryLower = query.Trim().ToLowerInvariant();
+
+        if (candidateLower == queryLower)
+            return 1000f;
+
+        float score = 0f;
+        if (candidateLower.StartsWith(queryLower, StringComparison.Ordinal))
+            score += 450f;
+        if (candidateLower.Contains(queryLower, StringComparison.Ordinal))
+            score += 220f;
+
+        var maxPrefixLength = Math.Min(candidateLower.Length, queryLower.Length);
+        int commonPrefixLength = 0;
+        for (; commonPrefixLength < maxPrefixLength; commonPrefixLength++)
+        {
+            if (candidateLower[commonPrefixLength] != queryLower[commonPrefixLength])
+                break;
+        }
+
+        score += commonPrefixLength * 38f;
+        score += ComputeBigramOverlap(candidateLower, queryLower) * 220f;
+        score -= Math.Abs(candidateLower.Length - queryLower.Length) * 3f;
+
+        return score > 0f ? score : 0f;
+    }
+
+    private static float ComputeBigramOverlap(string left, string right)
+    {
+        if (left.Length < 2 || right.Length < 2)
+            return left == right ? 1f : 0f;
+
+        var leftBigrams = new HashSet<string>();
+        for (int index = 0; index < left.Length - 1; index++)
+            leftBigrams.Add(left.Substring(index, 2));
+
+        int overlap = 0;
+        int rightCount = 0;
+        for (int index = 0; index < right.Length - 1; index++)
+        {
+            rightCount++;
+            if (leftBigrams.Contains(right.Substring(index, 2)))
+                overlap++;
+        }
+
+        var divisor = Math.Max(leftBigrams.Count, rightCount);
+        return divisor == 0 ? 0f : (float)overlap / divisor;
     }
 }

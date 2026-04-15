@@ -3,6 +3,7 @@ using PGEmu.Services;
 using PGEmu.Services.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 
@@ -35,15 +36,15 @@ public partial class FoundUserProfile : Control
 	private Label _gamer_tag = null!;
 	private Label _profile_note = null!;
 	private Label _title_gamertag = null!;
-	private Label _profile_status = null!;
+	private Label? _profile_status = null;
 	
-	private Button _addFriend = null;
+	private Button? _addFriend = null;
 	private Button _friends_list = null!;
-	private Button _profileSettingsShortcut = null!;
-	private MenuButton _dropdownButton = null!;
-	private PopupMenu _dropdownOptions = null; 
+	private Button? _profileSettingsShortcut = null;
+	private MenuButton? _dropdownButton = null;
+	private PopupMenu? _dropdownOptions = null; 
 	
-	private TextureRect _avatar;
+	private TextureRect _avatar = null!;
 	private int _uiHorizontalAxisDir;
 	private long _uiHorizontalAxisNextMs;
 	private int _uiVerticalAxisDir;
@@ -54,18 +55,29 @@ public partial class FoundUserProfile : Control
 
 	public override async void _Ready()
 	{
-		GD.Print("Recieved username:", profile.Username);
-		GD.Print(profile.UserId);
-		
-		_back = GetNode<Button>(BackPath);
+		if (profile == null)
+		{
+			profile = new ProfileResponse
+			{
+				Username = "Player",
+				Bio = "No bio yet.",
+				AvatarUrl = string.Empty,
+				UserId = string.Empty
+			};
+		}
 
+		_back = GetNode<Button>(BackPath);
+		if (!_back.IsConnected(Button.SignalName.Pressed, Callable.From(GoBack)))
 			_back.Pressed += GoBack;
 
-		_profileSettingsShortcut = GetNode<Button>(ProfileSettingsShortcutPath);
-		if (!_profileSettingsShortcut.IsConnected(Button.SignalName.Pressed, Callable.From(GoProfileSettings)))
+		_profileSettingsShortcut = GetNodeOrNull<Button>(ProfileSettingsShortcutPath);
+		if (_profileSettingsShortcut != null &&
+			!_profileSettingsShortcut.IsConnected(Button.SignalName.Pressed, Callable.From(GoProfileSettings)))
 		{
 			_profileSettingsShortcut.Pressed += GoProfileSettings;
 		}
+		if (_profileSettingsShortcut != null)
+			_profileSettingsShortcut.Visible = false;
 		
 		_friends_list = GetNode<Button>(FriendsListPath);
 		if (!_friends_list.IsConnected(Button.SignalName.Pressed, Callable.From(GoFriendsList)))
@@ -73,29 +85,27 @@ public partial class FoundUserProfile : Control
 			_friends_list.Pressed += GoFriendsList;
 		}
 		
-		_addFriend = GetNode<Button>(AddFriendPath);
-		_addFriend.Pressed += AddFriend;
+		_addFriend = GetNodeOrNull<Button>(AddFriendPath);
+		if (_addFriend != null && !_addFriend.IsConnected(Button.SignalName.Pressed, Callable.From(AddFriend)))
+			_addFriend.Pressed += AddFriend;
 		
-		// Get the blocked users and check if this one is blocked
-		GD.Print("rbuhghghh;");
-		userBlocked = await _friendService.GetIsBlocked(profile.UserId);
-		GD.Print(userBlocked);
-		GD.Print("blocekds" + blockedUsers);
-		
-		
-		
-		_dropdownButton = GetNode<MenuButton>(DropdownOptionsPath);
-		_dropdownOptions = _dropdownButton.GetPopup();
-		if (!userBlocked) 
+		_dropdownButton = GetNodeOrNull<MenuButton>(DropdownOptionsPath);
+		_dropdownOptions = _dropdownButton?.GetPopup();
+		if (_dropdownOptions != null)
 		{
-			_dropdownOptions.AddItem("Block", 1);
-		} else
-		{
-			_dropdownOptions.AddItem("Unblock", 1);
+			_dropdownOptions.Clear();
+			_dropdownOptions.AddItem("Message", 0);
+			if (!string.IsNullOrWhiteSpace(profile.UserId))
+				userBlocked = await _friendService.GetIsBlocked(profile.UserId);
+			_dropdownOptions.AddItem(userBlocked ? "Unblock" : "Block", 1);
+			_dropdownOptions.IdPressed += OnDropdownSelected;
 		}
-		_dropdownOptions.IdPressed += OnDropdownSelected;
+
+		if (!string.IsNullOrWhiteSpace(ProfileStatusPath))
+		{
+			_profile_status = GetNodeOrNull<Label>(ProfileStatusPath);
+		}
 		
-		_profile_status = GetNode<Label>(ProfileStatusPath);
 		_title_gamertag = GetNode<Label>(TitleGamertagPath);
 		_gamer_tag = GetNode<Label>(GamerTagPath);
 		_profile_note = GetNode<Label>(ProfileNotePath);
@@ -217,9 +227,21 @@ public partial class FoundUserProfile : Control
 
 	private List<List<Button>> GetControllerUiRows()
 	{
+		var topRow = _profileSettingsShortcut != null && _profileSettingsShortcut.Visible
+			? new Button?[] { _back, _profileSettingsShortcut }
+			: new Button?[] { _back };
+
+		var actionRow = _addFriend != null && _dropdownButton != null
+			? new Button?[] { _addFriend, _dropdownButton }
+			: _addFriend != null
+				? new Button?[] { _addFriend }
+				: _dropdownButton != null
+					? new Button?[] { _dropdownButton }
+					: Array.Empty<Button?>();
+
 		return ControllerService.BuildVisibleRows(
-			new Button?[] { _back, _profileSettingsShortcut },
-			new Button?[] { _addFriend, _dropdownButton },
+			topRow,
+			actionRow,
 			new Button?[] { _friends_list });
 	}
 
@@ -364,110 +386,288 @@ public partial class FoundUserProfile : Control
 
 	private void ApplyThemeAesthetic()
 	{
-		//var title = GetNodeOrNull<Label>(_title_gamertag);
-		UiStyle.StyleTitleLabel(_title_gamertag);
+		if (GetNodeOrNull<ColorRect>("Bg") is ColorRect bg)
+			bg.Color = new Color(0.068f, 0.048f, 0.121f, 0.96f);
 
-		UiStyle.StyleTitleLabel(_gamer_tag);
-		UiStyle.StyleMetaLabel(_profile_status);
-		UiStyle.StyleMetaLabel(_profile_note);
+		var cardSurface = new Color(0.10f, 0.09f, 0.16f, 0.93f);
+		var cardSurfaceAlt = new Color(0.12f, 0.10f, 0.19f, 0.95f);
+		var cardSurfaceInset = new Color(0.15f, 0.13f, 0.23f, 0.96f);
+		var cardBorder = new Color(0.56f, 0.48f, 0.76f, 0.46f);
+		var cardBorderStrong = new Color(0.72f, 0.64f, 0.92f, 0.62f);
+		var avatarBorder = new Color(0.48f, 0.83f, 1f, 0.48f);
+		var chipSurface = new Color(0.17f, 0.14f, 0.27f, 0.92f);
+		var chipAccent = new Color(0.74f, 0.84f, 1f, 0.84f);
+		var showcaseAccent = new Color(0.47f, 0.84f, 1f, 0.90f);
+		var recentAccent = new Color(0.57f, 0.97f, 0.79f, 0.88f);
+		var friendsAccent = new Color(1f, 0.73f, 0.86f, 0.90f);
+		var separatorColor = new Color(0.70f, 0.62f, 0.90f, 0.24f);
 
-		// Section headers
-		UiStyle.StyleTitleLabel(GetNodeOrNull<Label>("Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/Showcase"));
-		UiStyle.StyleTitleLabel(GetNodeOrNull<Label>("Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Label"));
-		UiStyle.StyleTitleLabel(GetNodeOrNull<Label>("Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Label"));
-
-		// Themed cards to match the rest of the launcher aesthetic.
-		ApplyCardStyle("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer2");
-		ApplyCardStyle("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer");
-		ApplyCardStyle("Margin/Root/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer");
-		ApplyCardStyle("Margin/Root/Body/RecentGamesAndFriends/ShowcaseSection");
-		ApplyCardStyle("Margin/Root/Body/RecentGamesAndFriends/RecentGames2");
-		ApplyCardStyle("Margin/Root/Body/RecentGamesAndFriends/Friends");
-
-		// Style all list buttons consistently.
 		UiStyle.StyleTopBarButton(_back);
-		UiStyle.StyleTopBarButton(_addFriend);
-		UiStyle.StyleTopBarButton(_dropdownButton);
-		UiStyle.StylePopupMenu(_dropdownOptions);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyParallaxShadow(_back);
+		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
+		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
 
-		// Center "See All" controls so they read as navigation actions.
-		var seeAllRecent = GetNodeOrNull<Button>("Margin/Root/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Button");
-		var seeAllFriends = GetNodeOrNull<Button>("Margin/Root/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Button");
-		if (seeAllRecent != null) seeAllRecent.Text = "See All";
-		if (seeAllFriends != null) seeAllFriends.Text = "See All";
+		if (_profileSettingsShortcut != null)
+		{
+			UiStyle.StyleTopBarButton(_profileSettingsShortcut);
+			UiStyle.AddHoverFeedback(_profileSettingsShortcut);
+			UiStyle.ApplyParallaxShadow(_profileSettingsShortcut);
+			UiStyle.TightenButtonContentPadding(_profileSettingsShortcut, horizontal: 8f, vertical: 3f);
+			ApplyButtonTheme(_profileSettingsShortcut, chipSurface, friendsAccent, isChip: true);
+		}
+
+		if (_addFriend != null)
+		{
+			UiStyle.StyleTopBarButton(_addFriend);
+			UiStyle.AddHoverFeedback(_addFriend);
+			UiStyle.ApplyParallaxShadow(_addFriend);
+			UiStyle.TightenButtonContentPadding(_addFriend, horizontal: 8f, vertical: 3f);
+			ApplyButtonTheme(_addFriend, chipSurface, chipAccent, isChip: true);
+		}
+
+		if (_dropdownButton != null)
+		{
+			UiStyle.StyleTopBarButton(_dropdownButton);
+			UiStyle.AddHoverFeedback(_dropdownButton);
+			UiStyle.ApplyParallaxShadow(_dropdownButton);
+			UiStyle.TightenButtonContentPadding(_dropdownButton, horizontal: 8f, vertical: 3f);
+			ApplyButtonTheme(_dropdownButton, chipSurface, friendsAccent, isChip: true);
+		}
+
+		if (_dropdownOptions != null)
+			UiStyle.StylePopupMenu(_dropdownOptions);
+
+		UiStyle.StyleTitleLabel(_title_gamertag);
+		_title_gamertag.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.98f));
+		UiStyle.StyleTitleLabel(_gamer_tag);
+		UiStyle.StyleStatusLabel(_profile_note);
+		if (_profile_status != null)
+			UiStyle.StyleMetaLabel(_profile_status);
+
+		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/Showcase", showcaseAccent);
+		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Label", recentAccent);
+		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Label", friendsAccent);
+
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2", cardSurfaceAlt, avatarBorder, 18, 1);
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame", cardSurfaceInset, cardBorderStrong, 16, 1);
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer", cardSurface, cardBorderStrong, 16, 1);
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer", cardSurfaceInset, cardBorder, 14, 1);
+
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection", cardSurfaceAlt, WithAlpha(showcaseAccent, 0.40f), 16, 1);
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2", cardSurface, WithAlpha(recentAccent, 0.38f), 16, 1);
+		ApplyCardStyle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends", cardSurfaceAlt, WithAlpha(friendsAccent, 0.40f), 16, 1);
+
+		StyleSeparator("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/HSeparator", WithAlpha(showcaseAccent, 0.32f));
+		StyleSeparator("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/HSeparator", WithAlpha(recentAccent, 0.30f));
+		StyleSeparator("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/HSeparator", WithAlpha(friendsAccent, 0.30f));
+		StyleSeparator("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/GamesAndFriendsSeparator2", separatorColor);
+		StyleSeparator("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/GamesAndFriendsSeparator", separatorColor);
+
+		StyleTileGrid(
+			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid",
+			showcaseAccent,
+			new[]
+			{
+				new Color(0.30f, 0.73f, 1f, 1f),
+				new Color(1f, 0.78f, 0.42f, 1f),
+				new Color(1f, 0.58f, 0.79f, 1f),
+				new Color(0.61f, 0.90f, 0.66f, 1f)
+			});
+		StyleTileGrid(
+			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid",
+			recentAccent,
+			new[]
+			{
+				new Color(0.58f, 0.97f, 0.79f, 1f),
+				new Color(0.48f, 0.84f, 1f, 1f),
+				new Color(0.90f, 0.77f, 1f, 1f),
+				new Color(1f, 0.83f, 0.51f, 1f)
+			});
+		StyleTileGrid(
+			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid",
+			friendsAccent,
+			new[]
+			{
+				new Color(1f, 0.73f, 0.86f, 1f),
+				new Color(0.52f, 0.87f, 1f, 1f),
+				new Color(1f, 0.81f, 0.48f, 1f),
+				new Color(0.72f, 0.89f, 0.67f, 1f)
+			});
+
+		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, recentAccent);
+		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, friendsAccent);
 	}
 
-	private void StyleButtonList(string containerPath)
+	private void StyleTileGrid(string containerPath, Color sectionAccent, Color[] tileAccents)
 	{
 		var container = GetNodeOrNull<Node>(containerPath);
 		if (container == null)
 			return;
 
+		int index = 0;
 		foreach (Node child in container.GetChildren())
 		{
 			if (child is not Button button)
 				continue;
 
-			// Keep list rows compact and consistent.
-			if (button.CustomMinimumSize.Y >= 56f)
-				button.CustomMinimumSize = new Vector2(button.CustomMinimumSize.X, 52f);
+			var accent = tileAccents[index % tileAccents.Length];
+			ApplyTileTheme(button, sectionAccent, accent);
+			index++;
 		}
 	}
 
-	private void ApplyCardStyle(string nodePath)
+	private void StyleFooterButton(string buttonPath, Color background, Color accent)
+	{
+		var button = GetNodeOrNull<Button>(buttonPath);
+		if (button == null)
+			return;
+
+		button.Text = "See All";
+		button.Alignment = HorizontalAlignment.Center;
+		ApplyButtonTheme(button, background, accent, isChip: true);
+	}
+
+	private void ApplyTileTheme(Button button, Color sectionAccent, Color tileAccent)
+	{
+		var baseSurface = Mix(new Color(0.13f, 0.11f, 0.20f, 0.96f), sectionAccent, 0.10f);
+		var background = Mix(baseSurface, tileAccent, 0.22f);
+		var hover = Mix(background, tileAccent, 0.12f);
+		var pressed = Mix(background, tileAccent, 0.06f);
+		var border = WithAlpha(tileAccent, 0.82f);
+		var focusBorder = Mix(tileAccent, new Color(0.97f, 0.95f, 1f, 1f), 0.18f);
+
+		button.Flat = false;
+		button.Alignment = HorizontalAlignment.Left;
+		button.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		button.AddThemeFontSizeOverride("font_size", 14);
+		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, border, 2, 16, 10f, 9f));
+		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, tileAccent, 2, 16, 10f, 9f));
+		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, tileAccent, 2, 16, 10f, 9f));
+		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 3, 16, 10f, 9f));
+		button.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_hover_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_pressed_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_focus_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+	}
+
+	private void StyleSectionTitle(string nodePath, Color color)
+	{
+		var label = GetNodeOrNull<Label>(nodePath);
+		if (label == null)
+			return;
+
+		UiStyle.StyleTitleLabel(label);
+		label.AddThemeColorOverride("font_color", new Color(color.R, color.G, color.B, 0.98f));
+	}
+
+	private void StyleSeparator(string nodePath, Color color)
+	{
+		if (GetNodeOrNull<CanvasItem>(nodePath) is CanvasItem separator)
+			separator.Modulate = color;
+	}
+
+	private void ApplyCardStyle(string nodePath, Color background, Color border, int radius, int borderWidth)
 	{
 		var control = GetNodeOrNull<Control>(nodePath);
 		if (control == null)
 			return;
 
-		control.AddThemeStyleboxOverride("panel", CreateCardStyle());
+		control.AddThemeStyleboxOverride("panel", CreatePanelStyle(background, border, radius, borderWidth));
 	}
 
-	private static StyleBoxFlat CreateCardStyle()
+	private void ApplyButtonTheme(Button button, Color background, Color accent, bool isChip = false)
+	{
+		int borderWidth = 1;
+		int radius = isChip ? 999 : 14;
+		float horizontalPadding = isChip ? 10f : 9f;
+		float verticalPadding = isChip ? 4f : 5f;
+		var hover = Mix(background, accent, 0.11f);
+		var pressed = Mix(background, accent, 0.05f);
+		var focusBorder = Mix(accent, new Color(0.76f, 0.90f, 1f, 1f), 0.25f);
+
+		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, WithAlpha(accent, isChip ? 0.70f : 0.56f), borderWidth, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, accent, borderWidth, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, accent, borderWidth, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 2, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("disabled", CreateButtonStyle(new Color(0.20f, 0.20f, 0.23f, 0.55f), new Color(0.52f, 0.52f, 0.56f, 0.5f), 1, radius, horizontalPadding, verticalPadding));
+		button.AddThemeColorOverride("font_color", new Color(0.95f, 0.94f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_hover_color", new Color(0.95f, 0.94f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_pressed_color", new Color(0.95f, 0.94f, 1f, 0.98f));
+		button.AddThemeColorOverride("font_focus_color", new Color(0.95f, 0.94f, 1f, 0.98f));
+	}
+
+	private static StyleBoxFlat CreatePanelStyle(Color background, Color border, int radius, int borderWidth)
 	{
 		return new StyleBoxFlat
 		{
-			BgColor = new Color(0.10f, 0.09f, 0.16f, 0.90f),
-			BorderWidthLeft = 1,
-			BorderWidthTop = 1,
-			BorderWidthRight = 1,
-			BorderWidthBottom = 1,
-			BorderColor = new Color(0.62f, 0.52f, 0.84f, 0.70f),
+			BgColor = background,
+			BorderWidthLeft = borderWidth,
+			BorderWidthTop = borderWidth,
+			BorderWidthRight = borderWidth,
+			BorderWidthBottom = borderWidth,
+			BorderColor = border,
 			BorderBlend = true,
-			CornerRadiusTopLeft = 12,
-			CornerRadiusTopRight = 12,
-			CornerRadiusBottomRight = 12,
-			CornerRadiusBottomLeft = 12
+			CornerRadiusTopLeft = radius,
+			CornerRadiusTopRight = radius,
+			CornerRadiusBottomRight = radius,
+			CornerRadiusBottomLeft = radius
 		};
+	}
+
+	private static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth, int radius, float horizontalPadding, float verticalPadding)
+	{
+		return new StyleBoxFlat
+		{
+			BgColor = background,
+			BorderWidthLeft = borderWidth,
+			BorderWidthTop = borderWidth,
+			BorderWidthRight = borderWidth,
+			BorderWidthBottom = borderWidth,
+			BorderColor = border,
+			BorderBlend = true,
+			CornerRadiusTopLeft = radius,
+			CornerRadiusTopRight = radius,
+			CornerRadiusBottomRight = radius,
+			CornerRadiusBottomLeft = radius,
+			ContentMarginLeft = horizontalPadding,
+			ContentMarginTop = verticalPadding,
+			ContentMarginRight = horizontalPadding,
+			ContentMarginBottom = verticalPadding
+		};
+	}
+
+	private static Color WithAlpha(Color color, float alpha)
+	{
+		return new Color(color.R, color.G, color.B, alpha);
+	}
+
+	private static Color Mix(Color from, Color to, float amount)
+	{
+		return new Color(
+			from.R + ((to.R - from.R) * amount),
+			from.G + ((to.G - from.G) * amount),
+			from.B + ((to.B - from.B) * amount),
+			from.A + ((to.A - from.A) * amount));
 	}
 
 	private void GoBack()
 	{
 		ResetUiNavigationState();
-		// Return to the scene we came from if provided, otherwise go home.
+		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
-
-		if (string.Equals(returnScene, "res://profile.tscn", StringComparison.OrdinalIgnoreCase) &&
-			tree.HasMeta(SettingsParentReturnSceneMeta))
-		{
-			var parentScene = tree.GetMeta(SettingsParentReturnSceneMeta).AsString();
-			if (!string.IsNullOrWhiteSpace(parentScene))
-				returnScene = parentScene;
-
-			tree.RemoveMeta(SettingsParentReturnSceneMeta);
-		}
-
-		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
-		tree.SetMeta("pgemu_return_scene", returnScene);
-
-		tree.ChangeSceneToFile(returnScene);
+		if (tree.HasMeta("pgemu_return_scene"))
+			tree.RemoveMeta("pgemu_return_scene");
+		tree.ChangeSceneToFile("res://profile.tscn");
 	}
 	
 	private async void AddFriend()
 	{
+		if (string.IsNullOrWhiteSpace(profile.UserId))
+			return;
+
 		_friendService.SendFriendRequest(profile.UserId);
-		_addFriend.Hide();
+		_addFriend?.Hide();
 		ResetUiNavigationState();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		//_cancelRequest.Show();
@@ -475,19 +675,22 @@ public partial class FoundUserProfile : Control
 	}
 	
 	private void OnDropdownSelected(long id)
-	{	
-		GD.Print("gungingigngnahgjgidsknfkajhfrekfhrewoi");
+	{
+		if (_dropdownOptions == null)
+			return;
+
 		switch (id)
 		{
 			case 0:
 				// messaging needs to be implemented
 				break;
 			case 1:
-				if (_dropdownOptions.GetItemText(1) == "Block")
+				var actionLabel = _dropdownOptions.GetItemText(_dropdownOptions.GetItemIndex(1));
+				if (string.Equals(actionLabel, "Block", StringComparison.OrdinalIgnoreCase))
 				{	
 					BlockUser();
 				}
-				else if (_dropdownOptions.GetItemText(1) == "Unblock")
+				else if (string.Equals(actionLabel, "Unblock", StringComparison.OrdinalIgnoreCase))
 				{
 					UnblockUser();
 				}
@@ -501,18 +704,32 @@ public partial class FoundUserProfile : Control
 	
 	public void BlockUser()
 	{
+		if (string.IsNullOrWhiteSpace(profile.UserId) || _dropdownOptions == null)
+			return;
+
 		GD.Print($"Attempting to block {profile.UserId}");
 		_friendService.Block(profile.UserId);
-		_dropdownOptions.RemoveItem(1);
-		_dropdownOptions.AddItem("UnBlock", 1);
+		var blockIndex = _dropdownOptions.GetItemIndex(1);
+		if (blockIndex >= 0)
+		{
+			_dropdownOptions.SetItemText(blockIndex, "Unblock");
+			_dropdownOptions.SetItemId(blockIndex, 1);
+		}
 	}
 	
-		public void UnblockUser()
+	public void UnblockUser()
 	{
-		GD.Print($"Attempting to block {profile.UserId}");
+		if (string.IsNullOrWhiteSpace(profile.UserId) || _dropdownOptions == null)
+			return;
+
+		GD.Print($"Attempting to unblock {profile.UserId}");
 		_friendService.Unblock(profile.UserId);
-		_dropdownOptions.RemoveItem(1);
-		_dropdownOptions.AddItem("Block", 1);
+		var blockIndex = _dropdownOptions.GetItemIndex(1);
+		if (blockIndex >= 0)
+		{
+			_dropdownOptions.SetItemText(blockIndex, "Block");
+			_dropdownOptions.SetItemId(blockIndex, 1);
+		}
 	}
 	
 	private void GoFriendsList() 
@@ -555,6 +772,8 @@ public partial class FoundUserProfile : Control
 				err = avatar.LoadPngFromBuffer(imageData);
 				if (err != Error.Ok)
 					err = avatar.LoadJpgFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = avatar.LoadWebpFromBuffer(imageData);
 			}
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
@@ -589,7 +808,20 @@ public partial class FoundUserProfile : Control
 
 		var projectDir = ProjectSettings.GlobalizePath("res://");
 		var relativePath = cleanReference.TrimStart('/').Replace('/', System.IO.Path.DirectorySeparatorChar);
-		return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, "..", "PGEmu.backend", relativePath));
+		var candidates = new[]
+		{
+			System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, "..", "PGEmu.backend", relativePath)),
+			System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Debug", "net10.0", relativePath)),
+			System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Release", "net10.0", relativePath))
+		};
+
+		foreach (var candidate in candidates)
+		{
+			if (System.IO.File.Exists(candidate))
+				return candidate;
+		}
+
+		return candidates[0];
 	}
 	
 }
