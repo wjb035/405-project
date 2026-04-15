@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="12_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
+[ext_resource type="Shader" uid="uid://buq1ti2e1ebm5" path="res://ShaderSlop/CRT.gdshader" id="18_kf1hi"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oy6yd"]
 shader = ExtResource("3_iw72c")
@@ -46,6 +47,30 @@ corner_radius_top_left = 13
 corner_radius_top_right = 13
 corner_radius_bottom_right = 13
 corner_radius_bottom_left = 13
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_26m5w"]
+shader = ExtResource("18_kf1hi")
+shader_parameter/overlay = true
+shader_parameter/scanlines_opacity = 0.13200000627
+shader_parameter/scanlines_width = 0.378000017955
+shader_parameter/grille_opacity = 0.0800000038
+shader_parameter/resolution = Vector2(640, 480)
+shader_parameter/pixelate = false
+shader_parameter/roll = false
+shader_parameter/roll_speed = 0.0
+shader_parameter/roll_size = 0.0
+shader_parameter/roll_variation = 0.10000000149012
+shader_parameter/distort_intensity = 0.00800000038
+shader_parameter/noise_opacity = 0.0550000026125
+shader_parameter/noise_speed = 5.0
+shader_parameter/static_noise_intensity = 0.0
+shader_parameter/aberration = 0.00600004778499996
+shader_parameter/brightness = 1.0
+shader_parameter/discolor = false
+shader_parameter/warp_amount = 0.0
+shader_parameter/clip_warp = false
+shader_parameter/vignette_intensity = 0.175
+shader_parameter/vignette_opacity = 0.1370000065075
 
 [node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
@@ -338,5 +363,22 @@ offset_right = 19.0
 offset_bottom = 30.1
 theme_override_colors/font_color = Color(1, 1, 1, 0.8)
 horizontal_alignment = 1
+
+[node name="PostProcessing" type="CanvasLayer" parent="." unique_id=2107908696]
+
+[node name="ColorRect" type="ColorRect" parent="PostProcessing" unique_id=1353371122]
+visible = false
+material = SubResource("ShaderMaterial_26m5w")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -96.0
+offset_top = -96.0
+offset_right = 96.0
+offset_bottom = 88.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_use_anchors_ = true
 
 [connection signal="pressed" from="Margin/Root/Foreground1/TopBar/TopIcons/BtnCollections" to="." method="OnCollectionsPressed"]

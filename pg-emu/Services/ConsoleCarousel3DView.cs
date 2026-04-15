@@ -169,6 +169,17 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
         _viewport.Scaling3DMode = SubViewport.Scaling3DModeEnum.Fsr;
         _viewport.Scaling3DScale = 1.0f; 
         _viewport.FsrSharpness = 0.3f;
+        
+        var overlay = new ColorRect();
+        overlay.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        overlay.MouseFilter = MouseFilterEnum.Ignore; 
+        var overlayMat = new ShaderMaterial();
+        overlayMat.Shader = GD.Load<Shader>("res://ShaderSlop/PS1Effect.gdshader");
+        overlayMat.SetShaderParameter("resolution", new Vector2I(320, 240));
+        overlayMat.SetShaderParameter("jitter", 0.25f);
+        overlayMat.SetShaderParameter("affine_mapping", true);
+        overlay.Material = overlayMat;
+        AddChild(overlay);
 
     }
 
@@ -264,7 +275,6 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
                 model.RotateY(Mathf.DegToRad(-18f));
                 break;
         }
-
         wrapper.AddChild(model);
         ConfigureConsoleAnimation(wrapper, model, type);
         return wrapper;
@@ -321,6 +331,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
     return root;
 }
 
+    
     private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
         new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic, SpecularMode = BaseMaterial3D.SpecularModeEnum.Disabled, };
 
