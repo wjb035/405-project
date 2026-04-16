@@ -5,9 +5,9 @@ using PGEmu.app;
 using PGEmu.Services;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-
+   
 public partial class Jukebox : Control
-{
+{  
 	private const string LibraryRefreshTokenMeta = "pgemu_library_refresh_token";
 
 	// NodePaths assigned in vault.tscn, keeps UI wiring in-editor instead of hardcoding node strings.
@@ -15,15 +15,22 @@ public partial class Jukebox : Control
 	[Export] public NodePath PrevPath;
 	[Export] public NodePath NextPath;
 	[Export] public NodePath PausePath;
-
+	[Export] public NodePath LoopPath;
+	[Export] public NodePath ShufflePath;
+	[Export] public NodePath PlayingPath;
+	
 	// Cached scene nodes, resolved in _Ready().
 	private Button _back = null!;
 	private Button _prev= null!;
 	private Button _next = null!;
 	private Button _pause = null!;
+	private Button _loop = null!;
+	private Button _shuffle = null!;
+	private Label _playing = null!;
 	public int currentIndex = -1;
 	public List<String> results = null;
 	private AudioManager audioMan;
+	
 	public override void _Ready()
 	{
 		
@@ -33,7 +40,10 @@ public partial class Jukebox : Control
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
 		_pause = GetNode<Button>(PausePath);
-
+		_loop = GetNode<Button>(LoopPath);
+		_shuffle = GetNode<Button>(ShufflePath);
+		_playing = GetNode<Label>(PlayingPath);
+		
 		VBoxContainer container = GetNode<VBoxContainer>("Margin/Root/Body/ScrollContainer/ButtonContainer");
 		GD.Print("hi from after container");
 
@@ -43,6 +53,7 @@ public partial class Jukebox : Control
 		if (_next != null) _next.Pressed += NextSong;
 		if (_prev != null) _prev.Pressed += PrevSong;
 		if (_pause != null) _pause.Pressed += Pause;
+		if (_loop != null) _loop.Pressed += Loop;
 		results = FindMusic();
 		
 		
@@ -60,6 +71,9 @@ public partial class Jukebox : Control
 			btn.Pressed += () => 
 			{
 				currentIndex = index;
+				GD.Print("Pressed " + title);
+				_pause.Text = "Pause";
+				_playing.Text = "Currently Playing: " + title;
 				audioMan.MusicPlay("res://JukeboxMusic/" + title);
 			};
 			
@@ -67,8 +81,23 @@ public partial class Jukebox : Control
 		}
 
 		
-		foreach (var p in PlatformList.platformList){
-			GD.Print(p.Name);
+		
+		
+	}
+
+
+	public void Shuffle(){
+		
+	} 
+	public void Loop(){
+		GD.Print(audioMan.musicSetting);
+		if (audioMan.musicSetting == "loop"){
+			_loop.Text = "Loop";
+			audioMan.musicSetting = "stop";
+		}
+		else if (audioMan.musicSetting == "stop"){
+			_loop.Text = "Unloop";
+			audioMan.musicSetting = "loop";
 		}
 		
 	}
@@ -76,9 +105,13 @@ public partial class Jukebox : Control
 	public void Pause(){
 		if (audioMan.MusicPlaying()){
 			GD.Print("music is playing in the hall");
+			_pause.Text = "Unpause";
+			audioMan.PauseMusic();
 		}
 		else{
 			GD.Print("no music");
+			_pause.Text = "Pause";
+			audioMan.UnpauseMusic();
 		}
 	}
 
@@ -87,6 +120,7 @@ public partial class Jukebox : Control
 		if (currentIndex != -1){
 			currentIndex+=1;
 			currentIndex = currentIndex % results.Count;
+			_playing.Text = "Currently Playing: " + results[currentIndex];
 			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
 		}
 	}
@@ -94,6 +128,7 @@ public partial class Jukebox : Control
 		if (currentIndex != -1){
 			currentIndex=currentIndex+results.Count-1;
 			currentIndex = currentIndex % results.Count;
+			_playing.Text = "Currently Playing: " + results[currentIndex];
 			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
 		}
 	}

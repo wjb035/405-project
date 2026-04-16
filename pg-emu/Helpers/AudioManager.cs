@@ -29,19 +29,21 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, AudioStream> _streamCache = new();
 
 	public static AudioManager Instance { get; private set; } = null!;
-
+	public string musicSetting = "stop";
 	public override void _Ready()
 	{
 		Instance = this;
 		
 		
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
-		_musicPlayer.VolumeDb = -100f;
+		//_musicPlayer.VolumeDb = -100f;
 		//AudioStream newTrack = GD.Load<AudioStream>("res://Helpers/Logos.mp3");
 		// _musicPlayer.Stream = newTrack;
 		
 		// loop whatever is currently playing 
 		_musicPlayer.Finished += OnMusicFinished;
+		
+		
 		//_musicPlayer.Play();
 		
 		_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
@@ -69,8 +71,15 @@ public partial class AudioManager : Node
 	}
 	
 	
-	private void OnMusicFinished(){
-		_musicPlayer.Play();
+	public void OnMusicFinished(){
+		
+		if (musicSetting == "loop"){
+			_musicPlayer.Play();
+		}
+		else if (musicSetting == "stop"){
+			
+		}
+		
 	}
 
 

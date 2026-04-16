@@ -11,8 +11,12 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_u3ngx")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
-PrevPath = NodePath("Margin/Root/Body/Prev")
-NextPath = NodePath("Margin/Root/Body/Next")
+PrevPath = NodePath("Margin/Root/Body/ButtonRow/Prev")
+NextPath = NodePath("Margin/Root/Body/ButtonRow/Next")
+PausePath = NodePath("Margin/Root/Body/ButtonRow/Pause")
+LoopPath = NodePath("Margin/Root/Body/ButtonRow/Loop")
+ShufflePath = NodePath("Margin/Root/Body/ButtonRow/Shuffle")
+PlayingPath = NodePath("Margin/Root/TopBar/Playing")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2051625939]
 layout_mode = 1
@@ -48,6 +52,11 @@ theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
 text = "JUKEBOX"
 horizontal_alignment = 1
 
+[node name="Playing" type="Label" parent="Margin/Root/TopBar" unique_id=1861771206]
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Currently Playing: "
+
 [node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=266782074]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -55,16 +64,33 @@ size_flags_vertical = 3
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Prev" type="Button" parent="Margin/Root/Body" unique_id=91526355]
+[node name="ButtonRow" type="HBoxContainer" parent="Margin/Root/Body" unique_id=483072578]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Prev" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=91526355]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Prev"
 
-[node name="Next" type="Button" parent="Margin/Root/Body" unique_id=198910844]
+[node name="Pause" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=674253913]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Pause"
+
+[node name="Next" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=198910844]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Next
 "
+
+[node name="Loop" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=158558345]
+layout_mode = 2
+text = "Loop"
+
+[node name="Shuffle" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=1923761008]
+layout_mode = 2
+text = "Shuffle"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body" unique_id=2054835221]
 layout_mode = 2
