@@ -751,13 +751,13 @@ private void OnAnyButtonPressed()
 	
 	}
 	
-	private void OnCollectionsPressed(){
+	private async void OnCollectionsPressed(){
 		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Collections.tscn");
-		
+		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Radial, 0.5f);
+
 	}
 	
 	private void OnInboxPressed()

@@ -13,20 +13,24 @@ public partial class ScreenTransition : CanvasLayer
 	public override void _Ready()
 	{
 		_fadeRect = GetNode<ColorRect>("FadeRect");
-		_fadeRect.Modulate = new Color(0, 0, 0, 0);
+		_fadeRect.Color = new Color(0, 0, 0, 1);
+		_fadeRect.Modulate = new Color(1, 1, 1, 0); 
+		_fadeRect.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_mat = new ShaderMaterial();
 		_mat.Shader = GD.Load<Shader>("res://ShaderSlop/TransitionEffect.gdshader");
+		_mat.SetShaderParameter("display_texture", GD.Load<Texture2D>("res://UI/TransitionTextures/display_mask.png"));
 		_mat.SetShaderParameter("luminance_cutoff", 0.0f);
 		_fadeRect.Material = _mat;
+		Layer = 100;
 	}
 	
 	private Texture2D GetMaskForTransition(TransitionType type) => type switch
 	{
-		TransitionType.Spiral => GD.Load<Texture2D>("res://UI/TransitionTextures/finalspiral.tres"),
-		TransitionType.Noise  => GD.Load<Texture2D>("res://UI/TransitionTextures/noise.tres"),
-		TransitionType.Wipe   => GD.Load<Texture2D>("res://UI/TransitionTextures/wipe.tres"),
-		TransitionType.Radial => GD.Load<Texture2D>("res://Textures/Transitions/radial.png"),
-		_                     => GD.Load<Texture2D>("res://Textures/Transitions/fade.png"), 
+		TransitionType.Spiral => GD.Load<Texture2D>("res://UI/TransitionTextures/finalspiral.png"),
+		TransitionType.Noise  => GD.Load<Texture2D>("res://UI/TransitionTextures/noise.png"),
+		TransitionType.Wipe   => GD.Load<Texture2D>("res://UI/TransitionTextures/wipe.png"),
+		TransitionType.Radial => GD.Load<Texture2D>("res://UI/TransitionTextures/radial.png"),
+		_                     => GD.Load<Texture2D>("res://UI/TransitionTextures/fade.png"), 
 	};
 
 	public async Task FadeOut(float duration = 0.5f)
@@ -43,11 +47,59 @@ public partial class ScreenTransition : CanvasLayer
 		await ToSignal(tween, "finished");
 	}
 	
-	public async Task ChangeScene(string path)
+	public async Task TransitionOut(float duration = 0.5f, TransitionType type = TransitionType.Spiral)
 	{
-		await FadeOut();
-		GetTree().ChangeSceneToFile(path);
-		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		await FadeIn();
+		_fadeRect.Modulate = new Color(1, 1, 1, 1);
+		_fadeRect.Material = _mat;
+		_mat.SetShaderParameter("mask_texture", GetMaskForTransition(type));
+
+		var tween = CreateTween();
+		tween.TweenMethod(Callable.From((float v) =>
+			_mat.SetShaderParameter("luminance_cutoff", v)), 1.0f, 0.0f, duration);
+		await ToSignal(tween, "finished");
+
+	}
+
+	public async Task TransitionIn(float duration = 0.5f, TransitionType type = TransitionType.Spiral)
+	{
+		_fadeRect.Modulate = new Color(1, 1, 1, 1);
+		_fadeRect.Material = _mat;
+		_mat.SetShaderParameter("mask_texture", GetMaskForTransition(type));
+		var tween = CreateTween();
+		tween.TweenMethod(Callable.From((float v) =>
+			_mat.SetShaderParameter("luminance_cutoff", v)), 0.0f, 1.0f, duration);
+		await ToSignal(tween, "finished");
+		
+		_fadeRect.Material = null; 
+		_fadeRect.Modulate = new Color(1, 1, 1, 0);
+	}
+	
+	public async Task ChangeScene(string path, TransitionType type = TransitionType.Fade, float duration = 0.5f)
+	{
+		if (type == TransitionType.Fade)
+		{
+			await FadeOut(duration);
+			GetTree().ChangeSceneToFile(path);
+			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+			await FadeIn(duration);
+		}
+		else
+		{
+			await TransitionOut(duration, type);
+			
+			_fadeRect.Material = null;
+			_fadeRect.Color = new Color(0, 0, 0, 1);
+			_fadeRect.Modulate = new Color(1, 1, 1, 1);
+			
+			await ToSignal(GetTree().CreateTimer(0.15f), "timeout");
+			
+			GetTree().ChangeSceneToFile(path);
+			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+			
+			_fadeRect.Material = _mat;
+			_mat.SetShaderParameter("luminance_cutoff", 0.0f);
+			
+			await TransitionIn(duration, type);
+		}
 	}
 }

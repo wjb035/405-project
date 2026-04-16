@@ -2,10 +2,10 @@
 
 [ext_resource type="Texture2D" uid="uid://dw3hmx4qed6bk" path="res://UI/TransitionTextures/noise.tres" id="1_4rm2d"]
 [ext_resource type="Shader" uid="uid://doqvtkdxur8uv" path="res://ShaderSlop/TransitionEffect.gdshader" id="1_65ltc"]
-[ext_resource type="Texture2D" uid="uid://d0lmbwr3cfs27" path="res://UI/TransitionTextures/radial.tres" id="1_wgncw"]
 [ext_resource type="Shader" uid="uid://sskn11s8mrjm" path="res://UI/TransitionTextures/spiral.gdshader" id="2_4rm2d"]
 [ext_resource type="Texture2D" uid="uid://cn3gpmmwc4ihh" path="res://UI/TransitionTextures/display_mask.png" id="2_ooorh"]
-[ext_resource type="Texture2D" uid="uid://q64ps57gaopi" path="res://UI/TransitionTextures/finalspiral.png" id="3_65ltc"]
+[ext_resource type="Texture2D" uid="uid://dcgo8yfvj5sw2" path="res://UI/TransitionTextures/radial.png" id="3_65ltc"]
+[ext_resource type="Texture2D" uid="uid://36g7p6ngo6kb" path="res://UI/TransitionTextures/wipe.tres" id="5_65ltc"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wlbj1"]
 shader = ExtResource("1_65ltc")
@@ -41,7 +41,7 @@ custom_minimum_size = Vector2(256, 256)
 layout_mode = 0
 offset_right = 256.0
 offset_bottom = 256.0
-texture = ExtResource("1_wgncw")
+texture = ExtResource("5_65ltc")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=714175362]
 visible = false
