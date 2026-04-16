@@ -1,5 +1,11 @@
 using Godot;
+using System;
+using System.IO;
+using PGEmu.app;
+using PGEmu.Services;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
+
 
 public partial class AudioManager : Node
 {
@@ -30,10 +36,16 @@ public partial class AudioManager : Node
 
 	public static AudioManager Instance { get; private set; } = null!;
 	public string musicSetting = "stop";
+	public int currentIndex = -1;
+	public int shuffleIndex = -1;
+	public List<String> results = null;
+	public List<int> PlayHistory = new();
+	public List<int> Unplayed = new();
+	//private Jukebox juke;
 	public override void _Ready()
 	{
 		Instance = this;
-		
+		// juke = GetNode<Jukebox>("/root/Main/Jukebox");
 		
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
 		//_musicPlayer.VolumeDb = -100f;
@@ -53,6 +65,51 @@ public partial class AudioManager : Node
 		for (int i = 0; i < _spinPlayers.Length; i++)
 			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
+	
+	
+	
+	public void OnMusicFinished(){
+		
+		if (musicSetting == "loop"){
+			_musicPlayer.Play();
+		}
+		else if (musicSetting == "stop"){
+			
+		}
+		else if (musicSetting == "shuffle"){
+			/*
+			general loop is that when a song is done (and there is no other song after it), we want to get a random integer from the 
+			unplayed list, then remove it from the unplayed, add it to the history, then start playing it. if we try to 
+			go backwards in the queue (before the first entry) don't! so many edge cases here
+			*/
+			bool isEndOfHistory = false;
+			for (int i = 0; i < PlayHistory.Count;i++){
+				// IF we find our current song in playhistory AND that index is at the end, we want to get a new song
+				if (PlayHistory[i] == currentIndex && i+1 == PlayHistory.Count){
+					isEndOfHistory = true;
+				}
+			}
+			GD.Print(isEndOfHistory);
+			//so, we want to get a new song instead of playing what's next
+			if (isEndOfHistory){
+				Random rnd = new Random();
+				int nextSong = rnd.Next(0,Unplayed.Count);
+				// so we have the index of where the index of the song is
+				int songIndex = Unplayed[nextSong];
+				Unplayed.Remove(songIndex);
+				PlayHistory.Add(songIndex);
+				MusicPlay("res://JukeboxMusic/" + results[songIndex]);
+			}
+			else{
+				// so it's not end of history- we just want to go to the next song in the history
+				
+				//int nextSongLocation;
+			}
+			
+			
+		}
+		
+	}
 	public bool MusicPlaying(){
 		return _musicPlayer.Playing;
 	}
@@ -71,16 +128,7 @@ public partial class AudioManager : Node
 	}
 	
 	
-	public void OnMusicFinished(){
-		
-		if (musicSetting == "loop"){
-			_musicPlayer.Play();
-		}
-		else if (musicSetting == "stop"){
-			
-		}
-		
-	}
+	
 
 
 	private AudioStream? GetStream(string path)

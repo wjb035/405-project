@@ -27,9 +27,26 @@ public partial class Jukebox : Control
 	private Button _loop = null!;
 	private Button _shuffle = null!;
 	private Label _playing = null!;
-	public int currentIndex = -1;
-	public List<String> results = null;
+	
+	
 	private AudioManager audioMan;
+	
+	/*
+		GENERAL TO DO LIST FOR MYSELF
+		-----------------------------------------------
+		ENSURE THAT PRESSING A BUTTON FOR A SONG CLEARS OUT SHUFFLE AND LOOP SETTINGS
+		
+		SKIP AND PREV SHOULD WORK CORRECTLY WITH SHUFFLE
+		
+		SHUFFLE WITH THE PLAY HISTORY SHOULD THEORETICALLY WORK -- TEST IT!!!!!! IT SHOULD IN THEORY
+		JUST PLAY THE NEXT SONG IF YOU WENT BACK A SONG
+		
+		MUSIC SHOULD PLAY WHEN A GAME IS LAUNCHED
+		
+	
+	*/
+	
+	
 	
 	public override void _Ready()
 	{
@@ -54,14 +71,15 @@ public partial class Jukebox : Control
 		if (_prev != null) _prev.Pressed += PrevSong;
 		if (_pause != null) _pause.Pressed += Pause;
 		if (_loop != null) _loop.Pressed += Loop;
-		results = FindMusic();
+		if (_shuffle != null) _shuffle.Pressed += Shuffle;
+		audioMan.results = FindMusic();
 		
 		
-		//int currentIndex = -1;
-		for (int i = 0; i < results.Count; i++)
+		//int audioMan.currentIndex = -1;
+		for (int i = 0; i < audioMan.results.Count; i++)
 		{
 			Button btn = new Button();
-			var title = results[i];
+			var title = audioMan.results[i];
 			int index = i;
 			
 			btn.Text = Regex.Replace(title, ".mp3$", "");
@@ -70,7 +88,7 @@ public partial class Jukebox : Control
 			UiStyle.StyleTopBarButton(btn);  
 			btn.Pressed += () => 
 			{
-				currentIndex = index;
+				audioMan.currentIndex = index;
 				GD.Print("Pressed " + title);
 				_pause.Text = "Pause";
 				_playing.Text = "Currently Playing: " + title;
@@ -87,7 +105,33 @@ public partial class Jukebox : Control
 
 
 	public void Shuffle(){
-		
+		if (audioMan.musicSetting == "shuffle"){
+			_shuffle.Text = "Shuffle";
+			audioMan.musicSetting = "stop";
+			
+			
+		}
+		else if (audioMan.musicSetting == "stop"){
+			_shuffle.Text = "Stop Shuffle";
+			
+			
+			// we want to fill the list of songs that haven't been played with every index besides
+			// the index of the currently playing song (you wouldn't want to move songs and then the next song
+			// is the same one)
+			for (int i = 0; i < audioMan.results.Count; i++){
+				if (i == audioMan.currentIndex){
+					audioMan.PlayHistory.Add(i);
+				}
+				else{
+					audioMan.Unplayed.Add(i);
+				}
+			}
+			
+			foreach (int i in audioMan.Unplayed){
+				GD.Print(audioMan.results[i] + " is unplayed");
+			}
+			audioMan.musicSetting = "shuffle";
+		}
 	} 
 	public void Loop(){
 		GD.Print(audioMan.musicSetting);
@@ -117,19 +161,19 @@ public partial class Jukebox : Control
 
 
 	public void NextSong(){
-		if (currentIndex != -1){
-			currentIndex+=1;
-			currentIndex = currentIndex % results.Count;
-			_playing.Text = "Currently Playing: " + results[currentIndex];
-			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
+		if (audioMan.currentIndex != -1){
+			audioMan.currentIndex+=1;
+			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
+			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
+			audioMan.MusicPlay("res://JukeboxMusic/" + audioMan.results[audioMan.currentIndex]);
 		}
 	}
 	public void PrevSong(){
-		if (currentIndex != -1){
-			currentIndex=currentIndex+results.Count-1;
-			currentIndex = currentIndex % results.Count;
-			_playing.Text = "Currently Playing: " + results[currentIndex];
-			audioMan.MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
+		if (audioMan.currentIndex != -1){
+			audioMan.currentIndex=audioMan.currentIndex+audioMan.results.Count-1;
+			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
+			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
+			audioMan.MusicPlay("res://JukeboxMusic/" + audioMan.results[audioMan.currentIndex]);
 		}
 	}
 
