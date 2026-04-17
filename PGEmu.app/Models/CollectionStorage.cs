@@ -14,7 +14,7 @@ public static class CollectionStorage
 {
     public static List<KeyValuePair<string, List<GameEntry>>> collections = new List<KeyValuePair<string, List<GameEntry>>>();
     public static List<GameEntry> currentCollection = null;
-
+    public static string SearchResult;
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,

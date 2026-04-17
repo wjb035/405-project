@@ -469,20 +469,42 @@ public partial class HomeScreen : Control
 		UiStyle.TightenButtonContentPadding(button, horizontal: 8f, vertical: 4f);
 
 		button.MouseEntered += () => SetSelectedUserSearchResult(index, updateSearchField: true);
-		//button.Pressed += () => _ = GD.Print("you separated them correctly!");
-		button.Pressed += () => GD.Print("you separated them correctly!");
+		button.Pressed += () => _ =  OnGameSearchResultPressedAsync(username);
+		//button.Pressed += () => GD.Print("you separated them correctly!");
 		return button;
 	}
 
-	private async Task OnGameSearchResultPressedAsync(int index)
+	private async Task OnGameSearchResultPressedAsync(string name)
 	{
-		if (index < 0 || index >= _userSearchResultUsernames.Count)
-			return;
+		
 
-		SetSelectedUserSearchResult(index, updateSearchField: true);
-		var username = _userSearchResultUsernames[index];
-		HideUserSearchResultsPopup();
-		await OpenUserProfileByUsernameAsync(username);
+		GD.Print(name);
+		var platformMatched = _platforms[0];
+		foreach (var p in _platforms){
+			var scanned = LibraryScanner.Scan(p, _config.LibraryRoot, out var scanDir);
+			foreach (var g in scanned){
+				if (g.Title == name){
+					platformMatched = p;
+					break;
+				}
+			}
+		}
+		
+		if (platformMatched != null){
+			var tree = GetTree();
+			tree.SetMeta(SelectedPlatformMetaKey, platformMatched.Id);
+			if (_configPath != null)
+				tree.SetMeta("pgemu_config_path", _configPath);
+			//using this to just store how we sort by games;
+			CollectionStorage.SearchResult = name;
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.7f, 1f);
+		}
+		else{
+			GD.Print("Error getting the platform!");
+		}
+		/*// Pass selection to the next screen without needing a singleton.
+		
+		*/
 	}
 	
 	

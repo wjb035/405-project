@@ -886,7 +886,28 @@ private void OnAnyButtonPressed()
 			
 
 			// Keep ordering stable and predictable.
-			_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
+			// If we came from the search for a game, put that in front since the user wants that
+			if (CollectionStorage.SearchResult != null){
+				var query = CollectionStorage.SearchResult;
+
+				
+
+				_games.Sort((a, b) =>
+				{
+					bool aMatches = a.Title.Contains(query, StringComparison.OrdinalIgnoreCase);
+					bool bMatches = b.Title.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+					if (aMatches != bMatches)
+						return bMatches.CompareTo(aMatches);
+
+					return string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase);
+				});
+				CollectionStorage.SearchResult = null;
+			}
+			else{
+				_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
+			}
+			
 			
 			if (_games.Count == 0)
 			{
