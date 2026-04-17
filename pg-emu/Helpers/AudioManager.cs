@@ -40,7 +40,7 @@ public partial class AudioManager : Node
 	public static AudioManager Instance { get; private set; } = null!;
 	public string musicSetting = "stop";
 	public int currentIndex = -1;
-	public int shuffleIndex = -1;
+	public int shuffleIndex = 0;
 	public List<String> results = null;
 	public List<int> PlayHistory = new();
 	public List<int> Unplayed = new();
@@ -82,19 +82,50 @@ public partial class AudioManager : Node
 			
 		}
 		else if (musicSetting == "shuffle"){
+		
 			/*
 			general loop is that when a song is done (and there is no other song after it), we want to get a random integer from the 
 			unplayed list, then remove it from the unplayed, add it to the history, then start playing it. if we try to 
 			go backwards in the queue (before the first entry) don't! so many edge cases here
 			*/
-			bool isEndOfHistory = false;
-			for (int i = 0; i < PlayHistory.Count;i++){
-				// IF we find our current song in playhistory AND that index is at the end, we want to get a new song
-				if (PlayHistory[i] == currentIndex && i+1 == PlayHistory.Count){
-					isEndOfHistory = true;
-				}
+			NextShuffle();
+			
+			
+		}
+		
+	}
+	public void PrevShuffle(){
+		// Now, what if we're going BACKWARDS when we're in shuffle mode? 
+		// Well, luckily the logic here is simple enough. If it's at the first value of the list 
+		// (We're at the song we started shuffling w/), then just play that song again!
+		// Otherwise, we just find the song before the current one and play it!
+		if (shuffleIndex == 0){
+			MusicPlay("res://JukeboxMusic/" + results[currentIndex]);
+		}
+		else{
+			// get the previous song index
+			shuffleIndex = shuffleIndex - 1;
+			int prevSongIndex = PlayHistory[shuffleIndex];
+			if (prevSongIndex != -1){
+				currentIndex = prevSongIndex;
+				MusicPlay("res://JukeboxMusic/" + results[prevSongIndex]);
 			}
+		}
+		
+	}
+	
+	public void NextShuffle(){
+		// have we ran out of songs to play that we haven't? purge the list!
+		if (Unplayed.Count == 0){
+			for (int i = 0; i < results.Count; i++){
+				
+				Unplayed.Add(i);
+				
+			}
+		}
+		bool isEndOfHistory = (PlayHistory.Count-1 == shuffleIndex);
 			GD.Print(isEndOfHistory);
+			
 			//so, we want to get a new song instead of playing what's next
 			if (isEndOfHistory){
 				Random rnd = new Random();
@@ -103,17 +134,26 @@ public partial class AudioManager : Node
 				int songIndex = Unplayed[nextSong];
 				Unplayed.Remove(songIndex);
 				PlayHistory.Add(songIndex);
+				shuffleIndex++;
+				currentIndex = songIndex;
 				MusicPlay("res://JukeboxMusic/" + results[songIndex]);
 			}
 			else{
 				// so it's not end of history- we just want to go to the next song in the history
 				
-				//int nextSongLocation;
+				int nextSongLocation = -1;
+				
+				//find where the current song's index is in the history, and save it to the temp integer above
+				
+				nextSongLocation = PlayHistory[shuffleIndex+1];
+				shuffleIndex++;
+				
+				// if it's negative one something has gone horribly awry 
+				if (nextSongLocation > -1){
+					currentIndex = nextSongLocation;
+					MusicPlay("res://JukeboxMusic/" + results[nextSongLocation]);
+				}
 			}
-			
-			
-		}
-		
 	}
 	public bool MusicPlaying(){
 		return _musicPlayer.Playing;

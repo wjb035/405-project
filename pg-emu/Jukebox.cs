@@ -34,16 +34,16 @@ public partial class Jukebox : Control
 	/*
 		GENERAL TO DO LIST FOR MYSELF
 		-----------------------------------------------
-		ENSURE THAT PRESSING A BUTTON FOR A SONG CLEARS OUT SHUFFLE AND LOOP SETTINGS
 		
-		SKIP AND PREV SHOULD WORK CORRECTLY WITH SHUFFLE
 		
-		SHUFFLE WITH THE PLAY HISTORY SHOULD THEORETICALLY WORK -- TEST IT!!!!!! IT SHOULD IN THEORY
-		JUST PLAY THE NEXT SONG IF YOU WENT BACK A SONG
-		
-		MUSIC SHOULD PLAY WHEN A GAME IS LAUNCHED
 		
 	
+		
+		MUSIC SHOULD PAUSE WHEN A GAME IS LAUNCHED
+		
+		
+		
+		
 	*/
 	
 	
@@ -67,12 +67,17 @@ public partial class Jukebox : Control
 		ApplyThemeAesthetic();
 		audioMan = GetNode<AudioManager>("/root/AudioManager");
 		if (_back != null) _back.Pressed += GoBack;
-		if (_next != null) _next.Pressed += NextSong;
-		if (_prev != null) _prev.Pressed += PrevSong;
+		if (_next != null) _next.Pressed += Next;
+		if (_prev != null) _prev.Pressed += Prev;
 		if (_pause != null) _pause.Pressed += Pause;
 		if (_loop != null) _loop.Pressed += Loop;
 		if (_shuffle != null) _shuffle.Pressed += Shuffle;
 		audioMan.results = FindMusic();
+		
+		
+		if (audioMan.MusicPlaying()){
+			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
+		}
 		
 		
 		//int audioMan.currentIndex = -1;
@@ -88,6 +93,14 @@ public partial class Jukebox : Control
 			UiStyle.StyleTopBarButton(btn);  
 			btn.Pressed += () => 
 			{
+				
+				// if someone starts playing a song and they were shuffling, they are no longer shuffling
+				audioMan.shuffleIndex = 0;
+				audioMan.PlayHistory.Clear();
+				audioMan.Unplayed.Clear();
+				audioMan.musicSetting = "stop";
+				_shuffle.Text = "Shuffle";
+				_loop.Text = "Loop";
 				audioMan.currentIndex = index;
 				GD.Print("Pressed " + title);
 				_pause.Text = "Pause";
@@ -111,9 +124,10 @@ public partial class Jukebox : Control
 			
 			
 		}
-		else if (audioMan.musicSetting == "stop"){
+		else if (audioMan.musicSetting == "stop" ||  audioMan.musicSetting == "loop"){
 			_shuffle.Text = "Stop Shuffle";
-			
+			// selecting shuffle should take you out of looping a song
+			_loop.Text = "Loop";
 			
 			// we want to fill the list of songs that haven't been played with every index besides
 			// the index of the currently playing song (you wouldn't want to move songs and then the next song
@@ -139,8 +153,9 @@ public partial class Jukebox : Control
 			_loop.Text = "Loop";
 			audioMan.musicSetting = "stop";
 		}
-		else if (audioMan.musicSetting == "stop"){
+		else if (audioMan.musicSetting == "stop" || audioMan.musicSetting == "shuffle"){
 			_loop.Text = "Unloop";
+			_shuffle.Text = "Shuffle";
 			audioMan.musicSetting = "loop";
 		}
 		
@@ -158,9 +173,40 @@ public partial class Jukebox : Control
 			audioMan.UnpauseMusic();
 		}
 	}
+	
+	
+	public void Next(){
+		if (audioMan.musicSetting == "stop"){
+			NextSongSequentially();
+		}
+		else if (audioMan.musicSetting == "loop"){
+			NextSongSequentially();
+			audioMan.musicSetting = "stop";
+			_loop.Text = "Loop";
+		}
+		else if (audioMan.musicSetting == "shuffle"){
+				audioMan.NextShuffle();
+				_playing.Text = audioMan.results[audioMan.currentIndex];
+		}
+	}
+	public void Prev(){
+		if (audioMan.musicSetting == "stop"){
+			PrevSongSequentially();
+		}
+		else if (audioMan.musicSetting == "loop"){
+			PrevSongSequentially();
+			audioMan.musicSetting = "stop";
+			_loop.Text = "Loop";
+		}
+		else if (audioMan.musicSetting == "shuffle"){
+				audioMan.PrevShuffle();
+				_playing.Text = audioMan.results[audioMan.currentIndex];
+				
+		}
+		
+	}
 
-
-	public void NextSong(){
+	public void NextSongSequentially(){
 		if (audioMan.currentIndex != -1){
 			audioMan.currentIndex+=1;
 			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
@@ -168,7 +214,7 @@ public partial class Jukebox : Control
 			audioMan.MusicPlay("res://JukeboxMusic/" + audioMan.results[audioMan.currentIndex]);
 		}
 	}
-	public void PrevSong(){
+	public void PrevSongSequentially(){
 		if (audioMan.currentIndex != -1){
 			audioMan.currentIndex=audioMan.currentIndex+audioMan.results.Count-1;
 			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
@@ -221,6 +267,7 @@ public partial class Jukebox : Control
 		if (hint != null)
 			hint.Text = "Set your library root or your games folder.";
 		UiStyle.StyleMetaLabel(hint);
+		//UiStyle.StyleMetaButton(_next);
 
 	}
 
