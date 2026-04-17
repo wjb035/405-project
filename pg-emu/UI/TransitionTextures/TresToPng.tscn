@@ -4,19 +4,20 @@
 [ext_resource type="Shader" uid="uid://doqvtkdxur8uv" path="res://ShaderSlop/TransitionEffect.gdshader" id="1_65ltc"]
 [ext_resource type="Shader" uid="uid://sskn11s8mrjm" path="res://UI/TransitionTextures/spiral.gdshader" id="2_4rm2d"]
 [ext_resource type="Texture2D" uid="uid://cn3gpmmwc4ihh" path="res://UI/TransitionTextures/display_mask.png" id="2_ooorh"]
-[ext_resource type="Texture2D" uid="uid://dcgo8yfvj5sw2" path="res://UI/TransitionTextures/radial.png" id="3_65ltc"]
+[ext_resource type="Texture2D" uid="uid://cmynkj666175g" path="res://UI/TransitionTextures/wipe.png" id="3_ooorh"]
 [ext_resource type="Texture2D" uid="uid://36g7p6ngo6kb" path="res://UI/TransitionTextures/wipe.tres" id="5_65ltc"]
+[ext_resource type="Texture2D" uid="uid://d0lmbwr3cfs27" path="res://UI/TransitionTextures/radial.tres" id="5_ooorh"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wlbj1"]
 shader = ExtResource("1_65ltc")
 shader_parameter/luminance_cutoff = 0.0
 shader_parameter/invert = false
-shader_parameter/mask_texture = ExtResource("3_65ltc")
+shader_parameter/mask_texture = ExtResource("3_ooorh")
 shader_parameter/display_texture = ExtResource("2_ooorh")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_65ltc"]
 shader = ExtResource("2_4rm2d")
-shader_parameter/coils = 2.5
+shader_parameter/coils = 3.0
 shader_parameter/wipe_blend = 0.0
 
 [node name="Control" type="Control" unique_id=100513007]
@@ -27,6 +28,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="ColorRect6" type="TextureRect" parent="." unique_id=478489784]
+visible = false
+material = SubResource("ShaderMaterial_wlbj1")
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 0
+offset_right = 256.0
+offset_bottom = 256.0
+texture = ExtResource("1_4rm2d")
+
 [node name="ColorRect3" type="TextureRect" parent="." unique_id=1039524584]
 material = SubResource("ShaderMaterial_wlbj1")
 custom_minimum_size = Vector2(256, 256)
@@ -35,6 +45,14 @@ offset_right = 256.0
 offset_bottom = 256.0
 texture = ExtResource("1_4rm2d")
 
+[node name="ColorRect4" type="TextureRect" parent="." unique_id=746253120]
+visible = false
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 0
+offset_right = 256.0
+offset_bottom = 256.0
+texture = ExtResource("5_ooorh")
+
 [node name="ColorRect2" type="TextureRect" parent="." unique_id=990814578]
 visible = false
 custom_minimum_size = Vector2(256, 256)
@@ -42,6 +60,13 @@ layout_mode = 0
 offset_right = 256.0
 offset_bottom = 256.0
 texture = ExtResource("5_65ltc")
+
+[node name="ColorRect5" type="ColorRect" parent="." unique_id=16244105]
+visible = false
+material = SubResource("ShaderMaterial_65ltc")
+layout_mode = 0
+offset_right = 256.0
+offset_bottom = 256.0
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=714175362]
 visible = false

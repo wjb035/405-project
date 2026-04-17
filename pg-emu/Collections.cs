@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PGEmu.app;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 public partial class Collections : Control
@@ -19,9 +20,14 @@ public partial class Collections : Control
 	[Export] public NodePath ChatPath;
 	[Export] public NodePath SettingsPath;
 	[Export] public NodePath HelpPath;
+	[Export] public NodePath GamePath;
 
 	// Card prefab spawned into the carousel.
 	[Export] public PackedScene CardScene;
+	
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
+
 
 	private Control _cardsRoot;
 	private Button _prev;
@@ -37,6 +43,7 @@ public partial class Collections : Control
 	private Button _help;
 	private Button _collectionPrompt;
 	private LineEdit _lineEdit;
+	private Button _gameSelect;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -88,6 +95,8 @@ public partial class Collections : Control
 		_chat = GetNodeOrNull<Button>(ChatPath);
 		_settings = GetNodeOrNull<Button>(SettingsPath);
 		_help = GetNodeOrNull<Button>(HelpPath);
+		_gameSelect = GetNodeOrNull<Button>(GamePath);
+		
 		ApplyAesthetic();
 
 		_prev.Pressed += () => Step(-1);
@@ -99,7 +108,9 @@ public partial class Collections : Control
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
+		if (_gameSelect != null) _gameSelect.Pressed += OnGamePressed;
 		_inbox.Pressed += OnInboxPressed;
+		
 
 		// background transition
 		StartBackgroundTransition();
@@ -185,15 +196,15 @@ private void OnAnyButtonPressed()
 		
 	}
 
-	private void OnBackPressed()
+	private async void OnBackPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://HomeScreen.tscn");
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 	}
 
-	private void OnSettingsPressed()
+	private async void OnSettingsPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		// Jump to the shared settings screen and return here afterward.
@@ -202,15 +213,17 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		tree.ChangeSceneToFile("res://Settings.tscn");
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+
 	}
 
-	private void OnFriendsPressed()
+	private async void OnFriendsPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://profile.tscn");
+		
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 	}
 	
 	private void OnInboxPressed()
@@ -218,25 +231,25 @@ private void OnAnyButtonPressed()
 		FriendInboxPopup.ShowPopup();
 	}
 	
-	private void OnAchPressed(){
+	private async void OnAchPressed(){
 		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Achievements.tscn");
-	
-	
-	}
-	
-	private void OnCollectionsPressed(){
-		AudioManager.Instance?.PlayNavigation(1);
 		
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Collections.tscn");
-	
+		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0.15f, true);
+		
 	}
 
+	private async void OnGamePressed(){
+		AudioManager.Instance?.PlayNavigation(1);
+		
+		var tree = GetTree();
+		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, false);
+	
+	}
+	
 	private void OnChatPressed()
 	{
 		GD.Print("Chat pressed");
@@ -247,7 +260,7 @@ private void OnAnyButtonPressed()
 		GD.Print("Help pressed");
 	}
 
-	private void OpenSelectedPlatform()
+	private async void OpenSelectedPlatform()
 	{ 
 		GD.Print("selection pressed!");
 		if (Count == 0) return;
@@ -275,7 +288,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		tree.ChangeSceneToFile("res://GameSelect.tscn");
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
 	}
 
 	private void SpawnCards()
@@ -859,6 +872,10 @@ private void OnAnyButtonPressed()
 		UiStyle.AddHoverFeedback(_help);
 		UiStyle.ApplyParallaxShadow(_help);
 
+		UiStyle.StyleTopBarButton(_gameSelect);
+		UiStyle.AddHoverFeedback(_gameSelect);
+		UiStyle.ApplyParallaxShadow(_gameSelect);
+		
 		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);
 		UiStyle.StyleStatusLabel(_status);

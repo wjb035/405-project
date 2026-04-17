@@ -148,7 +148,7 @@ public partial class WelcomeScreen : Control
 			? "res://HomeScreen.tscn" 
 			: "res://LoginScreen.tscn";
 
-		await Transition.ChangeScene(nextScene);
+		await Transition.ChangeScene(nextScene,  ScreenTransition.TransitionType.Radial, 1f, 0.5f, true);
 	}
 	
 	private async Task FadeOut()

@@ -120,13 +120,17 @@ public partial class AchievementSettings : Control
 		
 
 		UiStyle.StyleLineEdit(_usernameEdit);
+		UiStyle.ApplyParallaxShadow(_usernameEdit);
 		UiStyle.StyleLineEdit(_apiEdit);
+		UiStyle.ApplyParallaxShadow(_apiEdit);
 		
 		_usernameEdit.PlaceholderText = "RetroAchievements username";
 		_apiEdit.PlaceholderText = "RetroAchievements API Key";
 		
 
 		UiStyle.StylePrimaryButton(_apiSave);
+		UiStyle.AddHoverFeedback(_apiSave);
+		UiStyle.ApplyParallaxShadow(_apiSave);
 		
 		UiStyle.TightenButtonContentPadding(_apiSave, horizontal: 6f, vertical: 2f);
 		

@@ -6,6 +6,7 @@ uniform sampler2D mask_texture;
 uniform sampler2D display_texture;
 
 void fragment() {
+	
 	vec4 sample_color = texture(mask_texture, UV);
 	float luminance = dot(sample_color.rgb, vec3(0.2126, 0.7152, 0.0722));
 	

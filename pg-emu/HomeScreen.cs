@@ -503,7 +503,8 @@ public partial class HomeScreen : Control
 		Global.foundProfile = profile;
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+		
+		await Transition.ChangeScene("res://FoundUserProfile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 		return true;
 	}
 
@@ -524,7 +525,8 @@ public partial class HomeScreen : Control
 		dialog.Confirmed += async () =>
 		{
 			AuthService.Instance.Logout();
-			await Transition.ChangeScene("res://WelcomeScreen.tscn");
+			await Transition.ChangeScene("res://Welcome.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
+
 		};
 
 		dialog.PopupCentered();
@@ -713,7 +715,7 @@ private void OnAnyButtonPressed()
 
 
 
-	private void OnSettingsPressed()
+	private async void OnSettingsPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		// Jump to the shared settings screen and return here afterward.
@@ -722,15 +724,16 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		tree.ChangeSceneToFile("res://Settings.tscn");
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
 	}
 
-	private void OnFriendsPressed()
+	private async void OnFriendsPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://profile.tscn");
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+
 	}
 	
 	private void OnMusicPressed()
@@ -756,7 +759,7 @@ private void OnAnyButtonPressed()
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Radial, 0.5f);
+		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
 
 	}
 	
@@ -775,7 +778,7 @@ private void OnAnyButtonPressed()
 		GD.Print("Help pressed");
 	}
 
-	private void OpenSelectedPlatform()
+	private async void OpenSelectedPlatform()
 	{
 		if (_platforms.Count == 0) return;
 
@@ -792,7 +795,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		tree.ChangeSceneToFile("res://GameSelect.tscn");
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.7f, 1f);
 	}
 
 	private void RestoreSelectedPlatformSelection()

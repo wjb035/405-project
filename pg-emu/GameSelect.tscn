@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="11_rhyj1"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="12_ak8ya"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="12_rhyj1"]
+[ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="19_p3i2b"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ak8ya"]
 shader = ExtResource("3_cja7x")
@@ -278,6 +279,7 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/Foreground2/TopBar" unique_id=1193984394]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
+tooltip_text = "Back"
 text = "
 "
 icon = ExtResource("8_xj10s")
@@ -294,6 +296,7 @@ layout_mode = 2
 
 [node name="BtnAch" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=514724767]
 layout_mode = 2
+tooltip_text = "Achievements"
 text = "         "
 icon = ExtResource("9_xsmlm")
 icon_alignment = 1
@@ -302,6 +305,7 @@ expand_icon = true
 [node name="BtnCollections" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=2129456490]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Collections"
 icon = ExtResource("11_2kom7")
 icon_alignment = 1
 expand_icon = true
@@ -309,6 +313,7 @@ expand_icon = true
 [node name="BtnInbox" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1627789945]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Inbox"
 icon = ExtResource("12_rhyj1")
 icon_alignment = 1
 expand_icon = true
@@ -316,6 +321,7 @@ expand_icon = true
 [node name="BtnFriends" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=430120503]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Profile"
 icon = ExtResource("10_2kom7")
 icon_alignment = 1
 expand_icon = true
@@ -323,6 +329,7 @@ expand_icon = true
 [node name="BtnChat" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1002384540]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Chat"
 icon = ExtResource("11_rhyj1")
 icon_alignment = 1
 expand_icon = true
@@ -330,6 +337,7 @@ expand_icon = true
 [node name="BtnSettings" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=2026026780]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Settings"
 icon = ExtResource("12_ak8ya")
 icon_alignment = 1
 expand_icon = true
@@ -337,8 +345,9 @@ expand_icon = true
 [node name="BtnHelp" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=2126903515]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Help"
 text = " "
-icon = ExtResource("10_2kom7")
+icon = ExtResource("19_p3i2b")
 icon_alignment = 1
 expand_icon = true
 

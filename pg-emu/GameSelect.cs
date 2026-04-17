@@ -11,6 +11,8 @@ using RetroAchievements.Api;
 using PGEmu.Services;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
+using PGEmu.Helpers;
+using PGEmu.UI;
 
 
 public partial class GameSelect : Control
@@ -58,6 +60,11 @@ public partial class GameSelect : Control
 	private ScrollContainer _gridScroll = null!;
 	private GridContainer _gridRows = null!;
 	OptionButton _optionButton = new OptionButton();
+	
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
+
+	
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -250,13 +257,15 @@ private void OnAnyButtonPressed()
 }
 
 
-	private void GoBack()
+	private async void GoBack()
 	{
 		CollectionStorage.currentCollection = null;
 		AudioManager.Instance?.PlayNavigation(-1);
 		// Navigate back to the home screen scene.
-		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+
 	}
+	
 	private void addToCollection(){
 		GD.Print("button has been pressed!!!!!!");
 		if (_optionButton.Visible){
@@ -274,13 +283,16 @@ private void OnAnyButtonPressed()
 			ControllerService.FocusRowEntry(rows, ref _uiRowIndex, ref _uiColumnIndex);
 		}
 		
-		
 	}
 	
 	private void SelectedOption(long index){
-		 GD.Print("User selected: " + _optionButton.GetItemText((int)index));
+		
+		string collectionName = _optionButton.GetItemText((int)index);
+		string gameName = GetSelectedGame().Name;
+
+		GD.Print("User selected: " + collectionName);
 		foreach (var c in CollectionStorage.collections){
-			if (c.Key == _optionButton.GetItemText((int)index)){
+			if (c.Key == collectionName){
 				//GD.Print("found it!");
 				GetSelectedGame().platform = _platform;
 				c.Value.Add(GetSelectedGame());
@@ -289,6 +301,8 @@ private void OnAnyButtonPressed()
 				}
 				
 				CollectionStorage.saveToJson();
+				
+				ShowNotification($"{gameName} has been added to {collectionName}");
 			}
 		}
 		GD.Print(GetSelectedGame().Name);
@@ -299,7 +313,15 @@ private void OnAnyButtonPressed()
 		ResetUiNavigationState();
 		
 	}
-	private void OpenVault()
+	
+	private async void ShowNotification(string message, float duration = 2.0f)
+	{
+		var toast = new ToastNotification();
+		AddChild(toast);
+		await toast.Show(message, duration);
+	}
+	
+	private async void OpenVault()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		// Store return context in SceneTree meta so Settings can return here with the same config.
@@ -309,10 +331,10 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		tree.ChangeSceneToFile("res://Settings.tscn");
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
 	}
 
-	private void OpenProfile()
+	private async void OpenProfile()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		// Store return context so Profile can route back to this scene.
@@ -322,7 +344,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		tree.ChangeSceneToFile("res://profile.tscn");
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 	}
 
 	private void OnChatPressed()
@@ -335,26 +357,28 @@ private void OnAnyButtonPressed()
 		GD.Print("Help pressed");
 	}
 
-	private void GoHome()
+	private async void GoHome()
 	{
 		CollectionStorage.currentCollection = null;
-		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 	}
 	
-	private void GoAch()
+	private async void GoAch()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		AchievementStorage.gameName = GetSelectedGame().Name;
 		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
-		GetTree().ChangeSceneToFile("res://Achievements.tscn");
+		
+		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0.15f, true);
+
 	}
 	
-	private void OnCollectionsPressed(){
+	private async void OnCollectionsPressed(){
 		AudioManager.Instance?.PlayNavigation(1);
 		
 		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Collections.tscn");
+		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
+		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
 		
 	}
 	
@@ -3203,6 +3227,8 @@ private void OnAnyButtonPressed()
 		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
 	}
 
+	
+	
 	private void ApplyAesthetic()
 	{
 		// Match game selection controls to the same launcher palette and contrast rules.

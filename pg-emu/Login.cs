@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using System.Threading.Tasks;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 public partial class Login : Control
@@ -26,6 +27,9 @@ public partial class Login : Control
 	private Control _forgotPanel = null!;
 	private LineEdit _forgotEmail = null!;
 	private Button _forgotSubmit = null!;
+
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
 
 
 	public override void _Ready()
@@ -92,14 +96,28 @@ public partial class Login : Control
 		}
 
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyParallaxShadow(_back);
+		
 		UiStyle.StyleLineEdit(_username);
 		UiStyle.StyleLineEdit(_password);
+		
 		UiStyle.StylePrimaryButton(_loginButton);
+		UiStyle.AddHoverFeedback(_loginButton);
+		UiStyle.ApplyParallaxShadow(_loginButton);
+		
 		UiStyle.StylePrimaryButton(_registerButton);
+		UiStyle.AddHoverFeedback(_registerButton);
+		UiStyle.ApplyParallaxShadow(_registerButton);
+		
 		UiStyle.TightenButtonContentPadding(_loginButton, horizontal: 6f, vertical: 2f);
 		UiStyle.TightenButtonContentPadding(_registerButton, horizontal: 6f, vertical: 2f);
 		UiStyle.StyleLineEdit(_forgotEmail);
+		
 		UiStyle.StylePrimaryButton(_forgotSubmit);
+		UiStyle.AddHoverFeedback(_forgotSubmit);
+		UiStyle.ApplyParallaxShadow(_forgotSubmit);
+
 
 		_loginButton.Text = "Sign In";
 		_registerButton.Text = "Create Account";
@@ -163,7 +181,8 @@ public partial class Login : Control
 			return;
 		}
 
-		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+		await Transition.ChangeScene("res://HomeScreen.tscn",  ScreenTransition.TransitionType.Radial, 1f, 0.5f, true);
+		
 	}
 
 	private void OpenRegister()
@@ -219,7 +238,7 @@ public partial class Login : Control
 	}
 
 	
-	private void GoBack()
+	private async void GoBack()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
@@ -232,7 +251,7 @@ public partial class Login : Control
 		}
 
 
-		tree.ChangeSceneToFile(returnScene);
+		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 	}
 	
 }

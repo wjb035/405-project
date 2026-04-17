@@ -9,8 +9,8 @@ public partial class GlobalBackground : CanvasLayer
 	private ColorRect _rect;
 	private ShaderMaterial _mat;
 	public bool HasFadedIn = false;
-	private Texture2D default1 = GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres");
-	private Texture2D default2 = GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres");
+	private Texture2D default2 = GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres");
+	private Texture2D default1 = GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres");
 	
 	private Texture2D currentTex1;
 	private Texture2D currentTex2;
@@ -26,8 +26,8 @@ public partial class GlobalBackground : CanvasLayer
 	
 	private Dictionary<string, (Texture2D, Texture2D)> screenGradients = new()
 	{
-		{"WelcomeScreen", (GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres"),
-			GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres"))},
+		{"WelcomeScreen", (GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres"), 
+			GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres"))},
 		{"HomeScreen", (GD.Load<Texture2D>("res://ShaderSlop/Home1.tres"),
 			GD.Load<Texture2D>("res://ShaderSlop/Home2.tres"))},
 		{"GameScreen", (GD.Load<Texture2D>("res://ShaderSlop/Game1.tres"),

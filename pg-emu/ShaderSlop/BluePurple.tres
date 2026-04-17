@@ -1,8 +1,8 @@
 [gd_resource type="GradientTexture2D" format=3 uid="uid://cyjlmrq0fnof2"]
 
 [sub_resource type="Gradient" id="Gradient_6366u"]
-offsets = PackedFloat32Array(0.040229887, 0.1954023, 0.33333334, 0.52873564, 0.8678161)
-colors = PackedColorArray(0.87186325, 0.6818284, 1, 1, 0.88062555, 0.4959674, 0.84469014, 1, 0.97303945, 0.31411487, 0.7296571, 1, 0.3647059, 0, 1, 1, 0.06666672, 0, 0.25, 1)
+offsets = PackedFloat32Array(0.06321839, 0.13218391, 0.21839081, 0.49425286, 0.8678161)
+colors = PackedColorArray(0.87186325, 0.6818284, 1, 1, 0.88062555, 0.4959674, 0.84469014, 1, 0.97303945, 0.31411487, 0.7296571, 1, 0.36249995, 0.14999998, 1, 1, 0.06666672, 0, 0.25, 1)
 
 [resource]
 resource_name = "BluePurple"
