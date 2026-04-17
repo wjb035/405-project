@@ -92,7 +92,7 @@ public partial class HomeScreen : Control
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
-
+	private List<String> AllGames = new();
 	public async override void _Ready()
 	{
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
@@ -170,6 +170,15 @@ public partial class HomeScreen : Control
 			_            => ConsoleCarousel3DView.ConsoleType.Wii // fallback
 		}).ToList();
 
+		foreach (var p in _platforms){
+			GD.Print("For the search function: " + p.Name);	
+			var scanned = LibraryScanner.Scan(p, _config.LibraryRoot, out var scanDir);
+			foreach (var g in scanned){
+				AllGames.Add(g.Title);
+			}
+		}
+		
+		
 		// Populate carousel
 		_carousel.Populate(consoleTypes);
 		
@@ -342,6 +351,8 @@ public partial class HomeScreen : Control
 		return NormalizeSearchInput(_searchBarText.Text);
 	}
 
+
+	// THIS seems to be the functionality for the searching 
 	private async Task UpdateUserSearchResultsAsync(string? query)
 	{
 		var search = NormalizeSearchInput(query);
@@ -352,7 +363,10 @@ public partial class HomeScreen : Control
 		}
 
 		var requestId = ++_userSearchRequestId;
+		// MUST UNCOMMENT THIS LATER
 		var similarUsers = await _profileService.SearchUsersBySimilarity(search, 10);
+		var games = (await SearchGamesBySimilarity(search, 10)).ToList();
+		//games = games.ToList();
 		if (requestId != _userSearchRequestId || !IsScreenAlive())
 			return;
 
@@ -361,11 +375,39 @@ public partial class HomeScreen : Control
 			.Where(username => !string.IsNullOrWhiteSpace(username))
 			.Distinct(StringComparer.OrdinalIgnoreCase)
 			.Cast<string>();
-
-		PopulateUserSearchResults(usernames);
+		
+		// using a dictionary to sort out the functionality
+			
+		Dictionary<string, string> UsersAndGames = new();
+		foreach (var g in games){
+			UsersAndGames.Add(g,"game");
+		}
+		
+		foreach (var u in usernames){
+			UsersAndGames.Add(u,"user");
+		}
+		games.AddRange(usernames);
+		PopulateUserSearchResults(UsersAndGames);
 	}
 
-	private void PopulateUserSearchResults(IEnumerable<string> usernames)
+	public async Task<IReadOnlyList<String>> SearchGamesBySimilarity(string? query, int limit = 12)
+	{
+		var trimmedQuery = query?.Trim();
+		if (string.IsNullOrWhiteSpace(trimmedQuery))
+			return Array.Empty<String>();
+
+		var clampedLimit = Math.Clamp(limit, 1, 25);
+		var results = AllGames
+		.Where(s => !string.IsNullOrWhiteSpace(s) &&
+					s.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+		.Take(clampedLimit)
+		.ToList();
+		return results;
+	}
+
+
+
+	private void PopulateUserSearchResults(Dictionary<string, string> usernames)
 	{
 		foreach (Node child in _userSearchResultsList.GetChildren().ToArray())
 			child.QueueFree();
@@ -375,18 +417,28 @@ public partial class HomeScreen : Control
 		_selectedUserSearchResultIndex = -1;
 
 		foreach (var username in usernames.Take(10))
+		//foreach (var username in AllGames.Take(10))
 		{
-			var trimmedUsername = NormalizeSearchInput(username);
+			var trimmedUsername = NormalizeSearchInput(username.Key);
 			if (string.IsNullOrWhiteSpace(trimmedUsername))
 				continue;
 
 			var index = _userSearchResultUsernames.Count;
 			_userSearchResultUsernames.Add(trimmedUsername);
 			var itemButton = CreateUserSearchResultButton(trimmedUsername, index);
+			if (username.Value == "game"){
+				itemButton = CreateGameSearchResultButton(trimmedUsername, index);
+			}
+			
 			_userSearchResultButtons.Add(itemButton);
 			_userSearchResultsList.AddChild(itemButton);
-
-			itemButton.Modulate = new Color(1, 1, 1, 0);
+			if (username.Value == "user"){
+				itemButton.Modulate = new Color(1, 1, 1, 0);
+			}
+			else{
+				itemButton.Modulate = new Color(1, 150, 1, 0);
+			}
+		//	itemButton.Modulate = new Color(1, 1, 1, 0);
 			var tween = CreateTween();
 			tween.TweenProperty(itemButton, "modulate:a", 1f, 0.08f);
 		}
@@ -401,6 +453,39 @@ public partial class HomeScreen : Control
 		ShowUserSearchResultsPopup();
 	}
 
+	private Button CreateGameSearchResultButton(string username, int index)
+	{
+		var button = new Button
+		{
+			Text = username,
+			Alignment = HorizontalAlignment.Left,
+			ClipText = true,
+			CustomMinimumSize = new Vector2(0, 32),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			ToggleMode = true,
+			FocusMode = Control.FocusModeEnum.None
+		};
+		UiStyle.StyleTopBarButton(button);
+		UiStyle.TightenButtonContentPadding(button, horizontal: 8f, vertical: 4f);
+
+		button.MouseEntered += () => SetSelectedUserSearchResult(index, updateSearchField: true);
+		//button.Pressed += () => _ = GD.Print("you separated them correctly!");
+		button.Pressed += () => GD.Print("you separated them correctly!");
+		return button;
+	}
+
+	private async Task OnGameSearchResultPressedAsync(int index)
+	{
+		if (index < 0 || index >= _userSearchResultUsernames.Count)
+			return;
+
+		SetSelectedUserSearchResult(index, updateSearchField: true);
+		var username = _userSearchResultUsernames[index];
+		HideUserSearchResultsPopup();
+		await OpenUserProfileByUsernameAsync(username);
+	}
+	
+	
 	private void ShowUserSearchResultsPopup()
 	{
 		if (_userSearchResultUsernames.Count == 0)

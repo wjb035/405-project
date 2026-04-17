@@ -1143,7 +1143,7 @@ private void OnAnyButtonPressed()
 		if (e is InputEventKey f && f.Pressed && !f.Echo)
 		{
 			if (Input.IsActionJustPressed("game_flip") && 
-			    _browseLayout == BrowseLayoutMode.ThreeD)
+				_browseLayout == BrowseLayoutMode.ThreeD)
 			{
 				_carousel3D?.FlipSelected();
 				MarkInputHandled();
