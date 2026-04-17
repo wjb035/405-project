@@ -44,6 +44,7 @@ public partial class AudioManager : Node
 	public List<String> results = null;
 	public List<int> PlayHistory = new();
 	public List<int> Unplayed = new();
+	
 	//private Jukebox juke;
 	public override void _Ready()
 	{
@@ -157,6 +158,16 @@ public partial class AudioManager : Node
 	}
 	public bool MusicPlaying(){
 		return _musicPlayer.Playing;
+	}
+	
+	public bool IsPaused()
+	{
+		return _musicPlayer.StreamPaused;
+	}
+
+	public bool IsActuallyPlaying()
+	{
+		return _musicPlayer.Playing && !_musicPlayer.StreamPaused;
 	}
 	
 	public void PauseMusic(){

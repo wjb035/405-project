@@ -1,8 +1,42 @@
 [gd_scene format=3 uid="uid://d2qofc07w0i6n"]
 
 [ext_resource type="Script" uid="uid://dy4trfcu8lsoj" path="res://Jukebox.cs" id="1_u3ngx"]
+[ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="2_g0078"]
+[ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="2_uvchp"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_6pv21"]
+[ext_resource type="Texture2D" uid="uid://bdhfqd73aagas" path="res://Images/play icon.png" id="3_j76dh"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="4_6jqq3"]
+[ext_resource type="Texture2D" uid="uid://du2jb5jdb32v8" path="res://Images/flip fill icon.png" id="4_udcbl"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_frg2n"]
+[ext_resource type="Texture2D" uid="uid://bmbin1ax7cxef" path="res://Images/shuffle fill icon.png" id="6_1kv8w"]
+[ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="6_uvchp"]
+[ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="7_8n0sc"]
+[ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="8_vwnrk"]
+[ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="9_62mf5"]
+[ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="10_kf6uw"]
+[ext_resource type="Texture2D" uid="uid://bmueo5w7d0ujy" path="res://Images/flip icon.png" id="12_ptp4k"]
+[ext_resource type="Texture2D" uid="uid://da0o0qcet8xfs" path="res://Images/step back icon.png" id="13_j76dh"]
+[ext_resource type="Texture2D" uid="uid://bpwcdxghiwnsg" path="res://Images/pause icon.png" id="14_gyq2o"]
+[ext_resource type="Texture2D" uid="uid://3sl8ng658c3e" path="res://Images/step forward icon.png" id="15_udcbl"]
+[ext_resource type="Texture2D" uid="uid://lhoqqjibm8d5" path="res://Images/shuffle icon.png" id="16_1kv8w"]
 
-[node name="Jukebox" type="Control" unique_id=1243206364]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w05y1"]
+shader = ExtResource("3_6pv21")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.64, 0.54, 0.82, 0.7)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0150000007125
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvgg"]
+shader = ExtResource("4_6jqq3")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
+[node name="Jukebox" type="Control" unique_id=1243206364 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,13 +44,33 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_u3ngx")
-BackPath = NodePath("Margin/Root/TopBar/BtnBack")
-PrevPath = NodePath("Margin/Root/Body/ButtonRow/Prev")
-NextPath = NodePath("Margin/Root/Body/ButtonRow/Next")
-PausePath = NodePath("Margin/Root/Body/ButtonRow/Pause")
-LoopPath = NodePath("Margin/Root/Body/ButtonRow/Loop")
-ShufflePath = NodePath("Margin/Root/Body/ButtonRow/Shuffle")
-PlayingPath = NodePath("Margin/Root/TopBar/Playing")
+BackPath = NodePath("Margin/Root/Foreground2/TopBar/BtnBack")
+PrevPath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Prev")
+NextPath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Next")
+PausePath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Pause")
+LoopPath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Loop")
+ShufflePath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Shuffle")
+PlayingPath = NodePath("Margin/Root/Body/Mid2/BottomBar/Playing")
+FriendsPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends")
+InboxPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnInbox")
+ChatPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat")
+SettingsPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnSettings")
+HelpPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp")
+PauseIcon = ExtResource("14_gyq2o")
+PlayIcon = ExtResource("3_j76dh")
+LoopOnIcon = ExtResource("4_udcbl")
+LoopOffIcon = ExtResource("12_ptp4k")
+ShuffleOnIcon = ExtResource("6_1kv8w")
+ShuffleOffIcon = ExtResource("16_1kv8w")
+FriendInboxPopup = NodePath("Inbox")
+
+[node name="Inbox" parent="." unique_id=873650772 instance=ExtResource("2_uvchp")]
+position = Vector2i(237, 0)
+
+[node name="ParallaxUi" type="Node" parent="." unique_id=1575317270 node_paths=PackedStringArray("MidLayers", "ForegroundLayers")]
+script = ExtResource("2_g0078")
+MidLayers = [NodePath("../Margin/Root/Body/Mid1"), NodePath("../Margin/Root/Body/Mid2")]
+ForegroundLayers = [NodePath("../Margin/Root/ForegroundBars"), NodePath("../Margin/Root/Foreground2")]
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2051625939]
 layout_mode = 1
@@ -30,76 +84,226 @@ theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1428362622]
+[node name="Root" type="Control" parent="Margin" unique_id=581904827]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=780794738]
+[node name="ForegroundBars" type="CanvasLayer" parent="Margin/Root" unique_id=248508368]
+layer = -7
+
+[node name="TopBar2" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1334479053]
+material = SubResource("ShaderMaterial_w05y1")
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -15.0
+offset_top = -26.0
+offset_right = 49.0
+offset_bottom = 54.0
+grow_horizontal = 2
+
+[node name="BottomBar" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=633646412]
+material = SubResource("ShaderMaterial_oyvgg")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -133.09998
+offset_right = 16.0
+offset_bottom = 66.900024
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+
+[node name="Foreground2" type="CanvasLayer" parent="Margin/Root" unique_id=1887085736]
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root/Foreground2" unique_id=84388575]
+offset_left = 18.0
+offset_top = 7.1000004
+offset_right = 1134.0
+offset_bottom = 47.1
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/Foreground2/TopBar" unique_id=798633031]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+tooltip_text = "Back"
+text = "
+"
+icon = ExtResource("5_frg2n")
+icon_alignment = 1
+expand_icon = true
+
+[node name="TopSpacer" type="Control" parent="Margin/Root/Foreground2/TopBar" unique_id=1624006134]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1567769117]
-custom_minimum_size = Vector2(56, 40)
+[node name="TopIcons" type="HBoxContainer" parent="Margin/Root/Foreground2/TopBar" unique_id=276309443]
 layout_mode = 2
-text = "←"
 
-[node name="Hint" type="Label" parent="Margin/Root/TopBar" unique_id=135639925]
+[node name="BtnInbox" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=563234607]
+custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
+tooltip_text = "Inbox"
+icon = ExtResource("6_uvchp")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnFriends" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=564330501]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Profile"
+icon = ExtResource("7_8n0sc")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnChat" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1873284238]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Chat"
+icon = ExtResource("8_vwnrk")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnSettings" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1210135636]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Settings"
+icon = ExtResource("9_62mf5")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnHelp" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1608916596]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Help"
+text = " "
+icon = ExtResource("10_kf6uw")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Body" type="Control" parent="Margin/Root" unique_id=1172736966]
+anchors_preset = 0
+offset_top = 50.0
+offset_right = 1116.0
+offset_bottom = 579.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Mid1" type="CanvasLayer" parent="Margin/Root/Body" unique_id=1953323346]
+
+[node name="Hint" type="Label" parent="Margin/Root/Body/Mid1" unique_id=135639925]
+visible = false
+offset_left = 74.0
+offset_top = 120.0
+offset_right = 143.0
+offset_bottom = 143.0
 theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
 text = "JUKEBOX"
 horizontal_alignment = 1
 
-[node name="Playing" type="Label" parent="Margin/Root/TopBar" unique_id=1861771206]
-layout_mode = 2
-size_flags_horizontal = 6
-text = "Currently Playing: "
-
-[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=266782074]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="ButtonRow" type="HBoxContainer" parent="Margin/Root/Body" unique_id=483072578]
-layout_mode = 2
-size_flags_horizontal = 4
-
-[node name="Prev" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=91526355]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Prev"
-
-[node name="Pause" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=674253913]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Pause"
-
-[node name="Next" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=198910844]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Next
-"
-
-[node name="Loop" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=158558345]
-layout_mode = 2
-text = "Loop"
-
-[node name="Shuffle" type="Button" parent="Margin/Root/Body/ButtonRow" unique_id=1923761008]
-layout_mode = 2
-text = "Shuffle"
-
-[node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body" unique_id=2054835221]
-layout_mode = 2
+[node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body/Mid1" unique_id=2054835221]
+offset_left = 18.0
+offset_top = 109.0
+offset_right = 1134.0
+offset_bottom = 597.0
 size_flags_vertical = 3
 
-[node name="ButtonContainer" type="VBoxContainer" parent="Margin/Root/Body/ScrollContainer" unique_id=1051779703]
+[node name="ButtonContainer" type="VBoxContainer" parent="Margin/Root/Body/Mid1/ScrollContainer" unique_id=1051779703]
 layout_mode = 2
 
-[node name="Status" type="Label" parent="Margin/Root" unique_id=951530967]
-layout_mode = 2
+[node name="Status" type="Label" parent="Margin/Root/Body/Mid1" unique_id=951530967]
+visible = false
+offset_left = 18.0
+offset_top = 607.0
+offset_right = 1134.0
+offset_bottom = 630.0
 theme_override_colors/font_color = Color(0.8, 0.88, 0.96, 0.95)
 horizontal_alignment = 1
+
+[node name="Mid2" type="CanvasLayer" parent="Margin/Root/Body" unique_id=1931666073]
+
+[node name="BottomBar" type="Control" parent="Margin/Root/Body/Mid2" unique_id=1082710977]
+z_index = 87
+layout_mode = 3
+anchors_preset = 0
+offset_left = 11.0
+offset_top = 550.0
+offset_right = 1127.0
+offset_bottom = 581.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="Playing" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1861771206]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 45.0
+offset_right = 160.0
+offset_bottom = 68.0
+size_flags_horizontal = 4
+text = "Currently Playing: "
+
+[node name="ButtonRow" type="HBoxContainer" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=483072578]
+z_index = 37
+layout_mode = 0
+offset_left = 18.0
+offset_top = 25.0
+offset_right = 1134.0
+offset_bottom = 89.0
+size_flags_horizontal = 4
+
+[node name="BottomSpacer" type="Control" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1418049384]
+custom_minimum_size = Vector2(410, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Loop" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=158558345]
+z_index = 37
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Loop"
+icon = ExtResource("12_ptp4k")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Prev" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=91526355]
+z_index = 37
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+icon = ExtResource("13_j76dh")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Pause" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=674253913]
+z_index = 37
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+icon = ExtResource("14_gyq2o")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Next" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=198910844]
+z_index = 37
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("15_udcbl")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Shuffle" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1923761008]
+z_index = 37
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("16_1kv8w")
+icon_alignment = 1
+expand_icon = true

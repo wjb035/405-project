@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PGEmu.Helpers;
 using FriendRecordStatus = PGEmu.Services.Models.FriendStatus;
 
 public partial class Profile : Control
@@ -96,6 +97,9 @@ public partial class Profile : Control
 	private int _friendSearchOptionsRequestId;
 	private int _friendSearchResultsRequestId;
 
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
+	
 	public override async void _Ready()
 	{
 		_back = GetNode<Button>(BackPath);
@@ -2056,7 +2060,7 @@ public partial class Profile : Control
 			from.A + ((to.A - from.A) * amount));
 	}
 
-	private void GoBack()
+	private async void GoBack()
 	{
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(-1);
@@ -2084,7 +2088,7 @@ public partial class Profile : Control
 			returnScene = "res://HomeScreen.tscn";
 		tree.SetMeta("pgemu_return_scene", returnScene);
 
-		tree.ChangeSceneToFile(returnScene);
+		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
 	}
 
 		private async void GoFriendsList()
