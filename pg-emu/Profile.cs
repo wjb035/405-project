@@ -8,9 +8,24 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FriendRecordStatus = PGEmu.Services.Models.FriendStatus;
 
 public partial class Profile : Control
 {
+	private sealed class FriendListEntry
+	{
+		public string Id { get; init; } = string.Empty;
+		public string Username { get; init; } = string.Empty;
+		public FriendRecordStatus Status { get; init; } = FriendRecordStatus.Accepted;
+	}
+
+	private sealed class FriendDrawerRowRefs
+	{
+		public Button Button { get; init; } = null!;
+		public TextureRect Avatar { get; init; } = null!;
+		public Label DetailLabel { get; init; } = null!;
+	}
+
 	private const int MaxTileCount = 4;
 	private const float ControllerRowMergeThreshold = 36f;
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
@@ -25,6 +40,9 @@ public partial class Profile : Control
 	private const int FriendSearchFriendIdBase = 1000;
 	private const int FriendSearchMaxResults = 12;
 	private const int FriendSearchHintResults = 3;
+	private const float FriendDrawerWidth = 392f;
+	private const float FriendDrawerScrimAlpha = 0.54f;
+	private const float FriendDrawerTweenSeconds = 0.22f;
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath AvatarPath;
@@ -34,8 +52,11 @@ public partial class Profile : Control
 	private readonly System.Net.Http.HttpClient _client = new();
 	private readonly Dictionary<Button, string> _friendTileUsernames = new();
 	private readonly Dictionary<int, string> _friendSearchEntries = new();
+	private readonly Dictionary<string, ProfileResponse> _friendProfileCache = new(StringComparer.OrdinalIgnoreCase);
+	private readonly Dictionary<string, Texture2D> _avatarTextureCache = new(StringComparer.OrdinalIgnoreCase);
 	private readonly List<string> _allFriendSearchUsernames = new();
 	private readonly List<string> _friendSearchResultUsernames = new();
+	private readonly List<FriendListEntry> _friendEntries = new();
 
 	private Button _back = null!;
 	private Button _friendsList = null!;
@@ -49,6 +70,19 @@ public partial class Profile : Control
 	private ConfirmationDialog _friendSearchDialog = null!;
 	private LineEdit _friendSearchInput = null!;
 	private ItemList _friendSearchResultsList = null!;
+	private Control _friendDrawerOverlay = null!;
+	private ColorRect _friendDrawerScrim = null!;
+	private PanelContainer _friendDrawerPanel = null!;
+	private Label _friendDrawerTitle = null!;
+	private Label _friendDrawerCount = null!;
+	private Button _friendDrawerClose = null!;
+	private ScrollContainer _friendDrawerScroll = null!;
+	private VBoxContainer _friendDrawerList = null!;
+	private readonly List<Button> _friendDrawerButtons = new();
+	private Tween? _friendDrawerTween;
+	private bool _friendDrawerOpen;
+	private bool _friendDrawerAnimating;
+	private int _friendDrawerRequestId;
 
 	private ProfileResponse? _profile;
 	private bool _openingFriendProfile;
@@ -78,10 +112,11 @@ public partial class Profile : Control
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
 		ConnectIfNeeded(_friendsList, GoFriendsList);
 		ConnectFriendTileButtons();
-		if (_friendSearchDropdown != null)
-			_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
-		SetupFriendSearchDialog();
-		ConfigureFriendSearchDropdown(Array.Empty<string>());
+			if (_friendSearchDropdown != null)
+				_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
+			SetupFriendSearchDialog();
+			SetupFriendDrawer();
+			ConfigureFriendSearchDropdown(Array.Empty<string>());
 
 		ApplyThemeAesthetic();
 		SetLoadingState();
@@ -91,13 +126,13 @@ public partial class Profile : Control
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 	}
 
-	public override void _UnhandledInput(InputEvent @event)
-	{
-		if (ControllerService.TryHandleBackAction(@event, GoBack))
+		public override void _UnhandledInput(InputEvent @event)
 		{
-			GetViewport()?.SetInputAsHandled();
-			return;
-		}
+			if (ControllerService.TryHandleBackAction(@event, _friendDrawerOpen || _friendDrawerAnimating ? CloseFriendDrawer : GoBack))
+			{
+				GetViewport()?.SetInputAsHandled();
+				return;
+			}
 
 		if (@event is InputEventJoypadMotion joypadMotion)
 		{
@@ -195,11 +230,24 @@ public partial class Profile : Control
 		});
 	}
 
-	private List<List<Button>> GetControllerUiRows()
-	{
-		var topRow = new List<Button> { _back };
-		if (_friendSearchDropdown != null)
-			topRow.Add(_friendSearchDropdown);
+		private List<List<Button>> GetControllerUiRows()
+		{
+			if (_friendDrawerOverlay.Visible)
+			{
+				var rows = new List<List<Button>>
+				{
+					new() { _friendDrawerClose }
+				};
+
+				foreach (var button in _friendDrawerButtons.Where(button => button.Visible && !button.Disabled))
+					rows.Add(new List<Button> { button });
+
+				return rows;
+			}
+
+			var topRow = new List<Button> { _back };
+			if (_friendSearchDropdown != null)
+				topRow.Add(_friendSearchDropdown);
 		topRow.Add(_profileSettingsShortcut);
 
 		return ControllerService.BuildVisibleRows(
@@ -315,15 +363,21 @@ public partial class Profile : Control
 		return rect.Position.X + (rect.Size.X * 0.5f);
 	}
 
-	private void EnsureFocusedControlVisible()
-	{
-		if (GetViewport()?.GuiGetFocusOwner() is not Control focused)
-			return;
-		if (!GodotObject.IsInstanceValid(focused))
-			return;
+		private void EnsureFocusedControlVisible()
+		{
+			if (GetViewport()?.GuiGetFocusOwner() is not Control focused)
+				return;
+			if (!GodotObject.IsInstanceValid(focused))
+				return;
 
-		_bodyScroll.EnsureControlVisible(focused);
-	}
+			if (_friendDrawerOverlay.Visible && _friendDrawerScroll.IsAncestorOf(focused))
+			{
+				_friendDrawerScroll.EnsureControlVisible(focused);
+				return;
+			}
+
+			_bodyScroll.EnsureControlVisible(focused);
+		}
 
 	private bool ShouldHandleControllerInput(int device)
 	{
@@ -342,8 +396,8 @@ public partial class Profile : Control
 			button.Pressed += () => OpenFriendProfileAsync(button);
 	}
 
-	private void SetupFriendSearchDialog()
-	{
+		private void SetupFriendSearchDialog()
+		{
 		_friendSearchDialog = new ConfirmationDialog
 		{
 			Title = "Find Friend",
@@ -388,7 +442,519 @@ public partial class Profile : Control
 
 		_friendSearchDialog.Confirmed += () => _ = TriggerFriendSearchFromInputAsync();
 
-		AddChild(_friendSearchDialog);
+			AddChild(_friendSearchDialog);
+		}
+
+		private void SetupFriendDrawer()
+		{
+			_friendDrawerOverlay = new Control
+			{
+				Name = "FriendDrawerOverlay",
+				Visible = false,
+				MouseFilter = MouseFilterEnum.Stop,
+				ZIndex = 50
+			};
+			_friendDrawerOverlay.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			_friendDrawerOverlay.OffsetLeft = 0f;
+			_friendDrawerOverlay.OffsetTop = 0f;
+			_friendDrawerOverlay.OffsetRight = 0f;
+			_friendDrawerOverlay.OffsetBottom = 0f;
+			AddChild(_friendDrawerOverlay);
+
+			_friendDrawerScrim = new ColorRect
+			{
+				Name = "FriendDrawerScrim",
+				Color = new Color(0.03f, 0.02f, 0.06f, 0f),
+				MouseFilter = MouseFilterEnum.Stop
+			};
+			_friendDrawerScrim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			_friendDrawerScrim.OffsetLeft = 0f;
+			_friendDrawerScrim.OffsetTop = 0f;
+			_friendDrawerScrim.OffsetRight = 0f;
+			_friendDrawerScrim.OffsetBottom = 0f;
+			_friendDrawerScrim.GuiInput += OnFriendDrawerScrimInput;
+			_friendDrawerOverlay.AddChild(_friendDrawerScrim);
+
+		_friendDrawerPanel = new PanelContainer
+		{
+			Name = "FriendDrawerPanel",
+			MouseFilter = MouseFilterEnum.Stop,
+			CustomMinimumSize = new Vector2(FriendDrawerWidth, 0f)
+		};
+			_friendDrawerPanel.AnchorLeft = 1f;
+			_friendDrawerPanel.AnchorRight = 1f;
+			_friendDrawerPanel.AnchorTop = 0f;
+			_friendDrawerPanel.AnchorBottom = 1f;
+			_friendDrawerPanel.OffsetTop = 0f;
+			_friendDrawerPanel.OffsetBottom = 0f;
+			SetFriendDrawerDockedOffsets(isOpen: false);
+			_friendDrawerOverlay.AddChild(_friendDrawerPanel);
+
+			var panelMargin = new MarginContainer();
+			panelMargin.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			panelMargin.OffsetLeft = 0f;
+			panelMargin.OffsetTop = 0f;
+			panelMargin.OffsetRight = 0f;
+			panelMargin.OffsetBottom = 0f;
+			panelMargin.AddThemeConstantOverride("margin_left", 18);
+			panelMargin.AddThemeConstantOverride("margin_top", 18);
+			panelMargin.AddThemeConstantOverride("margin_right", 18);
+			panelMargin.AddThemeConstantOverride("margin_bottom", 18);
+			_friendDrawerPanel.AddChild(panelMargin);
+
+			var content = new VBoxContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill
+			};
+			content.AddThemeConstantOverride("separation", 12);
+			panelMargin.AddChild(content);
+
+			var headerRow = new HBoxContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+			};
+			headerRow.AddThemeConstantOverride("separation", 10);
+			content.AddChild(headerRow);
+
+			var titleStack = new VBoxContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+			};
+			titleStack.AddThemeConstantOverride("separation", 2);
+			headerRow.AddChild(titleStack);
+
+			_friendDrawerTitle = new Label
+			{
+				Name = "FriendDrawerTitle",
+				Text = "All Friends"
+			};
+			titleStack.AddChild(_friendDrawerTitle);
+
+			_friendDrawerCount = new Label
+			{
+				Name = "FriendDrawerCount",
+				Text = "0 total"
+			};
+			titleStack.AddChild(_friendDrawerCount);
+
+			_friendDrawerClose = new Button
+			{
+				Name = "FriendDrawerClose",
+				Text = "Close",
+				CustomMinimumSize = new Vector2(92f, 34f)
+			};
+			_friendDrawerClose.Pressed += CloseFriendDrawer;
+			headerRow.AddChild(_friendDrawerClose);
+
+			content.AddChild(new HSeparator());
+
+			_friendDrawerScroll = new ScrollContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+				HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled
+			};
+			content.AddChild(_friendDrawerScroll);
+
+			_friendDrawerList = new VBoxContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+			};
+			_friendDrawerList.AddThemeConstantOverride("separation", 10);
+			_friendDrawerScroll.AddChild(_friendDrawerList);
+		}
+
+		private void OnFriendDrawerScrimInput(InputEvent @event)
+		{
+			if (@event is not InputEventMouseButton mouseButton || !mouseButton.Pressed)
+				return;
+			if (mouseButton.ButtonIndex != MouseButton.Left)
+				return;
+
+			CloseFriendDrawer();
+			AcceptEvent();
+		}
+
+	private async Task OpenFriendDrawerAsync()
+	{
+		if (_friendDrawerOpen || _friendDrawerAnimating)
+			return;
+
+		var requestId = ++_friendDrawerRequestId;
+		_friendDrawerAnimating = true;
+		_friendDrawerOverlay.Visible = true;
+		_friendDrawerScrim.Color = new Color(0.03f, 0.02f, 0.06f, 0f);
+		SetFriendDrawerDockedOffsets(isOpen: false);
+
+		var friendEntries = _friendEntries.Count > 0
+			? _friendEntries.ToArray()
+			: await LoadFriendEntriesAsync();
+
+		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+		{
+			_friendDrawerAnimating = false;
+			return;
+		}
+
+		_friendEntries.Clear();
+		_friendEntries.AddRange(friendEntries);
+
+		if (_allFriendSearchUsernames.Count == 0)
+			ConfigureFriendSearchDropdown(friendEntries.Select(friend => friend.Username).ToArray());
+
+		PopulateFriendDrawer(friendEntries, requestId);
+		ApplyFriendDrawerTheme();
+
+		_friendDrawerTween?.Kill();
+			_friendDrawerTween = CreateTween();
+			_friendDrawerTween.SetParallel(true);
+			_friendDrawerTween.SetTrans(Tween.TransitionType.Cubic);
+			_friendDrawerTween.SetEase(Tween.EaseType.Out);
+			_friendDrawerTween.TweenProperty(
+				_friendDrawerScrim,
+				"color",
+				new Color(0.03f, 0.02f, 0.06f, FriendDrawerScrimAlpha),
+				FriendDrawerTweenSeconds);
+			_friendDrawerTween.TweenProperty(_friendDrawerPanel, "offset_left", -FriendDrawerWidth, FriendDrawerTweenSeconds);
+			_friendDrawerTween.TweenProperty(_friendDrawerPanel, "offset_right", 0f, FriendDrawerTweenSeconds);
+
+			await ToSignal(_friendDrawerTween, Tween.SignalName.Finished);
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+				return;
+
+			SetFriendDrawerDockedOffsets(isOpen: true);
+			_friendDrawerOpen = true;
+			_friendDrawerAnimating = false;
+			CallDeferred(nameof(RefreshControllerFocusGraph));
+			FocusFriendDrawerDefault();
+		}
+
+	private void CloseFriendDrawer()
+	{
+		if (!_friendDrawerOverlay.Visible || _friendDrawerAnimating)
+			return;
+
+		_friendDrawerRequestId++;
+		ResetUiNavigationState();
+		AudioManager.Instance?.PlayNavigation(-1);
+
+			_friendDrawerAnimating = true;
+			_friendDrawerOpen = false;
+			_friendDrawerTween?.Kill();
+			_friendDrawerTween = CreateTween();
+			_friendDrawerTween.SetParallel(true);
+			_friendDrawerTween.SetTrans(Tween.TransitionType.Cubic);
+			_friendDrawerTween.SetEase(Tween.EaseType.In);
+			_friendDrawerTween.TweenProperty(
+				_friendDrawerScrim,
+				"color",
+				new Color(0.03f, 0.02f, 0.06f, 0f),
+				FriendDrawerTweenSeconds);
+			_friendDrawerTween.TweenProperty(_friendDrawerPanel, "offset_left", 0f, FriendDrawerTweenSeconds);
+			_friendDrawerTween.TweenProperty(_friendDrawerPanel, "offset_right", FriendDrawerWidth, FriendDrawerTweenSeconds);
+			_friendDrawerTween.Finished += () =>
+			{
+				if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+					return;
+
+				_friendDrawerAnimating = false;
+				SetFriendDrawerDockedOffsets(isOpen: false);
+				_friendDrawerOverlay.Visible = false;
+				_friendsList.GrabFocus();
+				CallDeferred(nameof(RefreshControllerFocusGraph));
+			};
+		}
+
+	private void PopulateFriendDrawer(IReadOnlyList<FriendListEntry> friends, int requestId)
+	{
+		foreach (Node child in _friendDrawerList.GetChildren())
+			child.QueueFree();
+
+		_friendDrawerButtons.Clear();
+		_friendDrawerCount.Text = friends.Count == 1
+			? "1 friend"
+			: $"{friends.Count} friends";
+
+		if (friends.Count == 0)
+		{
+			var emptyState = new Label
+			{
+				Text = "No friends yet",
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+					CustomMinimumSize = new Vector2(0f, 160f)
+				};
+			_friendDrawerList.AddChild(emptyState);
+			return;
+		}
+
+		foreach (var friend in friends)
+		{
+			if (string.IsNullOrWhiteSpace(friend.Username))
+				continue;
+
+			var capturedUsername = friend.Username.Trim();
+			var friendButton = new Button
+			{
+				CustomMinimumSize = new Vector2(0f, 74f),
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				Text = string.Empty,
+				ClipContents = true,
+				TooltipText = $"View {capturedUsername}'s profile"
+			};
+
+			var margin = new MarginContainer
+			{
+				MouseFilter = MouseFilterEnum.Ignore
+			};
+			margin.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			margin.OffsetLeft = 14f;
+			margin.OffsetTop = 10f;
+			margin.OffsetRight = -14f;
+			margin.OffsetBottom = -10f;
+			friendButton.AddChild(margin);
+
+			var row = new HBoxContainer
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill
+			};
+			row.AddThemeConstantOverride("separation", 12);
+			margin.AddChild(row);
+
+			var avatarFrame = new PanelContainer
+			{
+				CustomMinimumSize = new Vector2(46f, 46f),
+				MouseFilter = MouseFilterEnum.Ignore
+			};
+			avatarFrame.AddThemeStyleboxOverride(
+				"panel",
+				CreatePanelStyle(
+					new Color(0.15f, 0.12f, 0.22f, 0.96f),
+					new Color(0.82f, 0.72f, 0.96f, 0.38f),
+					14,
+					1));
+			row.AddChild(avatarFrame);
+
+			var avatar = new TextureRect
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered
+			};
+			avatar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			avatar.OffsetLeft = 0f;
+			avatar.OffsetTop = 0f;
+			avatar.OffsetRight = 0f;
+			avatar.OffsetBottom = 0f;
+			avatarFrame.AddChild(avatar);
+
+			var textStack = new VBoxContainer
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ShrinkCenter
+			};
+			textStack.AddThemeConstantOverride("separation", 2);
+			row.AddChild(textStack);
+
+			var nameLabel = new Label
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				Text = capturedUsername
+			};
+			UiStyle.StyleTitleLabel(nameLabel);
+			nameLabel.AddThemeFontSizeOverride("font_size", 18);
+			nameLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.96f, 1f, 0.99f));
+			textStack.AddChild(nameLabel);
+
+			var detailLabel = new Label
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				Text = BuildFriendDetailText(friend, null)
+			};
+			UiStyle.StyleMetaLabel(detailLabel);
+			detailLabel.AddThemeFontSizeOverride("font_size", 13);
+			detailLabel.AddThemeColorOverride("font_color", new Color(0.86f, 0.83f, 0.95f, 0.86f));
+			textStack.AddChild(detailLabel);
+
+			var viewLabel = new Label
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				Text = "View",
+				HorizontalAlignment = HorizontalAlignment.Right,
+				VerticalAlignment = VerticalAlignment.Center
+			};
+			UiStyle.StyleMetaLabel(viewLabel);
+			viewLabel.AddThemeFontSizeOverride("font_size", 12);
+			viewLabel.AddThemeColorOverride("font_color", new Color(0.96f, 0.74f, 0.86f, 0.86f));
+			row.AddChild(viewLabel);
+
+			friendButton.Pressed += async () => await OpenFriendProfileByUsernameAsync(capturedUsername);
+			_friendDrawerList.AddChild(friendButton);
+			_friendDrawerButtons.Add(friendButton);
+
+			var rowRefs = new FriendDrawerRowRefs
+			{
+				Button = friendButton,
+				Avatar = avatar,
+				DetailLabel = detailLabel
+			};
+			_ = PopulateFriendDrawerRowDetailsAsync(friend, rowRefs, requestId);
+		}
+	}
+
+	private void FocusFriendDrawerDefault()
+	{
+		ResetUiNavigationState();
+		var rows = GetControllerUiRows();
+			if (rows.Count == 0)
+				return;
+
+			_uiRowIndex = _friendDrawerButtons.Count > 0 ? 1 : 0;
+			_uiColumnIndex = 0;
+			if (!FocusControllerRowEntry(rows))
+			{
+				if (_friendDrawerButtons.Count > 0)
+					_friendDrawerButtons[0].GrabFocus();
+			else
+				_friendDrawerClose.GrabFocus();
+		}
+	}
+
+	private void SetFriendDrawerDockedOffsets(bool isOpen)
+	{
+		if (!GodotObject.IsInstanceValid(_friendDrawerPanel))
+			return;
+
+		_friendDrawerPanel.OffsetLeft = isOpen ? -FriendDrawerWidth : 0f;
+		_friendDrawerPanel.OffsetRight = isOpen ? 0f : FriendDrawerWidth;
+	}
+
+	private async Task PopulateFriendDrawerRowDetailsAsync(FriendListEntry friend, FriendDrawerRowRefs rowRefs, int requestId)
+	{
+		try
+		{
+			var profile = await GetFriendProfileAsync(friend.Username);
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+				return;
+			if (requestId != _friendDrawerRequestId)
+				return;
+			if (!GodotObject.IsInstanceValid(rowRefs.Button) || !GodotObject.IsInstanceValid(rowRefs.Avatar) || !GodotObject.IsInstanceValid(rowRefs.DetailLabel))
+				return;
+
+			rowRefs.DetailLabel.Text = BuildFriendDetailText(friend, profile);
+			if (profile == null || string.IsNullOrWhiteSpace(profile.AvatarUrl))
+				return;
+
+			var avatarTexture = await LoadAvatarTextureAsync(profile.AvatarUrl);
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+				return;
+			if (requestId != _friendDrawerRequestId)
+				return;
+			if (!GodotObject.IsInstanceValid(rowRefs.Avatar))
+				return;
+			if (avatarTexture == null)
+				return;
+
+			rowRefs.Avatar.Texture = avatarTexture;
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Friend drawer detail load failed for {friend.Username}: {exception.Message}");
+		}
+	}
+
+	private async Task<ProfileResponse?> GetFriendProfileAsync(string username)
+	{
+		if (string.IsNullOrWhiteSpace(username))
+			return null;
+
+		if (_friendProfileCache.TryGetValue(username, out var cachedProfile))
+			return cachedProfile;
+
+		var profile = await _profileService.GetUserProfile(username.Trim());
+		if (profile != null && !string.IsNullOrWhiteSpace(profile.Username))
+			_friendProfileCache[profile.Username] = profile;
+
+		return profile;
+	}
+
+	private async Task<Texture2D?> LoadAvatarTextureAsync(string url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return null;
+
+		var normalizedUrl = NormalizeAvatarUrl(url);
+		if (_avatarTextureCache.TryGetValue(normalizedUrl, out var cachedTexture))
+			return cachedTexture;
+
+		try
+		{
+			var avatar = new Image();
+			var err = Error.Failed;
+
+			var localAvatarPath = TryResolveLocalAvatarPath(url);
+			if (!string.IsNullOrWhiteSpace(localAvatarPath) && File.Exists(localAvatarPath))
+			{
+				err = avatar.Load(localAvatarPath);
+			}
+			else
+			{
+				byte[] imageData = await _client.GetByteArrayAsync(normalizedUrl);
+				err = avatar.LoadPngFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = avatar.LoadJpgFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = avatar.LoadWebpFromBuffer(imageData);
+			}
+
+			if (err != Error.Ok)
+			{
+				GD.PrintErr("Failed to decode avatar image");
+				return null;
+			}
+
+			var texture = ImageTexture.CreateFromImage(avatar);
+			_avatarTextureCache[normalizedUrl] = texture;
+			return texture;
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr("Failed to load image: " + exception.Message);
+			return null;
+		}
+	}
+
+	private static string BuildFriendDetailText(FriendListEntry friend, ProfileResponse? profile)
+	{
+		if (profile != null && !string.IsNullOrWhiteSpace(profile.Bio))
+			return TrimSingleLine(profile.Bio, 84);
+
+		return friend.Status switch
+		{
+			FriendRecordStatus.Pending => "Pending friend request",
+			FriendRecordStatus.Blocked => "Blocked",
+			_ => "View friend profile"
+		};
+	}
+
+	private static string TrimSingleLine(string value, int maxLength)
+	{
+		var trimmed = value?
+			.Replace("\r", " ", StringComparison.Ordinal)
+			.Replace("\n", " ", StringComparison.Ordinal)
+			.Trim() ?? string.Empty;
+
+		if (trimmed.Length <= maxLength)
+			return trimmed;
+		if (maxLength <= 3)
+			return trimmed[..maxLength];
+
+		return $"{trimmed[..(maxLength - 3)]}...";
 	}
 
 	private void ConfigureFriendSearchDropdown(IReadOnlyList<string> usernames)
@@ -663,23 +1229,30 @@ public partial class Profile : Control
 		{
 			var showcaseTask = LoadCollectionNamesAsync();
 			var recentGamesTask = LoadRecentGameLabelsAsync();
-			var friendsTask = LoadFriendNamesAsync();
+			var friendsTask = LoadFriendEntriesAsync();
 
 			await Task.WhenAll(showcaseTask, recentGamesTask, friendsTask);
 			var showcaseItems = await showcaseTask;
 			var recentGameItems = await recentGamesTask;
 			var friendItems = await friendsTask;
+			var previewFriendItems = friendItems
+				.Select(friend => friend.Username)
+				.Take(MaxTileCount)
+				.ToArray();
 
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 
-				ApplyTileContent(ShowcaseTileGridPath, showcaseItems, "No collections yet");
-				ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
-				ApplyFriendTileContent(friendItems, "No friends yet");
-				ConfigureFriendSearchDropdown(friendItems);
+			_friendEntries.Clear();
+			_friendEntries.AddRange(friendItems);
 
-				SetFooterVisible(RecentGamesFooterPath, false);
-				SetFooterVisible(FriendsFooterPath, true);
+			ApplyTileContent(ShowcaseTileGridPath, showcaseItems, "No collections yet");
+			ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
+			ApplyFriendTileContent(previewFriendItems, "No friends yet");
+			ConfigureFriendSearchDropdown(friendItems.Select(friend => friend.Username).ToArray());
+
+			SetFooterVisible(RecentGamesFooterPath, false);
+			SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 		catch (Exception exception)
@@ -689,12 +1262,13 @@ public partial class Profile : Control
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 
-				ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "No collections yet");
-				ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
-				ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
-				ConfigureFriendSearchDropdown(Array.Empty<string>());
-				SetFooterVisible(RecentGamesFooterPath, false);
-				SetFooterVisible(FriendsFooterPath, true);
+			_friendEntries.Clear();
+			ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "No collections yet");
+			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
+			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
+			ConfigureFriendSearchDropdown(Array.Empty<string>());
+			SetFooterVisible(RecentGamesFooterPath, false);
+			SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
 	}
@@ -892,29 +1466,67 @@ public partial class Profile : Control
 		}
 	}
 
-	private async Task<IReadOnlyList<string>> LoadFriendNamesAsync()
+	private async Task<IReadOnlyList<FriendListEntry>> LoadFriendEntriesAsync()
 	{
 		try
 		{
 			var friendsJson = await FriendActivity.GetFriendsJson();
-			if (string.IsNullOrWhiteSpace(friendsJson))
-				return Array.Empty<string>();
+			if (!string.IsNullOrWhiteSpace(friendsJson))
+			{
+				var friendsRoot = JsonSerializer.Deserialize<JsonElement>(friendsJson);
+				var parsed = ParseFriendEntries(friendsRoot);
+				if (parsed.Count > 0)
+					return parsed;
+			}
 
-			var friendsRoot = JsonSerializer.Deserialize<JsonElement>(friendsJson);
-			if (friendsRoot.ValueKind != JsonValueKind.Array)
-				return Array.Empty<string>();
+			var response = await AuthService.Instance.SendAuthorizedRequest("http://localhost:5276/api/friends");
+			if (response == null)
+				return Array.Empty<FriendListEntry>();
 
-			return friendsRoot.EnumerateArray()
-				.Select(friend => ReadJsonString(friend, "username"))
-				.Where(username => !string.IsNullOrWhiteSpace(username))
-				.Take(MaxTileCount)
-				.ToArray();
+			return ParseFriendEntries(response.Value);
 		}
 		catch (Exception exception)
 		{
 			GD.PrintErr($"Friend list load failed: {exception.Message}");
-			return Array.Empty<string>();
+			return Array.Empty<FriendListEntry>();
 		}
+	}
+
+	private static IReadOnlyList<FriendListEntry> ParseFriendEntries(JsonElement friendsRoot)
+	{
+		if (friendsRoot.ValueKind == JsonValueKind.Object &&
+			TryGetPropertyIgnoreCase(friendsRoot, "friends", out var nestedFriends))
+		{
+			friendsRoot = nestedFriends;
+		}
+
+		if (friendsRoot.ValueKind != JsonValueKind.Array)
+			return Array.Empty<FriendListEntry>();
+
+		return friendsRoot.EnumerateArray()
+			.Where(friend => friend.ValueKind == JsonValueKind.Object)
+			.Select(friend => new FriendListEntry
+			{
+				Id = ReadJsonString(friend, "id"),
+				Username = ReadJsonString(friend, "username").Trim(),
+				Status = FriendRecordStatus.Accepted
+			})
+			.Where(friend => !string.IsNullOrWhiteSpace(friend.Username))
+			.GroupBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
+			.Select(group => group.First())
+			.OrderBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
+			.ToArray();
+	}
+
+	private async Task<IReadOnlyList<string>> LoadFriendNamesAsync(int? limit = MaxTileCount)
+	{
+		var friends = await LoadFriendEntriesAsync();
+		var usernames = friends.Select(friend => friend.Username);
+
+		if (limit.HasValue)
+			usernames = usernames.Take(limit.Value);
+
+		return usernames.ToArray();
 	}
 
 	private List<GameEntry> LoadInstalledGames()
@@ -1062,7 +1674,7 @@ public partial class Profile : Control
 
 	private static string ReadJsonString(JsonElement element, string propertyName)
 	{
-		if (!element.TryGetProperty(propertyName, out var property))
+		if (!TryGetPropertyIgnoreCase(element, propertyName, out var property))
 			return string.Empty;
 
 		return property.ValueKind switch
@@ -1071,6 +1683,24 @@ public partial class Profile : Control
 			JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => property.GetRawText(),
 			_ => string.Empty,
 		};
+	}
+
+	private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement property)
+	{
+		if (element.ValueKind == JsonValueKind.Object)
+		{
+			foreach (var candidate in element.EnumerateObject())
+			{
+				if (string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+				{
+					property = candidate.Value;
+					return true;
+				}
+			}
+		}
+
+		property = default;
+		return false;
 	}
 
 	private static string? ResolveConfigPath()
@@ -1222,9 +1852,10 @@ public partial class Profile : Control
 				new Color(0.72f, 0.89f, 0.67f, 1f)
 			});
 
-		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, recentAccent);
-		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, friendsAccent);
-	}
+			StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, recentAccent);
+			StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, friendsAccent);
+			ApplyFriendDrawerTheme();
+		}
 
 	private void StyleTileGrid(string containerPath, Color sectionAccent, Color[] tileAccents)
 	{
@@ -1244,16 +1875,63 @@ public partial class Profile : Control
 		}
 	}
 
-	private void StyleFooterButton(string buttonPath, Color background, Color accent)
-	{
-		var button = GetNodeOrNull<Button>(buttonPath);
+		private void StyleFooterButton(string buttonPath, Color background, Color accent)
+		{
+			var button = GetNodeOrNull<Button>(buttonPath);
 		if (button == null)
 			return;
 
-		button.Text = "See All";
-		button.Alignment = HorizontalAlignment.Center;
-		ApplyButtonTheme(button, background, accent, isChip: true);
-	}
+			button.Text = "See All";
+			button.Alignment = HorizontalAlignment.Center;
+			ApplyButtonTheme(button, background, accent, isChip: true);
+		}
+
+		private void ApplyFriendDrawerTheme()
+		{
+			if (_friendDrawerPanel == null)
+				return;
+
+			var panelSurface = new Color(0.09f, 0.07f, 0.16f, 0.97f);
+			var panelBorder = new Color(0.90f, 0.74f, 1f, 0.46f);
+			var friendsAccent = new Color(0.96f, 0.74f, 0.86f, 1f);
+			var chipSurface = new Color(0.17f, 0.14f, 0.27f, 0.92f);
+			var tileAccents = new[]
+			{
+				new Color(1f, 0.73f, 0.86f, 1f),
+				new Color(0.52f, 0.87f, 1f, 1f),
+				new Color(1f, 0.81f, 0.48f, 1f),
+				new Color(0.72f, 0.89f, 0.67f, 1f)
+			};
+
+			_friendDrawerPanel.AddThemeStyleboxOverride("panel", CreatePanelStyle(panelSurface, panelBorder, 22, 1));
+
+			UiStyle.StyleTitleLabel(_friendDrawerTitle);
+			_friendDrawerTitle.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.99f));
+			_friendDrawerTitle.AddThemeFontSizeOverride("font_size", 28);
+
+			UiStyle.StyleMetaLabel(_friendDrawerCount);
+			_friendDrawerCount.AddThemeFontSizeOverride("font_size", 14);
+			_friendDrawerCount.AddThemeColorOverride("font_color", new Color(friendsAccent.R, friendsAccent.G, friendsAccent.B, 0.88f));
+
+			ApplyButtonTheme(_friendDrawerClose, chipSurface, friendsAccent, isChip: true);
+
+			int index = 0;
+			foreach (Node child in _friendDrawerList.GetChildren())
+			{
+				switch (child)
+				{
+					case Button button:
+						ApplyTileTheme(button, friendsAccent, tileAccents[index % tileAccents.Length]);
+						index++;
+						break;
+					case Label label:
+						UiStyle.StyleStatusLabel(label);
+						label.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.84f));
+						label.AddThemeFontSizeOverride("font_size", 20);
+						break;
+				}
+			}
+		}
 
 	private void ApplyTileTheme(Button button, Color sectionAccent, Color tileAccent)
 	{
@@ -1409,12 +2087,12 @@ public partial class Profile : Control
 		tree.ChangeSceneToFile(returnScene);
 	}
 
-	private void GoFriendsList()
-	{
-		ResetUiNavigationState();
-		AudioManager.Instance?.PlaySelect();
-		GetTree().ChangeSceneToFile("res://FriendsList.tscn");
-	}
+		private async void GoFriendsList()
+		{
+			ResetUiNavigationState();
+			AudioManager.Instance?.PlaySelect();
+			await OpenFriendDrawerAsync();
+		}
 
 	private async void OpenFriendProfileAsync(Button button)
 	{
@@ -1477,45 +2155,23 @@ public partial class Profile : Control
 
 	private async Task LoadAvatar(string url)
 	{
-		try
-		{
-			var avatar = new Image();
-			var err = Error.Failed;
+		var texture = await LoadAvatarTextureAsync(url);
+		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
+			return;
+		if (texture == null)
+			return;
 
-			var localAvatarPath = TryResolveLocalAvatarPath(url);
-			if (!string.IsNullOrWhiteSpace(localAvatarPath) && File.Exists(localAvatarPath))
-			{
-				err = avatar.Load(localAvatarPath);
-			}
-			else
-			{
-				if (url.StartsWith("/"))
-					url = $"http://localhost:5276{url}";
+		_avatar.Texture = texture;
+	}
 
-				byte[] imageData = await _client.GetByteArrayAsync(url);
-				err = avatar.LoadPngFromBuffer(imageData);
-				if (err != Error.Ok)
-					err = avatar.LoadJpgFromBuffer(imageData);
-				if (err != Error.Ok)
-					err = avatar.LoadWebpFromBuffer(imageData);
-			}
+	private static string NormalizeAvatarUrl(string url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return string.Empty;
 
-			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(_avatar))
-				return;
-
-			if (err != Error.Ok)
-			{
-				GD.PrintErr("Failed to decode avatar image");
-				return;
-			}
-
-			var texture = ImageTexture.CreateFromImage(avatar);
-			_avatar.Texture = texture;
-		}
-		catch (Exception exception)
-		{
-			GD.PrintErr("Failed to load image: " + exception.Message);
-		}
+		return url.StartsWith("/", StringComparison.Ordinal)
+			? $"http://localhost:5276{url}"
+			: url;
 	}
 
 	private static string? TryResolveLocalAvatarPath(string avatarReference)

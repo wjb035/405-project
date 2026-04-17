@@ -19,6 +19,8 @@ public partial class AudioManager : Node
 	public const string AmbientTrackPath = "res://audio/Keygen_1.mp3";
 	public const string CarouselSpinSfxPath = "res://audio/spin.mp3";
 	public const string CarouselHoverSfxPath = "res://audio/hover.mp3";
+	public const string GbaOpenSfxPath = "res://audio/gba_open.mp3";
+	public const string GbaCloseSfxPath = "res://audio/gba_close.mp3";
 
 	private const float SpinBaseVolumeDb = -6f;
 	private const float HoverBaseVolumeDb = -8f;
@@ -29,6 +31,7 @@ public partial class AudioManager : Node
 	private AudioStreamPlayer _uiPlayer = null!;
 	private AudioStreamPlayer _navigationPlayer = null!;
 	private AudioStreamPlayer _hoverPlayer = null!;
+	private AudioStreamPlayer _consolePlayer = null!;
 	private readonly AudioStreamPlayer[] _spinPlayers = new AudioStreamPlayer[CarouselSpinVoiceCount];
 	private int _nextSpinPlayerIndex;
 	private Tween? _hoverFadeTween;
@@ -58,12 +61,14 @@ public partial class AudioManager : Node
 		
 		//_musicPlayer.Play();
 		
-		_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
-		_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
-		_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
+			_uiPlayer = GetNode<AudioStreamPlayer>("Ui");
+			_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
+			_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
+			_consolePlayer = new AudioStreamPlayer { Name = "Console" };
+			AddChild(_consolePlayer);
 
-		for (int i = 0; i < _spinPlayers.Length; i++)
-			_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
+			for (int i = 0; i < _spinPlayers.Length; i++)
+				_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
 	}
 	
 	
@@ -192,6 +197,11 @@ public partial class AudioManager : Node
 			-20f,  
 			0.5f   
 		);
+	}
+
+	public void PlayConsoleAnimationSfx(string path, float volumeDb = 0f)
+	{
+		PlayOnPlayer(_consolePlayer, path, volumeDb);
 	}
 
 	public void StopCarouselHover(bool fadeOut = true)

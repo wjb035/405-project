@@ -7,6 +7,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 {
 	private const ulong SettleSpinSuppressWindowMs = 90;
 	private const string GbaScreenLogoPath = "res://Models/gba_logo2.png";
+	private const string PspScreenLogoPath = "res://Models/psp_logo.png";
+	private const float PspScreenNudgeLeftU = 0.220f;
 	private const float GbaScreenUvScaleU = 3.074675f;
 	private const float GbaScreenUvScaleV = -4.6753664f;
 	private const float GbaScreenUvOffsetU = -1.825017f;
@@ -60,7 +62,9 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private readonly Dictionary<Node3D, double> _consoleAnimationHoldTimes = new();
 	private readonly HashSet<Node3D> _openAnimatedConsoles = new();
 	private readonly HashSet<Node3D> _manuallyClosedAnimatedConsoles = new();
+	private readonly HashSet<Node3D> _pendingConsoleCloseSounds = new();
 	private Texture2D? _gbaScreenLogoTexture;
+	private Texture2D? _pspScreenLogoTexture;
 	
 	public event System.Action<int>? SelectionChanged;
 
@@ -239,13 +243,19 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		var scene = GD.Load<PackedScene>(modelPath);
 		var model = scene.Instantiate<Node3D>();
-		if (type == ConsoleType.GBA)
+		if (type == ConsoleType.PSP)
+		{
+			EnsurePspRenderable(model);
+			ApplyPspScreenLogo(model);
+		}
+		else if (type == ConsoleType.GBA)
 			ApplyGbaScreenLogo(model);
 		EnableShadows(model);
 		var wrapper = new Node3D { Name = type.ToString() };
+		Node3D modelRoot = model;
 	   //  wrapper.RotateX(Mathf.DegToRad(-20f));
-		switch (type)
-		{
+			switch (type)
+			{
 			case ConsoleType.Wii:
 				model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
 				model.Position = new Vector3(-0.1f, 0.1f, 0);
@@ -256,12 +266,17 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.Position = new Vector3(0.05f, -1f, 0);
 				model.RotateY(Mathf.DegToRad(30f));
 				break;
-			case ConsoleType.PSP:
-				model.Scale = new Vector3(1.1f, 1.1f, 1.1f);
-				model.Position = new Vector3(0.3f, -1f, 0);
-				model.RotateX(Mathf.DegToRad(-10));
-				model.RotateY(Mathf.DegToRad(30));
-				break;
+				case ConsoleType.PSP:
+					var pspScale = ComputeUniformScaleToFit(model, 3.4f);
+					model.Scale = new Vector3(pspScale, pspScale, pspScale);
+					CenterNode3D(model);
+						var pspPivot = new Node3D { Name = "PSPPivot" };
+						pspPivot.Position = new Vector3(0.08f, -0.38f, 0f);
+						pspPivot.RotateX(Mathf.DegToRad(10f));
+						pspPivot.RotateY(Mathf.DegToRad(-170f));
+						pspPivot.AddChild(model);
+						modelRoot = pspPivot;
+						break;
 			case ConsoleType.GameCube:
 				model.Scale = new Vector3(0.030f, 0.030f, 0.030f);
 				model.Position = new Vector3(0, -0.7f, 0);
@@ -275,7 +290,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.RotateY(Mathf.DegToRad(-18f));
 				break;
 		}
-		wrapper.AddChild(model);
+		wrapper.AddChild(modelRoot);
 		ConfigureConsoleAnimation(wrapper, model, type);
 		return wrapper;
 		
@@ -341,6 +356,21 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			return;
 
 		root.Position -= bounds.GetCenter();
+	}
+
+	private static float ComputeUniformScaleToFit(Node3D root, float targetMaxDimension)
+	{
+		if (targetMaxDimension <= 0f ||
+			!TryGetNodeBounds(root, Transform3D.Identity, out var bounds))
+		{
+			return 1f;
+		}
+
+		var maxDimension = Mathf.Max(bounds.Size.X, Mathf.Max(bounds.Size.Y, bounds.Size.Z));
+		if (maxDimension <= 0.0001f)
+			return 1f;
+
+		return targetMaxDimension / maxDimension;
 	}
 
 	private static bool TryGetNodeBounds(Node3D node, Transform3D accumulatedTransform, out Aabb bounds)
@@ -426,6 +456,38 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				EnableShadows(childNode);
 	}
 
+	private static void EnsurePspRenderable(Node node)
+	{
+		if (node is MeshInstance3D mesh)
+		{
+			var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
+			for (int s = 0; s < surfaceCount; s++)
+			{
+				StandardMaterial3D? material = null;
+
+				if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
+				{
+					material = overrideMaterial;
+				}
+				else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
+				{
+					material = (StandardMaterial3D)baseMaterial.Duplicate();
+					mesh.SetSurfaceOverrideMaterial(s, material);
+				}
+
+				if (material == null)
+					continue;
+
+				// Some downloaded meshes use mirrored transforms that invert winding.
+				// Disabling culling keeps the model visible regardless of winding order.
+				material.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
+			}
+		}
+
+		foreach (Node child in node.GetChildren())
+			EnsurePspRenderable(child);
+	}
+
 	private void ApplyGbaScreenLogo(Node node)
 	{
 		var screenTexture = GetGbaScreenLogoTexture();
@@ -490,6 +552,205 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		foreach (var child in node.GetChildren())
 			ApplyGbaScreenLogoRecursive((Node)child, screenTexture);
+	}
+
+	private void ApplyPspScreenLogo(Node node)
+	{
+		var screenTexture = GetPspScreenLogoTexture();
+		if (screenTexture == null)
+			return;
+
+		ApplyPspScreenLogoRecursive(node, screenTexture, node.Name.ToString());
+	}
+
+	private Texture2D? GetPspScreenLogoTexture()
+	{
+		if (_pspScreenLogoTexture != null)
+			return _pspScreenLogoTexture;
+
+		var absolutePath = ProjectSettings.GlobalizePath(PspScreenLogoPath);
+		if (!FileAccess.FileExists(absolutePath))
+		{
+			GD.PrintErr($"Missing PSP screen logo at {absolutePath}");
+			return null;
+		}
+
+		var image = Image.LoadFromFile(absolutePath);
+		if (image.GetWidth() == 0 || image.GetHeight() == 0)
+		{
+			GD.PrintErr($"Unable to load PSP screen logo from {absolutePath}");
+			return null;
+		}
+
+		_pspScreenLogoTexture = ImageTexture.CreateFromImage(image);
+		return _pspScreenLogoTexture;
+	}
+
+	private void ApplyPspScreenLogoRecursive(Node node, Texture2D screenTexture, string hierarchyHint)
+	{
+		var nodeName = node.Name.ToString();
+		var currentHint = string.IsNullOrEmpty(hierarchyHint) ? nodeName : $"{hierarchyHint}/{nodeName}";
+
+		if (node is MeshInstance3D mesh)
+		{
+			var meshName = mesh.Name.ToString();
+			var isLikelyScreenMesh =
+				meshName.Contains("screen", System.StringComparison.OrdinalIgnoreCase) ||
+				meshName.Contains("phong2", System.StringComparison.OrdinalIgnoreCase) ||
+				meshName.Contains("object_179", System.StringComparison.OrdinalIgnoreCase) ||
+				meshName.Contains("pantalla", System.StringComparison.OrdinalIgnoreCase) ||
+				currentHint.Contains("object_179", System.StringComparison.OrdinalIgnoreCase) ||
+				currentHint.Contains("pantalla", System.StringComparison.OrdinalIgnoreCase) ||
+				currentHint.Contains("3dsmeshmatrix55", System.StringComparison.OrdinalIgnoreCase);
+
+			if (isLikelyScreenMesh)
+			{
+				NormalizeMeshUvsToSingleTile(mesh);
+				var targetAspect = EstimateScreenAspect(mesh);
+				var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
+				for (int s = 0; s < surfaceCount; s++)
+				{
+					StandardMaterial3D? material = null;
+
+					if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
+					{
+						material = overrideMaterial;
+					}
+					else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
+					{
+						material = (StandardMaterial3D)baseMaterial.Duplicate();
+						mesh.SetSurfaceOverrideMaterial(s, material);
+					}
+
+					if (material == null)
+						continue;
+
+					material.AlbedoColor = Colors.White;
+						material.AlbedoTexture = screenTexture;
+						material.Metallic = 0f;
+						material.Roughness = 0.34f;
+						ApplyCenteredCropToMaterial(material, screenTexture, targetAspect);
+						material.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
+						material.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+					}
+				}
+			}
+
+		foreach (var child in node.GetChildren())
+			ApplyPspScreenLogoRecursive((Node)child, screenTexture, currentHint);
+	}
+
+	private static void NormalizeMeshUvsToSingleTile(MeshInstance3D mesh)
+	{
+		if (mesh.Mesh is not ArrayMesh sourceMesh)
+			return;
+
+		var surfaceCount = sourceMesh.GetSurfaceCount();
+		if (surfaceCount <= 0)
+			return;
+
+		var normalizedMesh = new ArrayMesh();
+		var changed = false;
+
+		for (int s = 0; s < surfaceCount; s++)
+		{
+			var arrays = sourceMesh.SurfaceGetArrays(s);
+			if (arrays.Count > (int)Mesh.ArrayType.TexUV)
+			{
+				var sourceUvs = arrays[(int)Mesh.ArrayType.TexUV].AsVector2Array();
+				if (sourceUvs.Length > 0)
+				{
+					var minU = float.PositiveInfinity;
+					var maxU = float.NegativeInfinity;
+					var minV = float.PositiveInfinity;
+					var maxV = float.NegativeInfinity;
+
+					for (int i = 0; i < sourceUvs.Length; i++)
+					{
+						var uv = sourceUvs[i];
+						minU = Mathf.Min(minU, uv.X);
+						maxU = Mathf.Max(maxU, uv.X);
+						minV = Mathf.Min(minV, uv.Y);
+						maxV = Mathf.Max(maxV, uv.Y);
+					}
+
+					var rangeU = maxU - minU;
+					var rangeV = maxV - minV;
+					if (rangeU > 0.0001f && rangeV > 0.0001f)
+					{
+						var normalizedUvs = new Vector2[sourceUvs.Length];
+							for (int i = 0; i < sourceUvs.Length; i++)
+							{
+								var uv = sourceUvs[i];
+								normalizedUvs[i] = new Vector2(
+									(uv.X - minU) / rangeU,
+									1f - ((uv.Y - minV) / rangeV));
+							}
+
+						arrays[(int)Mesh.ArrayType.TexUV] = normalizedUvs;
+						changed = true;
+					}
+				}
+			}
+
+			normalizedMesh.AddSurfaceFromArrays(sourceMesh.SurfaceGetPrimitiveType(s), arrays);
+			if (sourceMesh.SurfaceGetMaterial(s) is Material sourceMaterial)
+				normalizedMesh.SurfaceSetMaterial(s, sourceMaterial);
+		}
+
+		if (changed)
+			mesh.Mesh = normalizedMesh;
+	}
+
+	private static float EstimateScreenAspect(MeshInstance3D mesh)
+	{
+		if (mesh.Mesh == null)
+			return 16f / 9f;
+
+		var size = mesh.Mesh.GetAabb().Size;
+		var dims = new[]
+		{
+			Mathf.Abs(size.X),
+			Mathf.Abs(size.Y),
+			Mathf.Abs(size.Z),
+		};
+		System.Array.Sort(dims);
+
+		var shortSide = Mathf.Max(dims[1], 0.0001f);
+		return dims[2] / shortSide;
+	}
+
+	private static void ApplyCenteredCropToMaterial(StandardMaterial3D material, Texture2D texture, float targetAspect)
+	{
+		var textureWidth = texture.GetWidth();
+		var textureHeight = texture.GetHeight();
+		if (textureWidth <= 0 || textureHeight <= 0 || targetAspect <= 0f)
+		{
+			material.Uv1Scale = Vector3.One;
+			material.Uv1Offset = Vector3.Zero;
+			return;
+		}
+
+		var textureAspect = (float)textureWidth / textureHeight;
+		var scaleU = 1f;
+		var scaleV = 1f;
+
+		if (textureAspect > targetAspect)
+		{
+			// Image is wider: crop left/right and keep center.
+			scaleU = targetAspect / textureAspect;
+		}
+		else if (textureAspect < targetAspect)
+		{
+			// Image is taller: crop top/bottom and keep center.
+			scaleV = textureAspect / targetAspect;
+		}
+
+		var offsetU = ((1f - scaleU) * 0.5f) + PspScreenNudgeLeftU;
+		var offsetV = (1f - scaleV) * 0.5f;
+
+		material.Uv1Scale = new Vector3(scaleU, scaleV, 1f);
+		material.Uv1Offset = new Vector3(offsetU, offsetV, 0f);
 	}
 
 	private void ConfigureConsoleAnimation(Node3D wrapper, Node3D model, ConsoleType type)
@@ -597,8 +858,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				continue;
 			}
 
-			if (!animationPlayer.IsPlaying() ||
-				animationPlayer.CurrentAnimationPosition <= 0.02)
+			var isClosed = !animationPlayer.IsPlaying() ||
+				animationPlayer.CurrentAnimationPosition <= 0.02;
+			if (_pendingConsoleCloseSounds.Contains(box) && isClosed)
+			{
+				AudioManager.Instance?.PlayConsoleAnimationSfx(AudioManager.GbaCloseSfxPath);
+				_pendingConsoleCloseSounds.Remove(box);
+			}
+
+			if (isClosed)
 			{
 				SetConsoleAnimationPose(box, 0.0, holdPose: false);
 			}
@@ -634,8 +902,11 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		}
 
 		_manuallyClosedAnimatedConsoles.Remove(box);
+		_pendingConsoleCloseSounds.Remove(box);
 		animationPlayer.Play(animationName);
 		_openAnimatedConsoles.Add(box);
+		if (IsConsoleType(box, ConsoleType.GBA))
+			AudioManager.Instance?.PlayConsoleAnimationSfx(AudioManager.GbaOpenSfxPath);
 	}
 
 	private void CloseAnimatedConsole(Node3D box, bool manual = false)
@@ -655,6 +926,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			animationPlayer.Seek(holdTime, true);
 		animationPlayer.PlayBackwards(animationName);
 		_openAnimatedConsoles.Remove(box);
+		if (IsConsoleType(box, ConsoleType.GBA))
+			_pendingConsoleCloseSounds.Add(box);
+		else
+			_pendingConsoleCloseSounds.Remove(box);
+	}
+
+	private static bool IsConsoleType(Node3D box, ConsoleType type)
+	{
+		return string.Equals(box.Name.ToString(), type.ToString(), System.StringComparison.Ordinal);
 	}
 
 	private bool TryToggleSelectedConsole(Vector2 localPos)

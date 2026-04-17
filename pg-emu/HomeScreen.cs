@@ -406,6 +406,7 @@ public partial class HomeScreen : Control
 		if (_userSearchResultUsernames.Count == 0)
 			return;
 
+		var shouldKeepSearchFocus = _searchBarText.HasFocus();
 		var textRect = _searchBarText.GetGlobalRect();
 		var buttonRect = _searchBarButton.GetGlobalRect();
 
@@ -416,7 +417,18 @@ public partial class HomeScreen : Control
 		var popupY = (int)Mathf.Ceil(textRect.End.Y + 4f);
 		var popupRect = new Rect2I((int)Mathf.Floor(minX), popupY, popupWidth, popupHeight);
 
-		_userSearchResultsPopup.Popup(popupRect);
+		if (_userSearchResultsPopup.Visible)
+		{
+			_userSearchResultsPopup.Position = popupRect.Position;
+			_userSearchResultsPopup.Size = popupRect.Size;
+		}
+		else
+		{
+			_userSearchResultsPopup.Popup(popupRect);
+		}
+
+		if (shouldKeepSearchFocus)
+			CallDeferred(nameof(RestoreSearchInputFocus));
 	}
 
 	private void HideUserSearchResultsPopup()
@@ -427,6 +439,15 @@ public partial class HomeScreen : Control
 
 		if (GodotObject.IsInstanceValid(_userSearchResultsPopup) && _userSearchResultsPopup.Visible)
 			_userSearchResultsPopup.Hide();
+	}
+
+	private void RestoreSearchInputFocus()
+	{
+		if (!GodotObject.IsInstanceValid(_searchBarText) || !_searchBarText.IsInsideTree())
+			return;
+
+		_searchBarText.GrabFocus();
+		_searchBarText.SetCaretColumn((_searchBarText.Text ?? string.Empty).Length);
 	}
 
 	private Button CreateUserSearchResultButton(string username, int index)

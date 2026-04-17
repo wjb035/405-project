@@ -117,7 +117,7 @@ public partial class FoundUserProfile : Control
 		_profile_note.Text = $"\"{profile.Bio}\"";
 		
 		ApplyThemeAesthetic();
-		LoadProfileAsync();
+		_ = LoadProfileAsync();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 	}
 
@@ -340,7 +340,7 @@ public partial class FoundUserProfile : Control
 		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
 	}
 
-	private void LoadProfileAsync()
+	private async Task LoadProfileAsync()
 	{
 		try
 		{
@@ -349,13 +349,35 @@ public partial class FoundUserProfile : Control
 				return;
 			}
 
-			if (profile == null)
+			var requestedUsername = profile?.Username?.Trim();
+
+			ProfileResponse? apiProfile = null;
+
+			if (!string.IsNullOrWhiteSpace(requestedUsername) &&
+				!string.Equals(requestedUsername, "Player", StringComparison.OrdinalIgnoreCase))
 			{
-				if (GodotObject.IsInstanceValid(_profile_note))
+				apiProfile = await _profileService.GetUserProfile(requestedUsername);
+			}
+
+			if (apiProfile != null)
+			{
+				profile = apiProfile;
+			}
+			else if (profile == null)
+			{
+				profile = new ProfileResponse
 				{
-					_profile_note.Text = "\"Unable to load profile right now.\"";
-				}
-				return;
+					Username = "Player",
+					Bio = "No bio yet.",
+					AvatarUrl = string.Empty,
+					UserId = string.Empty
+				};
+			}
+
+			if (GodotObject.IsInstanceValid(_title_gamertag))
+			{
+				var titleName = string.IsNullOrWhiteSpace(profile.Username) ? "Player" : profile.Username;
+				_title_gamertag.Text = $"{titleName}'s Profile";
 			}
 
 			if (GodotObject.IsInstanceValid(_gamer_tag))
@@ -368,10 +390,25 @@ public partial class FoundUserProfile : Control
 				_profile_note.Text = string.IsNullOrWhiteSpace(profile.Bio) ? "\"No bio yet.\"" : $"\"{profile.Bio}\"";
 			}
 
+			if (_dropdownOptions != null && !string.IsNullOrWhiteSpace(profile.UserId))
+			{
+				userBlocked = await _friendService.GetIsBlocked(profile.UserId);
+				var blockIndex = _dropdownOptions.GetItemIndex(1);
+				if (blockIndex >= 0)
+				{
+					_dropdownOptions.SetItemText(blockIndex, userBlocked ? "Unblock" : "Block");
+				}
+			}
+
 			if (!string.IsNullOrWhiteSpace(profile.AvatarUrl))
 			{
+				GD.Print($"Loaded profile from API for username '{profile.Username}' and userId '{profile.UserId}'");
 				GD.Print("Avatar: ", profile.AvatarUrl);
 				_ = LoadAvatar(profile.AvatarUrl);
+			}
+			else
+			{
+				GD.Print($"Loaded profile from API for username '{profile.Username}' and userId '{profile.UserId}', but no avatar URL was returned.");
 			}
 		}
 		catch (Exception exception)

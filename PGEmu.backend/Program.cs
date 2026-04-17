@@ -28,6 +28,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 0))
     )
 );
+builder.Services.AddScoped<DevelopmentDataSeeder>();
 
 // Pasword hasher
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -98,6 +99,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    var shouldSeedDevelopmentData = builder.Configuration.GetValue("DevelopmentSeed:Enabled", app.Environment.IsDevelopment());
+    if (shouldSeedDevelopmentData)
+    {
+        var developmentSeeder = scope.ServiceProvider.GetRequiredService<DevelopmentDataSeeder>();
+        await developmentSeeder.SeedAsync();
+    }
 }
 
 // Configure the HTTP request pipeline.
