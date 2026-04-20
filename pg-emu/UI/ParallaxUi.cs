@@ -24,9 +24,9 @@ public partial class ParallaxUi : Node
         _current = _current.Lerp(normalized * Strength, Smoothing * (float)delta);
 
         foreach (var layer in MidLayers)
-            layer.Offset = _current * -0.4f;
+            layer.Offset = _current * 0.4f;
 
         foreach (var layer in ForegroundLayers)
-            layer.Offset = _current * 0.7f;
+            layer.Offset = _current * 0.8f;
     }
 }

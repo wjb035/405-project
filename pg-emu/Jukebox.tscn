@@ -20,6 +20,14 @@
 [ext_resource type="Texture2D" uid="uid://3sl8ng658c3e" path="res://Images/step forward icon.png" id="15_udcbl"]
 [ext_resource type="Texture2D" uid="uid://lhoqqjibm8d5" path="res://Images/shuffle icon.png" id="16_1kv8w"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvgg"]
+shader = ExtResource("4_6jqq3")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w05y1"]
 shader = ExtResource("3_6pv21")
 shader_parameter/blur_amount = 3.0000001425
@@ -28,13 +36,13 @@ shader_parameter/highlight_color = Color(0.64, 0.54, 0.82, 0.7)
 shader_parameter/fade_strength = 0.0
 shader_parameter/highlight_thickness = 0.0150000007125
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvgg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_udcbl"]
 shader = ExtResource("4_6jqq3")
 shader_parameter/blur_amount = 3.0
-shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
-shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
-shader_parameter/fade_strength = 0.47200002242
-shader_parameter/highlight_thickness = 0.02
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.6392157, 0.5411765, 0.81960785, 0.7019608)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0150000007125
 
 [node name="Jukebox" type="Control" unique_id=1243206364 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
@@ -92,6 +100,21 @@ size_flags_vertical = 3
 [node name="ForegroundBars" type="CanvasLayer" parent="Margin/Root" unique_id=248508368]
 layer = -7
 
+[node name="Background" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=633646412]
+material = SubResource("ShaderMaterial_oyvgg")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -747.0
+offset_right = 16.0
+offset_bottom = 66.900024
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+
 [node name="TopBar2" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1334479053]
 material = SubResource("ShaderMaterial_w05y1")
 anchors_preset = 10
@@ -102,20 +125,12 @@ offset_right = 49.0
 offset_bottom = 54.0
 grow_horizontal = 2
 
-[node name="BottomBar" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=633646412]
-material = SubResource("ShaderMaterial_oyvgg")
-custom_minimum_size = Vector2(0, 200)
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -20.0
-offset_top = -133.09998
-offset_right = 16.0
-offset_bottom = 66.900024
-grow_horizontal = 2
-grow_vertical = 0
-color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+[node name="BottomBar" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1168877339]
+material = SubResource("ShaderMaterial_udcbl")
+offset_left = -34.0
+offset_top = 553.0
+offset_right = 1182.0
+offset_bottom = 673.0
 
 [node name="Foreground2" type="CanvasLayer" parent="Margin/Root" unique_id=1887085736]
 
