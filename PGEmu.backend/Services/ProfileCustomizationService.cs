@@ -190,6 +190,79 @@ public class ProfileCustomizationService : IProfileCustomizationService
         return rankedUsers;
     }
 
+    public async Task<IReadOnlyList<UserSearchResultDTO>> GetUserFriendsAsync(string username, int limit)
+    {
+        var normalizedUsername = username?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedUsername))
+            return Array.Empty<UserSearchResultDTO>();
+
+        var requestedUser = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Username == normalizedUsername);
+
+        if (requestedUser == null)
+            return Array.Empty<UserSearchResultDTO>();
+
+        var resolvedLimit = Math.Clamp(limit, 1, MaximumSearchLimit);
+
+        var friendIds = await _context.Friends
+            .AsNoTracking()
+            .Where(friend =>
+                friend.Status == FriendStatus.Accepted &&
+                (friend.SenderId == requestedUser.Id || friend.ReceiverId == requestedUser.Id))
+            .Select(friend => friend.SenderId == requestedUser.Id ? friend.ReceiverId : friend.SenderId)
+            .Distinct()
+            .ToListAsync();
+
+        if (friendIds.Count == 0)
+            return Array.Empty<UserSearchResultDTO>();
+
+        return await _context.Users
+            .AsNoTracking()
+            .Where(friend => friendIds.Contains(friend.Id))
+            .OrderBy(friend => friend.Username)
+            .Take(resolvedLimit)
+            .Select(friend => new UserSearchResultDTO
+            {
+                UserId = friend.Id,
+                Username = friend.Username,
+                AvatarUrl = friend.Profile != null ? friend.Profile.AvatarUrl : null
+            })
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<UserGameSummaryDTO>> GetUserRecentGamesAsync(string username, int limit)
+    {
+        var normalizedUsername = username?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedUsername))
+            return Array.Empty<UserGameSummaryDTO>();
+
+        var requestedUser = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Username == normalizedUsername);
+
+        if (requestedUser == null)
+            return Array.Empty<UserGameSummaryDTO>();
+
+        var resolvedLimit = Math.Clamp(limit, 1, 50);
+
+        return await _context.UserGames
+            .AsNoTracking()
+            .Where(game => game.UserId == requestedUser.Id)
+            .OrderByDescending(game => game.LastPlayed ?? DateTime.MinValue)
+            .ThenByDescending(game => game.PlaytimeMinutes)
+            .ThenBy(game => game.ExternalGameId)
+            .Take(resolvedLimit)
+            .Select(game => new UserGameSummaryDTO
+            {
+                ExternalGameId = game.ExternalGameId,
+                PlaytimeMinutes = game.PlaytimeMinutes,
+                LastPlayed = game.LastPlayed,
+                PlatformId = game.InstallPath
+            })
+            .ToListAsync();
+    }
+
     private static float ComputeSearchSimilarity(string candidate, string query)
     {
         if (string.IsNullOrWhiteSpace(candidate) || string.IsNullOrWhiteSpace(query))

@@ -19,4 +19,10 @@ public interface IProfileCustomizationService
 
     Task<IReadOnlyList<UserSearchResultDTO>>
         SearchUsersBySimilarityAsync(Guid currentUserId, string query, int limit);
+
+    Task<IReadOnlyList<UserSearchResultDTO>>
+        GetUserFriendsAsync(string username, int limit);
+
+    Task<IReadOnlyList<UserGameSummaryDTO>>
+        GetUserRecentGamesAsync(string username, int limit);
 }

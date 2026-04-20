@@ -4,12 +4,23 @@ using PGEmu.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 
 public partial class FoundUserProfile : Control
 {
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
+	private const string ReturnSceneMetaKey = "pgemu_return_scene";
+	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
+	private const string FoundProfileUsernameMeta = "pgemu_found_profile_username";
+	private const string FoundProfileUserIdMeta = "pgemu_found_profile_user_id";
+	private const string FriendsListOwnerMeta = "pgemu_friends_list_owner_username";
+	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
+	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
+	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
+	private const int MaxTileCount = 4;
+	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath TitleGamertagPath;
@@ -26,7 +37,7 @@ public partial class FoundUserProfile : Control
 	public ProfileService _profileService = new ProfileService();
 	public FriendService _friendService = new FriendService();
 	private readonly System.Net.Http.HttpClient _client = new();
-	private ProfileResponse profile = Global.foundProfile;
+	private ProfileResponse profile = new();
 	
 	public bool blockedUsers;
 	private bool userBlocked = false;
@@ -51,20 +62,14 @@ public partial class FoundUserProfile : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
+	private readonly Dictionary<Button, string> _friendTileUsernames = new();
+	private bool _openingFriendProfile;
+	private bool _openingSectionScene;
 	
 
 	public override async void _Ready()
 	{
-		if (profile == null)
-		{
-			profile = new ProfileResponse
-			{
-				Username = "Player",
-				Bio = "No bio yet.",
-				AvatarUrl = string.Empty,
-				UserId = string.Empty
-			};
-		}
+		profile = ResolveInitialProfile();
 
 		_back = GetNode<Button>(BackPath);
 		if (!_back.IsConnected(Button.SignalName.Pressed, Callable.From(GoBack)))
@@ -115,8 +120,13 @@ public partial class FoundUserProfile : Control
 		_title_gamertag.Text = $"{profile.Username}'s Profile";
 		_gamer_tag.Text = profile.Username;
 		_profile_note.Text = $"\"{profile.Bio}\"";
+		ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "Loading games...");
+		ApplyTileContent(FriendsTileGridPath, Array.Empty<string>(), "Loading friends...");
 		
 		ApplyThemeAesthetic();
+		BindFriendTileButtons();
+		BindShowcaseTileButtons();
+		BindRecentGameTileButtons();
 		_ = LoadProfileAsync();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 	}
@@ -239,10 +249,48 @@ public partial class FoundUserProfile : Control
 					? new Button?[] { _dropdownButton }
 					: Array.Empty<Button?>();
 
-		return ControllerService.BuildVisibleRows(
-			topRow,
-			actionRow,
-			new Button?[] { _friends_list });
+		var rows = ControllerService.BuildVisibleRows(topRow, actionRow);
+		rows.AddRange(BuildSectionTileRows());
+		rows.AddRange(ControllerService.BuildVisibleRows(new Button?[] { _friends_list }));
+		return rows;
+	}
+
+	private List<List<Button>> BuildSectionTileRows()
+	{
+		var showcaseTiles = GetTileButtons(ShowcaseTileGridPath);
+		var recentTiles = GetTileButtons(RecentGamesTileGridPath);
+		var friendTiles = GetTileButtons(FriendsTileGridPath);
+
+		var maxRows = Mathf.Max(showcaseTiles.Count, Mathf.Max(recentTiles.Count, friendTiles.Count));
+		if (maxRows <= 0)
+			return new List<List<Button>>();
+
+		var rows = new List<List<Button>>(maxRows);
+		for (int index = 0; index < maxRows; index++)
+		{
+			var row = new List<Button>(3);
+			TryAddSectionTile(row, showcaseTiles, index);
+			TryAddSectionTile(row, recentTiles, index);
+			TryAddSectionTile(row, friendTiles, index);
+
+			if (row.Count > 0)
+				rows.Add(row);
+		}
+
+		return rows;
+	}
+
+	private static void TryAddSectionTile(ICollection<Button> row, IReadOnlyList<Button> sectionTiles, int index)
+	{
+		if (index < 0 || index >= sectionTiles.Count)
+			return;
+
+		var button = sectionTiles[index];
+		if (!GodotObject.IsInstanceValid(button) || !button.Visible || button.Disabled)
+			return;
+
+		ControllerService.PrepareFocusable(button);
+		row.Add(button);
 	}
 
 	private bool IsUiNavigationActive()
@@ -340,6 +388,47 @@ public partial class FoundUserProfile : Control
 		return ControllerService.Instance?.ShouldHandleMenuInput(device) ?? true;
 	}
 
+	private ProfileResponse ResolveInitialProfile()
+	{
+		var resolved = CloneProfile(Global.foundProfile) ?? new ProfileResponse();
+		var tree = GetTree();
+
+		if (tree.HasMeta(FoundProfileUsernameMeta))
+		{
+			var requestedUsername = tree.GetMeta(FoundProfileUsernameMeta).AsString();
+			if (!string.IsNullOrWhiteSpace(requestedUsername))
+				resolved.Username = requestedUsername.Trim();
+		}
+
+		if (tree.HasMeta(FoundProfileUserIdMeta))
+		{
+			var requestedUserId = tree.GetMeta(FoundProfileUserIdMeta).AsString();
+			if (!string.IsNullOrWhiteSpace(requestedUserId))
+				resolved.UserId = requestedUserId.Trim();
+		}
+
+		resolved.Username = string.IsNullOrWhiteSpace(resolved.Username) ? "Player" : resolved.Username.Trim();
+		resolved.Bio = string.IsNullOrWhiteSpace(resolved.Bio) ? "No bio yet." : resolved.Bio;
+		resolved.AvatarUrl ??= string.Empty;
+		resolved.UserId ??= string.Empty;
+		return resolved;
+	}
+
+	private static ProfileResponse? CloneProfile(ProfileResponse? source)
+	{
+		if (source == null)
+			return null;
+
+		return new ProfileResponse
+		{
+			Message = source.Message,
+			UserId = source.UserId,
+			Username = source.Username,
+			Bio = source.Bio,
+			AvatarUrl = source.AvatarUrl
+		};
+	}
+
 	private async Task LoadProfileAsync()
 	{
 		try
@@ -349,12 +438,14 @@ public partial class FoundUserProfile : Control
 				return;
 			}
 
-			var requestedUsername = profile?.Username?.Trim();
+			var tree = GetTree();
+			var requestedUsername = tree.HasMeta(FoundProfileUsernameMeta)
+				? tree.GetMeta(FoundProfileUsernameMeta).AsString()?.Trim()
+				: profile.Username?.Trim();
 
 			ProfileResponse? apiProfile = null;
 
-			if (!string.IsNullOrWhiteSpace(requestedUsername) &&
-				!string.Equals(requestedUsername, "Player", StringComparison.OrdinalIgnoreCase))
+			if (!string.IsNullOrWhiteSpace(requestedUsername))
 			{
 				apiProfile = await _profileService.GetUserProfile(requestedUsername);
 			}
@@ -362,17 +453,16 @@ public partial class FoundUserProfile : Control
 			if (apiProfile != null)
 			{
 				profile = apiProfile;
+				Global.foundProfile = apiProfile;
+				tree.SetMeta(FoundProfileUsernameMeta, profile.Username ?? string.Empty);
+				tree.SetMeta(FoundProfileUserIdMeta, profile.UserId ?? string.Empty);
 			}
-			else if (profile == null)
+			else
 			{
-				profile = new ProfileResponse
-				{
-					Username = "Player",
-					Bio = "No bio yet.",
-					AvatarUrl = string.Empty,
-					UserId = string.Empty
-				};
+				GD.PrintErr($"FoundUserProfile: API profile lookup failed for '{requestedUsername ?? "<empty>"}'; using cached profile.");
 			}
+
+			await LoadSectionDataAsync(profile.Username);
 
 			if (GodotObject.IsInstanceValid(_title_gamertag))
 			{
@@ -534,6 +624,349 @@ public partial class FoundUserProfile : Control
 
 		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, recentAccent);
 		StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, friendsAccent);
+	}
+
+	private async Task LoadSectionDataAsync(string? username)
+	{
+		if (string.IsNullOrWhiteSpace(username))
+		{
+			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
+			ApplyTileContent(FriendsTileGridPath, Array.Empty<string>(), "No friends yet");
+			return;
+		}
+
+		try
+		{
+			var auth = AuthService.Instance;
+			if (auth == null)
+			{
+				ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
+				ApplyTileContent(FriendsTileGridPath, Array.Empty<string>(), "No friends yet");
+				return;
+			}
+
+			var encodedUsername = Uri.EscapeDataString(username.Trim());
+			var gamesTask = auth.SendAuthorizedRequest($"http://localhost:5276/api/profile/{encodedUsername}/games?limit={MaxTileCount}");
+			var friendsTask = auth.SendAuthorizedRequest($"http://localhost:5276/api/profile/{encodedUsername}/friends?limit={MaxTileCount}");
+
+			await Task.WhenAll(gamesTask, friendsTask);
+			var gameItems = DeserializeList<ProfileGameSummary>(await gamesTask);
+			var friendItems = DeserializeList<UserSearchResultResponse>(await friendsTask);
+
+			var gameLabels = new List<string>(MaxTileCount);
+			foreach (var game in gameItems)
+			{
+				var label = FormatRecentGameLabel(game);
+				if (string.IsNullOrWhiteSpace(label))
+					continue;
+
+				gameLabels.Add(label);
+				if (gameLabels.Count >= MaxTileCount)
+					break;
+			}
+
+			var visibleFriends = new List<UserSearchResultResponse>(MaxTileCount);
+			foreach (var friend in friendItems)
+			{
+				var label = friend.Username?.Trim();
+				if (string.IsNullOrWhiteSpace(label))
+					continue;
+
+				friend.Username = label;
+				visibleFriends.Add(friend);
+				if (visibleFriends.Count >= MaxTileCount)
+					break;
+			}
+
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+				return;
+
+			ApplyTileContent(RecentGamesTileGridPath, gameLabels, "No games found");
+			ApplyFriendTileContent(visibleFriends, "No friends yet");
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"FoundUserProfile section load failed: {exception.Message}");
+			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
+			ApplyFriendTileContent(Array.Empty<UserSearchResultResponse>(), "No friends yet");
+		}
+	}
+
+	private static IReadOnlyList<T> DeserializeList<T>(JsonElement? payload)
+	{
+		if (!payload.HasValue || payload.Value.ValueKind != JsonValueKind.Array)
+			return Array.Empty<T>();
+
+		try
+		{
+			var data = JsonSerializer.Deserialize<List<T>>(payload.Value.GetRawText(), JsonOptions);
+			return data ?? new List<T>();
+		}
+		catch
+		{
+			return Array.Empty<T>();
+		}
+	}
+
+	private static string FormatRecentGameLabel(ProfileGameSummary game)
+	{
+		var gameName = string.IsNullOrWhiteSpace(game.ExternalGameId)
+			? "Unknown Game"
+			: game.ExternalGameId.Trim();
+
+		if (game.PlaytimeMinutes <= 0)
+			return gameName;
+
+		return $"{gameName}  |  {FormatPlaytime(game.PlaytimeMinutes)}";
+	}
+
+	private static string FormatPlaytime(int totalMinutes)
+	{
+		if (totalMinutes < 60)
+			return $"{totalMinutes}m";
+
+		var hours = totalMinutes / 60;
+		var minutes = totalMinutes % 60;
+		return minutes == 0 ? $"{hours}h" : $"{hours}h {minutes}m";
+	}
+
+	private void ApplyTileContent(string containerPath, IReadOnlyList<string> items, string emptyText)
+	{
+		var buttons = GetTileButtons(containerPath);
+		if (buttons.Count == 0)
+			return;
+
+		if (items.Count == 0)
+		{
+			for (int index = 0; index < buttons.Count; index++)
+			{
+				var button = buttons[index];
+				button.Visible = index == 0;
+				button.Disabled = index == 0;
+				button.Text = index == 0 ? emptyText : string.Empty;
+				button.TooltipText = index == 0 ? emptyText : string.Empty;
+			}
+
+			return;
+		}
+
+		for (int index = 0; index < buttons.Count; index++)
+		{
+			var button = buttons[index];
+			if (index < items.Count)
+			{
+				var label = items[index];
+				button.Visible = true;
+				button.Disabled = false;
+				button.Text = label;
+				button.TooltipText = label;
+			}
+			else
+			{
+				button.Visible = false;
+				button.Disabled = false;
+				button.Text = string.Empty;
+				button.TooltipText = string.Empty;
+			}
+		}
+	}
+
+	private void ApplyFriendTileContent(IReadOnlyList<UserSearchResultResponse> friends, string emptyText)
+	{
+		var buttons = GetTileButtons(FriendsTileGridPath);
+		if (buttons.Count == 0)
+			return;
+
+		_friendTileUsernames.Clear();
+
+		if (friends.Count == 0)
+		{
+			for (int index = 0; index < buttons.Count; index++)
+			{
+				var button = buttons[index];
+				button.Visible = index == 0;
+				button.Disabled = index == 0;
+				button.Text = index == 0 ? emptyText : string.Empty;
+				button.TooltipText = index == 0 ? emptyText : string.Empty;
+			}
+
+			return;
+		}
+
+		for (int index = 0; index < buttons.Count; index++)
+		{
+			var button = buttons[index];
+			if (index < friends.Count)
+			{
+				var username = friends[index].Username?.Trim() ?? string.Empty;
+				if (string.IsNullOrWhiteSpace(username))
+				{
+					button.Visible = false;
+					button.Disabled = true;
+					button.Text = string.Empty;
+					button.TooltipText = string.Empty;
+					continue;
+				}
+
+				button.Visible = true;
+				button.Disabled = false;
+				button.Text = username;
+				button.TooltipText = $"View {username}'s profile";
+				_friendTileUsernames[button] = username;
+			}
+			else
+			{
+				button.Visible = false;
+				button.Disabled = true;
+				button.Text = string.Empty;
+				button.TooltipText = string.Empty;
+			}
+		}
+	}
+
+	private List<Button> GetTileButtons(string containerPath)
+	{
+		var container = GetNodeOrNull<Node>(containerPath);
+		if (container == null)
+			return new List<Button>();
+
+		var buttons = new List<Button>();
+		foreach (var child in container.GetChildren())
+		{
+			if (child is Button button)
+				buttons.Add(button);
+		}
+
+		return buttons;
+	}
+
+	private void BindFriendTileButtons()
+	{
+		var buttons = GetTileButtons(FriendsTileGridPath);
+		foreach (var button in buttons)
+		{
+			var capturedButton = button;
+			capturedButton.Pressed += async () => await OnFriendTilePressedAsync(capturedButton);
+		}
+	}
+
+	private void BindShowcaseTileButtons()
+	{
+		var buttons = GetTileButtons(ShowcaseTileGridPath);
+		foreach (var button in buttons)
+		{
+			var capturedButton = button;
+			capturedButton.Pressed += () => OpenCollectionsFromShowcaseTile(capturedButton);
+		}
+	}
+
+	private void BindRecentGameTileButtons()
+	{
+		var buttons = GetTileButtons(RecentGamesTileGridPath);
+		foreach (var button in buttons)
+		{
+			var capturedButton = button;
+			capturedButton.Pressed += () => OpenGameSelectFromRecentTile(capturedButton);
+		}
+	}
+
+	private void OpenCollectionsFromShowcaseTile(Button tileButton)
+	{
+		if (!IsActionableTile(tileButton) || _openingSectionScene)
+			return;
+
+		_openingSectionScene = true;
+		try
+		{
+			AudioManager.Instance?.PlaySelect();
+			var tree = GetTree();
+			tree.SetMeta(ReturnSceneMetaKey, "res://FoundUserProfile.tscn");
+			var selectedCollectionName = tileButton.Text?.Trim();
+			if (!string.IsNullOrWhiteSpace(selectedCollectionName))
+				tree.SetMeta(CollectionsFocusMetaKey, selectedCollectionName);
+			else if (tree.HasMeta(CollectionsFocusMetaKey))
+				tree.RemoveMeta(CollectionsFocusMetaKey);
+
+			tree.ChangeSceneToFile("res://Collections.tscn");
+		}
+		finally
+		{
+			_openingSectionScene = false;
+		}
+	}
+
+	private void OpenGameSelectFromRecentTile(Button tileButton)
+	{
+		if (!IsActionableTile(tileButton) || _openingSectionScene)
+			return;
+
+		_openingSectionScene = true;
+		try
+		{
+			AudioManager.Instance?.PlaySelect();
+			var tree = GetTree();
+			tree.SetMeta(ReturnSceneMetaKey, "res://FoundUserProfile.tscn");
+			tree.ChangeSceneToFile("res://GameSelect.tscn");
+		}
+		finally
+		{
+			_openingSectionScene = false;
+		}
+	}
+
+	private static bool IsActionableTile(Button button)
+	{
+		if (!GodotObject.IsInstanceValid(button))
+			return false;
+		if (!button.Visible || button.Disabled)
+			return false;
+
+		return !string.IsNullOrWhiteSpace(button.Text);
+	}
+
+	private async Task OnFriendTilePressedAsync(Button button)
+	{
+		if (!_friendTileUsernames.TryGetValue(button, out var username) || string.IsNullOrWhiteSpace(username))
+			username = button.Text;
+
+		username = username?.Trim();
+		if (string.IsNullOrWhiteSpace(username))
+			return;
+
+		await OpenFriendProfileByUsernameAsync(username);
+	}
+
+	private async Task OpenFriendProfileByUsernameAsync(string username)
+	{
+		if (_openingFriendProfile || string.IsNullOrWhiteSpace(username))
+			return;
+
+		_openingFriendProfile = true;
+		try
+		{
+			AudioManager.Instance?.PlaySelect();
+			var friendProfile = await _profileService.GetUserProfile(username.Trim());
+			if (friendProfile == null)
+				return;
+
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
+				return;
+
+			Global.foundProfile = friendProfile;
+			var tree = GetTree();
+			tree.SetMeta(FoundProfileUsernameMeta, friendProfile.Username ?? string.Empty);
+			tree.SetMeta(FoundProfileUserIdMeta, friendProfile.UserId ?? string.Empty);
+			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Could not open friend profile '{username}': {exception.Message}");
+		}
+		finally
+		{
+			_openingFriendProfile = false;
+		}
 	}
 
 	private void StyleTileGrid(string containerPath, Color sectionAccent, Color[] tileAccents)
@@ -773,6 +1206,10 @@ public partial class FoundUserProfile : Control
 	{
 		ResetUiNavigationState();
 		var tree = GetTree();
+		tree.SetMeta(FriendsListOwnerMeta, profile.Username ?? string.Empty);
+		tree.SetMeta(FoundProfileUsernameMeta, profile.Username ?? string.Empty);
+		tree.SetMeta(FoundProfileUserIdMeta, profile.UserId ?? string.Empty);
+		tree.SetMeta("pgemu_return_scene", "res://FoundUserProfile.tscn");
 		tree.ChangeSceneToFile("res://FriendsList.tscn");
 	}
 
@@ -859,6 +1296,12 @@ public partial class FoundUserProfile : Control
 		}
 
 		return candidates[0];
+	}
+
+	private sealed class ProfileGameSummary
+	{
+		public string ExternalGameId { get; set; } = string.Empty;
+		public int PlaytimeMinutes { get; set; }
 	}
 	
 }

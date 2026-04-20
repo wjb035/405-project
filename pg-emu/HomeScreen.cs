@@ -224,7 +224,8 @@ public partial class HomeScreen : Control
 	{
 		_userSearchResultsPopup = new PopupPanel
 		{
-			Visible = false
+			Visible = false,
+			Unfocusable = true
 		};
 		_userSearchResultsPopup.Hide();
 		_userSearchResultsPopup.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -630,6 +631,8 @@ public partial class HomeScreen : Control
 
 		Global.foundProfile = profile;
 		var tree = GetTree();
+		tree.SetMeta("pgemu_found_profile_username", profile.Username ?? string.Empty);
+		tree.SetMeta("pgemu_found_profile_user_id", profile.UserId ?? string.Empty);
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		
 		await Transition.ChangeScene("res://FoundUserProfile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);

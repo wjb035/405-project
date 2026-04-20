@@ -5,14 +5,20 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PGEmu.Services;
+using PGEmu.Services.Models;
 
 public partial class FriendsList : Control
 {	
+	private const string FriendsListOwnerMeta = "pgemu_friends_list_owner_username";
+	private const string DefaultReturnScene = "res://profile.tscn";
+	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
 	private readonly ProfileService _profileService = new();
 	private Button _back = null!;
 	private Label _title = null!;
 	private VBoxContainer _friendsContainer = null!;
 	private bool _openingFriendProfile;
+	private string _ownerUsername = string.Empty;
 	
 	
 	// Called when the node enters the scene tree for the first time.
@@ -21,6 +27,16 @@ public partial class FriendsList : Control
 		_back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
 		_title = GetNode<Label>("Bg/Margin/Root/TopBar/Label");
 		_friendsContainer = GetNode<VBoxContainer>("Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer");
+		var tree = GetTree();
+		_ownerUsername = tree.HasMeta(FriendsListOwnerMeta)
+			? (tree.GetMeta(FriendsListOwnerMeta).AsString() ?? string.Empty).Trim()
+			: string.Empty;
+
+		if (!string.IsNullOrWhiteSpace(_ownerUsername))
+			_title.Text = $"{_ownerUsername}'s Friends";
+		else
+			_title.Text = "Friends";
+
 		if (!_back.IsConnected(Button.SignalName.Pressed, Callable.From(GoBack)))
 			_back.Pressed += GoBack;
 
@@ -46,9 +62,13 @@ public partial class FriendsList : Control
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		if (tree.HasMeta("pgemu_return_scene"))
-			tree.RemoveMeta("pgemu_return_scene");
-		tree.ChangeSceneToFile("res://profile.tscn");
+		var returnScene = tree.HasMeta("pgemu_return_scene")
+			? tree.GetMeta("pgemu_return_scene").AsString()
+			: null;
+		returnScene = string.IsNullOrWhiteSpace(returnScene) ? DefaultReturnScene : returnScene;
+		if (tree.HasMeta(FriendsListOwnerMeta))
+			tree.RemoveMeta(FriendsListOwnerMeta);
+		tree.ChangeSceneToFile(returnScene);
 	}
 
 	private async Task PopulateFriendsAsync()
@@ -99,6 +119,25 @@ public partial class FriendsList : Control
 	{
 		try
 		{
+			if (!string.IsNullOrWhiteSpace(_ownerUsername))
+			{
+				var response = await AuthService.Instance.SendAuthorizedRequest(
+					$"http://localhost:5276/api/profile/{Uri.EscapeDataString(_ownerUsername)}/friends?limit=100");
+				if (response == null || response.Value.ValueKind != JsonValueKind.Array)
+					return Array.Empty<string>();
+
+				var friends = JsonSerializer.Deserialize<List<UserSearchResultResponse>>(
+					response.Value.GetRawText(),
+					JsonOptions);
+
+				return (friends ?? new List<UserSearchResultResponse>())
+					.Select(friend => friend.Username?.Trim() ?? string.Empty)
+					.Where(username => !string.IsNullOrWhiteSpace(username))
+					.Distinct(StringComparer.OrdinalIgnoreCase)
+					.OrderBy(username => username, StringComparer.OrdinalIgnoreCase)
+					.ToArray();
+			}
+
 			var friendsJson = await FriendActivity.GetFriendsJson();
 			if (string.IsNullOrWhiteSpace(friendsJson))
 				return Array.Empty<string>();
@@ -144,6 +183,8 @@ public partial class FriendsList : Control
 
 			Global.foundProfile = profile;
 			var tree = GetTree();
+			tree.SetMeta("pgemu_found_profile_username", profile.Username ?? string.Empty);
+			tree.SetMeta("pgemu_found_profile_user_id", profile.UserId ?? string.Empty);
 			tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
 			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
 		}

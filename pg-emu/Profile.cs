@@ -30,6 +30,8 @@ public partial class Profile : Control
 	private const int MaxTileCount = 4;
 	private const float ControllerRowMergeThreshold = 36f;
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
+	private const string ReturnSceneMetaKey = "pgemu_return_scene";
+	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
 	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
 	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
 	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
@@ -96,6 +98,7 @@ public partial class Profile : Control
 	private int _friendSearchHintRequestId;
 	private int _friendSearchOptionsRequestId;
 	private int _friendSearchResultsRequestId;
+	private bool _openingSectionScene;
 
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
@@ -116,6 +119,8 @@ public partial class Profile : Control
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
 		ConnectIfNeeded(_friendsList, GoFriendsList);
 		ConnectFriendTileButtons();
+		ConnectShowcaseTileButtons();
+		ConnectRecentGameTileButtons();
 			if (_friendSearchDropdown != null)
 				_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
 			SetupFriendSearchDialog();
@@ -234,31 +239,68 @@ public partial class Profile : Control
 		});
 	}
 
-		private List<List<Button>> GetControllerUiRows()
+	private List<List<Button>> GetControllerUiRows()
+	{
+		if (_friendDrawerOverlay.Visible)
 		{
-			if (_friendDrawerOverlay.Visible)
+			var rows = new List<List<Button>>
 			{
-				var rows = new List<List<Button>>
-				{
-					new() { _friendDrawerClose }
-				};
+				new() { _friendDrawerClose }
+			};
 
-				foreach (var button in _friendDrawerButtons.Where(button => button.Visible && !button.Disabled))
-					rows.Add(new List<Button> { button });
+			foreach (var button in _friendDrawerButtons.Where(button => button.Visible && !button.Disabled))
+				rows.Add(new List<Button> { button });
 
-				return rows;
-			}
+			return rows;
+		}
 
-			var topRow = new List<Button> { _back };
-			if (_friendSearchDropdown != null)
-				topRow.Add(_friendSearchDropdown);
+		var topRow = new List<Button> { _back };
+		if (_friendSearchDropdown != null)
+			topRow.Add(_friendSearchDropdown);
 		topRow.Add(_profileSettingsShortcut);
 
-		return ControllerService.BuildVisibleRows(
-			topRow,
-			new Button?[] { _visibilityToggle },
-			GetTileButtons(FriendsTileGridPath).Select(button => (Button?)button),
-			new Button?[] { _friendsList });
+		var navigationRows = ControllerService.BuildVisibleRows(topRow, new Button?[] { _visibilityToggle });
+		navigationRows.AddRange(BuildSectionTileRows());
+		navigationRows.AddRange(ControllerService.BuildVisibleRows(new Button?[] { _friendsList }));
+		return navigationRows;
+	}
+
+	private List<List<Button>> BuildSectionTileRows()
+	{
+		var showcaseTiles = GetTileButtons(ShowcaseTileGridPath);
+		var recentTiles = GetTileButtons(RecentGamesTileGridPath);
+		var friendTiles = GetTileButtons(FriendsTileGridPath);
+
+		var maxRows = Mathf.Max(showcaseTiles.Count, Mathf.Max(recentTiles.Count, friendTiles.Count));
+		if (maxRows <= 0)
+			return new List<List<Button>>();
+
+		var rows = new List<List<Button>>(maxRows);
+		for (int index = 0; index < maxRows; index++)
+		{
+			var row = new List<Button>(3);
+			TryAddSectionTile(row, showcaseTiles, index);
+			TryAddSectionTile(row, recentTiles, index);
+			TryAddSectionTile(row, friendTiles, index);
+
+			if (row.Count > 0)
+				rows.Add(row);
+		}
+
+		return rows;
+	}
+
+	private static void TryAddSectionTile(ICollection<Button> row, IReadOnlyList<Button> sectionTiles, int index)
+	{
+		if (index < 0 || index >= sectionTiles.Count)
+			return;
+
+		var button = sectionTiles[index];
+		if (!GodotObject.IsInstanceValid(button) || !button.Visible || button.Disabled)
+			return;
+
+		ControllerService.PrepareFocusable(button);
+		row.Add(button);
 	}
 
 	private bool FocusControllerRowEntry(IReadOnlyList<List<Button>> rows)
@@ -400,6 +442,87 @@ public partial class Profile : Control
 			button.Pressed += () => OpenFriendProfileAsync(button);
 	}
 
+	private void ConnectShowcaseTileButtons()
+	{
+		foreach (var button in GetTileButtons(ShowcaseTileGridPath))
+		{
+			var capturedButton = button;
+			capturedButton.Pressed += async () => await OpenCollectionsFromTileAsync(capturedButton);
+		}
+	}
+
+	private void ConnectRecentGameTileButtons()
+	{
+		foreach (var button in GetTileButtons(RecentGamesTileGridPath))
+		{
+			var capturedButton = button;
+			capturedButton.Pressed += async () => await OpenGameSelectFromRecentTileAsync(capturedButton);
+		}
+	}
+
+	private async Task OpenCollectionsFromTileAsync(Button tileButton)
+	{
+		if (!IsActionableTile(tileButton) || _openingSectionScene)
+			return;
+
+		_openingSectionScene = true;
+		try
+		{
+			AudioManager.Instance?.PlaySelect();
+			var tree = GetTree();
+			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+
+			var selectedCollectionName = tileButton.Text?.Trim();
+			if (!string.IsNullOrWhiteSpace(selectedCollectionName))
+				tree.SetMeta(CollectionsFocusMetaKey, selectedCollectionName);
+			else if (tree.HasMeta(CollectionsFocusMetaKey))
+				tree.RemoveMeta(CollectionsFocusMetaKey);
+
+			await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Could not open collections from profile tile: {exception.Message}");
+		}
+		finally
+		{
+			_openingSectionScene = false;
+		}
+	}
+
+	private async Task OpenGameSelectFromRecentTileAsync(Button tileButton)
+	{
+		if (!IsActionableTile(tileButton) || _openingSectionScene)
+			return;
+
+		_openingSectionScene = true;
+		try
+		{
+			AudioManager.Instance?.PlaySelect();
+			var tree = GetTree();
+			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, false);
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Could not open game select from recent-game tile: {exception.Message}");
+		}
+		finally
+		{
+			_openingSectionScene = false;
+		}
+	}
+
+	private static bool IsActionableTile(Button button)
+	{
+		if (!GodotObject.IsInstanceValid(button))
+			return false;
+		if (!button.Visible || button.Disabled)
+			return false;
+
+		return !string.IsNullOrWhiteSpace(button.Text);
+	}
+
 		private void SetupFriendSearchDialog()
 		{
 		_friendSearchDialog = new ConfirmationDialog
@@ -434,6 +557,7 @@ public partial class Profile : Control
 			CustomMinimumSize = new Vector2(0, 140),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			FocusMode = Control.FocusModeEnum.None,
 			Visible = false
 		};
 		_friendSearchResultsList.ItemSelected += OnFriendSearchResultSelected;
@@ -1110,6 +1234,7 @@ public partial class Profile : Control
 			.Cast<string>();
 
 		PopulateFriendSearchResultsList(usernames);
+		CallDeferred(nameof(RestoreFriendSearchInputFocus));
 	}
 
 	private async Task TriggerFriendSearchFromInputAsync()
@@ -1137,8 +1262,6 @@ public partial class Profile : Control
 		}
 
 		_friendSearchResultsList.Visible = _friendSearchResultUsernames.Count > 0;
-		if (_friendSearchResultUsernames.Count > 0)
-			_friendSearchResultsList.Select(0);
 	}
 
 	private void ClearFriendSearchResultsList()
@@ -1157,6 +1280,16 @@ public partial class Profile : Control
 		_friendSearchInput.Text = username;
 		_friendSearchInput.CaretColumn = username.Length;
 		_friendSearchDialog.GetOkButton().Disabled = false;
+		CallDeferred(nameof(RestoreFriendSearchInputFocus));
+	}
+
+	private void RestoreFriendSearchInputFocus()
+	{
+		if (!GodotObject.IsInstanceValid(_friendSearchInput) || !_friendSearchInput.IsInsideTree())
+			return;
+
+		_friendSearchInput.GrabFocus();
+		_friendSearchInput.CaretColumn = (_friendSearchInput.Text ?? string.Empty).Length;
 	}
 
 	private async void OnFriendSearchResultActivated(long index)
@@ -2101,6 +2234,15 @@ public partial class Profile : Control
 	private async void OpenFriendProfileAsync(Button button)
 	{
 		if (!_friendTileUsernames.TryGetValue(button, out var username) || string.IsNullOrWhiteSpace(username))
+		{
+			if (button.HasMeta("pgemu_friend_username"))
+				username = button.GetMeta("pgemu_friend_username").AsString();
+			else
+				username = button.Text;
+		}
+
+		username = username?.Trim();
+		if (string.IsNullOrWhiteSpace(username))
 			return;
 
 		await OpenFriendProfileByUsernameAsync(username);
@@ -2129,6 +2271,8 @@ public partial class Profile : Control
 
 			Global.foundProfile = profile;
 			var tree = GetTree();
+			tree.SetMeta("pgemu_found_profile_username", profile.Username ?? string.Empty);
+			tree.SetMeta("pgemu_found_profile_user_id", profile.UserId ?? string.Empty);
 			tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
 			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
 			return true;

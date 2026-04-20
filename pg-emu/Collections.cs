@@ -8,6 +8,9 @@ using PGEmu.Services;
 
 public partial class Collections : Control
 {
+	private const string ReturnSceneMetaKey = "pgemu_return_scene";
+	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
+
 	// Scene wiring (assigned in `HomeScreen.tscn`).
 	[Export] public NodePath CardsPath;
 	[Export] public NodePath PrevPath;
@@ -124,6 +127,7 @@ public partial class Collections : Control
 		await CollectionStorage.LoadFromJson();
 		LoadConfigAndPlatforms();
 		SpawnCards();
+		ApplyRequestedCollectionFocus();
 		LayoutCards();
 		UpdateSelectedLabel();
 	}
@@ -200,8 +204,15 @@ private void OnAnyButtonPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		var returnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: "res://HomeScreen.tscn";
+
+		if (string.IsNullOrWhiteSpace(returnScene))
+			returnScene = "res://HomeScreen.tscn";
+
+		tree.SetMeta(ReturnSceneMetaKey, returnScene);
+		await Transition.ChangeScene(returnScene, ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
 	}
 
 	private async void OnSettingsPressed()
@@ -346,6 +357,29 @@ private void OnAnyButtonPressed()
 	}
 
 	private int Count => _cards.Count;
+
+	private void ApplyRequestedCollectionFocus()
+	{
+		var tree = GetTree();
+		if (!tree.HasMeta(CollectionsFocusMetaKey))
+			return;
+
+		var requestedCollection = tree.GetMeta(CollectionsFocusMetaKey).AsString();
+		tree.RemoveMeta(CollectionsFocusMetaKey);
+
+		if (string.IsNullOrWhiteSpace(requestedCollection) || _platforms.Count == 0)
+			return;
+
+		for (int index = 0; index < _platforms.Count; index++)
+		{
+			var platformName = _platforms[index].Name?.Trim();
+			if (!string.Equals(platformName, requestedCollection.Trim(), StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			_carouselPos = index;
+			break;
+		}
+	}
 
 	private int WrapIndex(int i)
 	{

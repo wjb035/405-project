@@ -78,6 +78,22 @@ public class ProfileCustomizationController : ControllerBase
         return Ok(searchResults);
     }
 
+    [Authorize]
+    [HttpGet("{username}/friends")]
+    public async Task<IActionResult> GetUserFriends(string username, [FromQuery] int limit = 12)
+    {
+        var friends = await _profileCustomizationService.GetUserFriendsAsync(username, limit);
+        return Ok(friends);
+    }
+
+    [Authorize]
+    [HttpGet("{username}/games")]
+    public async Task<IActionResult> GetUserRecentGames(string username, [FromQuery] int limit = 8)
+    {
+        var games = await _profileCustomizationService.GetUserRecentGamesAsync(username, limit);
+        return Ok(games);
+    }
+
 
     [Authorize]
     [HttpGet("{username}")]
