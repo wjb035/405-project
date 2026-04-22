@@ -212,7 +212,7 @@ private void OnAnyButtonPressed()
 			returnScene = "res://HomeScreen.tscn";
 
 		tree.SetMeta(ReturnSceneMetaKey, returnScene);
-		await Transition.ChangeScene(returnScene, ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene(returnScene, ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 
 	private async void OnSettingsPressed()
@@ -224,7 +224,7 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
 
@@ -234,7 +234,7 @@ private void OnAnyButtonPressed()
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		
-		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 	
 	private void OnInboxPressed()
@@ -248,7 +248,7 @@ private void OnAnyButtonPressed()
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		
-		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0f, true);
 		
 	}
 
@@ -257,7 +257,7 @@ private void OnAnyButtonPressed()
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, false);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f, false);
 	
 	}
 	
@@ -299,7 +299,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f, true);
 	}
 
 	private void SpawnCards()

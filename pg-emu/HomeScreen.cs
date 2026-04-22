@@ -498,7 +498,7 @@ public partial class HomeScreen : Control
 				tree.SetMeta("pgemu_config_path", _configPath);
 			//using this to just store how we sort by games;
 			CollectionStorage.SearchResult = name;
-			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.7f, 1f);
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0f);
 		}
 		else{
 			GD.Print("Error getting the platform!");
@@ -635,7 +635,7 @@ public partial class HomeScreen : Control
 		tree.SetMeta("pgemu_found_profile_user_id", profile.UserId ?? string.Empty);
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		
-		await Transition.ChangeScene("res://FoundUserProfile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://FoundUserProfile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 		return true;
 	}
 
@@ -855,7 +855,7 @@ private void OnAnyButtonPressed()
 		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 
 	private async void OnFriendsPressed()
@@ -863,16 +863,16 @@ private void OnAnyButtonPressed()
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
 	
-	private void OnMusicPressed()
+	private async void OnMusicPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		tree.ChangeSceneToFile("res://Jukebox.tscn");
+		await Transition.ChangeScene("res://Jukebox.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 	
 	private void OnAchPressed(){
@@ -926,7 +926,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.7f, 1f);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
 	}
 
 	private void RestoreSelectedPlatformSelection()

@@ -20,6 +20,14 @@
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="12_rhyj1"]
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="19_p3i2b"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_p3i2b"]
+shader = ExtResource("4_xj10s")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.53506005, 0.44640002, 0.93, 0.20392157)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ak8ya"]
 shader = ExtResource("3_cja7x")
 shader_parameter/blur_amount = 3.0000001425
@@ -99,6 +107,21 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="ForegroundBars" type="CanvasLayer" parent="Margin/Root" unique_id=609329456]
+
+[node name="Background" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1074040702]
+material = SubResource("ShaderMaterial_p3i2b")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -680.1
+offset_right = -4.0
+offset_bottom = 133.80005
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
 
 [node name="TopBar2" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1092032696]
 material = SubResource("ShaderMaterial_ak8ya")

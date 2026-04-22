@@ -262,7 +262,7 @@ private void OnAnyButtonPressed()
 		CollectionStorage.currentCollection = null;
 		AudioManager.Instance?.PlayNavigation(-1);
 		// Navigate back to the home screen scene.
-		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
 	
@@ -331,7 +331,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 
 	private async void OpenProfile()
@@ -344,7 +344,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 
 	private void OnChatPressed()
@@ -360,7 +360,7 @@ private void OnAnyButtonPressed()
 	private async void GoHome()
 	{
 		CollectionStorage.currentCollection = null;
-		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f);
 	}
 	
 	private async void GoAch()
@@ -369,7 +369,7 @@ private void OnAnyButtonPressed()
 		AchievementStorage.gameName = GetSelectedGame().Name;
 		AchievementStorage.gameId = GetSelectedGame().retroAchievementsGameId;
 		
-		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0f, true);
 
 	}
 	
@@ -378,7 +378,7 @@ private void OnAnyButtonPressed()
 		
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://GameSelect.tscn");
-		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f, true);
 		
 	}
 	

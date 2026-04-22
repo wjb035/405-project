@@ -10,11 +10,20 @@
 [ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="5_rlxaj"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="6_c58cc"]
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="6_h06ym"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="6_n23tr"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="7_c58cc"]
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="8_gqrw3"]
 [ext_resource type="Texture2D" uid="uid://dlhc0hkofta0r" path="res://Images/controller icon.png" id="8_jpbjf"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="9_fupj7"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="10_rlxaj"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xb240"]
+shader = ExtResource("6_n23tr")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.53506005, 0.44640002, 0.93, 0.20392157)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_c58cc"]
 shader = ExtResource("3_fupj7")
@@ -85,6 +94,21 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 
 [node name="Foreground1" type="CanvasLayer" parent="Margin/Root" unique_id=221378369]
+
+[node name="Background" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=951600345]
+material = SubResource("ShaderMaterial_xb240")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -35.0
+offset_top = -680.1
+offset_right = 1.0
+offset_bottom = 133.80005
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
 
 [node name="TopBar2" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=2107773891]
 material = SubResource("ShaderMaterial_c58cc")

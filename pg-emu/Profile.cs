@@ -478,7 +478,7 @@ public partial class Profile : Control
 			else if (tree.HasMeta(CollectionsFocusMetaKey))
 				tree.RemoveMeta(CollectionsFocusMetaKey);
 
-			await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, true);
+			await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, true);
 		}
 		catch (Exception exception)
 		{
@@ -501,7 +501,7 @@ public partial class Profile : Control
 			AudioManager.Instance?.PlaySelect();
 			var tree = GetTree();
 			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
-			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0.15f, false);
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, false);
 		}
 		catch (Exception exception)
 		{
@@ -2221,7 +2221,7 @@ public partial class Profile : Control
 			returnScene = "res://HomeScreen.tscn";
 		tree.SetMeta("pgemu_return_scene", returnScene);
 
-		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 
 		private async void GoFriendsList()

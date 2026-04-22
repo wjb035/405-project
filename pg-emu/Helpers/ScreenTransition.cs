@@ -78,7 +78,7 @@ public partial class ScreenTransition : CanvasLayer
 		_fadeRect.Modulate = new Color(1, 1, 1, 0);
 	}
 	
-	public async Task ChangeScene(string path, TransitionType type = TransitionType.Fade, float duration = 0.5f, float holdDuration = 0.15f, bool invert = false)
+	public async Task ChangeScene(string path, TransitionType type = TransitionType.Fade, float duration = 0.25f, float holdDuration = 0.025f, bool invert = false)
 	{
 		if (type == TransitionType.Fade)
 		{

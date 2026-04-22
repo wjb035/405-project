@@ -104,8 +104,8 @@ public partial class Jukebox : Control
 		
 		VBoxContainer container = GetNode<VBoxContainer>("Margin/Root/Body/Mid1/ScrollContainer/ButtonContainer");
 		GD.Print("hi from after container");
-		
-		
+
+		StartBackgroundTransition();
 
 		ApplyThemeAesthetic();
 		audioMan = GetNode<AudioManager>("/root/AudioManager");
@@ -388,7 +388,7 @@ public partial class Jukebox : Control
 		tree.SetMeta("pgemu_settings_tab", "appearance");
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
-		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f, true);
+		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 	
 	private async void OnFriendsPressed()
@@ -396,7 +396,7 @@ public partial class Jukebox : Control
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
 	
@@ -421,8 +421,29 @@ public partial class Jukebox : Control
 		CollectionStorage.currentCollection = null;
 		AudioManager.Instance?.PlayNavigation(-1);
 		// Navigate back to the home screen scene.
-		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.5f, 0.15f);
+		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
+	}
+	
+	// BACKGOURND STUFF
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNode<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+		try
+		{
+			bg.StartTransition("JukeboxScreen", 1.5f);
+			GD.Print("Background transition finished!");
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
+		
 	}
 
 	

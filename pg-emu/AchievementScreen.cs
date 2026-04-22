@@ -15,8 +15,8 @@ public partial class AchievementScreen : Control
 	
 	public override async void _Ready()
 	{
-		Label _topText = GetNode<Label>("Bg/Margin/Root/TopBar/Title");
-		_back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
+		Label _topText = GetNode<Label>("Margin/Root/TopBar/Title");
+		_back = GetNode<Button>("Margin/Root/TopBar/BtnBack");
 		string splashText = "Achievements for " + AchievementStorage.gameName;
 		
 		string regexPattern =  @"\([^)]*\)";
@@ -223,7 +223,7 @@ if (iconsAndAchData.Count == 0){
 
 	private void ApplyAesthetic()
 	{
-		var title = GetNodeOrNull<Label>("Bg/Margin/Root/TopBar/Title");
+		var title = GetNodeOrNull<Label>("Margin/Root/TopBar/Title");
 		UiStyle.StyleTitleLabel(title);
 		UiStyle.StyleTopBarButton(_back);
 		UiStyle.AddHoverFeedback(_back);

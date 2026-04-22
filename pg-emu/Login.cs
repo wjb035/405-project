@@ -181,7 +181,7 @@ public partial class Login : Control
 			return;
 		}
 
-		await Transition.ChangeScene("res://HomeScreen.tscn",  ScreenTransition.TransitionType.Radial, 1f, 0.5f, true);
+		await Transition.ChangeScene("res://HomeScreen.tscn",  ScreenTransition.TransitionType.Radial, 0.55f, 0.5f, true);
 		
 	}
 
@@ -251,7 +251,7 @@ public partial class Login : Control
 		}
 
 
-		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Radial, 1f, 0.5f);
+		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Radial, 0.55f, 0.5f);
 	}
 	
 }

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 public partial class Settings : Control
@@ -38,7 +39,8 @@ public partial class Settings : Control
 	private int _controllerEntryVerticalAxisDir;
 	private long _controllerEntryVerticalAxisNextMs;
 	
-
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -96,7 +98,7 @@ public partial class Settings : Control
 		GetViewport()?.SetInputAsHandled();
 	}
 
-	private void GoBack()
+	private async void GoBack()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		// Return to the scene we came from if provided, otherwise go home.
@@ -104,7 +106,7 @@ public partial class Settings : Control
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
 		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
 
-		tree.ChangeSceneToFile(returnScene);
+		await Transition.ChangeScene(returnScene,  ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 	
 	

@@ -6,6 +6,7 @@
 [ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="4_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_iw72c"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
 [ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
 [ext_resource type="Texture2D" uid="uid://b3x0d5xxdxg5b" path="res://Images/search icon thin.png" id="7_oy6yd"]
@@ -17,6 +18,14 @@
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="12_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_26m5w"]
+shader = ExtResource("5_kf1hi")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.53506005, 0.44640002, 0.93, 0.20392157)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oy6yd"]
 shader = ExtResource("3_iw72c")
@@ -111,6 +120,21 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 
 [node name="Foreground1" type="CanvasLayer" parent="Margin/Root" unique_id=1689607992]
+
+[node name="Background" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=1693764385]
+material = SubResource("ShaderMaterial_26m5w")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -747.0
+offset_right = 16.0
+offset_bottom = 66.900024
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
 
 [node name="TopBar2" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=2060178397]
 material = SubResource("ShaderMaterial_oy6yd")

@@ -23,7 +23,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvgg"]
 shader = ExtResource("4_6jqq3")
 shader_parameter/blur_amount = 3.0
-shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
+shader_parameter/tint = Color(0.08644999, 0.042899996, 0.13, 0.7411765)
 shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
 shader_parameter/fade_strength = 0.47200002242
 shader_parameter/highlight_thickness = 0.02

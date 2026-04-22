@@ -34,6 +34,8 @@ public partial class GlobalBackground : CanvasLayer
 			GD.Load<Texture2D>("res://ShaderSlop/Game2.tres"))},
 		{"LoginScreen",  (GD.Load<Texture2D>("res://ShaderSlop/Login1.tres"),
 			GD.Load<Texture2D>("res://ShaderSlop/Login2.tres"))},
+		{"JukeboxScreen",  (GD.Load<Texture2D>("res://ShaderSlop/Jukebox1.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/Jukebox2.tres"))},
 	};
 	
 	public override void _Ready()
