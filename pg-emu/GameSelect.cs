@@ -204,13 +204,14 @@ public partial class GameSelect : Control
 		ResetUiNavigationState();
 		// Load data and build UI.
 		await LoadContextAndGames();
+		await StartMetadataWarmup();
 		SpawnCards();
 		ApplyBrowseLayoutMode();
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
 		StartCoverArtWarmup();
-		StartMetadataWarmup();
+		
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
 		
@@ -993,6 +994,7 @@ private void OnAnyButtonPressed()
 		}
 		else
 		{
+			//commenting this out means the cover art doesn't bind BUT the models stay
 			BuildCarouselCards();
 		}
 		
@@ -1005,7 +1007,9 @@ private void OnAnyButtonPressed()
 					CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
-				return (g.Title, tex);
+				bool isCompleted = true;
+				isGameCompleted(g);
+				return (g.Title, tex, isCompleted);
 			}).ToList();
 			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
 			_carousel3D.Populate(gameData, _carouselPos, isGba);
@@ -1015,6 +1019,12 @@ private void OnAnyButtonPressed()
 
 		UpdateNavEnabled();
 	}
+
+	private bool isGameCompleted(GameEntry g){
+		GD.Print(g.AchievementNum);
+		return true;
+	}
+
 
 	private int Count => _games.Count;
 
@@ -2736,7 +2746,7 @@ private void OnAnyButtonPressed()
 		_ = WarmCoverArtLibraryAsync(_platform, gamesToWarm, _coverArtWarmupCts.Token);
 	}
 
-	private void StartMetadataWarmup()
+	private async Task StartMetadataWarmup()
 	{
 		_metadataWarmupCts?.Cancel();
 		_metadataWarmupCts?.Dispose();
@@ -2753,7 +2763,7 @@ private void OnAnyButtonPressed()
 			return;
 
 		_metadataWarmupCts = new CancellationTokenSource();
-		_ = WarmGameMetadataAsync(_platform, gamesToWarm, _metadataWarmupCts.Token);
+		await WarmGameMetadataAsync(_platform, gamesToWarm, _metadataWarmupCts.Token);
 	}
 
 	private async Task WarmCoverArtLibraryAsync(PlatformConfig platform, IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
