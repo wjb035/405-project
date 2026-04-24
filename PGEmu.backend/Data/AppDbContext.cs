@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<UserGame> UserGames => Set<UserGame>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -157,5 +158,13 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        // Chat Messages
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => new { m.FromUser, m.ToUser });
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => m.GroupId);
     }
+    
 }

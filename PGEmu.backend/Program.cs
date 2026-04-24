@@ -9,6 +9,7 @@ using PGEmuBackend.Models;
 using PGEmuBackend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.JsonWebTokens;
+using PGEmuBackend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,8 @@ builder.Services.AddScoped<FriendService>();
 builder.Services.AddScoped<IProfileCustomizationService, ProfileCustomizationService>();
 builder.Services.AddScoped<IUserActivityService, UserActivityService>();
 
+// Chat service
+builder.Services.AddSignalR();
 
 // user game stuff 
 builder.Services.AddScoped<IUserGameService, UserGameService>();
@@ -117,6 +120,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapControllers();
+app.MapHub<ChatHub>("/chathub");
 
 app.UseHttpsRedirection();
 
