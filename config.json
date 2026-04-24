@@ -66,7 +66,7 @@
         ".nfs"
       ],
       "defaultEmulatorId": "dolphin",
-      "retroachievementsPlatformID": -1,
+      "retroachievementsPlatformID": 19,
       "libretro": {
         "corePath": "cores/dolphin_libretro.dylib",
         "libraryName": "Dolphin Libretro",
