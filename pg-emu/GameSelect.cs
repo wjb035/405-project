@@ -1007,8 +1007,8 @@ private void OnAnyButtonPressed()
 					CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
-				bool isCompleted = true;
-				isGameCompleted(g);
+				bool isCompleted = isGameCompleted(g);
+				
 				return (g.Title, tex, isCompleted);
 			}).ToList();
 			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
@@ -1021,8 +1021,15 @@ private void OnAnyButtonPressed()
 	}
 
 	private bool isGameCompleted(GameEntry g){
-		GD.Print(g.AchievementNum);
-		return true;
+		if (g.AchievementNum == "0/0" || g.AchievementNum == "Loading..."){
+			return false;
+		}
+		var parts = g.AchievementNum.Split('/');
+		
+		if (parts[0] == parts[1]){
+			return true;
+		}
+		return false;
 	}
 
 
