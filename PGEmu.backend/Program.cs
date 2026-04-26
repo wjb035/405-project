@@ -119,14 +119,11 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseSwagger();
-app.UseSwaggerUI();
 
-app.MapControllers();
-app.MapHub<ChatHub>("/chathub");
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
 
 // For the avatar storage folder
 var avatarPath = Path.Combine(
@@ -141,11 +138,14 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads/avatars"
 });
 
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 using PGEmuBackend.Data;
 using PGEmuBackend.Models;
 
@@ -15,7 +16,7 @@ public class ChatHub : Hub
           _db = db;
      }
      
-     // Shared dictionary: username to connectionId, name to members
+     // Shared dictionary: username to connectionId, group id to group info
      private static readonly ConcurrentDictionary<string, string> _users = new();
      private static readonly ConcurrentDictionary<string, GroupInfo> _groups = new();
      
@@ -23,34 +24,32 @@ public class ChatHub : Hub
      {
           public string Name { get; set; } = "";
           public string Owner { get; set; } = "";
-          public HashSet<string> Members { get; set; } = new();
      }
      
      // CONNECTION SHIT
+     // Handles connection and being added back to group chats the user was arleady in
      public async Task Register(string username)
      {
           _users[username] = Context.ConnectionId;
+          
+          var userGroups = await _db.ChatGroupMembers
+               .Where(m => m.Username == username)
+               .Select(m => m.GroupId)
+               .ToListAsync();
+
+          foreach (var groupId in userGroups)
+               await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
+          
           await Clients.Others.SendAsync("UserOnline", username);
      }
     
+     // Handles disconnection
      public override async Task OnDisconnectedAsync(Exception? exception)
      {
           var user = _users.FirstOrDefault(x => x.Value == Context.ConnectionId);
           if (user.Key != null)
           {
                _users.TryRemove(user.Key, out _);
-               
-               foreach (var group in _groups)
-               {
-                    if (group.Value.Members.Remove(user.Key))
-                    {
-                         await Clients.Group(group.Key).SendAsync("ReceiveGroupMessage",
-                              group.Key, "System", $"{user.Key} left the group");
-
-                         if (group.Value.Members.Count == 0)
-                              _groups.TryRemove(group.Key, out _);
-                    }
-               }
                await Clients.Others.SendAsync("UserOffline", user.Key);
           }
           await base.OnDisconnectedAsync(exception);
@@ -85,21 +84,32 @@ public class ChatHub : Hub
      // GROUOP SHIT
      public async Task CreateGroup(string owner, string groupName)
      {
-          var groupId = Guid.NewGuid().ToString();
-          _groups[groupId] = new GroupInfo
+          // Saves to db
+          var group = new ChatGroup
           {
+               Id = Guid.NewGuid().ToString(),
                Name = groupName,
                Owner = owner,
-               Members = new HashSet<string> { owner }
+               Members = new List<ChatGroupMember>
+               {
+                    new ChatGroupMember { Username = owner }
+               }
           };
-          await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-          await Clients.Caller.SendAsync("GroupCreated", groupId, groupName);
-          await Clients.Caller.SendAsync("ReceiveGroupMessage", groupId, "System",
+          _db.ChatGroups.Add(group);
+          await _db.SaveChangesAsync();
+          
+          // Track in memory for live routing
+          _groups[group.Id] = new GroupInfo { Name = groupName, Owner = owner };
+          await Groups.AddToGroupAsync(Context.ConnectionId, group.Id);
+
+          await Clients.Caller.SendAsync("GroupCreated", group.Id, groupName);
+          await Clients.Caller.SendAsync("ReceiveGroupMessage", group.Id, "System",
                $"Group \"{groupName}\" created");
      }
 
      public async Task InviteToGroup(string inviter, string groupId, string targetUser)
-     {    var group = _groups[groupId];
+     {   
+          var group = _groups[groupId];
           if (_users.TryGetValue(targetUser, out var targetConnectionId))
                await Clients.Client(targetConnectionId)
                     .SendAsync("GroupInviteReceived", groupId, group.Name, inviter);
@@ -109,14 +119,29 @@ public class ChatHub : Hub
      
      public async Task AcceptGroupInvite(string username, string groupId)
      {
-          var group = _groups[groupId];
-          group.Members.Add(username);
+          // Saves to db
+          _db.ChatGroupMembers.Add(new ChatGroupMember
+          {
+               GroupId = groupId,
+               Username = username
+          });
+          await _db.SaveChangesAsync();
+          
+          // Loads group info
+          var group = await _db.ChatGroups
+               .Include(g => g.Members)
+               .FirstAsync(g => g.Id == groupId);
+          
+          // Adds to signalR group
           await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-          await Clients.Caller.SendAsync("GroupJoined", groupId, group.Name, group.Members.ToList());
+          
+          var memberNames = group.Members.Select(m => m.Username).ToList();
+          await Clients.Caller.SendAsync("GroupJoined", groupId, group.Name, memberNames);
           await Clients.OthersInGroup(groupId).SendAsync("ReceiveGroupMessage", groupId,
                "System", $"{username} joined the group");
           await Clients.OthersInGroup(groupId).SendAsync("GroupMemberJoined", groupId, username);
      }
+     
 
      public async Task DeclineGroupInvite(string username, string groupId)
      {
@@ -128,24 +153,37 @@ public class ChatHub : Hub
      
      public async Task LeaveGroup(string username, string groupId)
      {
-          var group = _groups[groupId];
-          group.Members.Remove(username);
+          // Remove from DB
+          var member = await _db.ChatGroupMembers
+               .FirstAsync(m => m.GroupId == groupId && m.Username == username);
+          _db.ChatGroupMembers.Remove(member);
+          await _db.SaveChangesAsync();
+          
+          // Remove from SignalR
           await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
           await Clients.Caller.SendAsync("GroupLeft", groupId);
           await Clients.Group(groupId).SendAsync("ReceiveGroupMessage", groupId,
                "System", $"{username} left the group");
           await Clients.Group(groupId).SendAsync("GroupMemberLeft", groupId, username);
+          
+          // Transfer ownership
+          var group = await _db.ChatGroups.Include(g => g.Members)
+               .FirstAsync(g => g.Id == groupId);
 
           if (group.Owner == username)
           {
-               if (group.Members.Count > 0)
+               if (group.Members.Any())
                {
-                    group.Owner = group.Members.First();
+                    group.Owner = group.Members.First().Username;
+                    await _db.SaveChangesAsync();
                     await Clients.Group(groupId).SendAsync("ReceiveGroupMessage", groupId,
                          "System", $"{group.Owner} is now the group owner");
                }
                else
                {
+                    // If there aren't any mmebers left, just delete it
+                    _db.ChatGroups.Remove(group);
+                    await _db.SaveChangesAsync();
                     _groups.TryRemove(groupId, out _);
                }
           }
@@ -162,7 +200,12 @@ public class ChatHub : Hub
                return;
           }
 
-          group.Members.Remove(targetUser);
+          // Remove from DB
+          var member = await _db.ChatGroupMembers
+               .FirstAsync(m => m.GroupId == groupId && m.Username == targetUser);
+          _db.ChatGroupMembers.Remove(member);
+          await _db.SaveChangesAsync();
+          
           if (_users.TryGetValue(targetUser, out var targetConnectionId))
           {
                await Groups.RemoveFromGroupAsync(targetConnectionId, groupId);

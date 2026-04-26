@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatGroup> ChatGroups => Set<ChatGroup>();
+    public DbSet<ChatGroupMember> ChatGroupMembers => Set<ChatGroupMember>();
     
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -165,6 +167,17 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ChatMessage>()
             .HasIndex(m => m.GroupId);
+        
+        // Group chats
+        modelBuilder.Entity<ChatGroupMember>()
+            .HasOne(m => m.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(m => m.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChatGroupMember>()
+            .HasIndex(m => new { m.GroupId, m.Username })
+            .IsUnique();
     }
     
 }

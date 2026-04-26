@@ -498,7 +498,7 @@ public partial class HomeScreen : Control
 				tree.SetMeta("pgemu_config_path", _configPath);
 			//using this to just store how we sort by games;
 			CollectionStorage.SearchResult = name;
-			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0f);
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.35f, 0f);
 		}
 		else{
 			GD.Print("Error getting the platform!");
@@ -926,7 +926,7 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.35f, 0.1f);
 	}
 
 	private void RestoreSelectedPlatformSelection()

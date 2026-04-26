@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dw3hmx4qed6bk" path="res://UI/TransitionTextures/noise.tres" id="1_4rm2d"]
 [ext_resource type="Shader" uid="uid://doqvtkdxur8uv" path="res://ShaderSlop/TransitionEffect.gdshader" id="1_65ltc"]
+[ext_resource type="Script" uid="uid://bfosrxifhge01" path="res://UI/TransitionTextures/ChatTesting.cs" id="1_iogrx"]
 [ext_resource type="Shader" uid="uid://sskn11s8mrjm" path="res://UI/TransitionTextures/spiral.gdshader" id="2_4rm2d"]
 [ext_resource type="Texture2D" uid="uid://cn3gpmmwc4ihh" path="res://UI/TransitionTextures/display_mask.png" id="2_ooorh"]
 [ext_resource type="Texture2D" uid="uid://bissfw1qybts" path="res://UI/TransitionTextures/radialBig.png" id="3_ooorh"]
@@ -27,6 +28,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_iogrx")
 
 [node name="ColorRect6" type="TextureRect" parent="." unique_id=478489784]
 visible = false
