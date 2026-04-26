@@ -930,12 +930,8 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
-<<<<<<< Updated upstream
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.35f, 0.1f);
-=======
 		StartCoverArtWarmup(platform);
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
->>>>>>> Stashed changes
 	}
 
 	private void RestoreSelectedPlatformSelection()
