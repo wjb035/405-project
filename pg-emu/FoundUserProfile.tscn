@@ -108,7 +108,7 @@ custom_minimum_size = Vector2(120, 36)
 layout_mode = 2
 text = "Customize"
 
-[node name="BodyScroll" type="ScrollContainer" parent="Margin/Root"]
+[node name="BodyScroll" type="ScrollContainer" parent="Margin/Root" unique_id=2134510796]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -140,18 +140,18 @@ layout_mode = 2
 size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_yghs0")
 
-[node name="AvatarFrameMargin" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2"]
+[node name="AvatarFrameMargin" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2" unique_id=1846527642]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="AvatarFrame" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin"]
+[node name="AvatarFrame" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin" unique_id=955556912]
 clip_contents = true
 layout_mode = 2
 
-[node name="AvatarInnerMargin" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame"]
+[node name="AvatarInnerMargin" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame" unique_id=1469647259]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
@@ -193,7 +193,7 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="HeaderRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="HeaderRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1575913505]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
@@ -203,20 +203,19 @@ custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 size_flags_horizontal = 3
 label_settings = SubResource("LabelSettings_wi0ei")
-autowrap_mode = 0
 vertical_alignment = 1
 
-[node name="FriendActions" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow"]
+[node name="FriendActions" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow" unique_id=117389294]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 6
 
-[node name="AddFriend" type="Button" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/FriendActions"]
+[node name="AddFriend" type="Button" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/FriendActions" unique_id=360252566]
 custom_minimum_size = Vector2(98, 34)
 layout_mode = 2
 text = "Add Friend"
 
-[node name="MenuButton" type="MenuButton" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/FriendActions"]
+[node name="MenuButton" type="MenuButton" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/FriendActions" unique_id=1620893644]
 custom_minimum_size = Vector2(86, 34)
 layout_mode = 2
 text = "More"
@@ -241,8 +240,8 @@ theme_override_constants/margin_bottom = 12
 custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 size_flags_vertical = 1
-autowrap_mode = 3
 vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="RecentGamesAndFriends" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body" unique_id=1817153426]
 layout_mode = 2
@@ -275,12 +274,11 @@ text = "Showcase"
 [node name="HSeparator" type="HSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=241487974]
 layout_mode = 2
 
-[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer"]
+[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=556887235]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
-columns = 1
 
 [node name="Button2" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid" unique_id=1539136719]
 custom_minimum_size = Vector2(0, 60)
@@ -308,7 +306,6 @@ alignment = 0
 
 [node name="GamesAndFriendsSeparator2" type="VSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=17158126]
 visible = false
-custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 
 [node name="RecentGames2" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=860206557]
@@ -337,12 +334,11 @@ text = "Recent Games"
 [node name="HSeparator" type="HSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=1521774163]
 layout_mode = 2
 
-[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer"]
+[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=49289809]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
-columns = 1
 
 [node name="Button2" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid" unique_id=835964241]
 custom_minimum_size = Vector2(0, 60)
@@ -368,12 +364,12 @@ layout_mode = 2
 text = "Game 4  |  5959 hrs"
 alignment = 0
 
-[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer"]
+[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer" unique_id=970341480]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow"]
+[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow" unique_id=2050655515]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -381,11 +377,9 @@ size_flags_horizontal = 3
 custom_minimum_size = Vector2(104, 32)
 layout_mode = 2
 text = "See All"
-alignment = 1
 
 [node name="GamesAndFriendsSeparator" type="VSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=831130746]
 visible = false
-custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 
 [node name="Friends" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=1183626179]
@@ -414,12 +408,11 @@ text = "Friends"
 [node name="HSeparator" type="HSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=161421426]
 layout_mode = 2
 
-[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer"]
+[node name="TileGrid" type="GridContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=1557207455]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
-columns = 1
 
 [node name="Button2" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid" unique_id=1325354282]
 custom_minimum_size = Vector2(0, 60)
@@ -445,12 +438,12 @@ layout_mode = 2
 text = "Friend 4"
 alignment = 0
 
-[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer"]
+[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer" unique_id=1215965379]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow"]
+[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow" unique_id=405378403]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -459,4 +452,3 @@ custom_minimum_size = Vector2(104, 32)
 layout_mode = 2
 action_mode = 0
 text = "See All"
-alignment = 1

@@ -8,6 +8,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private const ulong SettleSpinSuppressWindowMs = 90;
 	private const string GbaCartridgeModelPath = "res://Models/gbaCart.glb";
 	private const string GbaCartridgeLogoPath = "res://Models/gba_logo2.png";
+	private const string DsCartridgeModelPath = "res://Models/ds_cart.glb";
+	private const float DsCartridgeUvScaleU = 1.18f;
+	private const float DsCartridgeUvOffsetU = -0.09f;
+	private const float DsCartridgeUvScaleV = 1.0f;
+	private const float DsCartridgeUvOffsetV = 0.0f;
 	private const float GbaCartridgeUvScaleU = 1.4593054f;
 	private const float GbaCartridgeUvOffsetU = -0.23596f;
 	private const float GbaCartridgeUvScaleV = -2.8823564f;
@@ -50,10 +55,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private readonly List<List<StandardMaterial3D>> _baseMaterials = new();
 	private readonly List<StandardMaterial3D?> _coverMaterials = new();
 	private bool _isGba;
+	private bool _isDs;
+	private bool _isPs1;
 	private Texture2D? _gbaCartridgeLogoTexture;
 	
 	// Card spacing in 3D units
-	private const float Spacing = 2.2f;
+		private const float Spacing = 2.55f;
 	private const float SelectedScale = 1.0f;
 	private const float UnselectedScale = 0.72f;
 
@@ -150,8 +157,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 
 	// Call this from GameSelect after loading games to clear everything and rebuild
-	public void Populate(List<(string title, Texture2D? coverArt, bool isCompleted)> games, float initialPos,
-		bool isGba = false)
+	public void Populate(
+		List<(string title, Texture2D? coverArt, bool isCompleted)> games,
+		float initialPos,
+		bool isGba = false,
+		bool isDs = false,
+		bool isPs1 = false)
 	{
 		// Clear old boxes
 		foreach (var b in _boxes)
@@ -165,6 +176,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		_count = games.Count;
 		_isGba = isGba;
+		_isDs = isDs;
+		_isPs1 = isPs1;
 		CarouselPos = WrapPos(initialPos);
 		_spinAudioPos = CarouselPos;
 		_lastSpinAudioCarouselPos = CarouselPos;
@@ -174,9 +187,13 @@ public partial class GameCarousel3DView : SubViewportContainer
 		for (int i = 0; i < games.Count; i++)
 		{
 			var (title, coverArt, isCompleted) = games[i];
-			var box = _isGba
-				? BuildGbaCartridge(title, coverArt)
-				: BuildBox(title, coverArt, isCompleted);
+			Node3D box;
+			if (_isGba)
+				box = BuildGbaCartridge(title, coverArt);
+			else if (_isDs)
+				box = BuildDsCartridge(title, coverArt);
+			else
+				box = BuildBox(title, coverArt, isCompleted);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
 		}
@@ -188,12 +205,18 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private Node3D BuildBox(string title, Texture2D? coverArt, bool isCompleted)
 	{
 		var root = new Node3D();
+		var boxSize = _isPs1
+			? new Vector3(2.8f, 2.8f, 0.25f)
+			: new Vector3(2.6f, 3.6f, 0.25f);
+		var coverSize = _isPs1
+			? new Vector2(2.68f, 2.68f)
+			: new Vector2(2.5f, 3.5f);
 
 		// Box mesh 
 		var mesh = new MeshInstance3D { Name = "Mesh" };
 		var boxMesh = new BoxMesh
 		{
-			Size = new Vector3(2.6f, 3.6f, 0.25f)
+			Size = boxSize
 		};
 		mesh.Mesh = boxMesh;
 
@@ -223,7 +246,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var coverMesh = new MeshInstance3D { Name = "CoverMesh" };
 		var quad = new QuadMesh
 		{
-			Size = new Vector2(2.5f, 3.5f)
+			Size = coverSize
 		};
 		coverMesh.Mesh = quad;
 		coverMesh.Position = new Vector3(0, 0, 0.126f);
@@ -264,7 +287,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var backMesh = new MeshInstance3D { Name = "BackMesh" };
 		var backQuad = new QuadMesh
 		{
-			Size = new Vector2(2.5f, 3.5f)
+			Size = coverSize
 		};
 		
 		backMesh.Mesh = backQuad;
@@ -317,6 +340,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		MeshInstance3D? labelMesh = null;
 		CollectImportedMaterials(model, materials, ref labelMesh);
 		_baseMaterials.Add(materials);
+		labelMesh ??= FindFirstMeshInstance(model);
 
 		if (labelMesh != null)
 		{
@@ -384,6 +408,73 @@ public partial class GameCarousel3DView : SubViewportContainer
 		return root;
 	}
 
+	private Node3D BuildDsCartridge(string title, Texture2D? coverArt)
+	{
+		if (!ResourceLoader.Exists(DsCartridgeModelPath))
+		{
+			GD.PrintErr($"DS cartridge model not found at {DsCartridgeModelPath}, falling back to box geometry");
+			return BuildBox(title, coverArt, false);
+		}
+
+		var scene = GD.Load<PackedScene>(DsCartridgeModelPath);
+		var model = scene.Instantiate<Node3D>();
+		CenterNode3D(model);
+		model.Scale = new Vector3(11.0f, 11.0f, 11.0f);
+		model.RotateX(Mathf.DegToRad(90f));
+		var hasModelBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
+
+		var root = new Node3D();
+		root.SetMeta("pgemu_title", title);
+		root.AddChild(model);
+
+		var materials = new List<StandardMaterial3D>();
+		MeshInstance3D? labelMesh = null;
+		CollectImportedMaterials(model, materials, ref labelMesh);
+		_baseMaterials.Add(materials);
+		labelMesh = FindMeshInstanceByDescriptor(model, "Sketchfab_Scene_Object_4")
+			?? FindMeshInstanceByDescriptor(model, "Object_4")
+			?? labelMesh;
+
+		if (labelMesh != null)
+		{
+			labelMesh.Name = "CoverMesh";
+			var template = labelMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
+			var coverMaterial = ApplyDsLabelTexture(labelMesh, coverArt, template);
+			_coverMaterials.Add(coverMaterial);
+		}
+		else
+		{
+			GD.PrintErr($"Could not locate a label mesh for DS cartridge: {title}");
+			_coverMaterials.Add(null);
+		}
+
+		var backMesh = new MeshInstance3D { Name = "BackMesh" };
+		var backLabelSize = hasModelBounds
+			? new Vector2(modelBounds.Size.X * 0.82f, modelBounds.Size.Y * 0.86f)
+			: new Vector2(1.55f, 1.7f);
+		backMesh.Mesh = new QuadMesh { Size = backLabelSize };
+		backMesh.Position = hasModelBounds
+			? new Vector3(
+				modelBounds.GetCenter().X,
+				modelBounds.GetCenter().Y,
+				modelBounds.Position.Z - 0.018f)
+			: new Vector3(0f, 0f, -0.12f);
+		backMesh.RotateY(Mathf.DegToRad(180f));
+
+		var backMat = new StandardMaterial3D
+		{
+			AlbedoColor = new Color(1, 1, 1, 1),
+			Roughness = 0.65f,
+			Metallic = 0.02f,
+			Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+			TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+		};
+		backMesh.SetSurfaceOverrideMaterial(0, backMat);
+		root.AddChild(backMesh);
+
+		return root;
+	}
+
 	// Updates a box's texture,c all it from gameselect
 	public void UpdateCoverArt(int index, Texture2D texture)
 	{
@@ -398,7 +489,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 				_boxes[index].HasMeta("pgemu_title") ? _boxes[index].GetMeta("pgemu_title").AsString() : string.Empty,
 				texture,
 				previousMaterial)
-			: ApplyCoverTexture(coverMesh, texture, previousMaterial);
+			: _isDs
+				? ApplyDsLabelTexture(coverMesh, texture, previousMaterial)
+				: ApplyCoverTexture(coverMesh, texture, previousMaterial);
 
 		if (index < _coverMaterials.Count)
 			_coverMaterials[index] = coverMat;
@@ -438,7 +531,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	{
 		var vp = new SubViewport
 		{
-			Size = new Vector2I(2048, 2896),
+			Size = _isPs1 ? new Vector2I(2048, 2048) : new Vector2I(2048, 2896),
 			TransparentBg = true,
 			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
 			Msaa2D = Viewport.Msaa.Msaa8X,
@@ -1342,6 +1435,28 @@ public partial class GameCarousel3DView : SubViewportContainer
 			ToggleGbaBackDetail(index, false);
 	}
 
+	private StandardMaterial3D ApplyDsLabelTexture(MeshInstance3D coverMesh, Texture2D? coverTexture,
+		StandardMaterial3D? template)
+	{
+		var coverMat = template != null
+			? (StandardMaterial3D)template.Duplicate()
+			: new StandardMaterial3D();
+
+		coverMat.AlbedoTexture = coverTexture;
+		coverMat.AlbedoColor = coverTexture != null
+			? Colors.White
+			: new Color(0.86f, 0.88f, 0.94f, 1f);
+		coverMat.Roughness = template?.Roughness ?? 0.55f;
+		coverMat.Metallic = template?.Metallic ?? 0.04f;
+		coverMat.Transparency = template?.Transparency ?? BaseMaterial3D.TransparencyEnum.Disabled;
+		coverMat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+		coverMat.ResourceLocalToScene = true;
+		coverMat.Uv1Scale = new Vector3(DsCartridgeUvScaleU, DsCartridgeUvScaleV, 1f);
+		coverMat.Uv1Offset = new Vector3(DsCartridgeUvOffsetU, DsCartridgeUvOffsetV, 0f);
+		coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
+		return coverMat;
+	}
+
 	private static StandardMaterial3D ApplyCoverTexture(MeshInstance3D coverMesh, Texture2D texture,
 		StandardMaterial3D? template)
 	{
@@ -1403,6 +1518,51 @@ public partial class GameCarousel3DView : SubViewportContainer
 		foreach (Node child in node.GetChildren())
 		{
 			var found = FindMeshByName(child, name);
+			if (found != null)
+				return found;
+		}
+
+		return null;
+	}
+
+	private static MeshInstance3D? FindFirstMeshInstance(Node node)
+	{
+		if (node is MeshInstance3D mesh && mesh.Mesh != null)
+			return mesh;
+
+		foreach (Node child in node.GetChildren())
+		{
+			var found = FindFirstMeshInstance(child);
+			if (found != null)
+				return found;
+		}
+
+		return null;
+	}
+
+	private static MeshInstance3D? FindMeshInstanceByDescriptor(Node node, string needle)
+	{
+		if (node is MeshInstance3D mesh && mesh.Mesh != null)
+		{
+			var meshDescriptor = $"{mesh.Name} {mesh.Mesh.ResourceName} {mesh.Mesh.ResourcePath}".ToLowerInvariant();
+			var lowerNeedle = needle.ToLowerInvariant();
+			if (meshDescriptor.Contains(lowerNeedle, System.StringComparison.Ordinal))
+				return mesh;
+
+			for (int surface = 0; surface < mesh.Mesh.GetSurfaceCount(); surface++)
+			{
+				if (mesh.Mesh.SurfaceGetMaterial(surface) is not StandardMaterial3D material)
+					continue;
+
+				var materialDescriptor = $"{material.ResourceName} {material.ResourcePath}".ToLowerInvariant();
+				if (materialDescriptor.Contains(lowerNeedle, System.StringComparison.Ordinal))
+					return mesh;
+			}
+		}
+
+		foreach (Node child in node.GetChildren())
+		{
+			var found = FindMeshInstanceByDescriptor(child, needle);
 			if (found != null)
 				return found;
 		}

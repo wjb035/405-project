@@ -158,11 +158,14 @@ public partial class HomeScreen : Control
 		InputRoutingService.Instance?.UnlockUiInput();
 		ResetUiNavigationState();
 		LoadConfigAndPlatforms();
+		BackgroundArtCache.Instance?.Begin(_config, _configPath);
 		
 		// Maps loaded platforms to console types
 		var consoleTypes = _platforms.Select(p => p.Id.ToLower() switch
 		{
 			"wii"        => ConsoleCarousel3DView.ConsoleType.Wii,
+			"ds"         => ConsoleCarousel3DView.ConsoleType.NintendoDS,
+			"ps1"        => ConsoleCarousel3DView.ConsoleType.PlayStation1,
 			"ps2"        => ConsoleCarousel3DView.ConsoleType.PlayStation2,
 			"psp"        => ConsoleCarousel3DView.ConsoleType.PSP,
 			"gc"   => ConsoleCarousel3DView.ConsoleType.GameCube,
@@ -184,6 +187,7 @@ public partial class HomeScreen : Control
 		
 		RestoreSelectedPlatformSelection();
 		UpdateSelectedLabel();
+		StartSelectedPlatformCoverArtWarmup();
 		
 		// we want to check if any emulator is running when posting the status
 		// cause if they're meandering around the home menu but playing a game 
@@ -926,7 +930,12 @@ private void OnAnyButtonPressed()
 		if (_configPath != null)
 			tree.SetMeta("pgemu_config_path", _configPath);
 
+<<<<<<< Updated upstream
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.35f, 0.1f);
+=======
+		StartCoverArtWarmup(platform);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
+>>>>>>> Stashed changes
 	}
 
 	private void RestoreSelectedPlatformSelection()
@@ -967,6 +976,25 @@ private void OnAnyButtonPressed()
 
 		GetTree().SetMeta(SelectedPlatformMetaKey, platformId);
 		_rememberedPlatformId = platformId;
+		StartCoverArtWarmup(_platforms[idx]);
+	}
+
+	private void StartSelectedPlatformCoverArtWarmup()
+	{
+		if (_platforms.Count == 0)
+			return;
+
+		var idx = Mathf.RoundToInt(_carousel.CarouselPos);
+		idx = WrapIndex(idx);
+		if (idx < 0 || idx >= _platforms.Count)
+			return;
+
+		StartCoverArtWarmup(_platforms[idx]);
+	}
+
+	private void StartCoverArtWarmup(PlatformConfig platform)
+	{
+		BackgroundArtCache.Instance?.PrioritizePlatform(platform);
 	}
 	
 	private void OnCarouselSelectionChanged(int index)

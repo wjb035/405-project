@@ -53,6 +53,16 @@
       "retroachievementsPlatformID": -1
     },
     {
+      "id": "ds",
+      "name": "Nintendo DS",
+      "romPath": "games/DS",
+      "extensions": [
+        ".nds"
+      ],
+      "defaultEmulatorId": "",
+      "retroachievementsPlatformID": 18
+    },
+    {
       "id": "wii",
       "name": "Nintendo Wii",
       "romPath": "games/Wii",
@@ -94,6 +104,20 @@
       }
     },
     {
+      "id": "ps1",
+      "name": "Sony PlayStation",
+      "romPath": "games/PS1",
+      "extensions": [
+        ".cue",
+        ".iso",
+        ".chd",
+        ".pbp",
+        ".m3u"
+      ],
+      "defaultEmulatorId": "swanstation",
+      "retroachievementsPlatformID": 12
+    },
+    {
       "id": "ps2",
       "name": "Playstation 2",
       "romPath": "games/PS2",
@@ -123,6 +147,19 @@
       "corePathWindows": "cores/dolphin_libretro.dll",
       "corePathMac": "cores/dolphin_libretro.dylib",
       "corePathLinux": "cores/dolphin_libretro.so"
+    },
+    {
+      "id": "swanstation",
+      "name": "SwanStation",
+      "exePath": "",
+      "argsTemplate": null,
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": "cores/swanstation_libretro.dll",
+      "corePathMac": "cores/swanstation_libretro.dylib",
+      "corePathLinux": "cores/swanstation_libretro.so"
     },
     {
       "id": "pcsx2",

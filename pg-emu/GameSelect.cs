@@ -1,6 +1,5 @@
 using Godot;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -75,11 +74,6 @@ public partial class GameSelect : Control
 	private readonly List<Control> _cards = new();
 	private readonly List<Control> _browseEntries = new();
 	private readonly List<GameEntry> _games = new();
-	private static readonly System.Net.Http.HttpClient CoverArtClient = new();
-	private static readonly ConcurrentDictionary<string, Texture2D> CoverArtCache = new(StringComparer.OrdinalIgnoreCase);
-	private static readonly ConcurrentDictionary<string, byte[]> CoverArtDataCache = new(StringComparer.OrdinalIgnoreCase);
-	private static readonly ConcurrentDictionary<string, Task<byte[]?>> CoverArtDownloadTasks = new(StringComparer.OrdinalIgnoreCase);
-	private static readonly SemaphoreSlim CoverArtDownloadThrottle = new(6, 6);
 	private BrowseLayoutMode _browseLayout = BrowseLayoutMode.Carousel;
 	private int _selectedIndex;
 	private int _gridColumnCount = 3;
@@ -204,13 +198,14 @@ public partial class GameSelect : Control
 		ResetUiNavigationState();
 		// Load data and build UI.
 		await LoadContextAndGames();
-		await StartMetadataWarmup();
+		ApplyCachedCoverArtUrls();
 		SpawnCards();
 		ApplyBrowseLayoutMode();
 		LayoutCards();
 		UpdateSelectionUI();
 		_achievement.Show();
 		StartCoverArtWarmup();
+		_ = StartMetadataWarmup();
 		
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
@@ -823,7 +818,24 @@ private void OnAnyButtonPressed()
 
 			// Scan the platform's library directory for compatible ROM files.
 			_games.Clear();
-			var scanned = LibraryScanner.Scan(_platform, _config.LibraryRoot, out var scanDir);
+			List<GameEntry> scanned;
+			string scanDir;
+			if (BackgroundArtCache.Instance != null &&
+				BackgroundArtCache.Instance.TryGetCachedLibrary(_platform, out var cachedScanned, out var cachedScanDir))
+			{
+				scanned = cachedScanned;
+				scanDir = cachedScanDir;
+			}
+			else
+			{
+				var scanResult = await Task.Run(() =>
+				{
+					var games = LibraryScanner.Scan(_platform, _config.LibraryRoot, out var resolvedDir);
+					return (Games: games, ScanDir: resolvedDir);
+				});
+				scanned = scanResult.Games;
+				scanDir = scanResult.ScanDir;
+			}
 
 			// If the expected ROM directory doesn't exist, report the exact resolved path.
 			if (!Directory.Exists(scanDir))
@@ -1004,7 +1016,7 @@ private void OnAnyButtonPressed()
 			{
 				Texture2D? tex = null;
 				if (!string.IsNullOrWhiteSpace(g.CoverArtUrl) &&
-					CoverArtCache.TryGetValue(g.CoverArtUrl, out var cached))
+					CoverArtImageCache.TryGetTexture(g.CoverArtUrl, out var cached))
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
 				bool isCompleted = isGameCompleted(g);
@@ -1012,7 +1024,9 @@ private void OnAnyButtonPressed()
 				return (g.Title, tex, isCompleted);
 			}).ToList();
 			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
-			_carousel3D.Populate(gameData, _carouselPos, isGba);
+			var isDs = string.Equals(_platform?.Id, "ds", StringComparison.OrdinalIgnoreCase);
+			var isPs1 = string.Equals(_platform?.Id, "ps1", StringComparison.OrdinalIgnoreCase);
+			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1);
 			
 			ApplyThreeDBackFaceData();
 		}
@@ -2753,6 +2767,23 @@ private void OnAnyButtonPressed()
 		_ = WarmCoverArtLibraryAsync(_platform, gamesToWarm, _coverArtWarmupCts.Token);
 	}
 
+	private void ApplyCachedCoverArtUrls()
+	{
+		if (CollectionStorage.currentCollection != null)
+		{
+			foreach (var group in _games
+				         .Where(game => game.platform != null)
+				         .GroupBy(game => game.platform))
+			{
+				LibretroThumbnailService.ApplyCachedCoverArt(group.Key, group);
+			}
+
+			return;
+		}
+
+		LibretroThumbnailService.ApplyCachedCoverArt(_platform, _games);
+	}
+
 	private async Task StartMetadataWarmup()
 	{
 		_metadataWarmupCts?.Cancel();
@@ -2822,14 +2853,14 @@ private void OnAnyButtonPressed()
 			.Select(game => game.CoverArtUrl)
 			.Where(static url => !string.IsNullOrWhiteSpace(url))
 			.Cast<string>()
-			.Where(url => !CoverArtCache.ContainsKey(url))
+			.Where(url => !CoverArtImageCache.HasTexture(url))
 			.Distinct(StringComparer.OrdinalIgnoreCase)
 			.ToList();
 
 		var tasks = coverArtUrls.Select(async coverArtUrl =>
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			await GetCoverArtBytesAsync(coverArtUrl);
+			await CoverArtImageCache.GetTextureAsync(coverArtUrl);
 		});
 
 		await Task.WhenAll(tasks);
@@ -2976,7 +3007,7 @@ private void OnAnyButtonPressed()
 		if (string.IsNullOrWhiteSpace(game.CoverArtUrl))
 			return;
 
-		if (CoverArtCache.TryGetValue(game.CoverArtUrl, out var cachedTexture))
+		if (CoverArtImageCache.TryGetTexture(game.CoverArtUrl, out var cachedTexture))
 		{
 			artRect.Texture = cachedTexture;
 			artRect.Visible = true;
@@ -2992,7 +3023,7 @@ private void OnAnyButtonPressed()
 	{
 		try
 		{
-			if (CoverArtCache.TryGetValue(coverArtUrl, out var cachedTexture))
+			if (CoverArtImageCache.TryGetTexture(coverArtUrl, out var cachedTexture))
 			{
 				artRect.Texture = cachedTexture;
 				artRect.Visible = true;
@@ -3000,8 +3031,8 @@ private void OnAnyButtonPressed()
 				return;
 			}
 
-			byte[]? imageData = await GetCoverArtBytesAsync(coverArtUrl);
-			if (imageData == null || imageData.Length == 0)
+			Texture2D? finalTexture = await CoverArtImageCache.GetTextureAsync(coverArtUrl);
+			if (finalTexture == null)
 				return;
 			
 			if (!GodotObject.IsInstanceValid(this) ||
@@ -3012,18 +3043,6 @@ private void OnAnyButtonPressed()
 				return;
 			}
 
-			Image coverArt = new Image();
-			Error loadError = coverArt.LoadPngFromBuffer(imageData);
-			if (loadError != Error.Ok)
-				loadError = coverArt.LoadJpgFromBuffer(imageData);
-
-			if (loadError != Error.Ok)
-				return;
-
-			ImageTexture texture = ImageTexture.CreateFromImage(coverArt);
-			Texture2D finalTexture = CoverArtCache.GetOrAdd(coverArtUrl, texture);
-			CoverArtDataCache.TryRemove(coverArtUrl, out _);
-			
 			if (_carousel3D != null)
 			{
 				for (int i = 0; i < _games.Count; i++)
@@ -3051,38 +3070,6 @@ private void OnAnyButtonPressed()
 		catch (Exception ex)
 		{
 			GD.PrintErr($"Failed to load cover art: {ex.Message}");
-		}
-	}
-
-	private static Task<byte[]?> GetCoverArtBytesAsync(string coverArtUrl)
-	{
-		if (string.IsNullOrWhiteSpace(coverArtUrl))
-			return Task.FromResult<byte[]?>(null);
-
-		if (CoverArtDataCache.TryGetValue(coverArtUrl, out var cachedBytes))
-			return Task.FromResult<byte[]?>(cachedBytes);
-
-		return CoverArtDownloadTasks.GetOrAdd(coverArtUrl, DownloadCoverArtBytesAsync);
-	}
-
-	private static async Task<byte[]?> DownloadCoverArtBytesAsync(string coverArtUrl)
-	{
-		await CoverArtDownloadThrottle.WaitAsync();
-		try
-		{
-			byte[] imageData = await CoverArtClient.GetByteArrayAsync(coverArtUrl);
-			CoverArtDataCache[coverArtUrl] = imageData;
-			return imageData;
-		}
-		catch (Exception ex)
-		{
-			GD.PrintErr($"Failed to download cover art bytes: {ex.Message}");
-			return null;
-		}
-		finally
-		{
-			CoverArtDownloadTasks.TryRemove(coverArtUrl, out _);
-			CoverArtDownloadThrottle.Release();
 		}
 	}
 

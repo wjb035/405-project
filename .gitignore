@@ -35,12 +35,6 @@ config.local.json
 ## Local emulators + ROMs
 PGEmu/Dolphin.app/
 PGEmu/games/*
-!PGEmu/games/GameCube/
-!PGEmu/games/Wii/
-PGEmu/games/GameCube/*
-PGEmu/games/Wii/*
-!PGEmu/games/GameCube/.gitkeep
-!PGEmu/games/Wii/.gitkeep
 
 ## Libretro runtime data
 # Dolphin's Sys tree is a local runtime dependency for the libretro core.

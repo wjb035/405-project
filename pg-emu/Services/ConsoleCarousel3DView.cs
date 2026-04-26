@@ -69,7 +69,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	public event System.Action<int>? SelectionChanged;
 
 	// Types of consoles we support
-	public enum ConsoleType { Wii, PlayStation2, PSP, GameCube, GBA }
+	public enum ConsoleType { Wii, NintendoDS, PlayStation1, PlayStation2, PSP, GameCube, GBA }
 	
 	public override void _Ready()
 	{
@@ -222,10 +222,11 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Builds actual 3d geometry of the cases
 	private Node3D BuildConsole(ConsoleType type)
 	{
-		
 		var modelPath = type switch
 		{
 			ConsoleType.Wii          => "res://Models/wii_console.glb",
+			ConsoleType.NintendoDS   => "res://Models/ds.glb",
+			ConsoleType.PlayStation1 => "res://Models/ps1.glb",
 			ConsoleType.PlayStation2 => "res://Models/ps2.glb",
 			ConsoleType.PSP          => "res://Models/psp.glb",
 			ConsoleType.GameCube     => "res://Models/gamecube.glb",
@@ -260,6 +261,22 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
 				model.Position = new Vector3(-0.1f, 0.1f, 0);
 				model.RotateY(Mathf.DegToRad(-60f));
+				break;
+			case ConsoleType.NintendoDS:
+				CenterNode3D(model);
+				var dsScale = ComputeUniformScaleToFit(model, 2.6f);
+				model.Scale = new Vector3(dsScale, dsScale, dsScale);
+				model.Position = new Vector3(0.02f, -0.38f, 0f);
+				model.RotateX(Mathf.DegToRad(8f));
+				model.RotateY(Mathf.DegToRad(0f));
+				break;
+			case ConsoleType.PlayStation1:
+				CenterNode3D(model);
+				var ps1Scale = ComputeUniformScaleToFit(model, 3.0f);
+				model.Scale = new Vector3(ps1Scale, ps1Scale, ps1Scale);
+				model.Position = new Vector3(0.02f, -0.38f, 0f);
+				model.RotateX(Mathf.DegToRad(8f));
+				model.RotateY(Mathf.DegToRad(24f));
 				break;
 			case ConsoleType.PlayStation2:
 				model.Scale = new Vector3(0.15f, 0.15f, 0.15f);
@@ -299,7 +316,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	//  Fallback for if the console doesnt have a model
 	private Node3D BuildPlaceholder(ConsoleType type)
 {
-	var root = new Node3D();
+	var root = new Node3D { Name = type.ToString() };
 	var mesh = new MeshInstance3D { Name = "Mesh" };
 
 	switch (type)
@@ -307,6 +324,24 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		case ConsoleType.Wii:
 			mesh.Mesh = new BoxMesh { Size = new Vector3(0.8f, 3.2f, 0.4f) };
 			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.92f, 0.92f, 0.90f)));
+			break;
+		case ConsoleType.NintendoDS:
+			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.38f, 1.9f) };
+			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.80f, 0.82f, 0.90f)));
+			break;
+		case ConsoleType.PlayStation1:
+			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.45f, 1.8f) };
+			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.63f, 0.63f, 0.60f)));
+			var discLid = new MeshInstance3D();
+			discLid.Mesh = new CylinderMesh { TopRadius = 0.62f, BottomRadius = 0.62f, Height = 0.04f };
+			discLid.Position = new Vector3(-0.3f, 0.25f, 0.05f);
+			discLid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.48f, 0.48f, 0.46f)));
+			root.AddChild(discLid);
+			var buttons = new MeshInstance3D();
+			buttons.Mesh = new BoxMesh { Size = new Vector3(0.65f, 0.06f, 0.18f) };
+			buttons.Position = new Vector3(0.68f, 0.27f, -0.48f);
+			buttons.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.24f, 0.24f, 0.24f)));
+			root.AddChild(buttons);
 			break;
 		case ConsoleType.PlayStation2:
 			mesh.Mesh = new BoxMesh { Size = new Vector3(1.2f, 3.0f, 0.7f) };
@@ -595,12 +630,6 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		{
 			var meshName = mesh.Name.ToString();
 			var isLikelyScreenMesh =
-				meshName.Contains("screen", System.StringComparison.OrdinalIgnoreCase) ||
-				meshName.Contains("phong2", System.StringComparison.OrdinalIgnoreCase) ||
-				meshName.Contains("object_179", System.StringComparison.OrdinalIgnoreCase) ||
-				meshName.Contains("pantalla", System.StringComparison.OrdinalIgnoreCase) ||
-				currentHint.Contains("object_179", System.StringComparison.OrdinalIgnoreCase) ||
-				currentHint.Contains("pantalla", System.StringComparison.OrdinalIgnoreCase) ||
 				currentHint.Contains("3dsmeshmatrix55", System.StringComparison.OrdinalIgnoreCase);
 
 			if (isLikelyScreenMesh)
