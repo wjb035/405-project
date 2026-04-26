@@ -31,6 +31,7 @@ public partial class HomeScreen : Control
 	[Export] public NodePath HelpPath;
 	[Export] public NodePath CollectionsPath;
 	[Export] public NodePath CarouselAreaPath;
+	[Export] public NodePath SearchFilterPath;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -51,6 +52,7 @@ public partial class HomeScreen : Control
 	private Button _help;
 	private Button _collections;
 	private Button _music;
+	private Button _filter;
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
 	private Control _carouselArea;
@@ -114,7 +116,7 @@ public partial class HomeScreen : Control
 		_help = GetNodeOrNull<Button>(HelpPath);
 		_collections = GetNodeOrNull<Button>(CollectionsPath);
 		_music = GetNodeOrNull<Button>(MusicPath);
-		
+		_filter = GetNodeOrNull<Button>(SearchFilterPath);
 		ApplyAesthetic();
 		SetupUserSearchResultsPopup();
 
@@ -147,6 +149,7 @@ public partial class HomeScreen : Control
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 		if (_music != null) _music.Pressed += OnMusicPressed;
+		if (_filter != null) _filter.Pressed += OnFilterPressed;
 		if (_collections != null && !_collections.IsConnected(Button.SignalName.Pressed, Callable.From(OnCollectionsPressed)))
 			_collections.Pressed += OnCollectionsPressed;
 		
@@ -223,7 +226,11 @@ public partial class HomeScreen : Control
 	{
 		await TriggerUserSearchFromInputAsync();
 	}
-
+	private void OnFilterPressed(){
+		GD.Print("filter pressed");
+	}	
+		
+		
 	private void SetupUserSearchResultsPopup()
 	{
 		_userSearchResultsPopup = new PopupPanel

@@ -2772,8 +2772,8 @@ private void OnAnyButtonPressed()
 		if (CollectionStorage.currentCollection != null)
 		{
 			foreach (var group in _games
-				         .Where(game => game.platform != null)
-				         .GroupBy(game => game.platform))
+						 .Where(game => game.platform != null)
+						 .GroupBy(game => game.platform))
 			{
 				LibretroThumbnailService.ApplyCachedCoverArt(group.Key, group);
 			}
