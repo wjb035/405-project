@@ -83,6 +83,8 @@ public partial class HomeScreen : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
+	private string filterType = "Both";
+
 
 	// for user search
 	public ProfileService _profileService = new ProfileService();
@@ -227,7 +229,20 @@ public partial class HomeScreen : Control
 		await TriggerUserSearchFromInputAsync();
 	}
 	private void OnFilterPressed(){
-		GD.Print("filter pressed");
+		if (filterType == "Both"){
+			_filter.Text = "Users";
+			filterType = "Games";
+			
+		}
+		else if (filterType == "Games"){
+			_filter.Text = "Both";
+			filterType = "Users";
+		}
+		else if (filterType == "Users"){
+			_filter.Text = "Games";
+			filterType = "Both";
+		}
+		
 	}	
 		
 		
@@ -391,13 +406,26 @@ public partial class HomeScreen : Control
 		// using a dictionary to sort out the functionality
 			
 		Dictionary<string, string> UsersAndGames = new();
-		foreach (var g in games){
+		if (filterType == "Both"){
+			foreach (var g in games){
 			UsersAndGames.Add(g,"game");
+			}
+			
+			foreach (var u in usernames){
+				UsersAndGames.Add(u,"user");
+			}
+		}
+		else if (filterType == "Users"){
+			foreach (var u in usernames){
+				UsersAndGames.Add(u,"user");
+			}
+		}
+		else if (filterType == "Games"){
+			foreach (var g in games){
+			UsersAndGames.Add(g,"game");
+			}
 		}
 		
-		foreach (var u in usernames){
-			UsersAndGames.Add(u,"user");
-		}
 		games.AddRange(usernames);
 		PopulateUserSearchResults(UsersAndGames);
 	}
