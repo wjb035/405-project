@@ -115,7 +115,7 @@ public partial class GameSelect : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
-
+	private bool achievementsLoaded = false;
 	// Active snap tween, killed on new input to keep things responsive.
 	private Tween? _tween;
 	
@@ -206,6 +206,34 @@ public partial class GameSelect : Control
 		_achievement.Show();
 		StartCoverArtWarmup();
 		_ = StartMetadataWarmup();
+		
+		var achNum = _games[0].AchievementNum;
+		GD.Print(achNum);
+		
+		
+		// Don't delete! This is progress bar work!
+		ProgressBar prog = new ProgressBar();
+		prog.MinValue = 0;
+				
+		prog.MaxValue = 100;
+		prog.Value = 50;
+
+		prog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		var progBg = new StyleBoxFlat();
+		progBg.BgColor = new Color(0.05f, 0.25f, 0.05f);
+		progBg.SetCornerRadiusAll(8);
+		
+		var fill = new StyleBoxFlat();
+		fill.BgColor = new Color(0.2f, 0.8f, 0.2f);
+		fill.SetCornerRadiusAll(8); 
+		
+		prog.AddThemeStyleboxOverride("background", progBg);
+		prog.AddThemeStyleboxOverride("fill", fill);
+		
+		
+		
+		var top = GetNode<HBoxContainer>("Margin/Root/Foreground2/TopBar");
+		//top.AddChild(prog);
 		
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
@@ -1019,6 +1047,7 @@ private void OnAnyButtonPressed()
 					CoverArtImageCache.TryGetTexture(g.CoverArtUrl, out var cached))
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
+				
 				bool isCompleted = isGameCompleted(g);
 				
 				return (g.Title, tex, isCompleted);
