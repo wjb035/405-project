@@ -11,4 +11,5 @@ public static class AchievementStorage
     public static int gameId = -1;
     
     public static string gameName = "";
+    public static HashSet<KeyValuePair<string, string>> awards = new();
 }

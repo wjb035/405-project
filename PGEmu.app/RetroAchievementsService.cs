@@ -156,4 +156,25 @@ public static class RetroAchievementsService
         //GD.Print("entered the thing");
         AchievementStorage.achievementData = achievementListParse;
     }
+
+    public static async Task awardedGames()
+    {
+        string pattern = @"[\s:-]";
+        
+        var response = await client.GetUserAwardsAsync(username);
+      
+        foreach (var g in response.VisibleUserAwards)
+        {
+            if (g.AwardType == "Game Beaten" || g.AwardType == "Mastery/Completion")
+            {
+                string userGameFileName = g.Title;
+                userGameFileName = Regex.Replace(userGameFileName, pattern, String.Empty);
+              
+                AchievementStorage.awards.Add(new KeyValuePair<string, string>(userGameFileName, g.AwardType));
+            }
+           
+        }
+
+        
+    }
 }

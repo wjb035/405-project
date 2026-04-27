@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using PGEmu.Helpers;
 using PGEmu.UI;
-
+using System.Text.RegularExpressions;
 
 public partial class GameSelect : Control
 {
@@ -1049,9 +1049,9 @@ private void OnAnyButtonPressed()
 					tex = cached;
 				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
 				
-				bool isCompleted = isGameCompleted(g);
+				string awardType = isGameCompleted(g);
 				
-				return (g.Title, tex, isCompleted);
+				return (g.Title, tex, awardType);
 			}).ToList();
 			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
 			var isDs = string.Equals(_platform?.Id, "ds", StringComparison.OrdinalIgnoreCase);
@@ -1064,16 +1064,23 @@ private void OnAnyButtonPressed()
 		UpdateNavEnabled();
 	}
 
-	private bool isGameCompleted(GameEntry g){
-		if (g.AchievementNum == "0/0" || g.AchievementNum == "Loading..."){
-			return false;
-		}
-		var parts = g.AchievementNum.Split('/');
+	private string isGameCompleted(GameEntry g){
+		// sanitize the name so it matches what will be in the database of awarded games
+		string gameSanitized = g.Name;
+		string pattern = @"[\s:-]";
+		string pattern2 =  @"\([^)]*\)";
+		gameSanitized = Regex.Replace(gameSanitized, pattern, String.Empty);
+		gameSanitized = Regex.Replace(gameSanitized, pattern2, String.Empty);
 		
-		if (parts[0] == parts[1]){
-			return true;
+		
+		// if the game is marked as beaten, it's silver
+		if (AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Game Beaten"))){
+			return "Game Beaten";
 		}
-		return false;
+		else if (AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Mastery/Completion"))){
+			return "Mastery/Completion";
+		}
+		return "none";
 	}
 
 

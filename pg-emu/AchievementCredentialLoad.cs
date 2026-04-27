@@ -26,6 +26,8 @@ public partial class AchievementCredentialLoad : Node
 	public async override void _Ready()
 	{
 		await LoadFromJson();
+		GD.Print("AUTOLOADED THE AWARD MANAGER!!!");
+		RetroAchievementsService.awardedGames();
 	}
 
 	

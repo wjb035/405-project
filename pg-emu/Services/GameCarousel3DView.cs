@@ -80,6 +80,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		Metallic = 1.0f,
 		Roughness = 0.15f
 	};
+	private StandardMaterial3D silver = new StandardMaterial3D
+	{
+		AlbedoColor = new Color(0.9f, 0.9f, 0.9f),
+		Metallic = 1.0f,
+		Roughness = 0.1f
+	};
 	public override void _Ready()
 	{
 		// Builds the SubViewport, which basically renders a 3d sub scene in a 2d UI.
@@ -158,7 +164,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 	// Call this from GameSelect after loading games to clear everything and rebuild
 	public void Populate(
-		List<(string title, Texture2D? coverArt, bool isCompleted)> games,
+		List<(string title, Texture2D? coverArt, string awardType)> games,
 		float initialPos,
 		bool isGba = false,
 		bool isDs = false,
@@ -186,14 +192,14 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		for (int i = 0; i < games.Count; i++)
 		{
-			var (title, coverArt, isCompleted) = games[i];
+			var (title, coverArt, award) = games[i];
 			Node3D box;
 			if (_isGba)
-				box = BuildGbaCartridge(title, coverArt);
+				box = BuildGbaCartridge(title, coverArt );
 			else if (_isDs)
 				box = BuildDsCartridge(title, coverArt);
 			else
-				box = BuildBox(title, coverArt, isCompleted);
+				box = BuildBox(title, coverArt, award);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
 		}
@@ -202,7 +208,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	}
 	
 	// Builds actual 3d geometry of the cases
-	private Node3D BuildBox(string title, Texture2D? coverArt, bool isCompleted)
+	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType)
 	{
 		var root = new Node3D();
 		var boxSize = _isPs1
@@ -228,8 +234,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Roughness = 0.6f,
 			Metallic = 0.2f,
 		};
-		if (isCompleted){
+		if (awardType == "Mastery/Completion"){
 			mat = gold;
+		}
+		else if (awardType == "Game Beaten"){
+			mat = silver;
 		}
 		else{
 			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
@@ -322,7 +331,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (!ResourceLoader.Exists(GbaCartridgeModelPath))
 		{
 			GD.PrintErr($"GBA cartridge model not found at {GbaCartridgeModelPath}, falling back to box geometry");
-			return BuildBox(title, coverArt, false);
+			return BuildBox(title, coverArt, "none");
 		}
 
 		var scene = GD.Load<PackedScene>(GbaCartridgeModelPath);
@@ -413,7 +422,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (!ResourceLoader.Exists(DsCartridgeModelPath))
 		{
 			GD.PrintErr($"DS cartridge model not found at {DsCartridgeModelPath}, falling back to box geometry");
-			return BuildBox(title, coverArt, false);
+			return BuildBox(title, coverArt, "none");
 		}
 
 		var scene = GD.Load<PackedScene>(DsCartridgeModelPath);
