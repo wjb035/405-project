@@ -86,11 +86,14 @@ layout_mode = 2
 [node name="ChatTitle" type="Label" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1077368712]
 layout_mode = 2
 
-[node name="MessageHistory" type="RichTextLabel" parent="Panel/VBox/MainArea/ChatTab" unique_id=2135134599]
+[node name="MessageScroll" type="ScrollContainer" parent="Panel/VBox/MainArea/ChatTab" unique_id=709667775]
 layout_mode = 2
 size_flags_vertical = 3
-bbcode_enabled = true
-scroll_following = true
+horizontal_scroll_mode = 0
+
+[node name="MessageContainer" type="VBoxContainer" parent="Panel/VBox/MainArea/ChatTab/MessageScroll" unique_id=1363306364]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="LoadMoreButton" type="Button" parent="Panel/VBox/MainArea/ChatTab" unique_id=1599501130]
 layout_mode = 2

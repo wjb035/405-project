@@ -72,9 +72,9 @@ public class ChatHub : Hub
           
           if (_users.TryGetValue(toUser, out var recipientConnectionId))
           {
-               await Clients.Client(recipientConnectionId).SendAsync("ReceiveDirectMessage", fromUser, message);
+               await Clients.Client(recipientConnectionId).SendAsync("ReceiveDirectMessage", fromUser, message, chat.SentAt);
           }
-          await Clients.Caller.SendAsync("ReceiveDirectMessage", fromUser, message);
+          await Clients.Caller.SendAsync("ReceiveDirectMessage", fromUser, message, chat.SentAt);
      }
      
      // GROUOP SHIT

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using PGEmu.Services;
 
@@ -20,10 +21,19 @@ public partial class ChatOverlay : CanvasLayer
 	private VBoxContainer _chatTab;
 	private Label _chatTitle;
 	private Button _backButton;
-	private RichTextLabel _messageLog;
 	private Button _loadMoreButton;
 	private LineEdit _inputField;
 	private Button _sendButton;
+	
+	// Message Formatting
+	private ScrollContainer _messageScroll;
+	private VBoxContainer _messageContainer;
+	private readonly Dictionary<string, Texture2D> _avatarCache = new();
+	private readonly System.Net.Http.HttpClient _httpClient = new();
+	private string _myAvatarUrl = "";
+	private string _theirAvatarUrl = "";
+	private string _lastMessageSender = "";
+	
 
 	// Dms
 	private bool _isOpen = false;
@@ -32,7 +42,8 @@ public partial class ChatOverlay : CanvasLayer
 	private Dictionary<string, int> _unread = new();
 	private HashSet<string> _onlineFriends = new();
 	private List<(string fromUser, string message, string sentAt)> _missedMessages = new();
-    
+	private List<(string fromUser, string message, string sentAt)> _displayedMessages = new();
+	
 	private ChatManager _chat;
 	
 	public override void _Ready()
@@ -50,7 +61,8 @@ public partial class ChatOverlay : CanvasLayer
 		_chatTab = GetNode<VBoxContainer>("Panel/VBox/MainArea/ChatTab");
 		_chatTitle = GetNode<Label>("Panel/VBox/MainArea/ChatTab/ChatHeader/ChatTitle");
 		_backButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/ChatHeader/BackButton");
-		_messageLog = GetNode<RichTextLabel>("Panel/VBox/MainArea/ChatTab/MessageHistory");
+		_messageScroll = GetNode<ScrollContainer>("Panel/VBox/MainArea/ChatTab/MessageScroll");
+		_messageContainer = GetNode<VBoxContainer>("Panel/VBox/MainArea/ChatTab/MessageScroll/MessageContainer");
 		_loadMoreButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/LoadMoreButton");
 		_inputField = GetNode<LineEdit>("Panel/VBox/MainArea/ChatTab/InputRow/TextField");
 		_sendButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/InputRow/SendButton");
@@ -230,15 +242,25 @@ public partial class ChatOverlay : CanvasLayer
 	{
 		_currentDmUser = username;
 		_oldestMessageTime = "";
+		_displayedMessages.Clear();
+		_lastMessageSender = "";
+		_myAvatarUrl = "";
+		_theirAvatarUrl = "";
 		_chat.SetDmRecipient(username);
-		_messageLog.Clear();
+		ClearMessages();
 		_loadMoreButton.Hide();
 		_unread.Remove(username);
 		_ = RefreshFriendsList();
 		GoToChatTab(username);
+		_ = OpenDmAsync(username);
+	}
+	
+	private async System.Threading.Tasks.Task OpenDmAsync(string username)
+	{
+		await PreloadAvatars(username);
 		_chat.LoadDmHistory(username);
 	}
-
+	
 	private void OnSend()
 	{
 		GD.Print($"Sending as: '{_chat.Username}' to: '{_currentDmUser}'");
@@ -263,31 +285,18 @@ public partial class ChatOverlay : CanvasLayer
 		string conversationWith = isMine ? _currentDmUser : fromUser;
 		
 		
-		GD.Print($"=== OnDmReceived ===");
-		GD.Print($"fromUser: '{fromUser}'");
-		GD.Print($"_chat.Username: '{_chat.Username}'");
-		GD.Print($"_currentDmUser: '{_currentDmUser}'");
-		GD.Print($"isMine: {isMine}");
-		GD.Print($"conversationWith: '{conversationWith}'");
-		GD.Print($"_isOpen: {_isOpen}");
-		GD.Print($"_tabBar.CurrentTab: {_tabBar.CurrentTab}");
-		GD.Print($"condition result: {_isOpen && _tabBar.CurrentTab == 1 && _currentDmUser == conversationWith}");
-
-		if (_isOpen && _tabBar.CurrentTab == 1 && _currentDmUser == fromUser)
+		if (_isOpen && _tabBar.CurrentTab == 1 && _currentDmUser == conversationWith)
 		{
-			GD.Print("APPENDING MESSAGE");
-			GD.Print($"_messageLog is null: {_messageLog == null}");
-			AppendMessage(fromUser, message, sentAt);
+			_displayedMessages.Add((fromUser, message, sentAt));
+			RebuildMessageLog();
 		}
 
 		else
 		{
 			if (!isMine)
-			{
-				GD.Print("GOING TO UNREAD");
+			{ 
 				_unread[fromUser] = _unread.GetValueOrDefault(fromUser, 0) + 1;
 				_ = RefreshFriendsList();
-			
 				if (!_isOpen)
 					_missedMessages.Add((fromUser, message, sentAt));
 			}
@@ -319,20 +328,17 @@ public partial class ChatOverlay : CanvasLayer
 		}
 		
 		// Put older messages above the existing ones
-		if (!string.IsNullOrEmpty(_oldestMessageTime) && messages.Count > 0)
-		{
-			string existing = _messageLog.Text;
-			_messageLog.Clear();
-			foreach (var msg in messages)
-				AppendMessage(GetString(msg, "fromUser"), GetString(msg, "content"), GetString(msg, "sentAt"));
-			_messageLog.AppendText(existing);
-		}
+		var incoming = messages
+			.Select(m => (GetString(m, "fromUser"), GetString(m, "content"), GetString(m, "sentAt")))
+			.ToList();
+
+		if (!string.IsNullOrEmpty(_oldestMessageTime))
+			_displayedMessages = incoming.Concat(_displayedMessages).ToList();
 		else
-		{
-			_messageLog.Clear();
-			foreach (var msg in messages)
-				AppendMessage(GetString(msg, "fromUser"), GetString(msg, "content"), GetString(msg, "sentAt"));
-		}
+			_displayedMessages = incoming;
+
+		// Rebuild all messages with correct isLastInBlock values
+		RebuildMessageLog();
 
 		if (messages.Count > 0)
 		{
@@ -345,24 +351,220 @@ public partial class ChatOverlay : CanvasLayer
 		}
 	}
 	
+	// Rebuilds the current message log 
+	private void RebuildMessageLog()
+	{
+		ClearMessages();
+		for (int i = 0; i < _displayedMessages.Count; i++)
+		{
+			var (fromUser, message, sentAt) = _displayedMessages[i];
+			// Last in block = next message is from someone else, or this is the last message
+			bool isLastInBlock = i == _displayedMessages.Count - 1 ||
+			                     _displayedMessages[i + 1].fromUser != fromUser;
+			AppendMessage(fromUser, message, sentAt, isLastInBlock);
+		}
+		ScrollToBottom();
+	}
+	
 	// Helper slop
-	private void AppendMessage(string fromUser, string message, string sentAt = "")
+	private void AppendMessage(string fromUser, string message, string sentAt = "", bool isLastInBlock = false)
 	{
 		
 		// Changes formatting based on if its you or the recipient messaging
 		bool isMe = fromUser == _chat.Username;
-		string color = isMe ? "b980ff" : "ffffff";
-		string time = FormatTime(sentAt);
-		string align = isMe ? "[right]" : "";
-		string alignEnd = isMe ? "[/right]" : "";
-		var text =
-			$"{align}[color=555577][{time}][/color] [color={color}][b]{fromUser}:[/b][/color] {message}{alignEnd}\n";
-
-		GD.Print("Appending text: " + text);
-		_messageLog.AppendText(text);
-		GD.Print("Message log text length after append: " + _messageLog.Text.Length);
+		_lastMessageSender = fromUser;
 		
-		_messageLog.ScrollToLine(_messageLog.GetLineCount());
+		// If sender changed, update previous last mesages avatar visibility. I want the avatar to only show up on the most recent message of each person.
+		var row = new HBoxContainer();
+		row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		row.AddThemeConstantOverride("separation", 0);
+
+		// Spots for the avatar to go
+		var avatarSpace = CreateAvatarSpace(fromUser, isMe, isLastInBlock, sentAt);
+		
+		// Chat bubble
+		var bubbleCol = new VBoxContainer();
+		bubbleCol.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		bubbleCol.AddThemeConstantOverride("separation", 2);
+		
+		var bubble = new PanelContainer();
+		bubble.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		
+		var bubbleStyle = new StyleBoxFlat
+		{
+			BgColor = isMe
+				? new Color(0.37f, 0.18f, 0.58f, 0.95f)   // purple for the user
+				: new Color(0.18f, 0.16f, 0.28f, 0.95f),   // dark for others
+			BorderColor = isMe
+				? new Color(0.65f, 0.42f, 0.92f, 0.7f)
+				: new Color(0.44f, 0.40f, 0.62f, 0.5f),
+			BorderWidthLeft = 1,
+			BorderWidthTop = 1,
+			BorderWidthRight = 1,
+			BorderWidthBottom = 1,
+			CornerRadiusTopLeft = isMe ? 16 : 4,
+			CornerRadiusTopRight = isMe ? 4 : 16,
+			CornerRadiusBottomLeft = 16,
+			CornerRadiusBottomRight = 16,
+			ContentMarginLeft = 12f,
+			ContentMarginRight = 12f,
+			ContentMarginTop = 8f,
+			ContentMarginBottom = 8f,
+		};
+		bubble.AddThemeStyleboxOverride("panel", bubbleStyle);
+		
+		// Message in the bubble yo
+		var msgLabel = new Label();
+		msgLabel.Text = message;
+		msgLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		msgLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		msgLabel.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.98f));
+		msgLabel.AddThemeFontSizeOverride("font_size", 14);
+		bubble.AddChild(msgLabel);
+		bubbleCol.AddChild(bubble);
+
+		
+		// Shows username udner message
+		if (isLastInBlock)
+		{
+			var usernameLabel = new Label();
+			usernameLabel.Text = fromUser;
+			usernameLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.63f, 0.8f, 1f));
+			usernameLabel.AddThemeFontSizeOverride("font_size", 10);
+			usernameLabel.HorizontalAlignment = isMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+			
+			// Time next to username
+			var timeLabel = new Label();
+			timeLabel.Text = FormatTime(sentAt);
+			timeLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.53f, 0.65f, 1f));
+			timeLabel.AddThemeFontSizeOverride("font_size", 10);
+			timeLabel.HorizontalAlignment = isMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+			
+			var metaRow = new HBoxContainer();
+			metaRow.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			metaRow.AddThemeConstantOverride("separation", 6);
+
+			usernameLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			timeLabel.SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd;
+
+			if (isMe)
+			{
+				metaRow.AddChild(timeLabel);
+				metaRow.AddChild(usernameLabel);
+				metaRow.AddChild(avatarSpace);
+			}
+			else
+			{
+				metaRow.AddChild(avatarSpace);
+				metaRow.AddChild(usernameLabel);
+				metaRow.AddChild(timeLabel);
+			}
+
+			bubbleCol.AddChild(metaRow);
+		}
+		
+		// ASSEMBLE ROW
+		
+		if (isMe)
+		{
+			// Spacer pushes bubble to the right. 
+			var spacer = new Control();
+			spacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			row.AddChild(spacer);
+			row.AddChild(bubbleCol);
+		}
+		else
+		{
+			// Spacer keeps bubble on lef
+			row.AddChild(bubbleCol);
+			var spacer = new Control();
+			spacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			row.AddChild(spacer);
+		}
+
+		_messageContainer.AddChild(row);
+		ScrollToBottom();
+
+	}
+
+	private Control CreateAvatarSpace(string fromUser, bool isMe, bool isLastInBlock, string sentAt)
+	{
+		var container = new Control();
+		container.CustomMinimumSize = new Vector2(24, 24);
+		container.SizeFlagsVertical = Control.SizeFlags.ShrinkEnd;
+		
+		// Empty if its not last in block
+		if (!isLastInBlock)
+			return container;
+		
+		// Avtar circle build
+		var avatarFrame = new PanelContainer();
+		avatarFrame.CustomMinimumSize = new Vector2(24, 24);
+		avatarFrame.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+		{
+			BgColor = new Color(0.20f, 0.16f, 0.30f, 1f),
+			CornerRadiusTopLeft = 999,
+			CornerRadiusTopRight = 999,
+			CornerRadiusBottomLeft = 999,
+			CornerRadiusBottomRight = 999,
+			BorderColor = isMe
+				? new Color(0.65f, 0.42f, 0.92f, 0.7f)
+				: new Color(0.44f, 0.40f, 0.62f, 0.5f),
+			BorderWidthLeft = 1,
+			BorderWidthTop = 1,
+			BorderWidthRight = 1,
+			BorderWidthBottom = 1,
+		});
+
+		
+		var avatarImg = new TextureRect();
+		avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+		avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
+		avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		avatarFrame.AddChild(avatarImg);
+
+		// Load avatar texture
+		var avatarUrl = isMe ? _myAvatarUrl : _theirAvatarUrl;
+		if (!string.IsNullOrEmpty(avatarUrl))
+		{
+			_ = SetAvatarAsync(avatarImg, avatarUrl);
+		}
+
+		var wrapper = new HBoxContainer();
+		wrapper.AddThemeConstantOverride("separation", 4);
+		wrapper.AddChild(avatarFrame);
+		
+		// Add wrapper to container
+		container.AddChild(wrapper);
+		container.CustomMinimumSize = new Vector2(24, 24); 
+		
+		return container;
+	}
+
+	private async System.Threading.Tasks.Task SetAvatarAsync(TextureRect rect, string url)
+	{
+		var texture = await LoadAvatarAsync(url);
+		if (texture != null && GodotObject.IsInstanceValid(rect))
+			rect.Texture = texture;
+	}
+
+	private void ScrollToBottom()
+	{
+		CallDeferred(nameof(DeferredScrollToBottom));
+	}
+
+	private void DeferredScrollToBottom()
+	{
+		if (GodotObject.IsInstanceValid(_messageScroll))
+			_messageScroll.ScrollVertical = (int)_messageScroll.GetVScrollBar().MaxValue;
+	}
+	
+	// Does what it says
+	private void ClearMessages()
+	{
+		foreach (Node child in _messageContainer.GetChildren())
+			child.QueueFree();
+		_lastMessageSender = "";
 	}
 
 	// Converts time to the right time zone and formats it right
@@ -372,6 +574,56 @@ public partial class ChatOverlay : CanvasLayer
 		if (DateTime.TryParse(isoString, out var dt))
 			return dt.ToLocalTime().ToString("HH:mm");
 		return "";
+	}
+	
+	
+	// AVatar fetching stolen from the profile screens
+	private async System.Threading.Tasks.Task<Texture2D> LoadAvatarAsync(string url)
+	{
+		if (string.IsNullOrEmpty(url)) return null;
+    
+		var normalized = url.StartsWith("/") ? $"http://localhost:5276{url}" : url;
+    
+		if (_avatarCache.TryGetValue(normalized, out var cached))
+			return cached;
+
+		try
+		{
+			var bytes = await _httpClient.GetByteArrayAsync(normalized);
+			var image = new Image();
+			var err = image.LoadPngFromBuffer(bytes);
+			if (err != Error.Ok) err = image.LoadJpgFromBuffer(bytes);
+			if (err != Error.Ok) err = image.LoadWebpFromBuffer(bytes);
+			if (err != Error.Ok) return null;
+
+			var texture = ImageTexture.CreateFromImage(image);
+			_avatarCache[normalized] = texture;
+			return texture;
+		}
+		catch { return null; }
+	}
+
+	private async System.Threading.Tasks.Task PreloadAvatars(string otherUsername)
+	{
+		var profileService = new PGEmu.Services.ProfileService();
+    
+		// Load my avatar
+		var myProfile = await profileService.GetMyProfile();
+		if (myProfile != null) 
+		{
+			_myAvatarUrl = myProfile.AvatarUrl ?? "";
+			if (!string.IsNullOrEmpty(_myAvatarUrl))
+				await LoadAvatarAsync(_myAvatarUrl);
+		}
+    
+		// Load their avatar
+		var theirProfile = await profileService.GetUserProfile(otherUsername);
+		if (theirProfile != null)
+		{
+			_theirAvatarUrl = theirProfile.AvatarUrl ?? "";
+			if (!string.IsNullOrEmpty(_theirAvatarUrl))
+				await LoadAvatarAsync(_theirAvatarUrl);
+		}
 	}
 	
 	private void ApplyAesthetic()

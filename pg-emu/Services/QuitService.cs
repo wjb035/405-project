@@ -91,6 +91,8 @@ public partial class QuitService : CanvasLayer
 		};
 		title.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.95f));
 		title.AddThemeFontSizeOverride("font_size", 22);
+		UiStyle.StyleTitleLabel(title);
+
 		root.AddChild(title);
 
 		var body = new Label
@@ -101,6 +103,7 @@ public partial class QuitService : CanvasLayer
 		};
 		body.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.85f));
 		body.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		UiStyle.StyleStatusLabel(body);
 		root.AddChild(body);
 
 		var buttons = new HBoxContainer
@@ -115,6 +118,9 @@ public partial class QuitService : CanvasLayer
 			Text = "Stay",
 			CustomMinimumSize = new Vector2(96, 34),
 		};
+		UiStyle.StylePrimaryButton(_stayButton);
+		UiStyle.AddHoverFeedback(_stayButton);
+		UiStyle.ApplyParallaxShadow(_stayButton);
 		buttons.AddChild(_stayButton);
 
 		_exitButton = new Button
@@ -122,6 +128,9 @@ public partial class QuitService : CanvasLayer
 			Text = "Exit",
 			CustomMinimumSize = new Vector2(96, 34),
 		};
+		UiStyle.StylePrimaryButton(_exitButton);
+		UiStyle.AddHoverFeedback(_exitButton);
+		UiStyle.ApplyParallaxShadow(_exitButton);
 		buttons.AddChild(_exitButton);
 
 		_stayButton.Pressed += HidePopup;
