@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using PGEmu.Services;
 
 public partial class ChatManager : Node
 {   
@@ -27,13 +28,25 @@ public partial class ChatManager : Node
 
     public string Username { get; set; } = "";
     public string CurrentDmRecipient { get; set; } = "";
-
+    public bool IsConnected => _connected;
+    
     private static readonly char RecordSeparator = (char)0x1E;
+    
     
     // Connection
     // Create an HTTP call to start the connection token negotiation
     public void ConnectToChat()
     {
+        // If username still empty, try to grab it now
+        if (string.IsNullOrEmpty(Username))
+            Username = AuthService.Instance.Username;
+
+        if (string.IsNullOrEmpty(Username))
+        {
+            GD.PrintErr("ChatManager: Cant connect, username is empty");
+            return;
+        }
+        
         var url = _serverUrl + _hubPath + "/negotiate?negotiateVersion=1";
         GD.Print("Negotiating at: " + url);
         

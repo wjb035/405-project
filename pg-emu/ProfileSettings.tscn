@@ -2,15 +2,6 @@
 
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dydam"]
 [ext_resource type="Script" uid="uid://dt84s428syeu" path="res://ProfileSettings.cs" id="1_vlvp3"]
-[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_8xddl"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_laeje"]
-shader = ExtResource("3_8xddl")
-shader_parameter/blur_amount = 3.0
-shader_parameter/tint = Color(0.108255014, 0.0903, 0.21, 0.9529412)
-shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
-shader_parameter/fade_strength = 0.47200002242
-shader_parameter/highlight_thickness = 0.02
 
 [node name="ProfileSettings" type="Control" unique_id=1173785683]
 layout_mode = 3
@@ -27,21 +18,18 @@ BioEditPath = NodePath("Margin/Root/SetBioContainer/BioEditBox")
 BioSaveButtonPath = NodePath("Margin/Root/SetBioContainer/SaveNewBio")
 AvatarSaveButtonPath = NodePath("Margin/Root/SetAvatarBox/SaveNewAvatar")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1154979152]
-material = SubResource("ShaderMaterial_laeje")
-custom_minimum_size = Vector2(0, 200)
+[node name="Bg" type="ColorRect" parent="." unique_id=583479706]
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -1.0
-offset_top = -680.1
-offset_right = 1.0
-offset_bottom = 133.80005
+offset_top = -32.099976
+offset_right = -1.0
+offset_bottom = -32.099976
 grow_horizontal = 2
-grow_vertical = 0
-color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=577387793]
 layout_mode = 1

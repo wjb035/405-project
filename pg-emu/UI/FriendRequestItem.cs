@@ -17,6 +17,8 @@ public partial class FriendRequestItem : InboxItem
 	{
 		AcceptButton.Pressed += OnAccept;
 		DeclineButton.Pressed += OnDecline;
+		
+		ApplyAesthetic();
 	}
 	
 	
@@ -92,4 +94,21 @@ public partial class FriendRequestItem : InboxItem
 		await Task.Delay(200); // simulate network delay
 		return true; // simulate success
 	}
+
+	private void ApplyAesthetic()
+	{
+		// Match game selection controls to the same launcher palette and contrast rules.
+		// Nav buttons
+		UiStyle.StyleTopBarButton(AcceptButton);
+		UiStyle.ApplyParallaxShadow(AcceptButton);
+		UiStyle.AddHoverFeedback(AcceptButton);
+		
+		UiStyle.StyleTopBarButton(DeclineButton);
+		UiStyle.ApplyParallaxShadow(DeclineButton);
+		UiStyle.AddHoverFeedback(DeclineButton);
+
+		UiStyle.StyleTitleLabel(UsernameLabel);
+
+	}
+
 }

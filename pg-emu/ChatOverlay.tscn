@@ -1,0 +1,110 @@
+[gd_scene format=3 uid="uid://1wtnmucvt428"]
+
+[ext_resource type="Script" uid="uid://c2osusou4flko" path="res://ChatOverlay.cs" id="1_6jj4k"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1jgq1"]
+bg_color = Color(0.11024502, 0.1071, 0.17, 1)
+border_width_left = 1
+border_color = Color(0.6392157, 0.5411765, 0.81960785, 0.7019608)
+corner_detail = 12
+
+[node name="ChatOverlay" type="CanvasLayer" unique_id=990789760]
+layer = 100
+script = ExtResource("1_6jj4k")
+
+[node name="Panel" type="Panel" parent="." unique_id=93477898]
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1jgq1")
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=265755199]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.025
+anchor_right = 0.85
+anchor_bottom = 0.875
+offset_left = 1.0
+offset_right = 31.0
+offset_bottom = 64.80005
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox" unique_id=1548460732]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CloseButton" type="Button" parent="Panel/VBox/Header" unique_id=949062338]
+layout_mode = 2
+text = "x"
+autowrap_trim_flags = 192
+
+[node name="TabBar" type="TabBar" parent="Panel/VBox/Header" unique_id=576265482]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+current_tab = 0
+tab_count = 2
+tab_0/title = "Friends"
+tab_1/title = "Chat"
+
+[node name="MainArea" type="Control" parent="Panel/VBox" unique_id=902146515]
+layout_mode = 2
+
+[node name="FriendsTab" type="VBoxContainer" parent="Panel/VBox/MainArea" unique_id=1113349924]
+layout_mode = 0
+offset_top = 4.0
+offset_right = 270.0
+offset_bottom = 298.0
+size_flags_vertical = 3
+
+[node name="SearchBar" type="LineEdit" parent="Panel/VBox/MainArea/FriendsTab" unique_id=584420099]
+layout_mode = 2
+placeholder_text = "Search for a friend or chat"
+
+[node name="FriendsList" type="VBoxContainer" parent="Panel/VBox/MainArea/FriendsTab" unique_id=1149150616]
+layout_mode = 2
+
+[node name="ChatTab" type="VBoxContainer" parent="Panel/VBox/MainArea" unique_id=1968610827]
+layout_mode = 0
+offset_top = 4.0
+offset_right = 270.0
+offset_bottom = 543.6
+size_flags_vertical = 3
+
+[node name="ChatHeader" type="HBoxContainer" parent="Panel/VBox/MainArea/ChatTab" unique_id=1965116622]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1094786830]
+layout_mode = 2
+
+[node name="ChatTitle" type="Label" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1077368712]
+layout_mode = 2
+
+[node name="MessageHistory" type="RichTextLabel" parent="Panel/VBox/MainArea/ChatTab" unique_id=2135134599]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="LoadMoreButton" type="Button" parent="Panel/VBox/MainArea/ChatTab" unique_id=1599501130]
+layout_mode = 2
+text = "Load more"
+
+[node name="InputRow" type="VBoxContainer" parent="Panel/VBox/MainArea/ChatTab" unique_id=150454115]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="TextField" type="LineEdit" parent="Panel/VBox/MainArea/ChatTab/InputRow" unique_id=62751578]
+layout_mode = 2
+placeholder_text = "Type here"
+
+[node name="SendButton" type="Button" parent="Panel/VBox/MainArea/ChatTab/InputRow" unique_id=1558668144]
+layout_mode = 2
+text = "Send"

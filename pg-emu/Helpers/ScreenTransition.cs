@@ -9,6 +9,7 @@ public partial class ScreenTransition : CanvasLayer
 	
 	private ColorRect _fadeRect = null!;
 	private ShaderMaterial _mat = null!;
+	bool isTransitioning = false;
 	
 	public override void _Ready()
 	{
@@ -82,13 +83,22 @@ public partial class ScreenTransition : CanvasLayer
 	{
 		if (type == TransitionType.Fade)
 		{
+			if (isTransitioning)
+				return;
+			isTransitioning = true;
+			
 			await FadeOut(duration);
 			GetTree().ChangeSceneToFile(path);
 			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 			await FadeIn(duration);
+			isTransitioning = false;
 		}
 		else
 		{
+			if (isTransitioning)
+				return;
+			isTransitioning = true;
+			
 			await TransitionOut(duration, type, invert);
 			
 			_fadeRect.Material = null;
@@ -104,6 +114,8 @@ public partial class ScreenTransition : CanvasLayer
 			_mat.SetShaderParameter("luminance_cutoff", 0.0f);
 			
 			await TransitionIn(duration, type, invert);
+			isTransitioning = false;
+
 		}
 	}
 }

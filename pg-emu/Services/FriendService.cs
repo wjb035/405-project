@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PGEmu.Services.Models;
 
@@ -170,7 +171,51 @@ public partial class FriendService : Node
 		GD.Print("Username: " + isBlocked.blocked);
 		return isBlocked.blocked;
 	}
+	
+	public async Task<List<string>> GetFriendUsernames()
+	{
+		try
+		{
+			ApplyAuthHeader();
+			var response = await httpClient.GetAsync("http://localhost:5276/api/friends");
+        
+			if (!response.IsSuccessStatusCode)
+			{
+				GD.PrintErr($"GetFriendUsernames failed: {response.StatusCode}");
+				return new List<string>();
+			}
+
+			var json = await response.Content.ReadAsStringAsync();
+			
+			List<FriendRequestDto> friends;
+			var result = JsonSerializer.Deserialize<List<FriendRequestDto>>(json, new JsonSerializerOptions
+			{
+				PropertyNameCaseInsensitive = true
+			});
+
+			if (result != null)
+			{
+				friends = result;
+			}
+			else
+				friends = new List<FriendRequestDto>();
+			
+			return friends
+				.Select(f => f.Username)
+				.Where(u => !string.IsNullOrWhiteSpace(u))
+				.OrderBy(u => u, StringComparer.OrdinalIgnoreCase)
+				.ToList();
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr($"GetFriendUsernames failed: {e.Message}");
+			return new List<string>();
+		}
+	}
+	
 }
+
+
 
 
 public class FriendRequestDto

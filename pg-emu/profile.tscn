@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://ccogu0w0xm2f7" path="res://Profile.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://cejuhmeuqr1a8" path="res://Images/funny desktop icon.png" id="2_wi0ei"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="3_theme"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_yghs0"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yghs0"]
 bg_color = Color(0, 0, 0, 0.47843137)
@@ -85,7 +86,9 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1235366535]
 custom_minimum_size = Vector2(46, 32)
 layout_mode = 2
-text = "←"
+icon = ExtResource("3_yghs0")
+icon_alignment = 1
+expand_icon = true
 
 [node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=1273007195]
 layout_mode = 2

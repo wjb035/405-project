@@ -263,7 +263,8 @@ private void OnAnyButtonPressed()
 	
 	private void OnChatPressed()
 	{
-		GD.Print("Chat pressed");
+		var overlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		overlay.ToggleOverlay();
 	}
 
 	private void OnHelpPressed()

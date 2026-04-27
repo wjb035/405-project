@@ -99,6 +99,19 @@ public partial class HomeScreen : Control
 	private List<String> AllGames = new();
 	public async override void _Ready()
 	{
+		var chatManager = GetNode<ChatManager>("/root/ChatManager");
+
+		if (!chatManager.IsConnected && AuthService.Instance.IsLoggedIn())
+		{
+			chatManager.Username = AuthService.Instance.Username;
+			GD.Print("Connecting chat as: " + chatManager.Username);
+			chatManager.ConnectToChat();
+		}
+		else
+		{
+			GD.Print("Chat NOT connecting.. IsConnected: " + chatManager.IsConnected + " IsLoggedIn: " + AuthService.Instance.IsLoggedIn());
+		}
+		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
 		_prev = GetNode<Button>(PrevPath);
 		_next = GetNode<Button>(NextPath);
@@ -940,7 +953,8 @@ private void OnAnyButtonPressed()
 
 	private void OnChatPressed()
 	{
-		GD.Print("Chat pressed");
+		var overlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		overlay.ToggleOverlay();
 	}
 
 	private void OnHelpPressed()

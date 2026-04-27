@@ -73,12 +73,8 @@ public class ChatHub : Hub
           if (_users.TryGetValue(toUser, out var recipientConnectionId))
           {
                await Clients.Client(recipientConnectionId).SendAsync("ReceiveDirectMessage", fromUser, message);
-               await Clients.Caller.SendAsync("ReceiveDirectMessage", fromUser, message);
           }
-          else
-          {
-               await Clients.Caller.SendAsync("Error", $"{toUser} is not online");
-          }
+          await Clients.Caller.SendAsync("ReceiveDirectMessage", fromUser, message);
      }
      
      // GROUOP SHIT
