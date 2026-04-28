@@ -207,33 +207,10 @@ public partial class GameSelect : Control
 		StartCoverArtWarmup();
 		_ = StartMetadataWarmup();
 		
-		var achNum = _games[0].AchievementNum;
-		GD.Print(achNum);
-		
-		
-		// Don't delete! This is progress bar work!
-		ProgressBar prog = new ProgressBar();
-		prog.MinValue = 0;
-				
-		prog.MaxValue = 100;
-		prog.Value = 50;
-
-		prog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		var progBg = new StyleBoxFlat();
-		progBg.BgColor = new Color(0.05f, 0.25f, 0.05f);
-		progBg.SetCornerRadiusAll(8);
-		
-		var fill = new StyleBoxFlat();
-		fill.BgColor = new Color(0.2f, 0.8f, 0.2f);
-		fill.SetCornerRadiusAll(8); 
-		
-		prog.AddThemeStyleboxOverride("background", progBg);
-		prog.AddThemeStyleboxOverride("fill", fill);
 		
 		
 		
-		var top = GetNode<HBoxContainer>("Margin/Root/Foreground2/TopBar");
-		//top.AddChild(prog);
+		
 		
 		CallDeferred(nameof(RefreshControllerFocusGraph));
 		
@@ -1041,6 +1018,9 @@ private void OnAnyButtonPressed()
 		
 		if (_carousel3D != null && _browseLayout == BrowseLayoutMode.ThreeD)
 		{
+			
+			var achNum = _games[0].AchievementNum;
+			GD.Print(achNum);
 			var gameData = _games.Select(g =>
 			{
 				Texture2D? tex = null;
@@ -2956,15 +2936,53 @@ private void OnAnyButtonPressed()
 		UpdateSelectionUI();
 		ApplyThreeDBackFaceData();
 	}
+	private ProgressBar? GetProgressBar(GameEntry game){
+		if (game.AchievementNum == "Loading..." || game.AchievementNum == "0/0"){
+			return null;
+		}
+		
+		// get the achievement number, then split it into its valid parts for the progress bar
+		string[] achievementNumSplit = game.AchievementNum.Split('/');
+		//GD.Print(achievementNumSplit[0]);
+		//GD.Print(achievementNumSplit[1]);
+		
+		
+		// Don't delete! This is progress bar work!
+		ProgressBar prog = new ProgressBar();
+		
+		prog.MinValue = 0;
+				
+		prog.MaxValue = int.Parse(achievementNumSplit[1]);
+		prog.Value = int.Parse(achievementNumSplit[0]);
 
+		prog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		var progBg = new StyleBoxFlat();
+		progBg.BgColor = new Color(0.05f, 0.25f, 0.05f);
+		progBg.SetCornerRadiusAll(8);
+		
+		var fill = new StyleBoxFlat();
+		fill.BgColor = new Color(0.2f, 0.8f, 0.2f);
+		fill.SetCornerRadiusAll(8); 
+		
+		prog.AddThemeStyleboxOverride("background", progBg);
+		prog.AddThemeStyleboxOverride("fill", fill);
+		
+		
+		
+		
+		
+		return prog;
+	}
 	private void ApplyThreeDBackFaceData()
 	{
 		if (_carousel3D == null || _browseLayout != BrowseLayoutMode.ThreeD)
 			return;
-
+		
+		
 		for (int i = 0; i < _games.Count; i++)
 		{
 			var game = _games[i];
+			ProgressBar prog = GetProgressBar(game);
 			_carousel3D.SetBackFaceData(
 				i,
 				game.Title,
@@ -2973,6 +2991,10 @@ private void OnAnyButtonPressed()
 				"",
 				game.AchievementNum ?? ""
 			);
+			
+			if (prog != null){
+				_carousel3D.SetSideProgressBar(i, prog);
+			}
 		}
 	}
 

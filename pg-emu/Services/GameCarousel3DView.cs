@@ -975,6 +975,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		BuildBackFaceTexture(index, title, description, genre, releaseYear, rating);
 	}
 
+	// public method for setting side data
+	public void SetSideProgressBar(int index, ProgressBar prog){
+		//GD.Print(index + " has a valid progress bar");
+	}
+
+
 	// Physics processing for the spin
 	public override void _Process(double delta)
 	{
