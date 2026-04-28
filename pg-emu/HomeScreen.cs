@@ -769,7 +769,7 @@ private void ConnectAllButtons(Node node)
 		if (!IsScreenAlive())
 			return;
 
-		var friendsRow = GetNodeOrNull<Control>("Margin/Root/CenterArea/FriendsRow");
+		var friendsRow = GetNodeOrNull<Control>("Margin/Root/CenterArea/Foreground2/FriendsRow");
 		if (friendsRow == null)
 			return;
 
