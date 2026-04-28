@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://1wtnmucvt428"]
 
 [ext_resource type="Script" uid="uid://c2osusou4flko" path="res://ChatOverlay.cs" id="1_6jj4k"]
+[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="2_58eyl"]
+[ext_resource type="Texture2D" uid="uid://cucbu5yh4r3nq" path="res://Images/x mark icon.png" id="2_orwy1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1jgq1"]
 bg_color = Color(0.11024502, 0.1071, 0.17, 1)
@@ -36,14 +38,17 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Header" type="HBoxContainer" parent="Panel/VBox" unique_id=1548460732]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_vertical = 0
 
 [node name="CloseButton" type="Button" parent="Panel/VBox/Header" unique_id=949062338]
+custom_minimum_size = Vector2(36, 24)
 layout_mode = 2
-text = "x"
-autowrap_trim_flags = 192
+icon = ExtResource("2_orwy1")
+autowrap_trim_flags = 0
+icon_alignment = 1
+expand_icon = true
 
 [node name="TabBar" type="TabBar" parent="Panel/VBox/Header" unique_id=576265482]
 custom_minimum_size = Vector2(200, 0)
@@ -57,6 +62,7 @@ tab_1/title = "Chat"
 layout_mode = 2
 
 [node name="FriendsTab" type="VBoxContainer" parent="Panel/VBox/MainArea" unique_id=1113349924]
+visible = false
 layout_mode = 0
 offset_top = 4.0
 offset_right = 270.0
@@ -81,7 +87,11 @@ size_flags_vertical = 3
 layout_mode = 2
 
 [node name="BackButton" type="Button" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1094786830]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
+icon = ExtResource("2_58eyl")
+icon_alignment = 1
+expand_icon = true
 
 [node name="ChatTitle" type="Label" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1077368712]
 layout_mode = 2

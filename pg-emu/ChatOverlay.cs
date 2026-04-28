@@ -369,26 +369,20 @@ public partial class ChatOverlay : CanvasLayer
 	// Helper slop
 	private void AppendMessage(string fromUser, string message, string sentAt = "", bool isLastInBlock = false)
 	{
-		
 		// Changes formatting based on if its you or the recipient messaging
 		bool isMe = fromUser == _chat.Username;
 		_lastMessageSender = fromUser;
 		
-		// If sender changed, update previous last mesages avatar visibility. I want the avatar to only show up on the most recent message of each person.
-		var row = new HBoxContainer();
+		var row = new VBoxContainer();
 		row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		row.AddThemeConstantOverride("separation", 0);
-
-		// Spots for the avatar to go
-		var avatarSpace = CreateAvatarSpace(fromUser, isMe, isLastInBlock, sentAt);
+		row.AddThemeConstantOverride("separation", 2);
 		
-		// Chat bubble
-		var bubbleCol = new VBoxContainer();
-		bubbleCol.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		bubbleCol.AddThemeConstantOverride("separation", 2);
+		var messageRow = new HBoxContainer();
+		messageRow.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		
+		// CHAT BUBBLE
 		var bubble = new PanelContainer();
-		bubble.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		bubble.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
 		
 		var bubbleStyle = new StyleBoxFlat
 		{
@@ -402,10 +396,10 @@ public partial class ChatOverlay : CanvasLayer
 			BorderWidthTop = 1,
 			BorderWidthRight = 1,
 			BorderWidthBottom = 1,
-			CornerRadiusTopLeft = isMe ? 16 : 4,
-			CornerRadiusTopRight = isMe ? 4 : 16,
-			CornerRadiusBottomLeft = 16,
-			CornerRadiusBottomRight = 16,
+			CornerRadiusBottomLeft = isMe ? 16 : 4,
+			CornerRadiusBottomRight = isMe ? 4 : 16,
+			CornerRadiusTopLeft = 16,
+			CornerRadiusTopRight = 16,
 			ContentMarginLeft = 12f,
 			ContentMarginRight = 12f,
 			ContentMarginTop = 8f,
@@ -413,20 +407,59 @@ public partial class ChatOverlay : CanvasLayer
 		};
 		bubble.AddThemeStyleboxOverride("panel", bubbleStyle);
 		
-		// Message in the bubble yo
+		// Message in the bubble yo, resizes based on how many letters are sent
 		var msgLabel = new Label();
 		msgLabel.Text = message;
 		msgLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-		msgLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		msgLabel.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.98f));
 		msgLabel.AddThemeFontSizeOverride("font_size", 14);
-		bubble.AddChild(msgLabel);
-		bubbleCol.AddChild(bubble);
-
 		
-		// Shows username udner message
+		float maxBubbleWidth = 200f;
+		float naturalWidth = 0f;
+		
+		// Resizing based on how much text is ssent
+		var font = msgLabel.GetThemeFont("font");
+		int fontSize = msgLabel.GetThemeFontSize("font_size");
+		if (font != null)
+			naturalWidth = font.GetStringSize(message, HorizontalAlignment.Left, -1, fontSize).X;
+		else
+			naturalWidth = message.Length * 8f;
+		
+		// Add padding to match bubble margins
+		float labelWidth = Mathf.Min(naturalWidth, maxBubbleWidth) + 1f;
+		msgLabel.CustomMinimumSize = new Vector2(labelWidth, 0);
+				
+		bubble.AddChild(msgLabel);
+		
+		// ASSEMBLE ROW
+		var spacer = new Control();
+		spacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		if (isMe)
+		{
+			// Spacer pushes bubble to the right. 
+			messageRow.AddChild(spacer);
+			messageRow.AddChild(bubble);
+		}
+		else
+		{
+			// Spacer keeps bubble on lef
+			messageRow.AddChild(bubble);
+			messageRow.AddChild(spacer);
+		}
+		row.AddChild(messageRow);
+		
+
+		// If sender changed, update previous last mesages avatar visibility. I want the avatar to only show up on the most recent message of each person.
 		if (isLastInBlock)
 		{
+			var metaRow = new HBoxContainer();
+			metaRow.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			metaRow.AddThemeConstantOverride("separation", 6);
+			
+			// Spots for the avatar to go
+			var avatarSpace = CreateAvatarSpace(isMe);
+				
+			// Shows username udner message
 			var usernameLabel = new Label();
 			usernameLabel.Text = fromUser;
 			usernameLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.63f, 0.8f, 1f));
@@ -440,15 +473,15 @@ public partial class ChatOverlay : CanvasLayer
 			timeLabel.AddThemeFontSizeOverride("font_size", 10);
 			timeLabel.HorizontalAlignment = isMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
 			
-			var metaRow = new HBoxContainer();
-			metaRow.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			metaRow.AddThemeConstantOverride("separation", 6);
+			var metaSpacer = new Control();
+			metaSpacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
-			usernameLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			timeLabel.SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd;
+			//usernameLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			//timeLabel.SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd;
 
 			if (isMe)
 			{
+				metaRow.AddChild(metaSpacer);
 				metaRow.AddChild(timeLabel);
 				metaRow.AddChild(usernameLabel);
 				metaRow.AddChild(avatarSpace);
@@ -458,49 +491,26 @@ public partial class ChatOverlay : CanvasLayer
 				metaRow.AddChild(avatarSpace);
 				metaRow.AddChild(usernameLabel);
 				metaRow.AddChild(timeLabel);
+				metaRow.AddChild(metaSpacer);
 			}
 
-			bubbleCol.AddChild(metaRow);
+			row.AddChild(metaRow);
 		}
-		
-		// ASSEMBLE ROW
-		
-		if (isMe)
-		{
-			// Spacer pushes bubble to the right. 
-			var spacer = new Control();
-			spacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			row.AddChild(spacer);
-			row.AddChild(bubbleCol);
-		}
-		else
-		{
-			// Spacer keeps bubble on lef
-			row.AddChild(bubbleCol);
-			var spacer = new Control();
-			spacer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			row.AddChild(spacer);
-		}
+
 
 		_messageContainer.AddChild(row);
 		ScrollToBottom();
 
 	}
 
-	private Control CreateAvatarSpace(string fromUser, bool isMe, bool isLastInBlock, string sentAt)
+	private Control CreateAvatarSpace(bool isMe)
 	{
-		var container = new Control();
+		var container = new PanelContainer();
 		container.CustomMinimumSize = new Vector2(24, 24);
 		container.SizeFlagsVertical = Control.SizeFlags.ShrinkEnd;
 		
-		// Empty if its not last in block
-		if (!isLastInBlock)
-			return container;
-		
 		// Avtar circle build
-		var avatarFrame = new PanelContainer();
-		avatarFrame.CustomMinimumSize = new Vector2(24, 24);
-		avatarFrame.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+		container.AddThemeStyleboxOverride("panel", new StyleBoxFlat
 		{
 			BgColor = new Color(0.20f, 0.16f, 0.30f, 1f),
 			CornerRadiusTopLeft = 999,
@@ -521,7 +531,7 @@ public partial class ChatOverlay : CanvasLayer
 		avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
 		avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
 		avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		avatarFrame.AddChild(avatarImg);
+		container.AddChild(avatarImg);
 
 		// Load avatar texture
 		var avatarUrl = isMe ? _myAvatarUrl : _theirAvatarUrl;
@@ -530,14 +540,6 @@ public partial class ChatOverlay : CanvasLayer
 			_ = SetAvatarAsync(avatarImg, avatarUrl);
 		}
 
-		var wrapper = new HBoxContainer();
-		wrapper.AddThemeConstantOverride("separation", 4);
-		wrapper.AddChild(avatarFrame);
-		
-		// Add wrapper to container
-		container.AddChild(wrapper);
-		container.CustomMinimumSize = new Vector2(24, 24); 
-		
 		return container;
 	}
 
@@ -605,7 +607,7 @@ public partial class ChatOverlay : CanvasLayer
 
 	private async System.Threading.Tasks.Task PreloadAvatars(string otherUsername)
 	{
-		var profileService = new PGEmu.Services.ProfileService();
+		var profileService = new ProfileService();
     
 		// Load my avatar
 		var myProfile = await profileService.GetMyProfile();
