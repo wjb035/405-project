@@ -244,8 +244,6 @@ public partial class GameCarousel3DView : SubViewportContainer
 			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
 		}
 		
-		
-		
 		_baseMaterials.Add(new List<StandardMaterial3D> { mat });
 		
 		mesh.SetSurfaceOverrideMaterial(0, mat);
@@ -315,6 +313,32 @@ public partial class GameCarousel3DView : SubViewportContainer
 		};
 		backMesh.SetSurfaceOverrideMaterial(0, backMat);
 		root.AddChild(backMesh);
+		
+		
+		
+		// Side mesh for the progress bar
+		var sideMesh = new MeshInstance3D { Name = "SideMesh" };
+		var sideQuad = new QuadMesh
+		{
+			Size = new Vector2(0.18f, 0.8f)
+		};
+		
+		sideMesh.Mesh = sideQuad;
+		sideMesh.Position = new Vector3(-(boxSize.X / 2f) - 0.001f, 0, 0f);
+		
+		// Flip it so it faces outwards
+		sideMesh.RotateY(Mathf.DegToRad(-90f));
+		
+		var sideMat = new StandardMaterial3D
+		{
+			AlbedoColor = new Color(0, 0, 0, 0),
+			Roughness = 0.5f,
+			Metallic = 0.05f,
+			Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+			TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
+		};
+		sideMesh.SetSurfaceOverrideMaterial(0, sideMat);
+		root.AddChild(sideMesh);
 		
 		// DEBUG
 		if (coverArt != null)
@@ -977,7 +1001,36 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 	// public method for setting side data
 	public void SetSideProgressBar(int index, ProgressBar prog){
-		//GD.Print(index + " has a valid progress bar");
+		// GD.Print(index + " has a valid progress bar");
+		
+		if (index >= _boxes.Count) return;
+		var sideMesh = FindMeshByName(_boxes[index], "SideMesh");
+		if (sideMesh == null) return;
+
+		var vp = new SubViewport
+		{
+			Size = new Vector2I(64, 512),
+			TransparentBg = true,
+			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
+			Msaa2D = Viewport.Msaa.Msaa4X,
+		};
+		_sceneRoot.AddChild(vp);
+		
+		
+		prog.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		prog.FillMode = (int)ProgressBar.FillModeEnum.TopToBottom; 
+		prog.ShowPercentage = true;
+		vp.AddChild(prog);
+		
+		var mat = sideMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
+		if (mat != null)
+		{
+			mat.AlbedoTexture = vp.GetTexture();
+			mat.AlbedoColor = Colors.White;
+			mat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
+
+		}
+
 	}
 
 

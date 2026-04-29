@@ -2957,11 +2957,11 @@ private void OnAnyButtonPressed()
 
 		prog.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		var progBg = new StyleBoxFlat();
-		progBg.BgColor = new Color(0.05f, 0.25f, 0.05f);
+		progBg.BgColor = new Color(0.1f, 0.05f, 0.25f);
 		progBg.SetCornerRadiusAll(8);
 		
 		var fill = new StyleBoxFlat();
-		fill.BgColor = new Color(0.2f, 0.8f, 0.2f);
+		fill.BgColor = new Color(0.65f, 0.3f, 0.4f);
 		fill.SetCornerRadiusAll(8); 
 		
 		prog.AddThemeStyleboxOverride("background", progBg);
