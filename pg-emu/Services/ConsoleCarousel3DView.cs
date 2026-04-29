@@ -108,7 +108,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		// Lighting
 		var sun = new DirectionalLight3D
 		{
-			LightEnergy = 1.2f,
+			LightEnergy = 2.1f,
 			LightColor = new Color(0.95f, 0.90f, 1.0f),
 			ShadowEnabled = true,
 			ShadowBlur = 0.5f,
@@ -1248,7 +1248,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
 			}
 			
-			var brightness = Mathf.Lerp(1.0f, 0.5f, t);
+			var brightness = Mathf.Lerp(1.0f, 0.3f, t);
 			DimMeshes(box, brightness);
 			
 		}

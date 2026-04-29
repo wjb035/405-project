@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
-[ext_resource type="Shader" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="4_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_iw72c"]
-[ext_resource type="Shader" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
 [ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
 [ext_resource type="Texture2D" uid="uid://b3x0d5xxdxg5b" path="res://Images/search icon thin.png" id="7_oy6yd"]
@@ -67,8 +67,8 @@ theme = ExtResource("1_iw72c")
 script = ExtResource("1")
 SearchBarText = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/SearchPanel/UserSearchBar")
 SearchBarButton = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/UserSearchButton")
-PrevPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnPrev")
-NextPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnNext")
+PrevPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnPrev2")
+NextPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnNext2")
 SelectedTitlePath = NodePath("Margin/Root/CenterArea/Mid2/SelectedTitle")
 StatusPath = NodePath("Margin/Root/CenterArea/Mid2/Status")
 SelectPlatformPath = NodePath("Margin/Root/CenterArea/Mid2/BottomRow/BtnSelect")
@@ -291,23 +291,50 @@ grow_vertical = 2
 
 [node name="Foreground2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=185503270]
 
-[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=1665989749]
-offset_left = 33.0
-offset_top = 201.05026
-offset_right = 161.0
-offset_bottom = 457.05017
-icon = ExtResource("14_1lj82")
+[node name="BtnPrev2" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=1708621407]
+offset_left = 20.0
+offset_top = 165.0
+offset_right = 162.0
+offset_bottom = 461.0
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=1687316739]
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnPrev2" unique_id=1193160107]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 25.0
+offset_top = -64.0
+offset_right = 89.0
+offset_bottom = 64.0
+grow_vertical = 2
+texture = ExtResource("14_1lj82")
+expand_mode = 1
+
+[node name="BtnNext2" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=2070620974]
 offset_left = 993.0
-offset_top = 201.05026
-offset_right = 1121.0
-offset_bottom = 457.05017
-icon = ExtResource("15_oy6yd")
+offset_top = 165.0
+offset_right = 1135.0
+offset_bottom = 461.0
 icon_alignment = 1
 expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnNext2" unique_id=1684957540]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -64.0
+offset_right = -20.0
+offset_bottom = 64.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("15_oy6yd")
+expand_mode = 1
 
 [node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Foreground2" unique_id=942896159]
 offset_left = 18.0

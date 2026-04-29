@@ -266,23 +266,50 @@ text = "New Collection"
 
 [node name="Foreground2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=1743036273]
 
-[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=534126549]
-offset_left = 33.0
-offset_top = 215.15
-offset_right = 161.0
-offset_bottom = 471.15
-icon = ExtResource("9_fupj7")
+[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=282720221]
+offset_left = 20.0
+offset_top = 165.0
+offset_right = 162.0
+offset_bottom = 461.0
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=2033288117]
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnPrev" unique_id=2128529275]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 25.0
+offset_top = -64.0
+offset_right = 89.0
+offset_bottom = 64.0
+grow_vertical = 2
+texture = ExtResource("9_fupj7")
+expand_mode = 1
+
+[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=2002502344]
 offset_left = 993.0
-offset_top = 215.15
-offset_right = 1121.0
-offset_bottom = 471.15
-icon = ExtResource("10_rlxaj")
+offset_top = 165.0
+offset_right = 1135.0
+offset_bottom = 461.0
 icon_alignment = 1
 expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnNext" unique_id=961330174]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -64.0
+offset_right = -20.0
+offset_bottom = 64.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("10_rlxaj")
+expand_mode = 1
 
 [node name="Mid2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=814785068]
 

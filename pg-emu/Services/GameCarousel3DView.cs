@@ -120,7 +120,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var sun = new DirectionalLight3D
 		{
 			Position = new Vector3(2, 4, 3),
-			LightEnergy = 1.1f,
+			LightEnergy = 1.8f, // 1.1f
 			LightColor = new Color(0.85f, 0.80f, 1.0f),
 		};
 		sun.RotateX(Mathf.DegToRad(-45f));
@@ -129,7 +129,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var ambient = new OmniLight3D
 		{
 			Position = new Vector3(0, 2, 4),
-			LightEnergy = 0.5f,
+			LightEnergy = 0.8f, // 0.5f
 			OmniRange = 20f,
 			LightColor = new Color(0.62f, 0.52f, 0.90f),
 		};
@@ -138,7 +138,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var rim = new OmniLight3D
 		{
 			Position = new Vector3(0, 1f, -3f),
-			LightEnergy = 0.4f,
+			LightEnergy = 0.6f, //0.4f
 			OmniRange = 12f,
 			LightColor = new Color(0.70f, 0.88f, 1.0f), 
 		};
@@ -231,8 +231,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		{
 			AlbedoColor = new Color(0.08f, 0.06f, 0.14f),
 			RoughnessTexture = null,
-			Roughness = 0.6f,
-			Metallic = 0.2f,
+			Roughness = 0.85f,
+			Metallic = 0.05f,
 		};
 		if (awardType == "Mastery/Completion"){
 			mat = gold;
@@ -280,7 +280,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			var placeholderMat = new StandardMaterial3D
 			{
 				AlbedoColor = new Color(0.75f, 0.72f, 0.85f, 1f), 
-				Roughness = 0.6f,
+				Roughness = 0.85f,
 				Metallic = 0.05f,
 				Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
 				TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
@@ -306,7 +306,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var backMat = new StandardMaterial3D
 		{
 			AlbedoColor = new Color(1, 1, 1, 1),
-			Roughness = 0.5f,
+			Roughness = 0.85f,
 			Metallic = 0.05f,
 			Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
 			TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic
