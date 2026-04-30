@@ -58,7 +58,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+color = Color(0.06801925, 0.047571667, 0.12111964, 0.68)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=266663920]
 layout_mode = 1

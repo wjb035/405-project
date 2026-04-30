@@ -63,6 +63,19 @@
       "retroachievementsPlatformID": 18
     },
     {
+      "id": "n64",
+      "name": "Nintendo 64",
+      "romPath": "games/N64",
+      "extensions": [
+        ".z64",
+        ".n64",
+        ".v64",
+        ".zip"
+      ],
+      "defaultEmulatorId": "",
+      "retroachievementsPlatformID": 2
+    },
+    {
       "id": "wii",
       "name": "Nintendo Wii",
       "romPath": "games/Wii",

@@ -59,6 +59,8 @@ public partial class LibretroPlayer : Node
 	private Vector2[]? _audioUploadFrames;
 
 	private static readonly short[] _inputStateCache = new short[16];
+	private const uint RetroDeviceJoypad = 1;
+	private const uint RetroDeviceIdJoypadMask = 256;
 	private static bool _isDolphinCore = false;
 	private static bool _isPpssppCore = false;
 	private static bool _forcePpssppSoftwareMode = false;
@@ -615,7 +617,7 @@ public partial class LibretroPlayer : Node
 					FileLogger.Log("[ppsspp] software-only policy active on macOS (forcing backend=none, denying HW context requests).");
 				}
 				InputMapper.EnsureDefaultActions(coreIdForBindings);
-				CacheValidActions();
+				CacheValidActions(forceRefresh: true);
 				PrepareEnvironmentDirectories();
 
 			// FileLogger.Log("[LibretroPlayer] Setting callbacks to core...");
@@ -798,9 +800,22 @@ public partial class LibretroPlayer : Node
 		if (_instance != null && _instance._ignoreInputTimer > 0) return 0;
 
 		if (port != 0) return 0;
-		if (device != 1) return 0;
+		if (device != RetroDeviceJoypad) return 0;
+		if (id == RetroDeviceIdJoypadMask) return BuildJoypadInputBitmask();
 		if (id >= (uint)_inputStateCache.Length) return 0;
 		return _inputStateCache[(int)id];
+	}
+
+	private static short BuildJoypadInputBitmask()
+	{
+		ushort mask = 0;
+		for (int i = 0; i < _inputStateCache.Length; i++)
+		{
+			if (_inputStateCache[i] != 0)
+				mask |= (ushort)(1 << i);
+		}
+
+		return unchecked((short)mask);
 	}
 
 	private static bool SetRumbleStateCallback(uint port, uint effect, ushort strength)

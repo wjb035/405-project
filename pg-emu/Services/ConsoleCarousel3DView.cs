@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PGEmu.Services;
 
@@ -13,7 +14,9 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const float GbaScreenUvScaleV = -4.6753664f;
 	private const float GbaScreenUvOffsetU = -1.825017f;
 	private const float GbaScreenUvOffsetV = 3.91563f;
-	private const double GbaOpen = 1.2;
+	private const double GbaOpen = 0.85;
+	private const double GbaSelectionOpen = 1.2;
+	private const double GameCubeRestPose = 2.125;
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
@@ -60,6 +63,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private readonly Dictionary<Node3D, string> _consoleAnimationNames = new();
 	private readonly Dictionary<Node3D, double> _consoleAnimationLengths = new();
 	private readonly Dictionary<Node3D, double> _consoleAnimationHoldTimes = new();
+	private readonly HashSet<Node3D> _selectionAnimatedConsoles = new();
+	private readonly HashSet<Node3D> _returnAnimatedConsoles = new();
 	private readonly HashSet<Node3D> _openAnimatedConsoles = new();
 	private readonly HashSet<Node3D> _manuallyClosedAnimatedConsoles = new();
 	private readonly HashSet<Node3D> _pendingConsoleCloseSounds = new();
@@ -69,7 +74,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	public event System.Action<int>? SelectionChanged;
 
 	// Types of consoles we support
-	public enum ConsoleType { Wii, NintendoDS, PlayStation1, PlayStation2, PSP, GameCube, GBA }
+	public enum ConsoleType { Wii, NintendoDS, Nintendo64, PlayStation1, PlayStation2, PSP, GameCube, GBA }
 	
 	public override void _Ready()
 	{
@@ -198,6 +203,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_consoleAnimationNames.Clear();
 		_consoleAnimationLengths.Clear();
 		_consoleAnimationHoldTimes.Clear();
+		_selectionAnimatedConsoles.Clear();
+		_returnAnimatedConsoles.Clear();
 		_openAnimatedConsoles.Clear();
 		_manuallyClosedAnimatedConsoles.Clear();
 
@@ -226,6 +233,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		{
 			ConsoleType.Wii          => "res://Models/wii_console.glb",
 			ConsoleType.NintendoDS   => "res://Models/ds.glb",
+			ConsoleType.Nintendo64   => "res://Models/n64.glb",
 			ConsoleType.PlayStation1 => "res://Models/ps1.glb",
 			ConsoleType.PlayStation2 => "res://Models/ps2.glb",
 			ConsoleType.PSP          => "res://Models/psp.glb",
@@ -258,25 +266,37 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			switch (type)
 			{
 			case ConsoleType.Wii:
-				model.Scale = new Vector3(0.8f, 0.8f, 0.8f);
-				model.Position = new Vector3(-0.1f, 0.1f, 0);
-				model.RotateY(Mathf.DegToRad(-60f));
+				SetWiiDiskVisible(model, false);
+				CenterNode3D(model, ShouldIncludeWiiBodyBounds);
+				var wiiScale = ComputeUniformScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
+				model.Scale = new Vector3(wiiScale, wiiScale, wiiScale);
+				model.Position = new Vector3(-0.8f, -.5f, 0f);
+				model.RotateY(Mathf.DegToRad(40f));
 				break;
 			case ConsoleType.NintendoDS:
 				CenterNode3D(model);
-				var dsScale = ComputeUniformScaleToFit(model, 2.6f);
+				var dsScale = ComputeUniformScaleToFit(model, 1.8f);
 				model.Scale = new Vector3(dsScale, dsScale, dsScale);
-				model.Position = new Vector3(0.02f, -0.38f, 0f);
+				model.Position = new Vector3(0.02f, -0.35f, 1f);
 				model.RotateX(Mathf.DegToRad(8f));
 				model.RotateY(Mathf.DegToRad(0f));
 				break;
+			case ConsoleType.Nintendo64:
+				CenterNode3D(model);
+				var n64Scale = ComputeUniformScaleToFit(model, 3.2f);
+				model.Scale = new Vector3(n64Scale, n64Scale, n64Scale);
+				model.Position = new Vector3(1f, -0.5f, 0f);
+				model.RotateX(Mathf.DegToRad(0f));
+				model.RotateY(Mathf.DegToRad(30f));
+				SetN64CartridgeVisible(model, false);
+				break;
 			case ConsoleType.PlayStation1:
 				CenterNode3D(model);
-				var ps1Scale = ComputeUniformScaleToFit(model, 3.0f);
+				var ps1Scale = ComputeUniformScaleToFit(model, 2.5f);
 				model.Scale = new Vector3(ps1Scale, ps1Scale, ps1Scale);
-				model.Position = new Vector3(0.02f, -0.38f, 0f);
+				model.Position = new Vector3(0.02f, -0.5f, 0f);
 				model.RotateX(Mathf.DegToRad(8f));
-				model.RotateY(Mathf.DegToRad(24f));
+				model.RotateY(Mathf.DegToRad(12f));
 				break;
 			case ConsoleType.PlayStation2:
 				model.Scale = new Vector3(0.15f, 0.15f, 0.15f);
@@ -298,6 +318,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.Scale = new Vector3(0.030f, 0.030f, 0.030f);
 				model.Position = new Vector3(0, -0.7f, 0);
 				model.RotateY(Mathf.DegToRad(30f));
+				SetGameCubeDiskVisible(model, false);
 				break;
 			case ConsoleType.GBA:
 				CenterNode3D(model);
@@ -305,6 +326,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.Position = new Vector3(0.08f, -0.22f, 0f);
 				model.RotateX(Mathf.DegToRad(14f));
 				model.RotateY(Mathf.DegToRad(-18f));
+				SetGbaCartridgeVisible(model, false);
 				break;
 		}
 		wrapper.AddChild(modelRoot);
@@ -328,6 +350,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		case ConsoleType.NintendoDS:
 			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.38f, 1.9f) };
 			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.80f, 0.82f, 0.90f)));
+			break;
+		case ConsoleType.Nintendo64:
+			mesh.Mesh = new BoxMesh { Size = new Vector3(2.5f, 0.55f, 1.8f) };
+			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.15f)));
+			var cartridgeSlot = new MeshInstance3D();
+			cartridgeSlot.Mesh = new BoxMesh { Size = new Vector3(1.0f, 0.10f, 0.32f) };
+			cartridgeSlot.Position = new Vector3(0f, 0.32f, -0.18f);
+			cartridgeSlot.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.04f, 0.04f, 0.05f), metallic: 0.5f));
+			root.AddChild(cartridgeSlot);
 			break;
 		case ConsoleType.PlayStation1:
 			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.45f, 1.8f) };
@@ -385,18 +416,18 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
 		new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic, SpecularMode = BaseMaterial3D.SpecularModeEnum.Disabled, };
 
-	private static void CenterNode3D(Node3D root)
+	private static void CenterNode3D(Node3D root, System.Func<Node3D, bool>? includeNode = null)
 	{
-		if (!TryGetNodeBounds(root, Transform3D.Identity, out var bounds))
+		if (!TryGetNodeBounds(root, Transform3D.Identity, out var bounds, includeNode))
 			return;
 
 		root.Position -= bounds.GetCenter();
 	}
 
-	private static float ComputeUniformScaleToFit(Node3D root, float targetMaxDimension)
+	private static float ComputeUniformScaleToFit(Node3D root, float targetMaxDimension, System.Func<Node3D, bool>? includeNode = null)
 	{
 		if (targetMaxDimension <= 0f ||
-			!TryGetNodeBounds(root, Transform3D.Identity, out var bounds))
+			!TryGetNodeBounds(root, Transform3D.Identity, out var bounds, includeNode))
 		{
 			return 1f;
 		}
@@ -408,10 +439,13 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return targetMaxDimension / maxDimension;
 	}
 
-	private static bool TryGetNodeBounds(Node3D node, Transform3D accumulatedTransform, out Aabb bounds)
+	private static bool TryGetNodeBounds(Node3D node, Transform3D accumulatedTransform, out Aabb bounds, System.Func<Node3D, bool>? includeNode = null)
 	{
 		var hasBounds = false;
 		bounds = new Aabb();
+		if (includeNode != null && !includeNode(node))
+			return false;
+
 		var currentTransform = accumulatedTransform * node.Transform;
 
 		if (node is MeshInstance3D mesh && mesh.Mesh != null)
@@ -433,7 +467,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		foreach (Node child in node.GetChildren())
 		{
-			if (child is not Node3D childNode || !TryGetNodeBounds(childNode, currentTransform, out var childBounds))
+			if (child is not Node3D childNode || !TryGetNodeBounds(childNode, currentTransform, out var childBounds, includeNode))
 				continue;
 
 			foreach (var corner in GetCorners(childBounds))
@@ -805,15 +839,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		animation.LoopMode = Animation.LoopModeEnum.None;
 		animationPlayer.Play(animationName);
-		animationPlayer.Seek(0.0, true);
+		animationPlayer.Seek(GetDefaultAnimationPoseTime(type, animation.Length), true);
 		animationPlayer.Stop(true);
 
 		_consoleAnimations[wrapper] = animationPlayer;
 		_consoleAnimationNames[wrapper] = animationName;
 		_consoleAnimationLengths[wrapper] = animation.Length;
-		_consoleAnimationHoldTimes[wrapper] = type == ConsoleType.GBA
-			? Mathf.Min((float)animation.Length, (float)GbaOpen)
-			: animation.Length;
+		_consoleAnimationHoldTimes[wrapper] = GetConsoleConfiguredHoldTime(type, animation.Length);
+		if (type == ConsoleType.GameCube)
+			SetGameCubeDiskVisible(model, false);
 	}
 
 	private static AnimationPlayer? FindAnimationPlayer(Node node)
@@ -831,6 +865,104 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return null;
 	}
 
+	private static bool ShouldAutoOpenAnimatedConsole(Node3D box)
+	{
+		return !IsConsoleType(box, ConsoleType.Wii) &&
+			!IsConsoleType(box, ConsoleType.Nintendo64) &&
+			!IsConsoleType(box, ConsoleType.GameCube);
+	}
+
+	public async Task PlaySelectedConsoleAnimationAsync(ConsoleType requiredType)
+	{
+		if (_boxes.Count == 0)
+			return;
+
+		var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (selectedIdx < 0 || selectedIdx >= _boxes.Count)
+			return;
+
+		var selectedBox = _boxes[selectedIdx];
+		if (!IsConsoleType(selectedBox, requiredType) ||
+			!_consoleAnimations.TryGetValue(selectedBox, out var animationPlayer) ||
+			!_consoleAnimationNames.TryGetValue(selectedBox, out var animationName))
+		{
+			return;
+		}
+
+		var animationLength = _consoleAnimationLengths.GetValueOrDefault(selectedBox, 0.0);
+		_selectionAnimatedConsoles.Add(selectedBox);
+		var holdTime = GetConsoleAnimationHoldTime(selectedBox, animationLength);
+		if (holdTime <= 0.0)
+			return;
+		var startTime = IsConsoleType(selectedBox, ConsoleType.GBA) && _openAnimatedConsoles.Contains(selectedBox)
+			? Mathf.Min((float)GbaOpen, (float)holdTime)
+			: 0.0;
+
+		_manuallyClosedAnimatedConsoles.Remove(selectedBox);
+		_pendingConsoleCloseSounds.Remove(selectedBox);
+		_openAnimatedConsoles.Add(selectedBox);
+		if (requiredType == ConsoleType.Wii)
+			SetWiiDiskVisible(selectedBox, true);
+		if (requiredType == ConsoleType.Nintendo64)
+			SetN64CartridgeVisible(selectedBox, true);
+		if (requiredType == ConsoleType.GameCube)
+			SetGameCubeDiskVisible(selectedBox, true);
+		if (requiredType == ConsoleType.GBA)
+			SetGbaCartridgeVisible(selectedBox, true);
+
+		animationPlayer.Stop();
+		animationPlayer.Play(animationName);
+		animationPlayer.Seek(startTime, true);
+
+		await ToSignal(GetTree().CreateTimer(Mathf.Max((float)(holdTime - startTime), 0.05f)), SceneTreeTimer.SignalName.Timeout);
+		if (!GodotObject.IsInstanceValid(this) ||
+			!GodotObject.IsInstanceValid(selectedBox) ||
+			!GodotObject.IsInstanceValid(animationPlayer))
+		{
+			return;
+		}
+
+		SetConsoleAnimationPose(selectedBox, holdTime, holdPose: true);
+	}
+
+	public void PlaySelectedConsoleReturnAnimation(ConsoleType requiredType)
+	{
+		if (_boxes.Count == 0)
+			return;
+
+		var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (selectedIdx < 0 || selectedIdx >= _boxes.Count)
+			return;
+
+		var selectedBox = _boxes[selectedIdx];
+		if (!IsConsoleType(selectedBox, requiredType) ||
+			!_consoleAnimations.TryGetValue(selectedBox, out var animationPlayer) ||
+			!_consoleAnimationNames.TryGetValue(selectedBox, out var animationName))
+		{
+			return;
+		}
+
+		var animationLength = _consoleAnimationLengths.GetValueOrDefault(selectedBox, 0.0);
+		var startTime = GetConsoleSelectionAnimationHoldTime(selectedBox, animationLength);
+		var stopTime = _consoleAnimationHoldTimes.TryGetValue(selectedBox, out var configuredHoldTime)
+			? configuredHoldTime
+			: animationLength;
+		if (startTime <= stopTime)
+			return;
+
+		_selectionAnimatedConsoles.Remove(selectedBox);
+		_manuallyClosedAnimatedConsoles.Remove(selectedBox);
+		_pendingConsoleCloseSounds.Remove(selectedBox);
+		_openAnimatedConsoles.Add(selectedBox);
+		_returnAnimatedConsoles.Add(selectedBox);
+		if (requiredType == ConsoleType.GBA)
+			SetGbaCartridgeVisible(selectedBox, true);
+
+		animationPlayer.Play(animationName);
+		animationPlayer.Seek(startTime, true);
+		animationPlayer.PlayBackwards(animationName);
+	}
+
 	private void UpdateAnimatedConsoleStates(int selectedIdx)
 	{
 		if (_boxes.Count == 0)
@@ -844,6 +976,13 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		{
 			if (!_consoleAnimations.ContainsKey(box))
 				continue;
+
+			if (!ShouldAutoOpenAnimatedConsole(box))
+			{
+				if (box != selectedBox && _openAnimatedConsoles.Contains(box))
+					CloseAnimatedConsole(box);
+				continue;
+			}
 
 			if (box != selectedBox)
 				_manuallyClosedAnimatedConsoles.Remove(box);
@@ -873,9 +1012,23 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			if (!_consoleAnimationLengths.TryGetValue(box, out var animationLength) || animationLength <= 0.0)
 				continue;
 
-			var holdTime = _consoleAnimationHoldTimes.TryGetValue(box, out var configuredHoldTime)
-				? configuredHoldTime
-				: animationLength;
+			var holdTime = GetConsoleAnimationHoldTime(box, animationLength);
+
+			if (_returnAnimatedConsoles.Contains(box))
+			{
+				var returnHoldTime = _consoleAnimationHoldTimes.TryGetValue(box, out var configuredHoldTime)
+					? configuredHoldTime
+					: animationLength;
+				if (!animationPlayer.IsPlaying() ||
+					animationPlayer.CurrentAnimationPosition <= returnHoldTime + 0.02)
+				{
+					_returnAnimatedConsoles.Remove(box);
+					SetConsoleAnimationPose(box, returnHoldTime, holdPose: true);
+					if (IsConsoleType(box, ConsoleType.GBA))
+						SetGbaCartridgeVisible(box, false);
+				}
+				continue;
+			}
 
 			if (_openAnimatedConsoles.Contains(box))
 			{
@@ -897,7 +1050,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 			if (isClosed)
 			{
-				SetConsoleAnimationPose(box, 0.0, holdPose: false);
+				SetConsoleAnimationPose(box, GetDefaultAnimationPoseTime(box, animationLength), holdPose: false);
+				if (IsConsoleType(box, ConsoleType.Wii))
+					SetWiiDiskVisible(box, false);
+				if (IsConsoleType(box, ConsoleType.Nintendo64))
+					SetN64CartridgeVisible(box, false);
+				if (IsConsoleType(box, ConsoleType.GameCube))
+					SetGameCubeDiskVisible(box, false);
+				if (IsConsoleType(box, ConsoleType.GBA))
+					SetGbaCartridgeVisible(box, false);
 			}
 		}
 	}
@@ -922,6 +1083,50 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		}
 	}
 
+	private double GetConsoleAnimationHoldTime(Node3D box, double animationLength)
+	{
+		if (_selectionAnimatedConsoles.Contains(box))
+			return GetConsoleSelectionAnimationHoldTime(box, animationLength);
+
+		return _consoleAnimationHoldTimes.TryGetValue(box, out var configuredHoldTime)
+			? configuredHoldTime
+			: animationLength;
+	}
+
+	private static double GetConsoleSelectionAnimationHoldTime(Node3D box, double animationLength)
+	{
+		if (IsConsoleType(box, ConsoleType.GBA))
+			return Mathf.Min((float)animationLength, (float)GbaSelectionOpen);
+		if (IsConsoleType(box, ConsoleType.GameCube))
+			return Mathf.Min((float)animationLength, (float)GameCubeRestPose);
+
+		return animationLength;
+	}
+
+	private static double GetConsoleConfiguredHoldTime(ConsoleType type, double animationLength)
+	{
+		return type switch
+		{
+			ConsoleType.GBA => Mathf.Min((float)animationLength, (float)GbaOpen),
+			ConsoleType.GameCube => Mathf.Min((float)animationLength, (float)GameCubeRestPose),
+			_ => animationLength
+		};
+	}
+
+	private static double GetDefaultAnimationPoseTime(ConsoleType type, double animationLength)
+	{
+		return type == ConsoleType.GameCube
+			? Mathf.Min((float)animationLength, (float)GameCubeRestPose)
+			: 0.0;
+	}
+
+	private static double GetDefaultAnimationPoseTime(Node3D box, double animationLength)
+	{
+		return IsConsoleType(box, ConsoleType.GameCube)
+			? Mathf.Min((float)animationLength, (float)GameCubeRestPose)
+			: 0.0;
+	}
+
 	private void OpenAnimatedConsole(Node3D box)
 	{
 		if (!_consoleAnimations.TryGetValue(box, out var animationPlayer) ||
@@ -932,6 +1137,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		_manuallyClosedAnimatedConsoles.Remove(box);
 		_pendingConsoleCloseSounds.Remove(box);
+		if (IsConsoleType(box, ConsoleType.Wii))
+			SetWiiDiskVisible(box, true);
+		if (IsConsoleType(box, ConsoleType.Nintendo64))
+			SetN64CartridgeVisible(box, true);
 		animationPlayer.Play(animationName);
 		_openAnimatedConsoles.Add(box);
 		if (IsConsoleType(box, ConsoleType.GBA))
@@ -950,6 +1159,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			_manuallyClosedAnimatedConsoles.Add(box);
 		else
 			_manuallyClosedAnimatedConsoles.Remove(box);
+		_selectionAnimatedConsoles.Remove(box);
+		_returnAnimatedConsoles.Remove(box);
 
 		if (_consoleAnimationHoldTimes.TryGetValue(box, out var holdTime))
 			animationPlayer.Seek(holdTime, true);
@@ -964,6 +1175,93 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private static bool IsConsoleType(Node3D box, ConsoleType type)
 	{
 		return string.Equals(box.Name.ToString(), type.ToString(), System.StringComparison.Ordinal);
+	}
+
+	private static bool ShouldIncludeWiiBodyBounds(Node3D node)
+	{
+		return !IsWiiDiskNode(node);
+	}
+
+	private static bool IsWiiDiskNode(Node3D node)
+	{
+		var nodeName = node.Name.ToString();
+		return nodeName.Contains("disc", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("disk", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(nodeName, "Object_2", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static void SetWiiDiskVisible(Node node, bool visible)
+	{
+		if (node is Node3D node3D && IsWiiDiskNode(node3D))
+			node3D.Visible = visible;
+
+		foreach (Node child in node.GetChildren())
+			SetWiiDiskVisible(child, visible);
+	}
+
+	private static bool IsGameCubeDiskNode(Node3D node)
+	{
+		var nodeName = node.Name.ToString();
+		if (nodeName.Contains("gamecube_Object_0_001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_0.001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_0_001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2.001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2_001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc.obj", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc_obj", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		return node is MeshInstance3D mesh &&
+			mesh.Mesh != null &&
+			(mesh.Mesh.ResourceName.Contains("gamecube_Object_0_001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_0.001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_0_001", System.StringComparison.OrdinalIgnoreCase));
+	}
+
+	private static void SetGameCubeDiskVisible(Node node, bool visible)
+	{
+		if (node is Node3D node3D && IsGameCubeDiskNode(node3D))
+			node3D.Visible = visible;
+
+		foreach (Node child in node.GetChildren())
+			SetGameCubeDiskVisible(child, visible);
+	}
+
+	private static bool IsGbaCartridgeNode(Node3D node)
+	{
+		var nodeName = node.Name.ToString();
+		if (nodeName.Contains("gba_Object_0", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(nodeName, "Object_4", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		return node is MeshInstance3D mesh &&
+			mesh.Mesh != null &&
+			mesh.Mesh.ResourceName.Contains("Object_0", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static void SetGbaCartridgeVisible(Node node, bool visible)
+	{
+		if (node is Node3D node3D && IsGbaCartridgeNode(node3D))
+			node3D.Visible = visible;
+
+		foreach (Node child in node.GetChildren())
+			SetGbaCartridgeVisible(child, visible);
+	}
+
+	private static void SetN64CartridgeVisible(Node node, bool visible)
+	{
+		if (node is Node3D node3D &&
+			node3D.Name.ToString().Contains("cartridge", System.StringComparison.OrdinalIgnoreCase))
+		{
+			node3D.Visible = visible;
+		}
+
+		foreach (Node child in node.GetChildren())
+			SetN64CartridgeVisible(child, visible);
 	}
 
 	private bool TryToggleSelectedConsole(Vector2 localPos)
@@ -982,6 +1280,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var selectedBox = _boxes[selectedIdx];
 		if (!_consoleAnimations.ContainsKey(selectedBox))
 			return false;
+		if (IsConsoleType(selectedBox, ConsoleType.Wii) ||
+			IsConsoleType(selectedBox, ConsoleType.Nintendo64) ||
+			IsConsoleType(selectedBox, ConsoleType.GameCube))
+		{
+			return false;
+		}
 
 		if (_openAnimatedConsoles.Contains(selectedBox))
 		{

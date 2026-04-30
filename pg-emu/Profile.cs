@@ -46,6 +46,7 @@ public partial class Profile : Control
 	private const float FriendDrawerWidth = 392f;
 	private const float FriendDrawerScrimAlpha = 0.54f;
 	private const float FriendDrawerTweenSeconds = 0.22f;
+	private const float ProfileBackgroundOverlayAlpha = 0.68f;
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath AvatarPath;
@@ -114,6 +115,8 @@ public partial class Profile : Control
 		_visibilityToggle = GetNode<OptionButton>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/OptionButton");
 		_friendSearchDropdown = GetNodeOrNull<OptionButton>(FriendSearchDropdownPath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
+
+		StartBackgroundTransition();
 
 		ConnectIfNeeded(_back, GoBack);
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
@@ -1887,7 +1890,7 @@ public partial class Profile : Control
 	private void ApplyThemeAesthetic()
 	{
 		if (GetNodeOrNull<ColorRect>("Bg") is ColorRect bg)
-			bg.Color = new Color(0.068f, 0.048f, 0.121f, 0.96f);
+			bg.Color = new Color(0.068f, 0.048f, 0.121f, ProfileBackgroundOverlayAlpha);
 
 		var cardSurface = new Color(0.10f, 0.09f, 0.16f, 0.93f);
 		var cardSurfaceAlt = new Color(0.12f, 0.10f, 0.19f, 0.95f);
@@ -2137,6 +2140,25 @@ public partial class Profile : Control
 		button.AddThemeColorOverride("font_hover_color", new Color(0.95f, 0.94f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_pressed_color", new Color(0.95f, 0.94f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_focus_color", new Color(0.95f, 0.94f, 1f, 0.98f));
+	}
+
+	private void StartBackgroundTransition()
+	{
+		var bg = GetNodeOrNull<GlobalBackground>("/root/GlobalBackground");
+		if (bg == null)
+		{
+			GD.PrintErr("GlobalBackground node not found!");
+			return;
+		}
+
+		try
+		{
+			bg.StartTransition("HomeScreen", 1.5f);
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Gradient transition failed: {ex.Message}");
+		}
 	}
 
 	private static StyleBoxFlat CreatePanelStyle(Color background, Color border, int radius, int borderWidth)

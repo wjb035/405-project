@@ -16,6 +16,8 @@ using System.Text.RegularExpressions;
 
 public partial class GameSelect : Control
 {
+	private const string GbaReturnEjectMetaKey = "pgemu_gba_return_eject_on_home";
+
 	// NodePaths assigned in GameSelect.tscn so we can wire UI in-editor without hardcoding paths.
 	[Export] public NodePath CardsPath;
 	[Export] public NodePath PrevPath;
@@ -262,6 +264,7 @@ private void OnAnyButtonPressed()
 	{
 		CollectionStorage.currentCollection = null;
 		AudioManager.Instance?.PlayNavigation(-1);
+		FlagGbaReturnEjectIfNeeded();
 		// Navigate back to the home screen scene.
 		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
@@ -362,7 +365,14 @@ private void OnAnyButtonPressed()
 	private async void GoHome()
 	{
 		CollectionStorage.currentCollection = null;
+		FlagGbaReturnEjectIfNeeded();
 		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f);
+	}
+
+	private void FlagGbaReturnEjectIfNeeded()
+	{
+		if (string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase))
+			GetTree().SetMeta(GbaReturnEjectMetaKey, true);
 	}
 	
 	private async void GoAch()

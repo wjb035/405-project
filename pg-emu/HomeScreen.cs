@@ -74,6 +74,7 @@ public partial class HomeScreen : Control
 	private const float AxisDeadzone = 0.55f;
 	private const int AxisRepeatMs = 180;
 	private const string SelectedPlatformMetaKey = "pgemu_selected_platform_id";
+	private const string GbaReturnEjectMetaKey = "pgemu_gba_return_eject_on_home";
 	private int _leftAxisDir;
 	private long _leftAxisNextMs;
 	private string? _rememberedPlatformId;
@@ -183,6 +184,7 @@ public partial class HomeScreen : Control
 		{
 			"wii"        => ConsoleCarousel3DView.ConsoleType.Wii,
 			"ds"         => ConsoleCarousel3DView.ConsoleType.NintendoDS,
+			"n64"        => ConsoleCarousel3DView.ConsoleType.Nintendo64,
 			"ps1"        => ConsoleCarousel3DView.ConsoleType.PlayStation1,
 			"ps2"        => ConsoleCarousel3DView.ConsoleType.PlayStation2,
 			"psp"        => ConsoleCarousel3DView.ConsoleType.PSP,
@@ -980,6 +982,15 @@ private void OnAnyButtonPressed()
 			tree.SetMeta("pgemu_config_path", _configPath);
 
 		StartCoverArtWarmup(platform);
+		if (string.Equals(platform.Id, "wii", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.Wii);
+		else if (string.Equals(platform.Id, "n64", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.Nintendo64);
+		else if (string.Equals(platform.Id, "gc", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GameCube);
+		else if (string.Equals(platform.Id, "gba", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GBA);
+
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
 	}
 
@@ -995,6 +1006,10 @@ private void OnAnyButtonPressed()
 		var platformId = tree.GetMeta(SelectedPlatformMetaKey).AsString();
 		if (string.IsNullOrWhiteSpace(platformId))
 			return;
+		var shouldPlayGbaReturnEject = tree.HasMeta(GbaReturnEjectMetaKey) &&
+			tree.GetMeta(GbaReturnEjectMetaKey).AsBool();
+		if (tree.HasMeta(GbaReturnEjectMetaKey))
+			tree.RemoveMeta(GbaReturnEjectMetaKey);
 
 		for (var i = 0; i < _platforms.Count; i++)
 		{
@@ -1003,6 +1018,11 @@ private void OnAnyButtonPressed()
 
 			_carousel.CarouselPos = i;
 			_rememberedPlatformId = _platforms[i].Id;
+			if (shouldPlayGbaReturnEject &&
+				string.Equals(_platforms[i].Id, "gba", StringComparison.OrdinalIgnoreCase))
+			{
+				_carousel.PlaySelectedConsoleReturnAnimation(ConsoleCarousel3DView.ConsoleType.GBA);
+			}
 			return;
 		}
 	}
