@@ -2,8 +2,17 @@
 
 [ext_resource type="Script" uid="uid://ccogu0w0xm2f7" path="res://Profile.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://cejuhmeuqr1a8" path="res://Images/funny desktop icon.png" id="2_wi0ei"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o4dpx"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="3_theme"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_yghs0"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_khxjx"]
+shader = ExtResource("3_o4dpx")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.06632001, 0.0468, 0.12, 0.79607844)
+shader_parameter/highlight_color = Color(0.7, 0.5, 0.9, 0.4)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yghs0"]
 bg_color = Color(0, 0, 0, 0.47843137)
@@ -52,19 +61,22 @@ AvatarPath = NodePath("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer
 ProfileSettingsShortcutPath = NodePath("Margin/Root/TopBar/BtnProfileSettings")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2146068837]
+material = SubResource("ShaderMaterial_khxjx")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.06801925, 0.047571667, 0.12111964, 0.68)
+color = Color(0.06666667, 0.047058824, 0.12156863, 0.6784314)
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=266663920]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 667.0
+offset_bottom = 76.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 16

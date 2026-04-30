@@ -140,6 +140,7 @@ public partial class HomeScreen : Control
 		_carouselArea = GetNode<Control>(CarouselAreaPath);
 		_carousel = new ConsoleCarousel3DView();
 		_carousel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_carousel.OffsetLeft = -10f;
 		
 		// Put it behind the UI inside the carousel container.
 		_carouselArea.AddChild(_carousel);

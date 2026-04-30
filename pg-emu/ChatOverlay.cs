@@ -172,14 +172,51 @@ public partial class ChatOverlay : CanvasLayer
 			
 			var row = new HBoxContainer();
 			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+			var avatarFrame = new PanelContainer();
+			avatarFrame.CustomMinimumSize = new Vector2(36, 36);
+			avatarFrame.ClipContents = true;
+			avatarFrame.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+		
+			// Avtar circle build
+			avatarFrame.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+			{
+				BgColor = new Color(0.20f, 0.16f, 0.30f, 0.2f),
+				CornerRadiusTopLeft = 24,
+				CornerRadiusTopRight = 24,
+				CornerRadiusBottomLeft = 24,
+				CornerRadiusBottomRight = 24,
+				BorderColor = _onlineFriends.Contains(friend)
+					? new Color(0.42f, 1f, 0.42f, 0.8f)  // green border if online
+					: new Color(0.44f, 0.40f, 0.62f, 0.5f),
+				BorderWidthLeft = 2,
+				BorderWidthTop = 2,
+				BorderWidthRight = 2,
+				BorderWidthBottom = 2,
+			});
+
+		
+			var avatarImg = new TextureRect();
+			avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+			avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
+			avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			avatarFrame.AddChild(avatarImg);
+
+			row.AddChild(avatarFrame);
 			
-			// Each row has a status indicator
+			// Load avatar texture
+			string capturedFriend = friend;
+			_ = LoadFriendAvatarAsync(capturedFriend, avatarImg);
+
+			
+			/* Each row has a status indicator
 			var dot = new ColorRect();
 			dot.CustomMinimumSize = new Vector2(10, 10);
 			dot.Color = _onlineFriends.Contains(friend)
 				? new Color(0.42f, 1f, 0.42f, 1f)
 				: new Color(0.33f, 0.33f, 0.44f, 1f);
 			row.AddChild(dot);
+			*/
 			
 			// Clickable friends, that elt you open dms with them
 			var btn = new Button();
@@ -216,6 +253,7 @@ public partial class ChatOverlay : CanvasLayer
 			_friendsList.AddChild(row);
 			
 			UiStyle.StyleTopBarButton(btn);
+			UiStyle.ApplyParallaxShadow(btn);
 			UiStyle.AddHoverFeedback(btn);
 		}
 		
@@ -508,18 +546,19 @@ public partial class ChatOverlay : CanvasLayer
 		var container = new PanelContainer();
 		container.CustomMinimumSize = new Vector2(24, 24);
 		container.SizeFlagsVertical = Control.SizeFlags.ShrinkEnd;
+		container.ClipContents = true;
 		
 		// Avtar circle build
 		container.AddThemeStyleboxOverride("panel", new StyleBoxFlat
 		{
-			BgColor = new Color(0.20f, 0.16f, 0.30f, 1f),
-			CornerRadiusTopLeft = 999,
-			CornerRadiusTopRight = 999,
-			CornerRadiusBottomLeft = 999,
-			CornerRadiusBottomRight = 999,
+			BgColor = new Color(0.20f, 0.16f, 0.30f, 0.2f),
+			CornerRadiusTopLeft = 12,
+			CornerRadiusTopRight = 12,
+			CornerRadiusBottomLeft = 12,
+			CornerRadiusBottomRight = 12,
 			BorderColor = isMe
-				? new Color(0.65f, 0.42f, 0.92f, 0.7f)
-				: new Color(0.44f, 0.40f, 0.62f, 0.5f),
+				? new Color(0.65f, 0.42f, 0.92f, 0.4f)
+				: new Color(0.44f, 0.40f, 0.62f, 0.4f),
 			BorderWidthLeft = 1,
 			BorderWidthTop = 1,
 			BorderWidthRight = 1,
@@ -605,6 +644,37 @@ public partial class ChatOverlay : CanvasLayer
 		catch { return null; }
 	}
 
+	private async System.Threading.Tasks.Task LoadFriendAvatarAsync(string username, TextureRect rect)
+	{
+		try
+		{
+			// Check cache first using username as key
+			if (_avatarCache.TryGetValue(username, out var cached))
+			{
+				if (GodotObject.IsInstanceValid(rect))
+					rect.Texture = cached;
+				return;
+			}
+
+			var profileService = new ProfileService();
+			var profile = await profileService.GetUserProfile(username);
+			if (profile == null || string.IsNullOrEmpty(profile.AvatarUrl))
+				return;
+
+			var texture = await LoadAvatarAsync(profile.AvatarUrl);
+			if (texture == null || !GodotObject.IsInstanceValid(rect))
+				return;
+
+			// Cache by username so repeated opens don't re-fetch
+			_avatarCache[username] = texture;
+			rect.Texture = texture;
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr($"LoadFriendAvatarAsync failed for {username}: {e.Message}");
+		}
+	}
+	
 	private async System.Threading.Tasks.Task PreloadAvatars(string otherUsername)
 	{
 		var profileService = new ProfileService();
@@ -631,12 +701,12 @@ public partial class ChatOverlay : CanvasLayer
 	private void ApplyAesthetic()
 	{
 		// Buttons
-		UiStyle.StyleTopBarButton(_closeButton);
-		UiStyle.AddHoverFeedback(_closeButton);
+		UiStyle.StyleGhostNavButton(_closeButton, 0.8f);
 		UiStyle.ApplyParallaxShadow(_closeButton);
 		
-		UiStyle.StyleTopBarButton(_backButton);
-		UiStyle.AddHoverFeedback(_backButton);
+		UiStyle.StyleTabBar(_tabBar);
+		
+		UiStyle.StyleGhostNavButton(_backButton, 0.8f);
 		UiStyle.ApplyParallaxShadow(_backButton);
 		
 		UiStyle.StylePrimaryButton(_sendButton);

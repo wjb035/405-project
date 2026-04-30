@@ -163,6 +163,59 @@ public static class UiStyle
         };
     }
     
+    public static void StyleTabBar(TabBar? tabBar)
+    {
+	    if (tabBar == null) return;
+
+	    var inactiveTab = new StyleBoxFlat
+	    {
+		    BgColor = new Color(0.18f, 0.14f, 0.27f, 0.75f),
+		    BorderWidthBottom = 2,
+		    BorderColor = new Color(0.64f, 0.54f, 0.82f, 0.3f),
+		    CornerRadiusTopLeft = 12,
+		    CornerRadiusTopRight = 12,
+		    ContentMarginLeft = 12f,
+		    ContentMarginRight = 12f,
+		    ContentMarginTop = 6f,
+		    ContentMarginBottom = 6f,
+	    };
+
+	    var activeTab = new StyleBoxFlat
+	    {
+		    BgColor = new Color(0.24f, 0.19f, 0.36f, 0.92f),
+		    BorderWidthBottom = 2,
+		    BorderColor = new Color(0.86f, 0.68f, 1f, 1f),
+		    CornerRadiusTopLeft = 12,
+		    CornerRadiusTopRight = 12,
+		    ContentMarginLeft = 12f,
+		    ContentMarginRight = 12f,
+		    ContentMarginTop = 6f,
+		    ContentMarginBottom = 6f,
+	    };
+
+	    var hoverTab = new StyleBoxFlat
+	    {
+		    BgColor = new Color(0.24f, 0.19f, 0.35f, 0.9f),
+		    BorderWidthBottom = 2,
+		    BorderColor = new Color(0.88f, 0.72f, 1f, 0.95f),
+		    CornerRadiusTopLeft = 12,
+		    CornerRadiusTopRight = 12,
+		    ContentMarginLeft = 12f,
+		    ContentMarginRight = 12f,
+		    ContentMarginTop = 6f,
+		    ContentMarginBottom = 6f,
+	    };
+
+	    tabBar.AddThemeStyleboxOverride("tab_unselected", inactiveTab);
+	    tabBar.AddThemeStyleboxOverride("tab_selected", activeTab);
+	    tabBar.AddThemeStyleboxOverride("tab_hovered", hoverTab);
+
+	    tabBar.AddThemeColorOverride("font_selected_color", TextColor);
+	    tabBar.AddThemeColorOverride("font_unselected_color", new Color(0.70f, 0.67f, 0.82f, 0.8f));
+	    tabBar.AddThemeColorOverride("font_hovered_color", TextColor);
+	    tabBar.AddThemeFontSizeOverride("font_size", 13);
+    }
+    
     // Helper for assigning this in other scenes
     public static void StyleGhostNav(params Button[] buttons)
     {
@@ -171,7 +224,7 @@ public static class UiStyle
     }
     
     // Nav arrows transparent and animate on hover
-    public static void StyleGhostNavButton(Button? button)
+    public static void StyleGhostNavButton(Button? button, float restingAlpha = 0.15f)
     {
         if (button == null) return;
 
@@ -183,7 +236,7 @@ public static class UiStyle
         button.AddThemeStyleboxOverride("focus", empty);
 
         // Start semi transparent
-        button.Modulate = new Color(0.78f, 0.7f, 0.8f, 0.15f);
+        button.Modulate = new Color(0.78f, 0.7f, 0.8f, restingAlpha);
 
         // Prevent layout stretching
         button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
@@ -197,18 +250,18 @@ public static class UiStyle
             button.PivotOffset = button.Size / 2f;
         };
 
-        ConnectGhostNavHover(button);
+        ConnectGhostNavHover(button, restingAlpha);
     }
     
     // Connects the animation to mouse hover
-    private static void ConnectGhostNavHover(Button button)
+    private static void ConnectGhostNavHover(Button button, float restingAlpha = 0.15f)
     {
-        button.MouseEntered += () => AnimateGhostNav(button, true);
-        button.MouseExited += () => AnimateGhostNav(button, false);
+        button.MouseEntered += () => AnimateGhostNav(button, true, restingAlpha);
+        button.MouseExited += () => AnimateGhostNav(button, false, restingAlpha);
     }
 
     // Animates the arrows 
-    private static void AnimateGhostNav(Button button, bool hovered)
+    private static void AnimateGhostNav(Button button, bool hovered, float restingAlpha = 0.15f)
     {
         var tween = button.CreateTween();
         tween.SetParallel(true);
@@ -221,7 +274,7 @@ public static class UiStyle
         tween.TweenProperty(button, "modulate",
             hovered
                 ? new Color(0.92f, 0.85f, 1f, 1f)  
-                : new Color(0.78f, 0.7f, 0.8f, 0.15f), 
+                : new Color(0.78f, 0.7f, 0.8f, restingAlpha), 
             0.2f);
         GD.Print(button.PivotOffset, " vs ", button.Size);
     }

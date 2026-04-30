@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://1wtnmucvt428"]
 
 [ext_resource type="Script" uid="uid://c2osusou4flko" path="res://ChatOverlay.cs" id="1_6jj4k"]
-[ext_resource type="Texture2D" uid="uid://c8ry8uj564spo" path="res://Images/small arrow left icon.png" id="2_58eyl"]
 [ext_resource type="Texture2D" uid="uid://cucbu5yh4r3nq" path="res://Images/x mark icon.png" id="2_orwy1"]
+[ext_resource type="Texture2D" uid="uid://b3inovkblhbxn" path="res://Images/small arrow left icon thin.png" id="3_orwy1"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1jgq1"]
 bg_color = Color(0.11024502, 0.1071, 0.17, 1)
@@ -43,12 +43,23 @@ layout_mode = 2
 size_flags_vertical = 0
 
 [node name="CloseButton" type="Button" parent="Panel/VBox/Header" unique_id=949062338]
-custom_minimum_size = Vector2(36, 24)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-icon = ExtResource("2_orwy1")
 autowrap_trim_flags = 0
 icon_alignment = 1
 expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Panel/VBox/Header/CloseButton" unique_id=204832294]
+layout_mode = 0
+offset_top = 1.0
+offset_right = 24.0
+offset_bottom = 25.0
+texture = ExtResource("2_orwy1")
+expand_mode = 1
+
+[node name="Control" type="Control" parent="Panel/VBox/Header" unique_id=296764871]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
 
 [node name="TabBar" type="TabBar" parent="Panel/VBox/Header" unique_id=576265482]
 custom_minimum_size = Vector2(200, 0)
@@ -89,9 +100,15 @@ layout_mode = 2
 [node name="BackButton" type="Button" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1094786830]
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
-icon = ExtResource("2_58eyl")
 icon_alignment = 1
 expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Panel/VBox/MainArea/ChatTab/ChatHeader/BackButton" unique_id=546956403]
+layout_mode = 0
+offset_right = 24.0
+offset_bottom = 24.0
+texture = ExtResource("3_orwy1")
+expand_mode = 1
 
 [node name="ChatTitle" type="Label" parent="Panel/VBox/MainArea/ChatTab/ChatHeader" unique_id=1077368712]
 layout_mode = 2
