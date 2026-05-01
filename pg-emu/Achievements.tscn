@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dsana"]
 [ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="2_uqn2r"]
-[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o5fs0"]
+[ext_resource type="Shader" path="res://ShaderSlop/BottomBar.gdshader" id="3_o5fs0"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ss6l3"]
 shader = ExtResource("3_o5fs0")
@@ -44,6 +44,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -16.0
+offset_right = -16.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 18
@@ -70,7 +72,8 @@ expand_icon = true
 
 [node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=749932390]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 6
+size_flags_vertical = 1
 theme_override_font_sizes/font_size = 28
 text = "Achievements"
 horizontal_alignment = 1
@@ -83,8 +86,8 @@ alignment = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1997757442]
 layout_mode = 0
-offset_left = 416.0
-offset_top = 128.0
+offset_left = 62.0
+offset_top = 72.0
 offset_right = 1134.0
 offset_bottom = 624.0
 

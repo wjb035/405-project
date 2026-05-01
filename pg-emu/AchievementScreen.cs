@@ -64,7 +64,7 @@ public partial class AchievementScreen : Control
 	Button btn = new Button();
 	btn.SizeFlagsHorizontal = SizeFlags.Fill;      // stretch horizontally
 	btn.SizeFlagsVertical = SizeFlags.ShrinkCenter; // height controlled by CustomMinimumSize
-	btn.CustomMinimumSize = new Vector2(400, 60);  // button size
+	btn.CustomMinimumSize = new Vector2(800, 60);  // button size
 	UiStyle.StyleTopBarButton(btn);  
 	int index = i;
 	btn.Pressed += () =>
@@ -81,7 +81,7 @@ public partial class AchievementScreen : Control
 
 	// Icon TextureRect
 	TextureRect icon = new TextureRect();
-	icon.SizeFlagsHorizontal = SizeFlags.ShrinkCenter; 
+	icon.SizeFlagsHorizontal = SizeFlags.ShrinkBegin; 
 	icon.SizeFlagsVertical = SizeFlags.Fill;         // fills button height
 	icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered; // scale proportionally
 	icon.CustomMinimumSize = new Vector2(48, 48);    // keeps it at least this big
@@ -89,7 +89,7 @@ public partial class AchievementScreen : Control
 
 	// Spacer between icon and text
 	Control spacer = new Control();
-	spacer.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
+	spacer.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
 	spacer.CustomMinimumSize = new Vector2(10, 0);
 	hbox.AddChild(spacer);
 
@@ -122,12 +122,19 @@ if (dateLabel.Text == "1/1/0001 12:00:00 AM"){
 	unlocked = false;
 }
 
+// Spacer between icon and text
+Control datespacer = new Control();
+datespacer.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+datespacer.CustomMinimumSize = new Vector2(150, 0);
+hbox.AddChild(datespacer);
+
+
 dateLabel.SizeFlagsHorizontal = SizeFlags.Fill;
 dateLabel.HorizontalAlignment = HorizontalAlignment.Left;
-textBox.AddChild(dateLabel);
+hbox.AddChild(dateLabel);
 
-// Optional: make it visually secondary
-//subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f); // slightly dimmer
+
+subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f); // slightly dimmer
 subtitleLabel.AddThemeFontSizeOverride("font_size", 12); // smaller font
 dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
 
