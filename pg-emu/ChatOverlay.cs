@@ -172,37 +172,41 @@ public partial class ChatOverlay : CanvasLayer
 			
 			var row = new HBoxContainer();
 			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-
-			var avatarFrame = new PanelContainer();
-			avatarFrame.CustomMinimumSize = new Vector2(36, 36);
-			avatarFrame.ClipContents = true;
-			avatarFrame.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-		
-			// Avtar circle build
-			avatarFrame.AddThemeStyleboxOverride("panel", new StyleBoxFlat
-			{
-				BgColor = new Color(0.20f, 0.16f, 0.30f, 0.2f),
-				CornerRadiusTopLeft = 24,
-				CornerRadiusTopRight = 24,
-				CornerRadiusBottomLeft = 24,
-				CornerRadiusBottomRight = 24,
-				BorderColor = _onlineFriends.Contains(friend)
-					? new Color(0.42f, 1f, 0.42f, 0.8f)  // green border if online
-					: new Color(0.44f, 0.40f, 0.62f, 0.5f),
-				BorderWidthLeft = 2,
-				BorderWidthTop = 2,
-				BorderWidthRight = 2,
-				BorderWidthBottom = 2,
-			});
-
-		
+			
+			
+			// Avatar in a cirlce 
+			var avatarWrapper = new Control();
+			avatarWrapper.CustomMinimumSize = new Vector2(40, 40);
+			avatarWrapper.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+			
+			// Online status indicator
+			var ring = new ColorRect();
+			ring.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			ring.Color = _onlineFriends.Contains(friend)
+				? new Color(0.42f, 1f, 0.42f, 0.8f)
+				: new Color(0.44f, 0.40f, 0.62f, 0.8f);
+			var ringShaderMat = new ShaderMaterial();
+			ringShaderMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			ring.Material = ringShaderMat;
+			ring.MouseFilter = Control.MouseFilterEnum.Ignore;
+			avatarWrapper.AddChild(ring);
+			
+			// ACtual avatar
 			var avatarImg = new TextureRect();
 			avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
 			avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
 			avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-			avatarFrame.AddChild(avatarImg);
+			avatarImg.OffsetLeft = 2;
+			avatarImg.OffsetTop = 2;
+			avatarImg.OffsetRight = -2;
+			avatarImg.OffsetBottom = -2;
 
-			row.AddChild(avatarFrame);
+			var avatarMat = new ShaderMaterial();
+			avatarMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			avatarImg.Material =  avatarMat;
+			
+			avatarWrapper.AddChild(avatarImg);
+			row.AddChild(avatarWrapper);
 			
 			// Load avatar texture
 			string capturedFriend = friend;
@@ -235,7 +239,7 @@ public partial class ChatOverlay : CanvasLayer
 				badge.Text = count.ToString();
 				badge.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 1f));
 				badge.AddThemeFontSizeOverride("font_size", 11);
-				var badgeStyle = new StyleBoxFlat
+				badge.AddThemeStyleboxOverride("normal", new StyleBoxFlat
 				{
 					BgColor = new Color(0.55f, 0.2f, 0.8f, 1f),
 					CornerRadiusTopLeft = 999,
@@ -246,8 +250,7 @@ public partial class ChatOverlay : CanvasLayer
 					ContentMarginRight = 6f,
 					ContentMarginTop = 2f,
 					ContentMarginBottom = 2f,
-				};
-				badge.AddThemeStyleboxOverride("normal", badgeStyle);
+				});
 				row.AddChild(badge);
 			}
 			_friendsList.AddChild(row);
@@ -256,8 +259,6 @@ public partial class ChatOverlay : CanvasLayer
 			UiStyle.ApplyParallaxShadow(btn);
 			UiStyle.AddHoverFeedback(btn);
 		}
-		
-		
 		
 	}
 	
