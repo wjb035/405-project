@@ -162,14 +162,6 @@ icon = ExtResource("6_c58cc")
 icon_alignment = 1
 expand_icon = true
 
-[node name="BtnFriends" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1856926597]
-custom_minimum_size = Vector2(44, 36)
-layout_mode = 2
-tooltip_text = "Profile"
-icon = ExtResource("5_rlxaj")
-icon_alignment = 1
-expand_icon = true
-
 [node name="BtnChat" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=2136396140]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
@@ -183,6 +175,14 @@ custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
 tooltip_text = "Settings"
 icon = ExtResource("7_c58cc")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnFriends" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1856926597]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Profile"
+icon = ExtResource("5_rlxaj")
 icon_alignment = 1
 expand_icon = true
 

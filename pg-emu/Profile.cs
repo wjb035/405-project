@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PGEmu.Helpers;
+using RetroAchievements.Api;
+using RetroAchievements.Api.Response.Users.Records;
 using FriendRecordStatus = PGEmu.Services.Models.FriendStatus;
 
 public partial class Profile : Control
@@ -31,7 +33,7 @@ public partial class Profile : Control
 	private const float ControllerRowMergeThreshold = 36f;
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
 	private const string ReturnSceneMetaKey = "pgemu_return_scene";
-	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
+	private const string TrophySectionTitlePath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/Showcase";
 	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
 	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
 	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
@@ -47,6 +49,9 @@ public partial class Profile : Control
 	private const float FriendDrawerScrimAlpha = 0.54f;
 	private const float FriendDrawerTweenSeconds = 0.22f;
 	private const float ProfileBackgroundOverlayAlpha = 0.68f;
+	private const string HoverFeedbackAppliedMeta = "pgemu_profile_hover_feedback_applied";
+	private const string RetroAchievementsConnectPrompt = "Connect to retroachievements to view your trophies!";
+	private const string NoEarnedTrophiesText = "No trophies earned yet";
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath AvatarPath;
@@ -115,6 +120,7 @@ public partial class Profile : Control
 		_visibilityToggle = GetNode<OptionButton>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/OptionButton");
 		_friendSearchDropdown = GetNodeOrNull<OptionButton>(FriendSearchDropdownPath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
+		ApplyAvatarMaskShader();
 
 		StartBackgroundTransition();
 
@@ -122,7 +128,6 @@ public partial class Profile : Control
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
 		ConnectIfNeeded(_friendsList, GoFriendsList);
 		ConnectFriendTileButtons();
-		ConnectShowcaseTileButtons();
 		ConnectRecentGameTileButtons();
 			if (_friendSearchDropdown != null)
 				_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
@@ -136,6 +141,16 @@ public partial class Profile : Control
 			LoadProfileAsync(),
 			LoadSectionDataAsync());
 		CallDeferred(nameof(RefreshControllerFocusGraph));
+	}
+
+	private void ApplyAvatarMaskShader()
+	{
+		var avatarMaterial = new ShaderMaterial
+		{
+			Shader = GD.Load<Shader>("res://ShaderSlop/RoundedAvatarFrame.gdshader")
+		};
+
+		_avatar.Material = avatarMaterial;
 	}
 
 		public override void _UnhandledInput(InputEvent @event)
@@ -445,51 +460,12 @@ public partial class Profile : Control
 			button.Pressed += () => OpenFriendProfileAsync(button);
 	}
 
-	private void ConnectShowcaseTileButtons()
-	{
-		foreach (var button in GetTileButtons(ShowcaseTileGridPath))
-		{
-			var capturedButton = button;
-			capturedButton.Pressed += async () => await OpenCollectionsFromTileAsync(capturedButton);
-		}
-	}
-
 	private void ConnectRecentGameTileButtons()
 	{
 		foreach (var button in GetTileButtons(RecentGamesTileGridPath))
 		{
 			var capturedButton = button;
 			capturedButton.Pressed += async () => await OpenGameSelectFromRecentTileAsync(capturedButton);
-		}
-	}
-
-	private async Task OpenCollectionsFromTileAsync(Button tileButton)
-	{
-		if (!IsActionableTile(tileButton) || _openingSectionScene)
-			return;
-
-		_openingSectionScene = true;
-		try
-		{
-			AudioManager.Instance?.PlaySelect();
-			var tree = GetTree();
-			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
-
-			var selectedCollectionName = tileButton.Text?.Trim();
-			if (!string.IsNullOrWhiteSpace(selectedCollectionName))
-				tree.SetMeta(CollectionsFocusMetaKey, selectedCollectionName);
-			else if (tree.HasMeta(CollectionsFocusMetaKey))
-				tree.RemoveMeta(CollectionsFocusMetaKey);
-
-			await Transition.ChangeScene("res://Collections.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, true);
-		}
-		catch (Exception exception)
-		{
-			GD.PrintErr($"Could not open collections from profile tile: {exception.Message}");
-		}
-		finally
-		{
-			_openingSectionScene = false;
 		}
 	}
 
@@ -1367,12 +1343,12 @@ public partial class Profile : Control
 	{
 		try
 		{
-			var showcaseTask = LoadCollectionNamesAsync();
+			var trophyTask = LoadTrophyTileDataAsync();
 			var recentGamesTask = LoadRecentGameLabelsAsync();
 			var friendsTask = LoadFriendEntriesAsync();
 
-			await Task.WhenAll(showcaseTask, recentGamesTask, friendsTask);
-			var showcaseItems = await showcaseTask;
+			await Task.WhenAll(trophyTask, recentGamesTask, friendsTask);
+			var trophyData = await trophyTask;
 			var recentGameItems = await recentGamesTask;
 			var friendItems = await friendsTask;
 			var previewFriendItems = friendItems
@@ -1386,7 +1362,7 @@ public partial class Profile : Control
 			_friendEntries.Clear();
 			_friendEntries.AddRange(friendItems);
 
-			ApplyTileContent(ShowcaseTileGridPath, showcaseItems, "No collections yet");
+			ApplyTileContent(ShowcaseTileGridPath, trophyData.Items, trophyData.EmptyText);
 			ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
 			ApplyFriendTileContent(previewFriendItems, "No friends yet");
 			ConfigureFriendSearchDropdown(friendItems.Select(friend => friend.Username).ToArray());
@@ -1403,7 +1379,7 @@ public partial class Profile : Control
 				return;
 
 			_friendEntries.Clear();
-			ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "No collections yet");
+			ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "Unable to load trophies right now");
 			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
 			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
 			ConfigureFriendSearchDropdown(Array.Empty<string>());
@@ -1532,34 +1508,61 @@ public partial class Profile : Control
 			button.RemoveMeta("pgemu_friend_username");
 	}
 
-	private async Task<IReadOnlyList<string>> LoadCollectionNamesAsync()
+	private async Task<(IReadOnlyList<string> Items, string EmptyText)> LoadTrophyTileDataAsync()
 	{
+		if (!HasRetroAchievementsCredentials())
+			return (Array.Empty<string>(), RetroAchievementsConnectPrompt);
+
 		try
 		{
-			var collectionsPath = ProjectSettings.GlobalizePath("res://collections.json");
-			if (!File.Exists(collectionsPath))
-				return Array.Empty<string>();
+			var response = await RetroAchievementsService.client.GetUserAwardsAsync(RetroAchievementsService.username);
+			if (response?.VisibleUserAwards == null)
+				return (Array.Empty<string>(), NoEarnedTrophiesText);
 
-			await using var stream = File.OpenRead(collectionsPath);
-			var collections = await JsonSerializer.DeserializeAsync<List<KeyValuePair<string, List<GameEntry>>>>(
-				stream,
-				new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-			if (collections == null)
-				return Array.Empty<string>();
-
-			return collections
-				.Select(collection => collection.Key?.Trim())
-				.Where(name => !string.IsNullOrWhiteSpace(name))
+			var trophies = response.VisibleUserAwards
+				.Where(IsTrophyAward)
+				.OrderBy(award => award.DisplayOrder)
+				.Select(FormatTrophyLabel)
+				.Where(label => !string.IsNullOrWhiteSpace(label))
+				.Distinct(StringComparer.OrdinalIgnoreCase)
 				.Take(MaxTileCount)
 				.Cast<string>()
 				.ToArray();
+
+			return trophies.Length == 0
+				? (Array.Empty<string>(), NoEarnedTrophiesText)
+				: (trophies, NoEarnedTrophiesText);
 		}
 		catch (Exception exception)
 		{
-			GD.PrintErr($"Collection load failed: {exception.Message}");
-			return Array.Empty<string>();
+			GD.PrintErr($"Trophy load failed: {exception.Message}");
+			return (Array.Empty<string>(), "Unable to load trophies right now");
 		}
+	}
+
+	private static bool HasRetroAchievementsCredentials()
+	{
+		return !string.IsNullOrWhiteSpace(RetroAchievementsService.username) &&
+			!string.IsNullOrWhiteSpace(RetroAchievementsService.apiKey);
+	}
+
+	private static bool IsTrophyAward(VisibleUserAward award)
+	{
+		return string.Equals(award.AwardType, "Game Beaten", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(award.AwardType, "Mastery/Completion", StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static string FormatTrophyLabel(VisibleUserAward award)
+	{
+		var title = award.Title?.Trim();
+		if (string.IsNullOrWhiteSpace(title))
+			return string.Empty;
+
+		var trophyType = string.Equals(award.AwardType, "Mastery/Completion", StringComparison.OrdinalIgnoreCase)
+			? "Mastery"
+			: "Beaten";
+
+		return $"{trophyType}: {title}";
 	}
 
 	private async Task<IReadOnlyList<string>> LoadRecentGameLabelsAsync()
@@ -1942,12 +1945,11 @@ public partial class Profile : Control
 		UiStyle.StyleTitleLabel(_gamerTag);
 		UiStyle.StyleStatusLabel(_profileNote);
 
-		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/Showcase", showcaseAccent);
+		StyleSectionTitle(TrophySectionTitlePath, showcaseAccent);
 		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Label", recentAccent);
 		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Label", friendsAccent);
 
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2", cardSurfaceAlt, avatarBorder, 18, 1);
-		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame", cardSurfaceInset, cardBorderStrong, 16, 1);
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer", cardSurface, cardBorderStrong, 16, 1);
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer", cardSurfaceInset, cardBorder, 14, 1);
 
@@ -2024,6 +2026,7 @@ public partial class Profile : Control
 			button.Text = "See All";
 			button.Alignment = HorizontalAlignment.Center;
 			ApplyButtonTheme(button, background, accent, isChip: true);
+			ApplyProfileHoverFeedback(button, scaleUp: 1.06f, shadowOffsetY: 3f);
 		}
 
 		private void ApplyFriendDrawerTheme()
@@ -2054,6 +2057,7 @@ public partial class Profile : Control
 			_friendDrawerCount.AddThemeColorOverride("font_color", new Color(friendsAccent.R, friendsAccent.G, friendsAccent.B, 0.88f));
 
 			ApplyButtonTheme(_friendDrawerClose, chipSurface, friendsAccent, isChip: true);
+			ApplyProfileHoverFeedback(_friendDrawerClose, scaleUp: 1.06f, shadowOffsetY: 3f);
 
 			int index = 0;
 			foreach (Node child in _friendDrawerList.GetChildren())
@@ -2094,6 +2098,17 @@ public partial class Profile : Control
 		button.AddThemeColorOverride("font_hover_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_pressed_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_focus_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+		ApplyProfileHoverFeedback(button, scaleUp: 1.03f, duration: 0.10f, shadowOffsetY: 2f);
+	}
+
+	private static void ApplyProfileHoverFeedback(Button? button, float scaleUp = 1.04f, float duration = 0.11f, float shadowOffsetY = 3f)
+	{
+		if (button == null || button.HasMeta(HoverFeedbackAppliedMeta))
+			return;
+
+		UiStyle.AddHoverFeedback(button, scaleUp, duration);
+		UiStyle.ApplyParallaxShadow(button, offsetY: shadowOffsetY);
+		button.SetMeta(HoverFeedbackAppliedMeta, true);
 	}
 
 	private void StyleSectionTitle(string nodePath, Color color)

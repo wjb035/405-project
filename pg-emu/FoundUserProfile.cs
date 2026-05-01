@@ -19,6 +19,7 @@ public partial class FoundUserProfile : Control
 	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
 	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
 	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
+	private const string HoverFeedbackAppliedMeta = "pgemu_profile_hover_feedback_applied";
 	private const int MaxTileCount = 4;
 	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -115,6 +116,7 @@ public partial class FoundUserProfile : Control
 		_gamer_tag = GetNode<Label>(GamerTagPath);
 		_profile_note = GetNode<Label>(ProfileNotePath);
 		_avatar = GetNode<TextureRect>(AvatarPath);
+		ApplyAvatarMaskShader();
 
 		// Keep navigation usable while profile data loads.
 		_title_gamertag.Text = $"{profile.Username}'s Profile";
@@ -129,6 +131,16 @@ public partial class FoundUserProfile : Control
 		BindRecentGameTileButtons();
 		_ = LoadProfileAsync();
 		CallDeferred(nameof(RefreshControllerFocusGraph));
+	}
+
+	private void ApplyAvatarMaskShader()
+	{
+		var avatarMaterial = new ShaderMaterial
+		{
+			Shader = GD.Load<Shader>("res://ShaderSlop/RoundedAvatarFrame.gdshader")
+		};
+
+		_avatar.Material = avatarMaterial;
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -577,7 +589,6 @@ public partial class FoundUserProfile : Control
 		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Label", friendsAccent);
 
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2", cardSurfaceAlt, avatarBorder, 18, 1);
-		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame", cardSurfaceInset, cardBorderStrong, 16, 1);
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer", cardSurface, cardBorderStrong, 16, 1);
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer", cardSurfaceInset, cardBorder, 14, 1);
 
@@ -996,6 +1007,7 @@ public partial class FoundUserProfile : Control
 		button.Text = "See All";
 		button.Alignment = HorizontalAlignment.Center;
 		ApplyButtonTheme(button, background, accent, isChip: true);
+		ApplyProfileHoverFeedback(button, scaleUp: 1.06f, shadowOffsetY: 3f);
 	}
 
 	private void ApplyTileTheme(Button button, Color sectionAccent, Color tileAccent)
@@ -1019,6 +1031,17 @@ public partial class FoundUserProfile : Control
 		button.AddThemeColorOverride("font_hover_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_pressed_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_focus_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+		ApplyProfileHoverFeedback(button, scaleUp: 1.03f, duration: 0.10f, shadowOffsetY: 2f);
+	}
+
+	private static void ApplyProfileHoverFeedback(Button? button, float scaleUp = 1.04f, float duration = 0.11f, float shadowOffsetY = 3f)
+	{
+		if (button == null || button.HasMeta(HoverFeedbackAppliedMeta))
+			return;
+
+		UiStyle.AddHoverFeedback(button, scaleUp, duration);
+		UiStyle.ApplyParallaxShadow(button, offsetY: shadowOffsetY);
+		button.SetMeta(HoverFeedbackAppliedMeta, true);
 	}
 
 	private void StyleSectionTitle(string nodePath, Color color)

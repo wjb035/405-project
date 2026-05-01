@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -11,12 +12,18 @@ public partial class FriendsList : Control
 {	
 	private const string FriendsListOwnerMeta = "pgemu_friends_list_owner_username";
 	private const string DefaultReturnScene = "res://profile.tscn";
+	private const string AvatarShaderPath = "res://ShaderSlop/RoundedAvatarFrame.gdshader";
+	private const string DefaultAvatarPath = "res://Images/funny desktop icon.png";
 	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+	private static readonly System.Net.Http.HttpClient Client = new();
 
 	private readonly ProfileService _profileService = new();
+	private readonly Dictionary<string, Texture2D> _avatarTextureCache = new(StringComparer.OrdinalIgnoreCase);
 	private Button _back = null!;
 	private Label _title = null!;
 	private VBoxContainer _friendsContainer = null!;
+	private Shader? _avatarShader;
+	private Texture2D? _defaultAvatarTexture;
 	private bool _openingFriendProfile;
 	private string _ownerUsername = string.Empty;
 	
@@ -27,6 +34,8 @@ public partial class FriendsList : Control
 		_back = GetNode<Button>("Bg/Margin/Root/TopBar/BtnBack");
 		_title = GetNode<Label>("Bg/Margin/Root/TopBar/Label");
 		_friendsContainer = GetNode<VBoxContainer>("Bg/Margin/Root/PanelContainer2/MarginContainer/VBoxContainer");
+		_avatarShader = GD.Load<Shader>(AvatarShaderPath);
+		_defaultAvatarTexture = GD.Load<Texture2D>(DefaultAvatarPath);
 		var tree = GetTree();
 		_ownerUsername = tree.HasMeta(FriendsListOwnerMeta)
 			? (tree.GetMeta(FriendsListOwnerMeta).AsString() ?? string.Empty).Trim()
@@ -73,14 +82,14 @@ public partial class FriendsList : Control
 
 	private async Task PopulateFriendsAsync()
 	{
-		var friendNames = await LoadFriendNamesAsync();
+		var friends = await LoadFriendEntriesAsync();
 		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 			return;
 
 		foreach (Node child in _friendsContainer.GetChildren())
 			child.QueueFree();
 
-		if (friendNames.Count == 0)
+		if (friends.Count == 0)
 		{
 			var emptyState = new Label
 			{
@@ -96,26 +105,82 @@ public partial class FriendsList : Control
 			return;
 		}
 
-		foreach (var username in friendNames)
+		foreach (var friend in friends)
 		{
-			var friendButton = new Button
-			{
-				CustomMinimumSize = new Vector2(0f, 60f),
-				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-				Text = username,
-				Alignment = HorizontalAlignment.Left,
-				ExpandIcon = true,
-				TooltipText = $"View {username}'s profile"
-			};
-
-			friendButton.Pressed += async () => await OpenFriendProfileByUsernameAsync(username);
+			var friendButton = CreateFriendRow(friend, out var avatar);
+			friendButton.Pressed += async () => await OpenFriendProfileByUsernameAsync(friend.Username);
 			_friendsContainer.AddChild(friendButton);
+			_ = LoadFriendAvatarAsync(friend, avatar);
 		}
 
 		ApplyThemeAesthetic();
 	}
 
-	private async Task<IReadOnlyList<string>> LoadFriendNamesAsync()
+	private Button CreateFriendRow(FriendListEntry friend, out TextureRect avatar)
+	{
+		var friendButton = new Button
+		{
+			CustomMinimumSize = new Vector2(0f, 72f),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			Text = string.Empty,
+			Alignment = HorizontalAlignment.Left,
+			TooltipText = $"View {friend.Username}'s profile"
+		};
+
+		var content = new HBoxContainer
+		{
+			MouseFilter = MouseFilterEnum.Ignore
+		};
+		content.SetAnchorsPreset(LayoutPreset.FullRect);
+		content.OffsetLeft = 12f;
+		content.OffsetTop = 7f;
+		content.OffsetRight = -12f;
+		content.OffsetBottom = -7f;
+		content.AddThemeConstantOverride("separation", 12);
+
+		var avatarWrapper = new Control
+		{
+			CustomMinimumSize = new Vector2(48f, 48f),
+			SizeFlagsVertical = SizeFlags.ShrinkCenter,
+			MouseFilter = MouseFilterEnum.Ignore
+		};
+
+		avatar = new TextureRect
+		{
+			Texture = _defaultAvatarTexture,
+			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+			StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
+			MouseFilter = MouseFilterEnum.Ignore
+		};
+		avatar.SetAnchorsPreset(LayoutPreset.FullRect);
+		if (_avatarShader != null)
+		{
+			avatar.Material = new ShaderMaterial
+			{
+				Shader = _avatarShader
+			};
+		}
+
+		var usernameLabel = new Label
+		{
+			Text = friend.Username,
+			VerticalAlignment = VerticalAlignment.Center,
+			SizeFlagsHorizontal = SizeFlags.ExpandFill,
+			SizeFlagsVertical = SizeFlags.ExpandFill,
+			MouseFilter = MouseFilterEnum.Ignore
+		};
+		usernameLabel.AddThemeFontSizeOverride("font_size", 18);
+		usernameLabel.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 0.98f));
+
+		avatarWrapper.AddChild(avatar);
+		content.AddChild(avatarWrapper);
+		content.AddChild(usernameLabel);
+		friendButton.AddChild(content);
+
+		return friendButton;
+	}
+
+	private async Task<IReadOnlyList<FriendListEntry>> LoadFriendEntriesAsync()
 	{
 		try
 		{
@@ -124,41 +189,121 @@ public partial class FriendsList : Control
 				var response = await AuthService.Instance.SendAuthorizedRequest(
 					$"http://localhost:5276/api/profile/{Uri.EscapeDataString(_ownerUsername)}/friends?limit=100");
 				if (response == null || response.Value.ValueKind != JsonValueKind.Array)
-					return Array.Empty<string>();
+					return Array.Empty<FriendListEntry>();
 
 				var friends = JsonSerializer.Deserialize<List<UserSearchResultResponse>>(
 					response.Value.GetRawText(),
 					JsonOptions);
 
 				return (friends ?? new List<UserSearchResultResponse>())
-					.Select(friend => friend.Username?.Trim() ?? string.Empty)
-					.Where(username => !string.IsNullOrWhiteSpace(username))
-					.Distinct(StringComparer.OrdinalIgnoreCase)
-					.OrderBy(username => username, StringComparer.OrdinalIgnoreCase)
+					.Select(friend => new FriendListEntry(
+						friend.Username?.Trim() ?? string.Empty,
+						string.IsNullOrWhiteSpace(friend.AvatarUrl) ? null : friend.AvatarUrl.Trim()))
+					.Where(friend => !string.IsNullOrWhiteSpace(friend.Username))
+					.GroupBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
+					.Select(group => group.First())
+					.OrderBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
 					.ToArray();
 			}
 
 			var friendsJson = await FriendActivity.GetFriendsJson();
 			if (string.IsNullOrWhiteSpace(friendsJson))
-				return Array.Empty<string>();
+				return Array.Empty<FriendListEntry>();
 
 			var friendsRoot = JsonSerializer.Deserialize<JsonElement>(friendsJson);
 			if (friendsRoot.ValueKind != JsonValueKind.Array)
-				return Array.Empty<string>();
+				return Array.Empty<FriendListEntry>();
 
 			return friendsRoot.EnumerateArray()
 				.Where(friend => friend.ValueKind == JsonValueKind.Object && IsAcceptedFriend(friend))
-				.Select(friend => ReadJsonString(friend, "username"))
-				.Where(username => !string.IsNullOrWhiteSpace(username))
-				.Select(username => username.Trim())
-				.Distinct(StringComparer.OrdinalIgnoreCase)
-				.OrderBy(username => username, StringComparer.OrdinalIgnoreCase)
+				.Select(friend => new FriendListEntry(
+					ReadJsonString(friend, "username").Trim(),
+					ReadFirstJsonString(friend, "avatarUrl", "AvatarUrl", "avatar_url").Trim()))
+				.Where(friend => !string.IsNullOrWhiteSpace(friend.Username))
+				.Select(friend => friend with { AvatarUrl = string.IsNullOrWhiteSpace(friend.AvatarUrl) ? null : friend.AvatarUrl })
+				.GroupBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
+				.Select(group => group.First())
+				.OrderBy(friend => friend.Username, StringComparer.OrdinalIgnoreCase)
 				.ToArray();
 		}
 		catch (Exception exception)
 		{
 			GD.PrintErr($"Friend list load failed: {exception.Message}");
-			return Array.Empty<string>();
+			return Array.Empty<FriendListEntry>();
+		}
+	}
+
+	private async Task LoadFriendAvatarAsync(FriendListEntry friend, TextureRect avatar)
+	{
+		try
+		{
+			var avatarUrl = friend.AvatarUrl;
+			if (string.IsNullOrWhiteSpace(avatarUrl))
+			{
+				var profile = await _profileService.GetUserProfile(friend.Username);
+				avatarUrl = profile?.AvatarUrl;
+			}
+
+			if (string.IsNullOrWhiteSpace(avatarUrl))
+				return;
+
+			var texture = await LoadAvatarTextureAsync(avatarUrl);
+			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree() || !GodotObject.IsInstanceValid(avatar))
+				return;
+			if (texture == null)
+				return;
+
+			avatar.Texture = texture;
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Friend avatar load failed for {friend.Username}: {exception.Message}");
+		}
+	}
+
+	private async Task<Texture2D?> LoadAvatarTextureAsync(string url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return null;
+
+		var normalizedUrl = NormalizeAvatarUrl(url);
+		if (_avatarTextureCache.TryGetValue(normalizedUrl, out var cachedTexture))
+			return cachedTexture;
+
+		try
+		{
+			var image = new Image();
+			var err = Error.Failed;
+
+			var localAvatarPath = TryResolveLocalAvatarPath(url);
+			if (!string.IsNullOrWhiteSpace(localAvatarPath) && File.Exists(localAvatarPath))
+			{
+				err = image.Load(localAvatarPath);
+			}
+			else
+			{
+				byte[] imageData = await Client.GetByteArrayAsync(normalizedUrl);
+				err = image.LoadPngFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = image.LoadJpgFromBuffer(imageData);
+				if (err != Error.Ok)
+					err = image.LoadWebpFromBuffer(imageData);
+			}
+
+			if (err != Error.Ok)
+			{
+				GD.PrintErr("Failed to decode friend avatar image");
+				return null;
+			}
+
+			var texture = ImageTexture.CreateFromImage(image);
+			_avatarTextureCache[normalizedUrl] = texture;
+			return texture;
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"Failed to load friend avatar image: {exception.Message}");
+			return null;
 		}
 	}
 
@@ -223,6 +368,57 @@ public partial class FriendsList : Control
 			_ => string.Empty,
 		};
 	}
+
+	private static string ReadFirstJsonString(JsonElement element, params string[] propertyNames)
+	{
+		foreach (var propertyName in propertyNames)
+		{
+			var value = ReadJsonString(element, propertyName);
+			if (!string.IsNullOrWhiteSpace(value))
+				return value;
+		}
+
+		return string.Empty;
+	}
+
+	private static string NormalizeAvatarUrl(string url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return string.Empty;
+
+		return url.StartsWith("/", StringComparison.Ordinal)
+			? $"http://localhost:5276{url}"
+			: url;
+	}
+
+	private static string? TryResolveLocalAvatarPath(string avatarReference)
+	{
+		if (string.IsNullOrWhiteSpace(avatarReference))
+			return null;
+
+		var cleanReference = avatarReference.Split('?', 2)[0];
+		if (!cleanReference.StartsWith("/uploads/avatars/", StringComparison.OrdinalIgnoreCase))
+			return null;
+
+		var projectDir = ProjectSettings.GlobalizePath("res://");
+		var relativePath = cleanReference.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+		var candidates = new[]
+		{
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", relativePath)),
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Debug", "net10.0", relativePath)),
+			Path.GetFullPath(Path.Combine(projectDir, "..", "PGEmu.backend", "bin", "Release", "net10.0", relativePath))
+		};
+
+		foreach (var candidate in candidates)
+		{
+			if (File.Exists(candidate))
+				return candidate;
+		}
+
+		return candidates[0];
+	}
+
+	private sealed record FriendListEntry(string Username, string? AvatarUrl);
 
 	private void ApplyThemeAesthetic()
 	{

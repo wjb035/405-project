@@ -1475,9 +1475,9 @@ private void OnAnyButtonPressed()
 		AddFocusableButton(buttons, _inbox);
 		AddFocusableButton(buttons, _collections);
 		AddFocusableButton(buttons, _achievement);
-		AddFocusableButton(buttons, _friends);
 		AddFocusableButton(buttons, _chat);
 		AddFocusableButton(buttons, _settings);
+		AddFocusableButton(buttons, _friends);
 		AddFocusableButton(buttons, _help);
 		AddFocusableButton(buttons, _add);
 		AddFocusableButton(buttons, _flip);

@@ -178,7 +178,7 @@ public partial class FriendService : Node
 		{
 			ApplyAuthHeader();
 			var response = await httpClient.GetAsync("http://localhost:5276/api/friends");
-        
+		
 			if (!response.IsSuccessStatusCode)
 			{
 				GD.PrintErr($"GetFriendUsernames failed: {response.StatusCode}");

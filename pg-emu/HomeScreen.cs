@@ -1267,7 +1267,7 @@ private void OnAnyButtonPressed()
 	private List<List<Button>> GetControllerUiRows()
 	{
 		return ControllerService.BuildVisibleRows(
-			new[] { _logout, _searchBarButton, _inbox, _collections, _friends, _music, _chat, _settings, _help },
+			new[] { _logout, _searchBarButton, _music, _collections, _inbox, _chat, _settings, _friends, _help },
 			new[] { _prev, _selectPlatform, _next });
 	}
 

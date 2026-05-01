@@ -268,14 +268,14 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			case ConsoleType.Wii:
 				SetWiiDiskVisible(model, false);
 				CenterNode3D(model, ShouldIncludeWiiBodyBounds);
-				var wiiScale = ComputeUniformScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
+				var wiiScale = ScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
 				model.Scale = new Vector3(wiiScale, wiiScale, wiiScale);
 				model.Position = new Vector3(-0.8f, -.5f, 0f);
 				model.RotateY(Mathf.DegToRad(40f));
 				break;
 			case ConsoleType.NintendoDS:
 				CenterNode3D(model);
-				var dsScale = ComputeUniformScaleToFit(model, 1.8f);
+				var dsScale = ScaleToFit(model, 1.8f);
 				model.Scale = new Vector3(dsScale, dsScale, dsScale);
 				model.Position = new Vector3(0.02f, -0.35f, 1f);
 				model.RotateX(Mathf.DegToRad(8f));
@@ -283,7 +283,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				break;
 			case ConsoleType.Nintendo64:
 				CenterNode3D(model);
-				var n64Scale = ComputeUniformScaleToFit(model, 3.2f);
+				var n64Scale = ScaleToFit(model, 3.2f);
 				model.Scale = new Vector3(n64Scale, n64Scale, n64Scale);
 				model.Position = new Vector3(1f, -0.5f, 0f);
 				model.RotateX(Mathf.DegToRad(0f));
@@ -292,19 +292,21 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				break;
 			case ConsoleType.PlayStation1:
 				CenterNode3D(model);
-				var ps1Scale = ComputeUniformScaleToFit(model, 2.5f);
+				var ps1Scale = ScaleToFit(model, 2.5f);
 				model.Scale = new Vector3(ps1Scale, ps1Scale, ps1Scale);
 				model.Position = new Vector3(0.02f, -0.5f, 0f);
 				model.RotateX(Mathf.DegToRad(8f));
-				model.RotateY(Mathf.DegToRad(12f));
+				model.RotateY(Mathf.DegToRad(10f));
 				break;
 			case ConsoleType.PlayStation2:
-				model.Scale = new Vector3(0.15f, 0.15f, 0.15f);
-				model.Position = new Vector3(0.05f, -1f, 0);
-				model.RotateY(Mathf.DegToRad(30f));
+				CenterNode3D(model);
+				var ps2Scale = ScaleToFit(model, 2.5f);
+				model.Scale = new Vector3(ps2Scale, ps2Scale, ps2Scale);
+				model.Position = new Vector3(1.45f, -1.75f, -1.2f);
+				model.RotateY(Mathf.DegToRad(100f));
 				break;
 				case ConsoleType.PSP:
-					var pspScale = ComputeUniformScaleToFit(model, 3.4f);
+					var pspScale = ScaleToFit(model, 3.4f);
 					model.Scale = new Vector3(pspScale, pspScale, pspScale);
 					CenterNode3D(model);
 						var pspPivot = new Node3D { Name = "PSPPivot" };
@@ -424,7 +426,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		root.Position -= bounds.GetCenter();
 	}
 
-	private static float ComputeUniformScaleToFit(Node3D root, float targetMaxDimension, System.Func<Node3D, bool>? includeNode = null)
+	private static float ScaleToFit(Node3D root, float targetMaxDimension, System.Func<Node3D, bool>? includeNode = null)
 	{
 		if (targetMaxDimension <= 0f ||
 			!TryGetNodeBounds(root, Transform3D.Identity, out var bounds, includeNode))
@@ -563,7 +565,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		if (screenTexture == null)
 			return;
 
-		ApplyGbaScreenLogoRecursive(node, screenTexture);
+		ApplyGbaLogoRecursive(node, screenTexture);
 	}
 
 	private Texture2D? GetGbaScreenLogoTexture()
@@ -589,7 +591,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return _gbaScreenLogoTexture;
 	}
 
-	private void ApplyGbaScreenLogoRecursive(Node node, Texture2D screenTexture)
+	private void ApplyGbaLogoRecursive(Node node, Texture2D screenTexture)
 	{
 		if (node is MeshInstance3D mesh && mesh.Name.ToString().Contains("Screen"))
 		{
@@ -620,19 +622,19 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		}
 
 		foreach (var child in node.GetChildren())
-			ApplyGbaScreenLogoRecursive((Node)child, screenTexture);
+			ApplyGbaLogoRecursive((Node)child, screenTexture);
 	}
 
 	private void ApplyPspScreenLogo(Node node)
 	{
-		var screenTexture = GetPspScreenLogoTexture();
+		var screenTexture = GetPspLogoTexture();
 		if (screenTexture == null)
 			return;
 
-		ApplyPspScreenLogoRecursive(node, screenTexture, node.Name.ToString());
+		ApplyPspLogoRecursive(node, screenTexture, node.Name.ToString());
 	}
 
-	private Texture2D? GetPspScreenLogoTexture()
+	private Texture2D? GetPspLogoTexture()
 	{
 		if (_pspScreenLogoTexture != null)
 			return _pspScreenLogoTexture;
@@ -655,7 +657,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return _pspScreenLogoTexture;
 	}
 
-	private void ApplyPspScreenLogoRecursive(Node node, Texture2D screenTexture, string hierarchyHint)
+	private void ApplyPspLogoRecursive(Node node, Texture2D screenTexture, string hierarchyHint)
 	{
 		var nodeName = node.Name.ToString();
 		var currentHint = string.IsNullOrEmpty(hierarchyHint) ? nodeName : $"{hierarchyHint}/{nodeName}";
@@ -700,7 +702,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			}
 
 		foreach (var child in node.GetChildren())
-			ApplyPspScreenLogoRecursive((Node)child, screenTexture, currentHint);
+			ApplyPspLogoRecursive((Node)child, screenTexture, currentHint);
 	}
 
 	private static void NormalizeMeshUvsToSingleTile(MeshInstance3D mesh)
@@ -1185,9 +1187,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private static bool IsWiiDiskNode(Node3D node)
 	{
 		var nodeName = node.Name.ToString();
-		return nodeName.Contains("disc", System.StringComparison.OrdinalIgnoreCase) ||
-			nodeName.Contains("disk", System.StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(nodeName, "Object_2", System.StringComparison.OrdinalIgnoreCase);
+		return string.Equals(nodeName, "Object_2", System.StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static void SetWiiDiskVisible(Node node, bool visible)

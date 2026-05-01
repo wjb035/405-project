@@ -5,7 +5,6 @@
 [ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o4dpx"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="3_theme"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_yghs0"]
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_khxjx"]
 shader = ExtResource("3_o4dpx")
 shader_parameter/blur_amount = 3.0
@@ -57,7 +56,7 @@ grow_vertical = 2
 theme = ExtResource("3_theme")
 script = ExtResource("1")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
-AvatarPath = NodePath("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer/TextureRect")
+AvatarPath = NodePath("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer/AvatarStack/TextureRect")
 ProfileSettingsShortcutPath = NodePath("Margin/Root/TopBar/BtnProfileSettings")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2146068837]
@@ -75,8 +74,6 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 667.0
-offset_bottom = 76.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 16
@@ -160,26 +157,35 @@ layout_mode = 2
 
 [node name="AvatarInnerMargin" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame" unique_id=877343172]
 layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin" unique_id=1618703419]
 clip_contents = true
-custom_minimum_size = Vector2(144, 144)
+custom_minimum_size = Vector2(156, 156)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
-[node name="TextureRect" type="TextureRect" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer" unique_id=430130487]
-clip_contents = true
+[node name="AvatarStack" type="Control" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer"]
+custom_minimum_size = Vector2(156, 156)
 layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer/AvatarStack" unique_id=430130487]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("2_wi0ei")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Sprite2D" type="Sprite2D" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer" unique_id=300521412]
+[node name="Sprite2D" type="Sprite2D" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer/AvatarStack" unique_id=300521412]
 visible = false
 
 [node name="PanelContainer" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer" unique_id=1230511267]
