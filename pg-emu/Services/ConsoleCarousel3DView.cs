@@ -6,7 +6,7 @@ namespace PGEmu.Services;
 
 public partial class ConsoleCarousel3DView : SubViewportContainer
 {
-	private const ulong SettleSpinSuppressWindowMs = 90;
+	private const ulong SettleSpinSuppressWindowMs = 40;
 	private const string GbaScreenLogoPath = "res://Models/gba_logo2.png";
 	private const string PspScreenLogoPath = "res://Models/psp_logo.png";
 	private const float PspScreenNudgeLeftU = 0.220f;
@@ -20,7 +20,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
-	private const float Friction = 3.5f;
+	private const float Friction = 3.0f;
 	private const float DragScale = 0.004f;
 	private const float FlingMultiplier = 15f; 
 	private const float ClickDragThreshold = 14f;
@@ -39,6 +39,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private float _lastSpinAudioCarouselPos = 0f;
 	private int _lastSpinAudioStep = 0;
 	private ulong _lastSpinAudioMs;
+	
+	private float _spinSpeed = 0f;
+	private const float SpinSpeedDecay = 3f;
+	private const float SpinSpeedMax = 1.0f;
 
 	// 3D scene internals
 	private SubViewport _viewport;
@@ -114,7 +118,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var sun = new DirectionalLight3D
 		{
 			LightEnergy = 2.1f,
-			LightColor = new Color(0.95f, 0.90f, 1.0f),
+			LightColor = new Color(1f, 0.95f, 0.85f),
 			ShadowEnabled = true,
 			ShadowBlur = 0.5f,
 		};
@@ -127,8 +131,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		var fill = new DirectionalLight3D
 		{
-			LightEnergy = 0.4f,
-			LightColor = new Color(0.62f, 0.52f, 0.90f),
+			LightEnergy = 0.7f,
+			LightColor = new Color(0.45f, 0.38f, 1f),
 		};
 		fill.RotateX(Mathf.DegToRad(20f));
 		fill.RotateY(Mathf.DegToRad(-120f));
@@ -137,16 +141,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var rim = new OmniLight3D
 		{
 			Position = new Vector3(0, 3f, -4f),
-			LightEnergy = 1.2f,
+			LightEnergy = 1.0f,
 			OmniRange = 15f,
-			LightColor = new Color(0.70f, 0.60f, 1.0f), 
+			LightColor = new Color(0.50f, 0.65f, 1.0f), 
 		};
 		_sceneRoot.AddChild(rim);
 		
 		var env = new Environment();
 		env.AmbientLightSource = Godot.Environment.AmbientSource.Color;
-		env.AmbientLightColor = new Color(0.3f, 0.2f, 0.5f);
-		env.AmbientLightEnergy = 0.3f;
+		env.AmbientLightColor = new Color(0.25f, 0.3f, 0.65f);
+		env.AmbientLightEnergy = 0.7f;
 
 		var worldEnv = new WorldEnvironment { Environment = env };
 		_sceneRoot.AddChild(worldEnv);
@@ -160,7 +164,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		var groundMat = new StandardMaterial3D
 		{
-			AlbedoColor = new Color(0.08f, 0.05f, 0.15f, 0.5f),
+			AlbedoColor = new Color(0.08f, 0.05f, 0.25f, 0.5f),
 			Roughness = 1f,
 			// ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
 			Transparency = BaseMaterial3D.TransparencyEnum.Alpha
@@ -324,7 +328,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				break;
 			case ConsoleType.GBA:
 				CenterNode3D(model);
-				model.Scale = new Vector3(0.20f, 0.20f, 0.20f);
+				model.Scale = new Vector3(0.15f, 0.15f, 0.15f);
 				model.Position = new Vector3(0.08f, -0.22f, 0f);
 				model.RotateX(Mathf.DegToRad(14f));
 				model.RotateY(Mathf.DegToRad(-18f));
@@ -1520,7 +1524,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_hoverTween.SetTrans(Tween.TransitionType.Elastic);
 		_hoverTween.SetEase(Tween.EaseType.Out);
 		_hoverTween.TweenProperty(box, "scale",
-			new Vector3(SelectedScale * 1.02f, SelectedScale * 1.02f, SelectedScale * 1.02f),
+			new Vector3(SelectedScale * 1.1f, SelectedScale * 1.1f, SelectedScale * 1.1f),
 			0.05f); // tiny quick punch up
 		_hoverTween.TweenProperty(box, "scale",
 			new Vector3(SelectedScale, SelectedScale, SelectedScale),
@@ -1627,13 +1631,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		_spinAudioPos += delta;
 		_lastSpinAudioCarouselPos = CarouselPos;
+		
+		var speedSource = _dragging ? Mathf.Abs(_lastDragVelocity) : Mathf.Abs(_velocity);
+		_spinSpeed = Mathf.Clamp(speedSource / 4.0f, 0f, 1f);
 
 		var currentStep = Mathf.RoundToInt(_spinAudioPos);
 		if (currentStep == _lastSpinAudioStep)
 			return;
 
 		_lastSpinAudioStep = currentStep;
-		PlaySpinAudio();
+		PlaySpinAudio(true);
 	}
 
 	private void PlaySpinAudio(bool suppressIfRecent = false)
@@ -1642,7 +1649,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		if (suppressIfRecent && now - _lastSpinAudioMs < SettleSpinSuppressWindowMs)
 			return;
 
-		AudioManager.Instance?.PlayCarouselSpin();
+		var pitch = Mathf.Lerp(0.9f, 1.6f, _spinSpeed);
+		AudioManager.Instance?.PlayCarouselSpin(pitch);
 		_lastSpinAudioMs = now;
 	}
 

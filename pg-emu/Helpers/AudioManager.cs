@@ -11,19 +11,20 @@ public partial class AudioManager : Node
 {
 	private const int CarouselSpinVoiceCount = 4;
 
-	public const string ClickSfxPath = "res://audio/fwd.mp3";
-	public const string BackSfxPath = "res://audio/bk.mp3";
-	public const string ForwardSfxPath = "res://audio/fwd.mp3";
-	public const string SelectSfxPath = "res://audio/select2.mp3";
+	public const string ClickSfxPath = "res://audio/fwd2.mp3";
+	public const string BackSfxPath = "res://audio/bk2.mp3";
+	public const string ForwardSfxPath = "res://audio/fwd2.mp3";
+	public const string SelectSfxPath = "res://audio/select3.mp3";
 	public const string MessageOpenSfxPath = "res://audio/notif_smooth.mp3";
 	public const string AmbientTrackPath = "res://audio/Keygen_1.mp3";
-	public const string CarouselSpinSfxPath = "res://audio/spin.mp3";
+	public const string CarouselSpinSfxPath = "res://audio/spin2.mp3";
 	public const string CarouselHoverSfxPath = "res://audio/hover.mp3";
 	public const string GbaOpenSfxPath = "res://audio/gba_open.mp3";
 	public const string GbaCloseSfxPath = "res://audio/gba_close.mp3";
+	public const string ButtonHoverSfxPath = "res://audio/hover_btn.mp3";
 
-	private const float SpinBaseVolumeDb = -6f;
-	private const float HoverBaseVolumeDb = -8f;
+	private const float SpinBaseVolumeDb = -3f;
+	private const float HoverBaseVolumeDb = -9f;
 	private const float HoverFadeOutDb = -40f;
 	private const float HoverFadeOutSeconds = 0.12f;
 
@@ -32,6 +33,7 @@ public partial class AudioManager : Node
 	private AudioStreamPlayer _navigationPlayer = null!;
 	private AudioStreamPlayer _hoverPlayer = null!;
 	private AudioStreamPlayer _consolePlayer = null!;
+	private AudioStreamPlayer _buttonHoverPlayer = null!;
 	private readonly AudioStreamPlayer[] _spinPlayers = new AudioStreamPlayer[CarouselSpinVoiceCount];
 	private int _nextSpinPlayerIndex;
 	private Tween? _hoverFadeTween;
@@ -66,7 +68,10 @@ public partial class AudioManager : Node
 			_navigationPlayer = GetNode<AudioStreamPlayer>("Navigation");
 			_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
 			_consolePlayer = new AudioStreamPlayer { Name = "Console" };
+			_buttonHoverPlayer = new AudioStreamPlayer { Name = "ButtonHover" };
 			AddChild(_consolePlayer);
+			AddChild(_buttonHoverPlayer);
+
 
 			for (int i = 0; i < _spinPlayers.Length; i++)
 				_spinPlayers[i] = GetNode<AudioStreamPlayer>($"Spin{i + 1}");
@@ -219,12 +224,13 @@ public partial class AudioManager : Node
 
 	public void PlaySelect() => PlayOnPlayer(_uiPlayer, SelectSfxPath);
 
-	public void PlayMessageOpen() => PlayOnPlayer(_uiPlayer, MessageOpenSfxPath);
+	public void PlayMessageOpen() => PlayOnPlayer(_uiPlayer, MessageOpenSfxPath, volumeDb: -5f);
 
-	public void PlayCarouselSpin()
+	public void PlayCarouselSpin(float pitch = 1.0f)
 	{
 		var player = _spinPlayers[_nextSpinPlayerIndex];
 		_nextSpinPlayerIndex = (_nextSpinPlayerIndex + 1) % _spinPlayers.Length;
+		player.PitchScale = pitch;
 		PlayOnPlayer(player, CarouselSpinSfxPath, SpinBaseVolumeDb);
 	}
 
@@ -250,7 +256,7 @@ public partial class AudioManager : Node
 		);
 	}
 
-	public void PlayConsoleAnimationSfx(string path, float volumeDb = 0f)
+	public void PlayConsoleAnimationSfx(string path, float volumeDb = -4f)
 	{
 		PlayOnPlayer(_consolePlayer, path, volumeDb);
 	}
@@ -282,6 +288,13 @@ public partial class AudioManager : Node
 
 	public void PlayNavigation(int direction)
 	{
+		_navigationPlayer.PitchScale = (float)GD.RandRange(0.92, 1.08);
 		PlayOnPlayer(_navigationPlayer, direction < 0 ? BackSfxPath : ForwardSfxPath);
+	}
+	
+	public void PlayButtonHover()
+	{
+		_buttonHoverPlayer.PitchScale = (float)GD.RandRange(0.92, 1.08);
+		PlayOnPlayer(_buttonHoverPlayer, ButtonHoverSfxPath);
 	}
 }

@@ -344,6 +344,8 @@ public static class UiStyle
 	    
 	    button.MouseEntered += () =>
 	    {
+		    AudioManager.Instance?.PlayButtonHover();
+		    
 		    activeTween?.Kill();
 		    activeTween = button.CreateTween();
 		    activeTween.SetTrans(Tween.TransitionType.Cubic);

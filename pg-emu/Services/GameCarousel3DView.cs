@@ -46,6 +46,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private float _lastSpinAudioCarouselPos = 0f;
 	private int _lastSpinAudioStep = 0;
 	private ulong _lastSpinAudioMs;
+	private float _spinSpeed = 0f;
 
 	// 3D scene internals
 	private SubViewport _viewport;
@@ -76,15 +77,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 	public event System.Action<int>? SelectionChanged;
 	private StandardMaterial3D gold = new StandardMaterial3D
 	{
-		AlbedoColor = new Color(1.0f, 0.766f, 0.336f),
+		AlbedoColor = new Color(1.0f, 0.733f, 0.336f),
 		Metallic = 1.0f,
-		Roughness = 0.15f
+		Roughness = 0.08f
 	};
 	private StandardMaterial3D silver = new StandardMaterial3D
 	{
 		AlbedoColor = new Color(0.9f, 0.9f, 0.9f),
 		Metallic = 1.0f,
-		Roughness = 0.1f
+		Roughness = 0.05f
 	};
 	public override void _Ready()
 	{
@@ -131,23 +132,39 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Position = new Vector3(0, 2, 4),
 			LightEnergy = 0.8f, // 0.5f
 			OmniRange = 20f,
-			LightColor = new Color(0.62f, 0.52f, 0.90f),
+			LightColor = new Color(0.62f, 0.38f, 1.0f),
 		};
 		_sceneRoot.AddChild(ambient);
 		
 		var rim = new OmniLight3D
 		{
 			Position = new Vector3(0, 1f, -3f),
-			LightEnergy = 0.6f, //0.4f
+			LightEnergy = 0.9f, //0.4f
 			OmniRange = 12f,
-			LightColor = new Color(0.70f, 0.88f, 1.0f), 
+			LightColor = new Color(0.60f, 0.82f, 1.0f), 
 		};
 		_sceneRoot.AddChild(rim);
 		
+		var fill = new OmniLight3D
+		{
+			Position = new Vector3(0, 2, 2),
+			LightEnergy = 0.3f,
+			LightColor = new Color(1f, 0.98f, 0.92f)
+		};
+		_sceneRoot.AddChild(fill);
+
 		var env = new Environment();
-		env.AmbientLightSource = Godot.Environment.AmbientSource.Color;
-		env.AmbientLightColor = new Color(0.3f, 0.2f, 0.5f);
-		env.AmbientLightEnergy = 0.2f;
+	
+		var sky = new Sky();
+		sky.SkyMaterial = new ProceduralSkyMaterial();
+
+		env.Sky = sky;
+		env.BackgroundMode = Environment.BGMode.Sky;
+
+		env.AmbientLightSource = Environment.AmbientSource.Sky;		
+		env.AmbientLightEnergy = 0.55f;
+		env.AmbientLightSkyContribution = 0.5f;
+		
 
 		var worldEnv = new WorldEnvironment { Environment = env };
 		_sceneRoot.AddChild(worldEnv);
@@ -241,7 +258,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 			mat = silver;
 		}
 		else{
-			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+			// mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+			mat = silver;
 		}
 		
 		_baseMaterials.Add(new List<StandardMaterial3D> { mat });
@@ -1262,7 +1280,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_hoverTween.SetTrans(Tween.TransitionType.Elastic);
 		_hoverTween.SetEase(Tween.EaseType.Out);
 		_hoverTween.TweenProperty(box, "scale",
-			new Vector3(SelectedScale * 1.02f, SelectedScale * 1.02f, SelectedScale * 1.02f),
+			new Vector3(SelectedScale * 1.1f, SelectedScale * 1.1f, SelectedScale * 1.1f),
 			0.05f); // tiny quick punch up
 		_hoverTween.TweenProperty(box, "scale",
 			new Vector3(SelectedScale, SelectedScale, SelectedScale),
@@ -1356,6 +1374,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		_spinAudioPos += delta;
 		_lastSpinAudioCarouselPos = CarouselPos;
+		
+		var speedSource = _dragging ? Mathf.Abs(_lastDragVelocity) : Mathf.Abs(_velocity);
+		_spinSpeed = Mathf.Clamp(speedSource / 4.0f, 0f, 1f);
+
 
 		var currentStep = Mathf.RoundToInt(_spinAudioPos);
 		if (currentStep == _lastSpinAudioStep)
@@ -1371,7 +1393,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (suppressIfRecent && now - _lastSpinAudioMs < SettleSpinSuppressWindowMs)
 			return;
 
-		AudioManager.Instance?.PlayCarouselSpin();
+		
+		var pitch = Mathf.Lerp(0.9f, 1.6f, _spinSpeed);
+		AudioManager.Instance?.PlayCarouselSpin(pitch);
 		_lastSpinAudioMs = now;
 	}
 
