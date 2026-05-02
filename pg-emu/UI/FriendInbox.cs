@@ -10,8 +10,11 @@ public partial class FriendInbox : PopupPanel
 {
 	[Export] private VBoxContainer InboxList;
 	[Export] private Label StatusLabel;
-	[Export] private PackedScene FriendRequestItemScene ;
+	[Export] private PackedScene FriendRequestItemScene;
+	[Export] private PackedScene MissedMessageItemScene;
+	[Export] private Label MissedMessagesLabel;
 	[Export] private Panel PopupContent;
+	
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -62,9 +65,40 @@ public partial class FriendInbox : PopupPanel
 		// Handles the loading of the friend requests from the database
 		StatusLabel.Text = "Loading...";
 		StatusLabel.Visible = true;
+		
+		// remove existing children
+		foreach (Node child in InboxList.GetChildren().ToArray())
+		{
+			child.QueueFree();
+		} 
 
-		await ToSignal(GetTree().CreateTimer(1.0), "timeout"); // simulate delay
+		// await ToSignal(GetTree().CreateTimer(1.0), "timeout"); // simulate delay
 
+		var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		var missed = chatOverlay.GetAndClearMissedMessages();
+		
+		if (missed.Count > 0)
+		{
+			var msgHeader = new Label();
+			msgHeader.Text = "Missed Messages";
+			UiStyle.StyleMetaLabel(msgHeader);
+			InboxList.AddChild(msgHeader);
+
+			foreach (var (fromUser, message, sentAt) in missed)
+			{
+				var item = MissedMessageItemScene.Instantiate<MissedMessageItem>();
+				InboxList.AddChild(item);
+				item.Setup(fromUser, message, sentAt);
+
+				item.Modulate = new Color(1, 1, 1, 0);
+				var tween = CreateTween();
+				tween.TweenProperty(item, "modulate:a", 1f, 0.2f);
+			}
+			
+			var separator = new HSeparator();
+			InboxList.AddChild(separator);
+		}
+		
 		List<FriendRequestDto> requests;
 		try
 		{
@@ -87,19 +121,29 @@ public partial class FriendInbox : PopupPanel
 		GD.Print($"Friend requests loaded: {requests.Count}");
 		foreach (var r in requests)
 			GD.Print($"Request from: {r.Username}, Id: {r.Id}");
-
-		// remove existing children
-		foreach (Node child in InboxList.GetChildren().ToArray())
-		{
-			child.QueueFree();
-		} 
+		
 			
 		// If there arent requests, display there are none
 		if (requests == null || requests.Count == 0)
 		{
-			StatusLabel.Text = "No requests";
-			StatusLabel.Visible = true;
+			if (missed.Count == 0)
+			{
+				StatusLabel.Text = "No notifications";
+				StatusLabel.Visible = true;
+			}
+			else
+			{
+				StatusLabel.Visible = false;
+			}
 			return;
+		}
+		
+		if (missed.Count > 0)
+		{
+			var reqHeader = new Label();
+			reqHeader.Text = "Friend Requests";
+			UiStyle.StyleMetaLabel(reqHeader);
+			InboxList.AddChild(reqHeader);
 		}
 	
 		StatusLabel.Visible = false;

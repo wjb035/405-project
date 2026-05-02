@@ -14,10 +14,10 @@ public partial class MissedMessageItem : InboxItem
 
 	public override void _Ready()
 	{
-		_fromLabel = GetNode<Label>("HBox/VBox/FromLabel");
-		_previewLabel = GetNode<Label>("HBox/VBox/PreviewLabel");
-		_timeLabel = GetNode<Label>("HBox/TimeLabel");
-		_replyButton = GetNode<Button>("HBox/ReplyButton");
+		_fromLabel = GetNode<Label>("HBox/FromLabel");
+		_previewLabel = GetNode<Label>("HBox/PreviewLabel");
+		_timeLabel = GetNode<Label>("HBox2/TimeLabel");
+		_replyButton = GetNode<Button>("HBox2/ReplyButton");
 
 		UiStyle.StyleTopBarButton(_replyButton);
 		UiStyle.AddHoverFeedback(_replyButton);

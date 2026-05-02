@@ -41,6 +41,7 @@ public partial class ChatOverlay : CanvasLayer
 	private string _oldestMessageTime = "";
 	private Dictionary<string, int> _unread = new();
 	private HashSet<string> _onlineFriends = new();
+	
 	private List<(string fromUser, string message, string sentAt)> _missedMessages = new();
 	private List<(string fromUser, string message, string sentAt)> _displayedMessages = new();
 	
@@ -178,18 +179,7 @@ public partial class ChatOverlay : CanvasLayer
 			var avatarWrapper = new Control();
 			avatarWrapper.CustomMinimumSize = new Vector2(40, 40);
 			avatarWrapper.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-			
-			// Online status indicator
-			var ring = new ColorRect();
-			ring.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-			ring.Color = _onlineFriends.Contains(friend)
-				? new Color(0.42f, 1f, 0.42f, 0.8f)
-				: new Color(0.44f, 0.40f, 0.62f, 0.8f);
-			var ringShaderMat = new ShaderMaterial();
-			ringShaderMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
-			ring.Material = ringShaderMat;
-			ring.MouseFilter = Control.MouseFilterEnum.Ignore;
-			avatarWrapper.AddChild(ring);
+
 			
 			// ACtual avatar
 			var avatarImg = new TextureRect();
@@ -206,6 +196,29 @@ public partial class ChatOverlay : CanvasLayer
 			avatarImg.Material =  avatarMat;
 			
 			avatarWrapper.AddChild(avatarImg);
+			
+			// Online status indicator
+			var ring = new ColorRect();
+			ring.CustomMinimumSize = new Vector2(10, 10);
+			
+			ring.AnchorLeft = 1;
+			ring.AnchorTop = 1;
+			ring.AnchorRight = 1;
+			ring.AnchorBottom = 1;
+
+			ring.OffsetLeft = -12;
+			ring.OffsetTop = -12;
+			ring.OffsetRight = -2;
+			ring.OffsetBottom = -2;
+			
+			ring.Color = _onlineFriends.Contains(friend)
+				? new Color(0.42f, 1f, 0.42f)
+				: new Color(0.44f, 0.40f, 0.62f);
+			var ringShaderMat = new ShaderMaterial();
+			ringShaderMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			ring.Material = ringShaderMat;
+			ring.MouseFilter = Control.MouseFilterEnum.Ignore;
+			avatarWrapper.AddChild(ring);
 			row.AddChild(avatarWrapper);
 			
 			// Load avatar texture

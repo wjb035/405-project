@@ -12,6 +12,13 @@ corner_radius_bottom_left = 5
 shadow_color = Color(0, 0, 0.16, 0.13725491)
 shadow_size = 3
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_syhmf"]
+bg_color = Color(0.07281999, 0.0671, 0.11, 0.47843137)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [node name="Panel" type="Panel" unique_id=158150431]
 custom_minimum_size = Vector2(300, 40)
 offset_right = 300.0
@@ -20,7 +27,14 @@ size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1ip1e")
 script = ExtResource("1_syhmf")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1386711342]
+[node name="Panel" type="Panel" parent="." unique_id=1303617240]
+layout_mode = 0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 162.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_syhmf")
+
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1386711342]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.015
@@ -29,18 +43,34 @@ offset_right = 66.5
 offset_bottom = 40.0
 theme_override_constants/separation = 5
 
-[node name="Username Label" type="Label" parent="HBoxContainer" unique_id=1073063703]
+[node name="UsernameLabel" type="Label" parent="HBox" unique_id=1073063703]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Username"
 
-[node name="Accept Button" type="Button" parent="HBoxContainer" unique_id=1929210884]
+[node name="ReplyButton" type="Button" parent="HBox" unique_id=1929210884]
 layout_mode = 2
 size_flags_vertical = 4
 size_flags_stretch_ratio = 0.0
-text = "Accept"
+text = "Reply?"
 
-[node name="Decline Button" type="Button" parent="HBoxContainer" unique_id=1804425905]
+[node name="HBox2" type="HBoxContainer" parent="." unique_id=1820212522]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.015
+anchor_right = 0.765
+offset_top = 39.0
+offset_right = 66.5
+offset_bottom = 79.0
+theme_override_constants/separation = 5
+
+[node name="PreviewLabel" type="Label" parent="HBox2" unique_id=1087798578]
+custom_minimum_size = Vector2(235, 0)
 layout_mode = 2
-size_flags_vertical = 4
-text = "Decline"
+size_flags_horizontal = 3
+text = "Message Preview"
+
+[node name="TimeLabel" type="Label" parent="HBox2" unique_id=1685869814]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Time"
