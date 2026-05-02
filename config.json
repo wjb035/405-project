@@ -1,10 +1,10 @@
 {
-  "libraryRoot": "D:\\PGEmu Games",
+  "libraryRoot": "",
   "platforms": [
     {
       "id": "gc",
       "name": "Nintendo GameCube",
-      "romPath": "games/GameCube",
+      "romPath": "D:/PGEmu Games/games/GameCube",
       "extensions": [
         ".iso",
         ".gcm",
@@ -20,7 +20,7 @@
     {
       "id": "gba",
       "name": "Game Boy Advance",
-      "romPath": "GBA",
+      "romPath": "D:/PGEmu Games/games/GBA",
       "extensions": [
         ".gba"
       ],
@@ -30,7 +30,7 @@
     {
       "id": "ds",
       "name": "Nintendo DS",
-      "romPath": "games/DS",
+      "romPath": "D:/DSGamePath",
       "extensions": [
         ".nds"
       ],
@@ -40,7 +40,7 @@
     {
       "id": "n64",
       "name": "Nintendo 64",
-      "romPath": "games/N64",
+      "romPath": "D:/N64GamePath",
       "extensions": [
         ".z64",
         ".n64",
@@ -53,7 +53,7 @@
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "games/Wii",
+      "romPath": "D:/PGEmu Games/games/Wii",
       "extensions": [
         ".iso",
         ".gcz",
@@ -69,7 +69,7 @@
     {
       "id": "ps1",
       "name": "Sony PlayStation",
-      "romPath": "games/PS1",
+      "romPath": "D:/PSXGamePath",
       "extensions": [
         ".cue",
         ".iso",
@@ -83,7 +83,7 @@
     {
       "id": "ps2",
       "name": "Playstation 2",
-      "romPath": "games/PS2",
+      "romPath": "D:/PGEmu Games/games/PS2",
       "extensions": [
         ".iso"
       ],
@@ -93,7 +93,7 @@
     {
       "id": "psp",
       "name": "Playstation Portable",
-      "romPath": "games/PSP",
+      "romPath": "D:/PGEmu Games/games/PSP",
       "extensions": [
         ".iso"
       ],
