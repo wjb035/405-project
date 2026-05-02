@@ -1,5 +1,5 @@
 {
-  "libraryRoot": "",
+  "libraryRoot": "D:\\PGEmu Games",
   "platforms": [
     {
       "id": "gc",
@@ -15,32 +15,7 @@
         ".wbfs"
       ],
       "defaultEmulatorId": "dolphin",
-      "retroachievementsPlatformID": 16,
-      "libretro": {
-        "corePath": "cores/dolphin_libretro.dylib",
-        "libraryName": "Dolphin Libretro",
-        "libraryVersion": "1.0",
-        "validExtensions": "iso|gcm|gcz|ciso|cisos|rvz|wbfs",
-        "needFullPath": true,
-        "blockExtract": true,
-        "targetWidth": 640,
-        "targetHeight": 528,
-        "maxWidth": 1920,
-        "maxHeight": 1080,
-        "aspectRatio": 1.3333333,
-        "targetFps": 60,
-        "sampleRate": 48000,
-        "startupTimeoutSeconds": 120,
-        "options": {
-          "dolphin_renderer": "OpenGL",
-          "dolphin_cpu_core": "Interpreter (slowest)",
-          "dolphin_main_cpu_thread": "Disabled",
-          "dolphin_fastmem": "Disabled",
-          "dolphin_fastmem_arena": "Disabled",
-          "dolphin_wiimote_continuous_scanning": "Disabled",
-          "dolphin_bluetooth_passthrough": "Disabled"
-        }
-      }
+      "retroachievementsPlatformID": 16
     },
     {
       "id": "gba",
@@ -89,32 +64,7 @@
         ".nfs"
       ],
       "defaultEmulatorId": "dolphin",
-      "retroachievementsPlatformID": 19,
-      "libretro": {
-        "corePath": "cores/dolphin_libretro.dylib",
-        "libraryName": "Dolphin Libretro",
-        "libraryVersion": "1.0",
-        "validExtensions": "iso|gcz|ciso|rvz|wbfs|nfs",
-        "needFullPath": true,
-        "blockExtract": true,
-        "targetWidth": 640,
-        "targetHeight": 528,
-        "maxWidth": 1920,
-        "maxHeight": 1080,
-        "aspectRatio": 1.3333333,
-        "targetFps": 60,
-        "sampleRate": 48000,
-        "startupTimeoutSeconds": 120,
-        "options": {
-          "dolphin_renderer": "OpenGL",
-          "dolphin_cpu_core": "Interpreter (slowest)",
-          "dolphin_main_cpu_thread": "Disabled",
-          "dolphin_fastmem": "Disabled",
-          "dolphin_fastmem_arena": "Disabled",
-          "dolphin_wiimote_continuous_scanning": "Disabled",
-          "dolphin_bluetooth_passthrough": "Disabled"
-        }
-      }
+      "retroachievementsPlatformID": 19
     },
     {
       "id": "ps1",
@@ -155,8 +105,12 @@
     {
       "id": "dolphin",
       "name": "Dolphin",
-      "exePath": "Dolphin.app/Contents/MacOS/Dolphin",
-      "argsTemplate": "--exec \"{ROM}\" --batch",
+      "exePath": "C:/Fun Stuff/Dolphin Emulator/dolphin-2509-x64/Dolphin-x64/Dolphin.exe",
+      "argsTemplate": "--exec \u0022{ROM}\u0022 --batch",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
       "corePathWindows": "cores/dolphin_libretro.dll",
       "corePathMac": "cores/dolphin_libretro.dylib",
       "corePathLinux": "cores/dolphin_libretro.so"
@@ -178,13 +132,27 @@
       "id": "pcsx2",
       "name": "PCSX2",
       "exePath": "C:/Program Files/PCSX2/pcsx2-qt.exe",
-      "argsTemplate": "  \"{ROM}\""
+      "argsTemplate": "  \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": null,
+      "corePathLinux": null
     },
     {
       "id": "ppsspp",
       "name": "PPSSPP",
       "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
-      "argsTemplate": "  \"{ROM}\""
+      "argsTemplate": "  \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": null,
+      "corePathLinux": null
     },
     {
       "id": "mgba",
