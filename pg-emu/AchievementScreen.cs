@@ -60,88 +60,90 @@ public partial class AchievementScreen : Control
 
 		for (int i = 0; i < iconsAndAchData.Count; i++)
 {
-	// Create main button
-	Button btn = new Button();
-	btn.SizeFlagsHorizontal = SizeFlags.Fill;      // stretch horizontally
-	btn.SizeFlagsVertical = SizeFlags.ShrinkCenter; // height controlled by CustomMinimumSize
-	btn.CustomMinimumSize = new Vector2(800, 60);  // button size
-	UiStyle.StyleTopBarButton(btn);  
-	int index = i;
-	btn.Pressed += () =>
-	{
-		AudioManager.Instance?.PlayClick();
-		GD.Print($"Button {index + 1} pressed");
-	};
+	
+Button btn = new Button();
+btn.SizeFlagsHorizontal = SizeFlags.Fill;
+btn.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+btn.CustomMinimumSize = new Vector2(1000, 100); // fixed height like you want
+UiStyle.StyleTopBarButton(btn);
 
-	// HBoxContainer inside button
-	HBoxContainer hbox = new HBoxContainer();
-	hbox.SizeFlagsHorizontal = SizeFlags.Fill;
-	hbox.SizeFlagsVertical = SizeFlags.Fill;
-	btn.AddChild(hbox);
+int index = i;
+btn.Pressed += () =>
+{
+	AudioManager.Instance?.PlayClick();
+	GD.Print($"Button {index + 1} pressed");
+};
 
-	// Icon TextureRect
+	HBoxContainer rootRow = new HBoxContainer();
+	rootRow.SizeFlagsHorizontal = SizeFlags.Fill;
+	rootRow.Alignment = BoxContainer.AlignmentMode.Begin;
+	rootRow.AddThemeConstantOverride("separation", 14); // slightly tighter
+	btn.AddChild(rootRow);
+
+	MarginContainer iconWrapper = new MarginContainer();
+	iconWrapper.AddThemeConstantOverride("margin_left", 10);
+	iconWrapper.AddThemeConstantOverride("margin_top", 16);
+	rootRow.AddChild(iconWrapper);
+
+
 	TextureRect icon = new TextureRect();
-	icon.SizeFlagsHorizontal = SizeFlags.ShrinkBegin; 
-	icon.SizeFlagsVertical = SizeFlags.Fill;         // fills button height
-	icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered; // scale proportionally
-	icon.CustomMinimumSize = new Vector2(48, 48);    // keeps it at least this big
-	hbox.AddChild(icon);
+	icon.CustomMinimumSize = new Vector2(48, 48);
+	icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+	iconWrapper.AddChild(icon);
 
-	// Spacer between icon and text
+	Label titleLabel = new Label();
+	titleLabel.Text = iconsAndAchData[i].Value.Title;
+	titleLabel.CustomMinimumSize = new Vector2(360, 0);
+	titleLabel.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+	titleLabel.AutowrapMode = TextServer.AutowrapMode.Word;
+	titleLabel.MaxLinesVisible = 2;
+	titleLabel.VerticalAlignment = VerticalAlignment.Top;
+	
+	
+	
+	rootRow.AddChild(titleLabel);
+	
+	
+
 	Control spacer = new Control();
-	spacer.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
-	spacer.CustomMinimumSize = new Vector2(10, 0);
-	hbox.AddChild(spacer);
+	spacer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+	spacer.SizeFlagsStretchRatio = 0.5f;
+	rootRow.AddChild(spacer);
 
-	// VBox for text (title + subtitle)
-VBoxContainer textBox = new VBoxContainer();
-textBox.SizeFlagsHorizontal = SizeFlags.Fill;
-textBox.SizeFlagsVertical = SizeFlags.Fill;
-hbox.AddChild(textBox);
+	Label dateLabel = new Label();
+	bool unlocked = iconsAndAchData[i].Value.EarnedDate.Year > 1;
+	dateLabel.Text = unlocked
+		? iconsAndAchData[i].Value.EarnedDate.ToString()
+		: "Not unlocked!";
+	dateLabel.CustomMinimumSize = new Vector2(165, 0);
+	dateLabel.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+	dateLabel.VerticalAlignment = VerticalAlignment.Top;
+	dateLabel.HorizontalAlignment = HorizontalAlignment.Left;
+	dateLabel.AddThemeFontSizeOverride("font_size", 12);
+	dateLabel.Modulate = new Color(0.65f, 0.65f, 0.65f);
+	rootRow.AddChild(dateLabel);
 
-// First Label (Title)
-Label titleLabel = new Label();
-titleLabel.Text = iconsAndAchData[i].Value.Title;
-titleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
-titleLabel.HorizontalAlignment = HorizontalAlignment.Left;
-textBox.AddChild(titleLabel);
+	ColorRect separator = new ColorRect();
+	separator.Color = new Color(1, 1, 1, 0.6f);
+	separator.CustomMinimumSize = new Vector2(2, 70);
+	separator.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+	rootRow.AddChild(separator);
 
-// Second Label (Subtitle / Description)
-Label subtitleLabel = new Label();
-subtitleLabel.Text = iconsAndAchData[i].Value.Description; // or whatever field you use
-subtitleLabel.SizeFlagsHorizontal = SizeFlags.Fill;
-subtitleLabel.HorizontalAlignment = HorizontalAlignment.Left;
-textBox.AddChild(subtitleLabel);
+	Label subtitleLabel = new Label();
+	subtitleLabel.Text = iconsAndAchData[i].Value.Description;
+	subtitleLabel.CustomMinimumSize = new Vector2(250, 0);
+	subtitleLabel.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+	subtitleLabel.AutowrapMode = TextServer.AutowrapMode.Word;
+	subtitleLabel.MaxLinesVisible = 4;
+	subtitleLabel.VerticalAlignment = VerticalAlignment.Top;
+	subtitleLabel.AddThemeFontSizeOverride("font_size", 14);
+	subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f);
 
+	rootRow.AddChild(subtitleLabel);
+	btn.AddThemeConstantOverride("content_margin_top", 6);
+	btn.AddThemeConstantOverride("content_margin_bottom", 2);
 
-Label dateLabel = new Label();
-dateLabel.Text = iconsAndAchData[i].Value.EarnedDate.ToString(); // or whatever field you use
-bool unlocked = true;
-if (dateLabel.Text == "1/1/0001 12:00:00 AM"){
-	dateLabel.Text = "Not unlocked!";
-	unlocked = false;
-}
-
-// Spacer between icon and text
-Control datespacer = new Control();
-datespacer.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
-datespacer.CustomMinimumSize = new Vector2(150, 0);
-hbox.AddChild(datespacer);
-
-
-dateLabel.SizeFlagsHorizontal = SizeFlags.Fill;
-dateLabel.HorizontalAlignment = HorizontalAlignment.Left;
-hbox.AddChild(dateLabel);
-
-
-subtitleLabel.Modulate = new Color(0.8f, 0.8f, 0.8f); // slightly dimmer
-subtitleLabel.AddThemeFontSizeOverride("font_size", 12); // smaller font
-dateLabel.AddThemeFontSizeOverride("font_size", 8); // smaller font
-
-
-
-
-	// Add button to container
+	// add to container
 	container.AddChild(btn);
 
 	// Load icon asynchronously
