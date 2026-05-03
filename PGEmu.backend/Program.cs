@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.JsonWebTokens;
 using PGEmuBackend.Hubs;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

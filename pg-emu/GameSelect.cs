@@ -3329,7 +3329,7 @@ private void OnAnyButtonPressed()
 		// Nav buttons
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
-		UiStyle.StyleGhostNav(_prev, _next);
+		UiStyle.StyleGhostNav(0.15f,_prev, _next);
 
 		// Primary actions
 		UiStyle.StylePrimaryButton(_play);

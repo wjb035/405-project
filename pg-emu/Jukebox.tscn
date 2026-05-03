@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://d2qofc07w0i6n"]
 
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_1kv8w"]
 [ext_resource type="Script" uid="uid://dy4trfcu8lsoj" path="res://Jukebox.cs" id="1_u3ngx"]
 [ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="2_g0078"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="2_uvchp"]
@@ -22,10 +23,10 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvgg"]
 shader = ExtResource("4_6jqq3")
-shader_parameter/blur_amount = 3.0
-shader_parameter/tint = Color(0.08644999, 0.042899996, 0.13, 0.7411765)
+shader_parameter/blur_amount = 6.04400028709
+shader_parameter/tint = Color(0.09803922, 0.011764706, 0.14117648, 0.79607844)
 shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
-shader_parameter/fade_strength = 0.47200002242
+shader_parameter/fade_strength = 0.6810000323475
 shader_parameter/highlight_thickness = 0.02
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w05y1"]
@@ -44,6 +45,40 @@ shader_parameter/highlight_color = Color(0.6392157, 0.5411765, 0.81960785, 0.701
 shader_parameter/fade_strength = 0.0
 shader_parameter/highlight_thickness = 0.0150000007125
 
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_1kv8w"]
+size = Vector2(0, 0)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_4bmip"]
+size = Vector2(0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f514c"]
+bg_color = Color(0.18233332, 0.17750001, 0.25, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+expand_margin_top = 3.0
+expand_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1kv8w"]
+bg_color = Color(0.74671, 0.5162, 0.89, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+expand_margin_top = 3.0
+expand_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4bmip"]
+bg_color = Color(0.98, 0.18620001, 0.37141985, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 6
+expand_margin_top = 3.0
+expand_margin_bottom = 3.0
+
 [node name="Jukebox" type="Control" unique_id=1243206364 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
 anchors_preset = 15
@@ -51,6 +86,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_1kv8w")
 script = ExtResource("1_u3ngx")
 BackPath = NodePath("Margin/Root/Foreground2/TopBar/BtnBack")
 PrevPath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Prev")
@@ -59,6 +95,9 @@ PausePath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Pause")
 LoopPath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Loop")
 ShufflePath = NodePath("Margin/Root/Body/Mid2/BottomBar/ButtonRow/Shuffle")
 PlayingPath = NodePath("Margin/Root/Body/Mid2/BottomBar/Playing")
+ProgressPath = NodePath("Margin/Root/Body/Mid2/BottomBar/HSlider")
+CurrentTimePath = NodePath("Margin/Root/Body/Mid2/BottomBar/CurrentTime")
+TotalTimePath = NodePath("Margin/Root/Body/Mid2/BottomBar/TotalTime")
 FriendsPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends")
 InboxPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnInbox")
 ChatPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat")
@@ -128,9 +167,9 @@ grow_horizontal = 2
 [node name="BottomBar" type="ColorRect" parent="Margin/Root/ForegroundBars" unique_id=1168877339]
 material = SubResource("ShaderMaterial_udcbl")
 offset_left = -34.0
-offset_top = 553.0
+offset_top = 542.0
 offset_right = 1182.0
-offset_bottom = 673.0
+offset_bottom = 662.0
 
 [node name="Foreground2" type="CanvasLayer" parent="Margin/Root" unique_id=1887085736]
 
@@ -222,6 +261,7 @@ text = "JUKEBOX"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body/Mid1" unique_id=2054835221]
+clip_contents = false
 offset_left = 18.0
 offset_top = 109.0
 offset_right = 1134.0
@@ -256,29 +296,31 @@ size_flags_vertical = 0
 [node name="Playing" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1861771206]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 45.0
-offset_right = 160.0
-offset_bottom = 68.0
+offset_top = 26.0
+offset_right = 201.0
+offset_bottom = 49.0
 size_flags_horizontal = 4
+theme = ExtResource("1_1kv8w")
 text = "Currently Playing: "
 
 [node name="ButtonRow" type="HBoxContainer" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=483072578]
 z_index = 37
 layout_mode = 0
 offset_left = 18.0
-offset_top = 25.0
+offset_top = 1.0
 offset_right = 1134.0
-offset_bottom = 89.0
+offset_bottom = 65.0
 size_flags_horizontal = 4
+theme_override_constants/separation = 14
 
 [node name="BottomSpacer" type="Control" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1418049384]
-custom_minimum_size = Vector2(410, 0)
+custom_minimum_size = Vector2(412, 0)
 layout_mode = 2
 size_flags_vertical = 0
 
 [node name="Loop" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=158558345]
 z_index = 37
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_vertical = 4
 tooltip_text = "Loop"
@@ -288,7 +330,7 @@ expand_icon = true
 
 [node name="Prev" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=91526355]
 z_index = 37
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -298,16 +340,17 @@ expand_icon = true
 
 [node name="Pause" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=674253913]
 z_index = 37
-custom_minimum_size = Vector2(64, 64)
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_horizontal = 4
+size_flags_vertical = 4
 icon = ExtResource("14_gyq2o")
 icon_alignment = 1
 expand_icon = true
 
 [node name="Next" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=198910844]
 z_index = 37
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("15_udcbl")
@@ -316,9 +359,44 @@ expand_icon = true
 
 [node name="Shuffle" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1923761008]
 z_index = 37
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("16_1kv8w")
 icon_alignment = 1
 expand_icon = true
+
+[node name="HSlider" type="HSlider" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=917953753]
+custom_minimum_size = Vector2(500, 5)
+layout_mode = 0
+offset_left = 319.0
+offset_top = 62.0
+offset_right = 819.0
+offset_bottom = 78.0
+theme_override_icons/grabber = SubResource("PlaceholderTexture2D_1kv8w")
+theme_override_icons/grabber_disabled = SubResource("PlaceholderTexture2D_4bmip")
+theme_override_styles/slider = SubResource("StyleBoxFlat_f514c")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_1kv8w")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_4bmip")
+
+[node name="CurrentTime" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1382569948]
+layout_mode = 0
+offset_left = 279.0
+offset_top = 61.0
+offset_right = 320.0
+offset_bottom = 84.0
+theme = ExtResource("1_1kv8w")
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "0:00"
+
+[node name="TotalTime" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1930123671]
+layout_mode = 0
+offset_left = 828.0
+offset_top = 61.0
+offset_right = 868.0
+offset_bottom = 84.0
+theme = ExtResource("1_1kv8w")
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "0:00"

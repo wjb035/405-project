@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
 [ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
-[ext_resource type="Shader" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
 [ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="4_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_iw72c"]
-[ext_resource type="Shader" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
 [ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
 [ext_resource type="Texture2D" uid="uid://b3x0d5xxdxg5b" path="res://Images/search icon thin.png" id="7_oy6yd"]
@@ -34,6 +34,8 @@ shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
 shader_parameter/highlight_color = Color(0.64, 0.54, 0.82, 0.7)
 shader_parameter/fade_strength = 0.0
 shader_parameter/highlight_thickness = 0.0150000007125
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kf1hi"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend1"]
 bg_color = Color(0.1882353, 0.1882353, 0.1882353, 1)
@@ -86,6 +88,7 @@ FriendInboxPopup = NodePath("Inbox")
 
 [node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
 position = Vector2i(237, 0)
+visible = false
 
 [node name="Bg" type="ColorRect" parent="." unique_id=581845523]
 visible = false
@@ -175,6 +178,7 @@ size_flags_horizontal = 3
 [node name="SearchPanel" type="Panel" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=1712921906]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_kf1hi")
 
 [node name="UserSearchBar" type="TextEdit" parent="Margin/Root/Foreground1/TopBar/HBoxContainer/SearchPanel" unique_id=1821935292]
 layout_mode = 1
@@ -184,7 +188,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("7_1lj82")
-placeholder_text = "Search Users"
+placeholder_text = "Search Games"
 
 [node name="UserSearchButton" type="Button" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=1909408829]
 custom_minimum_size = Vector2(44, 36)
@@ -195,6 +199,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="SearchFilter" type="Button" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=100235555]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Games"
 

@@ -22,6 +22,7 @@ public partial class AudioManager : Node
 	public const string GbaOpenSfxPath = "res://audio/gba_open.mp3";
 	public const string GbaCloseSfxPath = "res://audio/gba_close.mp3";
 	public const string ButtonHoverSfxPath = "res://audio/hover_btn.mp3";
+	public const string FlipSfxPath = "res://audio/flip.mp3";
 
 	private const float SpinBaseVolumeDb = -3f;
 	private const float HoverBaseVolumeDb = -9f;
@@ -34,6 +35,8 @@ public partial class AudioManager : Node
 	private AudioStreamPlayer _hoverPlayer = null!;
 	private AudioStreamPlayer _consolePlayer = null!;
 	private AudioStreamPlayer _buttonHoverPlayer = null!;
+	private AudioStreamPlayer _boxPlayer = null!;
+
 	private readonly AudioStreamPlayer[] _spinPlayers = new AudioStreamPlayer[CarouselSpinVoiceCount];
 	private int _nextSpinPlayerIndex;
 	private Tween? _hoverFadeTween;
@@ -69,8 +72,11 @@ public partial class AudioManager : Node
 			_hoverPlayer = GetNode<AudioStreamPlayer>("Hover");
 			_consolePlayer = new AudioStreamPlayer { Name = "Console" };
 			_buttonHoverPlayer = new AudioStreamPlayer { Name = "ButtonHover" };
+			_boxPlayer = new AudioStreamPlayer { Name = "ButtonHover" };
+
 			AddChild(_consolePlayer);
 			AddChild(_buttonHoverPlayer);
+			AddChild(_boxPlayer);
 
 
 			for (int i = 0; i < _spinPlayers.Length; i++)
@@ -292,9 +298,35 @@ public partial class AudioManager : Node
 		PlayOnPlayer(_navigationPlayer, direction < 0 ? BackSfxPath : ForwardSfxPath);
 	}
 	
+	public void PlayFlip()
+	{
+		_boxPlayer.PitchScale = (float)GD.RandRange(0.8, 1.1);
+		PlayOnPlayer(_boxPlayer, FlipSfxPath, -10f);
+	}
+	
 	public void PlayButtonHover()
 	{
 		_buttonHoverPlayer.PitchScale = (float)GD.RandRange(0.92, 1.08);
 		PlayOnPlayer(_buttonHoverPlayer, ButtonHoverSfxPath);
 	}
+	
+	
+	// For seeking through the music
+	public void SeekMusic(float position)
+	{
+		_musicPlayer.Seek(position);
+	}
+	
+	public float GetMusicPlaybackPosition()
+	{
+		return _musicPlayer.GetPlaybackPosition();
+	}
+
+	public float GetMusicStreamLength()
+	{
+		return _musicPlayer.Stream != null
+			? (float)_musicPlayer.Stream.GetLength()
+			: 0f;
+	}
+
 }

@@ -11,12 +11,14 @@ public partial class ChatOverlay : CanvasLayer
 	private Panel _panel;
 	private TabBar _tabBar;
 	private Button _closeButton;
-
+	private float _restingX;
+	
 	// Friends tab
 	private VBoxContainer _friendsTab;
 	private LineEdit _searchBar;
 	private VBoxContainer _friendsList;
-
+	private Dictionary<string, DateTime> _lastMessageTime = new();
+	
 	// Chat tab
 	private VBoxContainer _chatTab;
 	private Label _chatTitle;
@@ -24,6 +26,8 @@ public partial class ChatOverlay : CanvasLayer
 	private Button _loadMoreButton;
 	private LineEdit _inputField;
 	private Button _sendButton;
+	private bool _isLoadingMore = false;
+	private bool _suppressScrollToBottom = false;
 	
 	// Message Formatting
 	private ScrollContainer _messageScroll;
@@ -67,6 +71,7 @@ public partial class ChatOverlay : CanvasLayer
 		_loadMoreButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/LoadMoreButton");
 		_inputField = GetNode<LineEdit>("Panel/VBox/MainArea/ChatTab/InputRow/TextField");
 		_sendButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/InputRow/SendButton");
+		_restingX = _panel.Position.X;
 		
 		// Chat is hidden on start, it should be the friends tab first
 		_panel.Hide();
@@ -80,7 +85,8 @@ public partial class ChatOverlay : CanvasLayer
 		_searchBar.TextChanged += filter => RefreshFriendsList(filter);
 		_sendButton.Pressed += OnSend;
 		_inputField.TextSubmitted += _ => OnSend();
-		_loadMoreButton.Pressed += OnLoadMore;
+		// _loadMoreButton.Pressed += OnLoadMore;
+		_messageScroll.GetVScrollBar().ValueChanged += OnScrollValueChanged;
 
 		// ChatManager signals
 		_chat.DmReceived += OnDmReceived;
@@ -118,6 +124,14 @@ public partial class ChatOverlay : CanvasLayer
 	{
 		_isOpen = true;
 		_panel.Show();
+		
+		// Animate
+		_panel.Position = new Vector2(_restingX + _panel.Size.X, _panel.Position.Y); 
+		var tween = CreateTween();
+		tween.SetTrans(Tween.TransitionType.Cubic);
+		tween.SetEase(Tween.EaseType.Out);
+		tween.TweenProperty(_panel, "position:x", _restingX, 0.28f);
+		
 		GoToFriendsTab();
 		_ = RefreshFriendsList();
 	}
@@ -125,7 +139,18 @@ public partial class ChatOverlay : CanvasLayer
 	public void CloseOverlay()
 	{
 		_isOpen = false;
-		_panel.Hide();
+		
+		var tween = CreateTween();
+		var exitX = _restingX + _panel.Size.X;
+		tween.SetTrans(Tween.TransitionType.Cubic);
+		tween.SetEase(Tween.EaseType.In);
+		tween.TweenProperty(_panel, "position:x", exitX, 0.22f);
+
+		tween.TweenCallback(Callable.From(() =>
+		{
+			_panel.Hide();
+			_panel.Position = new Vector2(_restingX, _panel.Position.Y);
+		}));
 	}
 	
 	
@@ -163,8 +188,11 @@ public partial class ChatOverlay : CanvasLayer
 		
 		var friends = await FriendService.Instance.GetFriendUsernames();
 		
+		var sorted = friends.OrderByDescending(f =>
+			_lastMessageTime.TryGetValue(f, out var t) ? t : DateTime.MinValue).ToList();
+		
 		// Loops through the friends and creates a container for each friend.
-		foreach (var friend in friends)
+		foreach (var friend in sorted)
 		{
 			if (!string.IsNullOrEmpty(filter) &&
 			    !friend.Contains(filter, StringComparison.OrdinalIgnoreCase))
@@ -336,6 +364,8 @@ public partial class ChatOverlay : CanvasLayer
 		bool isMine = fromUser == _chat.Username;
 		string conversationWith = isMine ? _currentDmUser : fromUser;
 		
+		if (DateTime.TryParse(sentAt, out var msgTime))
+			_lastMessageTime[conversationWith] = msgTime;
 		
 		if (_isOpen && _tabBar.CurrentTab == 1 && _currentDmUser == conversationWith)
 		{
@@ -388,19 +418,60 @@ public partial class ChatOverlay : CanvasLayer
 			_displayedMessages = incoming.Concat(_displayedMessages).ToList();
 		else
 			_displayedMessages = incoming;
-
-		// Rebuild all messages with correct isLastInBlock values
-		RebuildMessageLog();
+		
+		// If youre loading more messages, don't autoscroll to the bottom
+		_suppressScrollToBottom = !string.IsNullOrEmpty(_oldestMessageTime) && _displayedMessages.Count > 0;
 
 		if (messages.Count > 0)
-		{
 			_oldestMessageTime = GetString(messages[0], "sentAt");
-			_loadMoreButton.Show();
-		}
-		else
+		
+		// Rebuild all messages with correct isLastInBlock values
+		RebuildMessageLog();
+		if (_displayedMessages.Count > 0 && DateTime.TryParse(
+			    _displayedMessages[^1].sentAt, out var lastTime))
 		{
-			_loadMoreButton.Hide();
+			_lastMessageTime[_currentDmUser] = lastTime;
 		}
+		_suppressScrollToBottom = false;
+		_loadMoreButton.Hide();
+	}
+	
+	// For loading mroe messages
+	private async void OnScrollValueChanged(double value)
+	{
+		if (_isLoadingMore || string.IsNullOrEmpty(_oldestMessageTime)) return;
+		
+		// If scroll bar isn't at the top, dont trigger the load more
+		var scrollBar = _messageScroll.GetVScrollBar();
+		if (value > scrollBar.MaxValue * 0.12) return; 
+		
+		_isLoadingMore = true;
+		ShowLoadingIndicator(true);
+		
+		var oldMax = scrollBar.MaxValue;
+
+		_chat.LoadDmHistory(_currentDmUser, _oldestMessageTime);
+		
+		// 2 frame delay for rebuildmessagelog
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		
+		
+		if (GodotObject.IsInstanceValid(_messageScroll))
+		{
+			var addedHeight = _messageScroll.GetVScrollBar().MaxValue - oldMax;
+			_messageScroll.ScrollVertical = (int)(value + addedHeight);
+		}
+
+		ShowLoadingIndicator(false);
+		_isLoadingMore = false;
+		
+	}
+	private void ShowLoadingIndicator(bool visible)
+	{
+		_loadMoreButton.Text = visible ? "Loading messages..." : "";
+		_loadMoreButton.Disabled = true;
+		_loadMoreButton.Visible = visible;
 	}
 	
 	// Rebuilds the current message log 
@@ -415,7 +486,8 @@ public partial class ChatOverlay : CanvasLayer
 			                     _displayedMessages[i + 1].fromUser != fromUser;
 			AppendMessage(fromUser, message, sentAt, isLastInBlock);
 		}
-		ScrollToBottom();
+		if (!_suppressScrollToBottom)
+			ScrollToBottom();
 	}
 	
 	// Helper slop
@@ -548,10 +620,7 @@ public partial class ChatOverlay : CanvasLayer
 
 			row.AddChild(metaRow);
 		}
-
-
 		_messageContainer.AddChild(row);
-		ScrollToBottom();
 
 	}
 
@@ -711,6 +780,7 @@ public partial class ChatOverlay : CanvasLayer
 				await LoadAvatarAsync(_theirAvatarUrl);
 		}
 	}
+	
 	
 	private void ApplyAesthetic()
 	{

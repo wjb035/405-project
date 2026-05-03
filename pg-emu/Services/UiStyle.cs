@@ -141,7 +141,7 @@ public static class UiStyle
 	}
 
     // Single helper that keeps radius/border/content margins consistent for all controls.
-    private static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth)
+    public static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth, float padX = 10f, float padY = 6f)
     {
         return new StyleBoxFlat
         {
@@ -156,10 +156,10 @@ public static class UiStyle
             CornerRadiusTopRight = 12,
             CornerRadiusBottomRight = 12,
             CornerRadiusBottomLeft = 12,
-            ContentMarginLeft = 10f,
-            ContentMarginTop = 6f,
-            ContentMarginRight = 10f,
-            ContentMarginBottom = 6f,
+            ContentMarginLeft = padX,
+            ContentMarginRight = padX,
+            ContentMarginTop = padY,
+            ContentMarginBottom = padY,
         };
     }
     
@@ -216,11 +216,12 @@ public static class UiStyle
 	    tabBar.AddThemeFontSizeOverride("font_size", 13);
     }
     
+    
     // Helper for assigning this in other scenes
-    public static void StyleGhostNav(params Button[] buttons)
+    public static void StyleGhostNav(float restingAlpha = 0.15f, params Button[] buttons)
     {
         foreach (var b in buttons)
-            StyleGhostNavButton(b);
+            StyleGhostNavButton(b, restingAlpha);
     }
     
     // Nav arrows transparent and animate on hover

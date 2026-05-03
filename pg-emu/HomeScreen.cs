@@ -84,7 +84,7 @@ public partial class HomeScreen : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
-	private string filterType = "Both";
+	private string filterType = "Games";
 
 
 	// for user search
@@ -246,16 +246,19 @@ public partial class HomeScreen : Control
 	}
 	private void OnFilterPressed(){
 		if (filterType == "Both"){
-			_filter.Text = "Users";
+			_searchBarText.PlaceholderText = "Search Games";
+			_filter.Text = "Games";
 			filterType = "Games";
 			
 		}
 		else if (filterType == "Games"){
-			_filter.Text = "Both";
+			_searchBarText.PlaceholderText = "Search Users";
+			_filter.Text = "Users";
 			filterType = "Users";
 		}
 		else if (filterType == "Users"){
-			_filter.Text = "Games";
+			_searchBarText.PlaceholderText = "Search everything";
+			_filter.Text = "Both";
 			filterType = "Both";
 		}
 		
@@ -424,9 +427,8 @@ public partial class HomeScreen : Control
 		Dictionary<string, string> UsersAndGames = new();
 		if (filterType == "Both"){
 			foreach (var g in games){
-			UsersAndGames.Add(g,"game");
+				UsersAndGames.Add(g,"game");
 			}
-			
 			foreach (var u in usernames){
 				UsersAndGames.Add(u,"user");
 			}
@@ -711,7 +713,7 @@ public partial class HomeScreen : Control
 		dialog.Confirmed += async () =>
 		{
 			AuthService.Instance.Logout();
-			await Transition.ChangeScene("res://Welcome.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
+			await Transition.ChangeScene("res://WelcomeScreen.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 
 		};
 
@@ -1445,7 +1447,7 @@ private void OnAnyButtonPressed()
 		// Nav buttons
 		UiStyle.StyleNavButton(_prev);
 		UiStyle.StyleNavButton(_next);
-		UiStyle.StyleGhostNav(_prev, _next);
+		UiStyle.StyleGhostNav(0.15f, _prev, _next);
 
 		// Primary actions
 		UiStyle.StylePrimaryButton(_selectPlatform);
@@ -1484,6 +1486,10 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_searchBarButton);
 		UiStyle.AddHoverFeedback(_searchBarButton);
 		UiStyle.ApplyParallaxShadow(_searchBarButton);
+		
+		UiStyle.StyleTopBarButton(_filter);
+		UiStyle.AddHoverFeedback(_filter);
+		UiStyle.ApplyParallaxShadow(_filter);
 		
 		UiStyle.StyleTopBarButton(_music);
 		UiStyle.AddHoverFeedback(_music);

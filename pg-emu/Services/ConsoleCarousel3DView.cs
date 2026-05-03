@@ -271,10 +271,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			{
 			case ConsoleType.Wii:
 				SetWiiDiskVisible(model, false);
-				CenterNode3D(model, ShouldIncludeWiiBodyBounds);
+				// CenterNode3D(model, ShouldIncludeWiiBodyBounds);
 				var wiiScale = ScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
 				model.Scale = new Vector3(wiiScale, wiiScale, wiiScale);
-				model.Position = new Vector3(-0.8f, -.5f, 0f);
+				// model.Position = new Vector3(-0.8f, -.5f, 0f);
+				if (TryGetNodeBounds(model, Transform3D.Identity, out var wiiBounds, ShouldIncludeWiiBodyBounds))
+				{
+					var center = wiiBounds.GetCenter();
+					model.Position = new Vector3(-center.X, -center.Y, -center.Z);
+				}
 				model.RotateY(Mathf.DegToRad(40f));
 				break;
 			case ConsoleType.NintendoDS:

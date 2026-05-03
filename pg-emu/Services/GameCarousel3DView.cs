@@ -1482,7 +1482,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	{
 		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
 		if (idx >= _boxes.Count) return;
-		
+
+		AudioManager.Instance?.PlayFlip();
 		var box = _boxes[idx];
 		
 		var isFlipped = _flippedBoxes.Contains(idx);
@@ -1513,7 +1514,6 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void UnflipSelected()
 	{
 		CollapseExpandedGbaBacks();
-
 		foreach (var idx in _flippedBoxes)
 		{
 			if (idx >= _boxes.Count) continue;

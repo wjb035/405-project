@@ -20,6 +20,11 @@ public partial class Jukebox : Control
 	[Export] public NodePath ShufflePath;
 	[Export] public NodePath PlayingPath;
 	
+	// Progressbar
+	[Export] public NodePath ProgressPath;
+	[Export] public NodePath CurrentTimePath;
+	[Export] public NodePath TotalTimePath;
+	
 	// Topbar
 	[Export] public NodePath FriendsPath;
 	[Export] public NodePath InboxPath;
@@ -44,12 +49,19 @@ public partial class Jukebox : Control
 	private Button _shuffle = null!;
 	private Label _playing = null!;
 	
+	// Progress bar
+	private HSlider _progressBar;
+	private Label _currentTimeLabel;
+	private Label _totalTimeLabel;
+	private bool _isScrubbing = false;
+	
 	private Button _friends;
 	private Button _inbox;
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
 	
+
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
@@ -81,7 +93,6 @@ public partial class Jukebox : Control
 	public override void _Ready()
 	{
 		
-		
 		// Resolve NodePaths into actual nodes.
 		_back = GetNode<Button>(BackPath);
 		_prev = GetNode<Button>(PrevPath);
@@ -90,6 +101,10 @@ public partial class Jukebox : Control
 		_loop = GetNode<Button>(LoopPath);
 		_shuffle = GetNode<Button>(ShufflePath);
 		_playing = GetNode<Label>(PlayingPath);
+		
+		_progressBar = GetNode<HSlider>(ProgressPath);
+		_currentTimeLabel = GetNode<Label>(CurrentTimePath);
+		_totalTimeLabel = GetNode<Label>(TotalTimePath);
 		
 		_friends = GetNode<Button>(FriendsPath);
 		_inbox = GetNode<Button>(InboxPath);
@@ -130,6 +145,19 @@ public partial class Jukebox : Control
 		}
 		
 		
+		// Progress bar intiialization
+		_progressBar.MinValue = 0;
+		_progressBar.Step = 0.01;
+		
+		_progressBar.DragStarted += () => _isScrubbing = true;
+		
+		_progressBar.DragEnded += (changed) =>
+		{
+			_isScrubbing = false;
+			if (changed)
+				audioMan.SeekMusic((float)_progressBar.Value);
+		};
+		
 		//int audioMan.currentIndex = -1;
 		for (int i = 0; i < audioMan.results.Count; i++)
 		{
@@ -137,10 +165,39 @@ public partial class Jukebox : Control
 			var title = audioMan.results[i];
 			int index = i;
 			
+			
 			btn.Text = Regex.Replace(title, ".mp3$", "");
 			btn.CustomMinimumSize = new Vector2(300, 80);
+			btn.Alignment = HorizontalAlignment.Left;
+			btn.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			btn.AddThemeFontSizeOverride("font_size", 18);
+			btn.AddThemeFontOverride("font", GD.Load<FontFile>("res://Fonts/DM_Mono/DMMono-Medium.ttf"));
+			
+			var normal = UiStyle.CreateButtonStyle(
+				new Color(0.35f, 0.15f, 0.30f, 0.45f), 
+				new Color(0.8f, 0.4f, 0.7f),     
+				2, 16f
+			);
 
-			UiStyle.StyleTopBarButton(btn);  
+			var hover = UiStyle.CreateButtonStyle(
+				new Color(0.45f, 0.18f, 0.38f, 0.75f),
+				new Color(1.0f, 0.5f, 0.65f),
+				2, 16f
+			);
+
+			var pressed = UiStyle.CreateButtonStyle(
+				new Color(0.25f, 0.10f, 0.22f, 0.45f),
+				new Color(0.7f, 0.3f, 0.7f),
+				2, 16f
+			);
+
+			
+			btn.AddThemeStyleboxOverride("normal", normal);
+			btn.AddThemeStyleboxOverride("hover", hover);
+			btn.AddThemeStyleboxOverride("pressed", pressed);
+			btn.AddThemeStyleboxOverride("focus", normal);
+			UiStyle.ApplyParallaxShadow(btn, offsetY: 5f);
+			UiStyle.AddHoverFeedback(btn);
 			btn.Pressed += () => 
 			{
 				
@@ -158,12 +215,33 @@ public partial class Jukebox : Control
 			
 			container.AddChild(btn);
 		}
-
-		
-		
 		
 	}
 
+	public override void _Process(double delta)
+	{
+		if (!audioMan.MusicPlaying() || _progressBar == null) return;
+		
+		var length = audioMan.GetMusicStreamLength();
+		var position = audioMan.GetMusicPlaybackPosition();
+		
+		   
+		if (length <= 0) return;
+    
+		_progressBar.MaxValue = length;
+    
+		if (!_isScrubbing)
+			_progressBar.Value = position;
+    
+		_currentTimeLabel.Text = FormatDuration(position);
+		_totalTimeLabel.Text = FormatDuration(length);
+	}
+	
+	private string FormatDuration(float seconds)
+	{
+		var t = TimeSpan.FromSeconds(seconds);
+		return $"{(int)t.TotalMinutes}:{t.Seconds:D2}";
+	}
 
 	public void Shuffle(){
 		if (audioMan.musicSetting == "shuffle"){
@@ -231,6 +309,7 @@ public partial class Jukebox : Control
 			GD.Print("no music");
 			_pause.Icon = PauseIcon;
 			audioMan.UnpauseMusic();
+			audioMan.SeekMusic((float)_progressBar.Value);
 		}
 	}
 	
@@ -304,9 +383,8 @@ public partial class Jukebox : Control
 	}
 		return result;
 	}
-
-
-
+	
+	
 	public override void _UnhandledInput(InputEvent @event)
 	{
 		if (!ControllerService.TryHandleBackAction(@event, GoBack))
@@ -327,24 +405,21 @@ public partial class Jukebox : Control
 		UiStyle.StyleMetaLabel(hint);
 		
 		UiStyle.StylePrimaryButton(_prev);
-		UiStyle.AddHoverFeedback(_prev);
 		UiStyle.ApplyParallaxShadow(_prev, offsetY: 5f);
 		
 		UiStyle.StylePrimaryButton(_next);
-		UiStyle.AddHoverFeedback(_next);
 		UiStyle.ApplyParallaxShadow(_next, offsetY: 5f);
 		
 		UiStyle.StylePrimaryButton(_pause);
-		UiStyle.AddHoverFeedback(_pause);
 		UiStyle.ApplyParallaxShadow(_pause, offsetY: 5f);
 
 		UiStyle.StylePrimaryButton(_loop);
-		UiStyle.AddHoverFeedback(_loop);
 		UiStyle.ApplyParallaxShadow(_loop, offsetY: 5f);
 		
 		UiStyle.StylePrimaryButton(_shuffle);
-		UiStyle.AddHoverFeedback(_shuffle);
 		UiStyle.ApplyParallaxShadow(_shuffle, offsetY: 5f);
+		
+		UiStyle.StyleGhostNav(1f,_prev, _next, _pause, _loop, _shuffle);
 		
 		UiStyle.StyleTopBarButton(_back);
 		UiStyle.AddHoverFeedback(_back);
@@ -369,7 +444,6 @@ public partial class Jukebox : Control
 		UiStyle.StyleTopBarButton(_help);
 		UiStyle.AddHoverFeedback(_help);
 		UiStyle.ApplyParallaxShadow(_help);
-		
 
 	}
 
