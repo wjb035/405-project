@@ -74,6 +74,14 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private readonly HashSet<int> _animatingBoxes = new();
 	private readonly HashSet<int> _expandedGbaBacks = new();
 	
+	// Passive animation
+	private double _swayTime = 0;
+	private float _currentSwayAngle = 0f;
+	private const float SwayAmplitude = 0.04f;
+	private const float SwaySpeed = 0.8f;
+	private const float SwayBobAmplitude = 0.03f;
+	private readonly HashSet<int> _returningBoxes = new();
+	
 	public event System.Action<int>? SelectionChanged;
 	private StandardMaterial3D gold = new StandardMaterial3D
 	{
@@ -258,8 +266,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			mat = silver;
 		}
 		else{
-			// mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
-			mat = silver;
+			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
 		}
 		
 		_baseMaterials.Add(new List<StandardMaterial3D> { mat });
@@ -1092,6 +1099,39 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}
 
 		LayoutBoxes();
+		
+		_swayTime += delta;
+		var swayAngle = Mathf.Sin((float)_swayTime * SwaySpeed) * SwayAmplitude;
+		var swayBob = Mathf.Sin((float)_swayTime * SwaySpeed * 2.0f) * SwayBobAmplitude;
+
+		_currentSwayAngle = swayAngle;
+
+		for (int i = 0; i < _boxes.Count; i++)
+		{
+
+			if (i == _hoveredIdx || _animatingBoxes.Contains(i) || _returningBoxes.Contains(i))
+			{
+				continue;
+			}
+			
+			var box = _boxes[i];
+			
+			box.Rotation = new Vector3(
+				swayAngle,
+				box.Rotation.Y,
+				swayAngle * 0.5f
+			);
+			
+			if (!IsCarouselMoving())
+			{
+				box.Position = new Vector3(
+					box.Position.X,
+					box.Position.Y + swayBob,
+					box.Position.Z
+				);
+			}
+
+		}
 	}
 
 	public override void _ExitTree()
@@ -1208,6 +1248,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_hoverTween = CreateTween();
 		_hoverTween.SetTrans(Tween.TransitionType.Back);
 		_hoverTween.SetEase(Tween.EaseType.Out);
+		
+		_hoverTween.TweenProperty(box, "rotation",
+			new Vector3(0f, _flippedBoxes.Contains(idx) ? Mathf.DegToRad(180f) : 0f, 0f),
+			0.15f);
+
 		_hoverTween.TweenProperty(box, "scale",
 			new Vector3(SelectedScale * 1.08f, SelectedScale * 1.08f, SelectedScale * 1.08f),
 			0.2f);
@@ -1222,22 +1267,37 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		_hoverTween?.Kill();
 		_hoverTween = CreateTween();
+		_hoverTween.SetParallel();
 		_hoverTween.SetTrans(Tween.TransitionType.Spring);
 		_hoverTween.SetEase(Tween.EaseType.Out);
+		
+		_returningBoxes.Add(idx);
+		_animatingBoxes.Add(idx);
+		
+		
+		// Reset scale
 		_hoverTween.TweenProperty(box, "scale",
 			new Vector3(SelectedScale, SelectedScale, SelectedScale),
 			0.6f);
+		
 		// Reset tilt
 		if (!_flippedBoxes.Contains(idx))
 		{
-			_animatingBoxes.Add(idx);
 			_hoverTween.TweenProperty(box, "rotation",
-				new Vector3(0f, 0f, 0f), 0.4f);
-			
-			var capturedIdx = idx;
-			_hoverTween.TweenCallback(Callable.From(() =>
-				_animatingBoxes.Remove(capturedIdx)));
+				new Vector3(_currentSwayAngle, 0f, _currentSwayAngle * 0.5f), 0.4f);
 		}
+		else
+		{
+			_hoverTween.TweenProperty(box, "rotation",
+				new Vector3(_currentSwayAngle, box.Rotation.Y, _currentSwayAngle * 0.5f), 0.4f);
+		}
+		
+		var capturedIdx = idx;
+		_hoverTween.TweenCallback(Callable.From(() =>
+		{
+			_returningBoxes.Remove(capturedIdx);
+			_animatingBoxes.Remove(capturedIdx);
+		}));
 	}
 
 	private void UpdateHoverTilt(int idx, Vector2 mousePos)
@@ -1294,6 +1354,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		for (int i = 0; i < _boxes.Count; i++)
 		{
+			
 			var box = _boxes[i];
 
 			var d = i - CarouselPos;
@@ -1306,7 +1367,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			box.Position = new Vector3(d * Spacing, 0f, -t * 1.2f);
 			
 			// ONLY set scale and rotation if not hovered
-			if (i != _hoveredIdx)
+			if (i != _hoveredIdx && !_returningBoxes.Contains(i))
 			{
 				var scale = Mathf.Lerp(SelectedScale, UnselectedScale, t);
 				box.Scale = new Vector3(scale, scale, scale);
