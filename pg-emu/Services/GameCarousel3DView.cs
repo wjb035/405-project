@@ -228,13 +228,14 @@ public partial class GameCarousel3DView : SubViewportContainer
 			var (title, coverArt, award) = games[i];
 			var platformId = platformIds != null && i < platformIds.Count ? platformIds[i] : null;
 			var useSquareBox = !_isGba && !_isDs && IsSquareBoxPlatform(platformId);
+			var useSidewaysBox = !_isGba && !_isDs && IsSidewaysBoxPlatform(platformId);
 			Node3D box;
 			if (_isGba)
 				box = BuildGbaCartridge(title, coverArt );
 			else if (_isDs)
 				box = BuildDsCartridge(title, coverArt);
 			else
-				box = BuildBox(title, coverArt, award, useSquareBox);
+				box = BuildBox(title, coverArt, award, useSquareBox, useSidewaysBox);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
 		}
@@ -243,11 +244,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 	}
 	
 	// Builds actual 3d geometry of the cases
-	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType, bool forceSquare = false)
+	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType, bool forceSquare = false, bool forceSideways = false)
 	{
 		var root = new Node3D();
 		var squareBox = _isPs1 || _isN64 || forceSquare;
-		var sidewaysBox = _isSnes;
+		var sidewaysBox = _isSnes || forceSideways;
 		root.SetMeta("pgemu_square_box", squareBox);
 		var boxSize = squareBox
 			? new Vector3(2.8f, 2.8f, 0.25f)
@@ -1655,6 +1656,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 			string.Equals(platformId, "gba", System.StringComparison.OrdinalIgnoreCase) ||
 			string.Equals(platformId, "ds", System.StringComparison.OrdinalIgnoreCase) ||
 			string.Equals(platformId, "N64", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool IsSidewaysBoxPlatform(string? platformId)
+	{
+		return string.Equals(platformId, "snes", System.StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static bool IsSquareBoxMesh(Node node)
