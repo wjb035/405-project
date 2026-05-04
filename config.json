@@ -40,14 +40,14 @@
     {
       "id": "n64",
       "name": "Nintendo 64",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/N64",
+      "romPath": "D:/PGEmu Games/games/N64",
       "extensions": [
         ".z64",
         ".n64",
         ".v64",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "project64",
       "retroachievementsPlatformID": 2
     },
     {
@@ -97,7 +97,7 @@
     {
       "id": "ps1",
       "name": "Sony PlayStation",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS1",
+      "romPath": "D:/PGEmu Games/games/PSX",
       "extensions": [
         ".cue",
         ".iso",
@@ -105,7 +105,7 @@
         ".pbp",
         ".m3u"
       ],
-      "defaultEmulatorId": "swanstation",
+      "defaultEmulatorId": "duckstation",
       "retroachievementsPlatformID": 12
     },
     {
@@ -211,7 +211,20 @@
     {
       "id": "duckstation",
       "name": "DuckStation",
-      "exePath": "",
+      "exePath": "C:/Users/howto/AppData/Local/Programs/DuckStation/duckstation-qt-x64-ReleaseLTCG.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "project64",
+      "name": "Project64",
+      "exePath": "C:/Program Files (x86)/Project64 3.0/Project64.exe",
       "argsTemplate": " \u0022{ROM}\u0022",
       "exePathWindows": null,
       "exePathMac": null,

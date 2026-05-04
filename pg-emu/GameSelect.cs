@@ -1070,6 +1070,7 @@ private void OnAnyButtonPressed()
 	}
 
 	private string isGameCompleted(GameEntry g){
+		
 		// sanitize the name so it matches what will be in the database of awarded games
 		string gameSanitized = g.Name;
 		string pattern = @"[\s:-]";
@@ -1079,7 +1080,7 @@ private void OnAnyButtonPressed()
 		
 		
 		// if the game is marked as beaten, it's silver
-		if (AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Game Beaten"))){
+		if (AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Game Beaten")) & !AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Mastery/Completion"))){
 			return "Game Beaten";
 		}
 		else if (AchievementStorage.awards.Contains(new KeyValuePair<string,string>(gameSanitized, "Mastery/Completion"))){
