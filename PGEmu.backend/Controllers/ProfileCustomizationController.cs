@@ -59,7 +59,17 @@ public class ProfileCustomizationController : ControllerBase
         if (!user.Success)
             return NotFound("Profile not found.");
 
-        return Ok(new { Message = user.Message, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
+        return Ok(new
+        {
+            Message = user.Message,
+            UserId = user.Profile.UserId,
+            Username = user.Profile.Username,
+            Bio = user.Profile.Bio,
+            AvatarUrl = user.Profile.AvatarUrl,
+            ProfileAccent = user.Profile.ProfileAccent,
+            AvatarFrame = user.Profile.AvatarFrame,
+            ProfileBackground = user.Profile.ProfileBackground
+        });
     }
 
     [Authorize]
@@ -103,7 +113,17 @@ public class ProfileCustomizationController : ControllerBase
         if (!user.Success)
             return NotFound("Profile not found.");
 
-        return Ok(new { Message = user.Message, UserId = user.Profile.UserId, Username = user.Profile.Username, Bio = user.Profile.Bio, AvatarUrl = user.Profile.AvatarUrl });
+        return Ok(new
+        {
+            Message = user.Message,
+            UserId = user.Profile.UserId,
+            Username = user.Profile.Username,
+            Bio = user.Profile.Bio,
+            AvatarUrl = user.Profile.AvatarUrl,
+            ProfileAccent = user.Profile.ProfileAccent,
+            AvatarFrame = user.Profile.AvatarFrame,
+            ProfileBackground = user.Profile.ProfileBackground
+        });
     }
 
     [Authorize]
@@ -121,6 +141,32 @@ public class ProfileCustomizationController : ControllerBase
             return BadRequest(result.Message);
 
         return Ok(new { message = result.Message, Bio = result.NewBio });
+    }
+
+    [Authorize]
+    [HttpPut("style")]
+    public async Task<IActionResult> ChangeProfileStyle([FromBody] ProfileCustomizationDTO request)
+    {
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null)
+            return BadRequest("User not authenticated.");
+
+        var result = await _profileCustomizationService.ChangeProfileStyleAsync(
+            Guid.Parse(userIdClaim.Value),
+            request.ProfileAccent,
+            request.AvatarFrame,
+            request.ProfileBackground);
+
+        if (!result.Success)
+            return BadRequest(result.Message);
+
+        return Ok(new
+        {
+            message = result.Message,
+            ProfileAccent = result.ProfileAccent,
+            AvatarFrame = result.AvatarFrame,
+            ProfileBackground = result.ProfileBackground
+        });
     }
 
     [Authorize]

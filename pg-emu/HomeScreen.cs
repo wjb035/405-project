@@ -57,6 +57,7 @@ public partial class HomeScreen : Control
 	private Button _searchBarButton;
 	private Control _carouselArea;
 	private PopupPanel _userSearchResultsPopup = null!;
+	private HelpPopup _helpPopup = null!;
 	private Panel _userSearchResultsContent = null!;
 	private ScrollContainer _userSearchResultsScroll = null!;
 	private VBoxContainer _userSearchResultsList = null!;
@@ -135,6 +136,7 @@ public partial class HomeScreen : Control
 		_filter = GetNodeOrNull<Button>(SearchFilterPath);
 		ApplyAesthetic();
 		SetupUserSearchResultsPopup();
+		SetupHelpPopup();
 
 		// Build the 3D console carousel
 		_carouselArea = GetNode<Control>(CarouselAreaPath);
@@ -186,6 +188,8 @@ public partial class HomeScreen : Control
 			"wii"        => ConsoleCarousel3DView.ConsoleType.Wii,
 			"ds"         => ConsoleCarousel3DView.ConsoleType.NintendoDS,
 			"n64"        => ConsoleCarousel3DView.ConsoleType.Nintendo64,
+			"snes"       => ConsoleCarousel3DView.ConsoleType.SNES,
+			"nes"        => ConsoleCarousel3DView.ConsoleType.NES,
 			"ps1"        => ConsoleCarousel3DView.ConsoleType.PlayStation1,
 			"ps2"        => ConsoleCarousel3DView.ConsoleType.PlayStation2,
 			"psp"        => ConsoleCarousel3DView.ConsoleType.PSP,
@@ -964,7 +968,13 @@ private void OnAnyButtonPressed()
 
 	private void OnHelpPressed()
 	{
-		GD.Print("Help pressed");
+		_helpPopup.ShowPopup();
+	}
+
+	private void SetupHelpPopup()
+	{
+		_helpPopup = new HelpPopup();
+		AddChild(_helpPopup);
 	}
 
 	private async void OpenSelectedPlatform()
@@ -989,10 +999,16 @@ private void OnAnyButtonPressed()
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.Wii);
 		else if (string.Equals(platform.Id, "n64", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.Nintendo64);
+		else if (string.Equals(platform.Id, "snes", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.SNES);
+		else if (string.Equals(platform.Id, "nes", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.NES);
 		else if (string.Equals(platform.Id, "gc", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GameCube);
 		else if (string.Equals(platform.Id, "gba", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GBA);
+		else if (string.Equals(platform.Id, "ps2", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PlayStation2);
 
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
 	}

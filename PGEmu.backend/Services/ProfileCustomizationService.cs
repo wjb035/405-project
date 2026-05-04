@@ -14,6 +14,30 @@ public class ProfileCustomizationService : IProfileCustomizationService
     private readonly AppDbContext _context;
     private const int MaximumSearchLimit = 25;
     private const int CandidateFetchCount = 250;
+    private const string DefaultProfileAccent = "sky";
+    private const string DefaultAvatarFrame = "rounded";
+    private const string DefaultProfileBackground = "original";
+    private static readonly HashSet<string> ProfileAccentIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "sky",
+        "mint",
+        "rose",
+        "gold",
+        "violet"
+    };
+    private static readonly HashSet<string> AvatarFrameIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "rounded",
+        "sharp",
+        "circle"
+    };
+    private static readonly HashSet<string> ProfileBackgroundIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "original",
+        "starry-night",
+        "earthbound",
+        "rusty"
+    };
 
     public ProfileCustomizationService(AppDbContext context)
     {
@@ -93,6 +117,45 @@ public class ProfileCustomizationService : IProfileCustomizationService
         return (true, "Avatar changed successfully", user.Profile.AvatarUrl);
     }
 
+    public async Task<(bool Success, string Message, string ProfileAccent, string AvatarFrame, string ProfileBackground)>
+        ChangeProfileStyleAsync(Guid userId, string? profileAccent, string? avatarFrame, string? profileBackground)
+    {
+        var accent = NormalizeStyleId(profileAccent, DefaultProfileAccent);
+        var frame = NormalizeStyleId(avatarFrame, DefaultAvatarFrame);
+        var background = NormalizeStyleId(profileBackground, DefaultProfileBackground);
+
+        if (!ProfileAccentIds.Contains(accent))
+            return (false, "Invalid profile accent", DefaultProfileAccent, DefaultAvatarFrame, DefaultProfileBackground);
+        if (!AvatarFrameIds.Contains(frame))
+            return (false, "Invalid avatar frame", DefaultProfileAccent, DefaultAvatarFrame, DefaultProfileBackground);
+        if (!ProfileBackgroundIds.Contains(background))
+            return (false, "Invalid profile background", DefaultProfileAccent, DefaultAvatarFrame, DefaultProfileBackground);
+
+        var user = await _context.Users
+            .Include(u => u.Profile)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            return (false, "User not found", DefaultProfileAccent, DefaultAvatarFrame, DefaultProfileBackground);
+
+        if (user.Profile == null)
+        {
+            user.Profile = new UserProfile
+            {
+                UserId = userId
+            };
+        }
+
+        user.Profile.ProfileAccent = accent;
+        user.Profile.AvatarFrame = frame;
+        user.Profile.ProfileBackground = background;
+        user.Profile.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return (true, "Profile style changed successfully", accent, frame, background);
+    }
+
 
 
 
@@ -131,6 +194,9 @@ public class ProfileCustomizationService : IProfileCustomizationService
                 Username = user.Username,
                 Bio = user.Profile.Bio,
                 AvatarUrl = user.Profile.AvatarUrl,
+                ProfileAccent = NormalizeStyleId(user.Profile.ProfileAccent, DefaultProfileAccent),
+                AvatarFrame = NormalizeStyleId(user.Profile.AvatarFrame, DefaultAvatarFrame),
+                ProfileBackground = NormalizeStyleId(user.Profile.ProfileBackground, DefaultProfileBackground)
             });
     }
 
@@ -315,5 +381,12 @@ public class ProfileCustomizationService : IProfileCustomizationService
 
         var divisor = Math.Max(leftBigrams.Count, rightCount);
         return divisor == 0 ? 0f : (float)overlap / divisor;
+    }
+
+    private static string NormalizeStyleId(string? value, string defaultValue)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? defaultValue
+            : value.Trim().ToLowerInvariant();
     }
 }

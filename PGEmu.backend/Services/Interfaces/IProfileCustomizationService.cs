@@ -14,6 +14,9 @@ public interface IProfileCustomizationService
     Task<(bool Success, string Message, string? NewBio)>
         ChangeBioAsync(Guid userId, string? newBio);
 
+    Task<(bool Success, string Message, string ProfileAccent, string AvatarFrame, string ProfileBackground)>
+        ChangeProfileStyleAsync(Guid userId, string? profileAccent, string? avatarFrame, string? profileBackground);
+
     Task<(bool Success, string Message, ProfileCustomizationDTO Profile)>
         GetUserAsync(Guid? UserId, string? username);
 

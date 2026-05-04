@@ -53,6 +53,7 @@ public partial class GameSelect : Control
 	private Button _add = null!;
 	private Button _chat = null!;
 	private Button _help = null!;
+	private HelpPopup _helpPopup = null!;
 	private Button _flip = null!;
 	private PanelContainer _listShell = null!;
 	private ScrollContainer _listScroll = null!;
@@ -150,6 +151,7 @@ public partial class GameSelect : Control
 		_friends = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends");
 		_chat = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat");
 		_help = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp");
+		SetupHelpPopup();
 		_achievement = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnAch");
 		_add = GetNode<Button>(AddPath);
 		_flip = GetNode<Button>(FlipPath);
@@ -359,7 +361,13 @@ private void OnAnyButtonPressed()
 
 	private void OnHelpPressed()
 	{
-		GD.Print("Help pressed");
+		_helpPopup.ShowPopup();
+	}
+
+	private void SetupHelpPopup()
+	{
+		_helpPopup = new HelpPopup();
+		AddChild(_helpPopup);
 	}
 
 	private async void GoHome()

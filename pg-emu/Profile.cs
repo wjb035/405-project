@@ -37,9 +37,16 @@ public partial class Profile : Control
 	private const string ShowcaseTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid";
 	private const string RecentGamesTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid";
 	private const string FriendsTileGridPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid";
+	private const string ShowcaseFooterPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow";
 	private const string RecentGamesFooterPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow";
 	private const string FriendsFooterPath = "Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow";
 	private const string FriendSearchDropdownPath = "Margin/Root/TopBar/FriendSearchDropdown";
+	private const string AvatarCardPath = "Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2";
+	private const string AvatarFrameMarginPath = AvatarCardPath + "/AvatarFrameMargin";
+	private const string AvatarFramePath = AvatarFrameMarginPath + "/AvatarFrame";
+	private const string AvatarInnerMarginPath = AvatarFramePath + "/AvatarInnerMargin";
+	private const string AvatarAspectPath = AvatarInnerMarginPath + "/AspectRatioContainer";
+	private const string AvatarStackPath = AvatarAspectPath + "/AvatarStack";
 	private const int FriendSearchPlaceholderId = -1;
 	private const int FriendSearchUsernamePromptId = -2;
 	private const int FriendSearchFriendIdBase = 1000;
@@ -48,8 +55,8 @@ public partial class Profile : Control
 	private const float FriendDrawerWidth = 392f;
 	private const float FriendDrawerScrimAlpha = 0.54f;
 	private const float FriendDrawerTweenSeconds = 0.22f;
-	private const float ProfileBackgroundOverlayAlpha = 0.68f;
 	private const string HoverFeedbackAppliedMeta = "pgemu_profile_hover_feedback_applied";
+	private const string SceneBackgroundMaterialMeta = "pgemu_profile_scene_background_material_local";
 	private const string RetroAchievementsConnectPrompt = "Connect to retroachievements to view your trophies!";
 	private const string NoEarnedTrophiesText = "No trophies earned yet";
 
@@ -66,9 +73,13 @@ public partial class Profile : Control
 	private readonly List<string> _allFriendSearchUsernames = new();
 	private readonly List<string> _friendSearchResultUsernames = new();
 	private readonly List<FriendListEntry> _friendEntries = new();
+	private ProfileVisualStyleCatalog.ResolvedStyle _visualStyle =
+		ProfileVisualStyleCatalog.Resolve(null, null, null);
 
 	private Button _back = null!;
 	private Button _friendsList = null!;
+	private Button? _showcaseSeeAll = null;
+	private Button? _recentGamesSeeAll = null;
 	private Button _profileSettingsShortcut = null!;
 	private ScrollContainer _bodyScroll = null!;
 	private Label _gamerTag = null!;
@@ -119,6 +130,8 @@ public partial class Profile : Control
 		_profileNote = GetNode<Label>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/ProfileNote");
 		_visibilityToggle = GetNode<OptionButton>("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow/OptionButton");
 		_friendSearchDropdown = GetNodeOrNull<OptionButton>(FriendSearchDropdownPath);
+		_showcaseSeeAll = GetNodeOrNull<Button>(ShowcaseFooterPath + "/Button");
+		_recentGamesSeeAll = GetNodeOrNull<Button>(RecentGamesFooterPath + "/Button");
 		_avatar = GetNode<TextureRect>(AvatarPath);
 		ApplyAvatarMaskShader();
 
@@ -127,6 +140,10 @@ public partial class Profile : Control
 		ConnectIfNeeded(_back, GoBack);
 		ConnectIfNeeded(_profileSettingsShortcut, GoProfileSettings);
 		ConnectIfNeeded(_friendsList, GoFriendsList);
+		if (_showcaseSeeAll != null)
+			ConnectIfNeeded(_showcaseSeeAll, GoAchievements);
+		if (_recentGamesSeeAll != null)
+			ConnectIfNeeded(_recentGamesSeeAll, GoGameSelect);
 		ConnectFriendTileButtons();
 		ConnectRecentGameTileButtons();
 			if (_friendSearchDropdown != null)
@@ -145,12 +162,34 @@ public partial class Profile : Control
 
 	private void ApplyAvatarMaskShader()
 	{
-		var avatarMaterial = new ShaderMaterial
+		var avatarMaterial = _avatar.Material as ShaderMaterial;
+		if (avatarMaterial == null)
 		{
-			Shader = GD.Load<Shader>("res://ShaderSlop/RoundedAvatarFrame.gdshader")
-		};
+			avatarMaterial = new ShaderMaterial
+			{
+				Shader = GD.Load<Shader>(GetAvatarShaderPath())
+			};
+			_avatar.Material = avatarMaterial;
+		}
+		else if (avatarMaterial.Shader?.ResourcePath != GetAvatarShaderPath())
+		{
+			avatarMaterial.Shader = GD.Load<Shader>(GetAvatarShaderPath());
+		}
 
-		_avatar.Material = avatarMaterial;
+		var style = _visualStyle;
+		avatarMaterial.SetShaderParameter("width", style.AvatarFrame.Width);
+		if (style.AvatarFrame.Id != "circle")
+			avatarMaterial.SetShaderParameter("radius", style.AvatarFrame.Radius);
+		avatarMaterial.SetShaderParameter("stroke_width", style.AvatarFrame.StrokeWidth);
+		avatarMaterial.SetShaderParameter("stroke_color", style.Background.Accent);
+		avatarMaterial.SetShaderParameter("edge_softness", 0.006f);
+	}
+
+	private string GetAvatarShaderPath()
+	{
+		return _visualStyle.AvatarFrame.Id == "circle"
+			? "res://ShaderSlop/circle.gdshader"
+			: "res://ShaderSlop/RoundedAvatarFrame.gdshader";
 	}
 
 		public override void _UnhandledInput(InputEvent @event)
@@ -279,7 +318,7 @@ public partial class Profile : Control
 
 		var navigationRows = ControllerService.BuildVisibleRows(topRow, new Button?[] { _visibilityToggle });
 		navigationRows.AddRange(BuildSectionTileRows());
-		navigationRows.AddRange(ControllerService.BuildVisibleRows(new Button?[] { _friendsList }));
+		navigationRows.AddRange(ControllerService.BuildVisibleRows(new Button?[] { _showcaseSeeAll, _recentGamesSeeAll, _friendsList }));
 		return navigationRows;
 	}
 
@@ -1312,6 +1351,8 @@ public partial class Profile : Control
 				return;
 			}
 
+			ApplyProfileVisualStyle(_profile);
+
 			_gamerTag.Text = string.IsNullOrWhiteSpace(_profile.Username) ? "Player" : _profile.Username;
 			_profileNote.Text = string.IsNullOrWhiteSpace(_profile.Bio)
 				? "No bio yet."
@@ -1337,6 +1378,17 @@ public partial class Profile : Control
 	private void SetFailedState()
 	{
 		_profileNote.Text = "Unable to load profile right now.";
+	}
+
+	private void ApplyProfileVisualStyle(ProfileResponse profile)
+	{
+		_visualStyle = ProfileVisualStyleCatalog.Resolve(
+			profile.ProfileAccent,
+			profile.AvatarFrame,
+			profile.ProfileBackground);
+		ApplyAvatarMaskShader();
+		ApplyThemeAesthetic();
+		StartBackgroundTransition(0.85f);
 	}
 
 	private async Task LoadSectionDataAsync()
@@ -1367,7 +1419,8 @@ public partial class Profile : Control
 			ApplyFriendTileContent(previewFriendItems, "No friends yet");
 			ConfigureFriendSearchDropdown(friendItems.Select(friend => friend.Username).ToArray());
 
-			SetFooterVisible(RecentGamesFooterPath, false);
+			SetFooterVisible(ShowcaseFooterPath, true);
+			SetFooterVisible(RecentGamesFooterPath, true);
 			SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
@@ -1383,7 +1436,8 @@ public partial class Profile : Control
 			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
 			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
 			ConfigureFriendSearchDropdown(Array.Empty<string>());
-			SetFooterVisible(RecentGamesFooterPath, false);
+			SetFooterVisible(ShowcaseFooterPath, true);
+			SetFooterVisible(RecentGamesFooterPath, true);
 			SetFooterVisible(FriendsFooterPath, true);
 			CallDeferred(nameof(RefreshControllerFocusGraph));
 		}
@@ -1892,47 +1946,45 @@ public partial class Profile : Control
 
 	private void ApplyThemeAesthetic()
 	{
-		if (GetNodeOrNull<ColorRect>("Bg") is ColorRect bg)
-			bg.Color = new Color(0.068f, 0.048f, 0.121f, ProfileBackgroundOverlayAlpha);
+		ApplySceneBackgroundShader();
 
-		var cardSurface = new Color(0.10f, 0.09f, 0.16f, 0.93f);
-		var cardSurfaceAlt = new Color(0.12f, 0.10f, 0.19f, 0.95f);
-		var cardSurfaceInset = new Color(0.15f, 0.13f, 0.23f, 0.96f);
-		var cardBorder = new Color(0.56f, 0.48f, 0.76f, 0.46f);
-		var cardBorderStrong = new Color(0.72f, 0.64f, 0.92f, 0.62f);
-		var avatarBorder = new Color(0.48f, 0.83f, 1f, 0.48f);
-		var chipSurface = new Color(0.17f, 0.14f, 0.27f, 0.92f);
-		var chipAccent = new Color(0.74f, 0.84f, 1f, 0.84f);
-		var showcaseAccent = new Color(0.47f, 0.84f, 1f, 0.90f);
-		var recentAccent = new Color(0.57f, 0.97f, 0.79f, 0.88f);
-		var friendsAccent = new Color(1f, 0.73f, 0.86f, 0.90f);
-		var separatorColor = new Color(0.70f, 0.62f, 0.90f, 0.24f);
+		var theme = _visualStyle.Background;
+		var accentPrimary = theme.Accent;
+		var cardSurface = _visualStyle.Background.CardSurface;
+		var cardSurfaceAlt = _visualStyle.Background.CardSurfaceAlt;
+		var cardSurfaceInset = _visualStyle.Background.CardSurfaceInset;
+		var cardBorder = WithAlpha(Mix(accentPrimary, new Color(0.56f, 0.48f, 0.76f, 1f), 0.50f), 0.46f);
+		var cardBorderStrong = WithAlpha(Mix(accentPrimary, new Color(0.97f, 0.95f, 1f, 1f), 0.22f), 0.62f);
+		var avatarBorder = WithAlpha(accentPrimary, 0.62f);
+		var chipSurface = _visualStyle.Background.ChipSurface;
+		var chipAccent = WithAlpha(accentPrimary, 0.84f);
+		var showcaseAccent = WithAlpha(theme.ShowcaseAccent, 0.92f);
+		var recentAccent = WithAlpha(theme.RecentAccent, 0.92f);
+		var friendsAccent = WithAlpha(theme.FriendsAccent, 0.92f);
+		var separatorColor = _visualStyle.Background.Separator;
+		var themeTileAccents = theme.TileAccents;
 
 		UiStyle.StyleTopBarButton(_back);
-		UiStyle.AddHoverFeedback(_back);
-		UiStyle.ApplyParallaxShadow(_back);
+		ApplyProfileHoverFeedback(_back, scaleUp: 1.08f);
 		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
 		UiStyle.StylePopupMenu(_visibilityToggle.GetPopup());
 		if (_friendSearchDropdown != null)
 			UiStyle.StylePopupMenu(_friendSearchDropdown.GetPopup());
 		UiStyle.StyleTopBarButton(_profileSettingsShortcut);
-		UiStyle.AddHoverFeedback(_profileSettingsShortcut);
-		UiStyle.ApplyParallaxShadow(_profileSettingsShortcut);
+		ApplyProfileHoverFeedback(_profileSettingsShortcut, scaleUp: 1.08f);
 		UiStyle.TightenButtonContentPadding(_profileSettingsShortcut, horizontal: 8f, vertical: 3f);
-		ApplyButtonTheme(_profileSettingsShortcut, chipSurface, friendsAccent, isChip: true);
+		ApplyButtonTheme(_profileSettingsShortcut, chipSurface, showcaseAccent, isChip: true);
 
 		UiStyle.StyleOptionButton(_visibilityToggle);
-		UiStyle.AddHoverFeedback(_visibilityToggle);
-		UiStyle.ApplyParallaxShadow(_visibilityToggle);
+		ApplyProfileHoverFeedback(_visibilityToggle, scaleUp: 1.08f);
 		UiStyle.TightenButtonContentPadding(_visibilityToggle, horizontal: 8f, vertical: 3f);
 		ApplyButtonTheme(_visibilityToggle, chipSurface, chipAccent, isChip: true);
 
 		if (_friendSearchDropdown != null)
 		{
 			UiStyle.StyleOptionButton(_friendSearchDropdown);
-			UiStyle.AddHoverFeedback(_friendSearchDropdown);
-			UiStyle.ApplyParallaxShadow(_friendSearchDropdown);
+			ApplyProfileHoverFeedback(_friendSearchDropdown, scaleUp: 1.08f);
 			UiStyle.TightenButtonContentPadding(_friendSearchDropdown, horizontal: 8f, vertical: 3f);
 			ApplyButtonTheme(_friendSearchDropdown, chipSurface, friendsAccent, isChip: true);
 		}
@@ -1949,7 +2001,8 @@ public partial class Profile : Control
 		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/Label", recentAccent);
 		StyleSectionTitle("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/Label", friendsAccent);
 
-		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2", cardSurfaceAlt, avatarBorder, 18, 1);
+		ApplyCardStyle(AvatarCardPath, cardSurfaceAlt, avatarBorder, _visualStyle.AvatarFrame.PanelRadius, 1);
+		ApplyAvatarFrameLayout();
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer", cardSurface, cardBorderStrong, 16, 1);
 		ApplyCardStyle("Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer", cardSurfaceInset, cardBorder, 14, 1);
 
@@ -1966,38 +2019,104 @@ public partial class Profile : Control
 		StyleTileGrid(
 			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/TileGrid",
 			showcaseAccent,
-			new[]
-			{
-				new Color(0.30f, 0.73f, 1f, 1f),
-				new Color(1f, 0.78f, 0.42f, 1f),
-				new Color(1f, 0.58f, 0.79f, 1f),
-				new Color(0.61f, 0.90f, 0.66f, 1f)
-			});
+			themeTileAccents);
 		StyleTileGrid(
 			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/TileGrid",
 			recentAccent,
-			new[]
-			{
-				new Color(0.58f, 0.97f, 0.79f, 1f),
-				new Color(0.48f, 0.84f, 1f, 1f),
-				new Color(0.90f, 0.77f, 1f, 1f),
-				new Color(1f, 0.83f, 0.51f, 1f)
-			});
+			themeTileAccents);
 		StyleTileGrid(
 			"Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/TileGrid",
 			friendsAccent,
-			new[]
-			{
-				new Color(1f, 0.73f, 0.86f, 1f),
-				new Color(0.52f, 0.87f, 1f, 1f),
-				new Color(1f, 0.81f, 0.48f, 1f),
-				new Color(0.72f, 0.89f, 0.67f, 1f)
-			});
+			themeTileAccents);
 
+			StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow/Button", chipSurface, showcaseAccent);
 			StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/RecentGames2/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, recentAccent);
 			StyleFooterButton("Margin/Root/BodyScroll/Body/RecentGamesAndFriends/Friends/MarginContainer/VBoxContainer/FooterRow/Button", chipSurface, friendsAccent);
 			ApplyFriendDrawerTheme();
 		}
+
+	private void ApplySceneBackgroundShader()
+	{
+		if (GetNodeOrNull<ColorRect>("Bg") is not ColorRect bg)
+			return;
+
+		bg.Color = _visualStyle.Background.Overlay;
+		if (bg.Material is not ShaderMaterial material)
+			return;
+
+		if (!bg.HasMeta(SceneBackgroundMaterialMeta))
+		{
+			material = material.Duplicate() as ShaderMaterial ?? material;
+			bg.Material = material;
+			bg.SetMeta(SceneBackgroundMaterialMeta, true);
+		}
+
+		material.SetShaderParameter("tint", _visualStyle.Background.SceneTint);
+		material.SetShaderParameter("highlight_color", _visualStyle.Background.SceneHighlight);
+		material.SetShaderParameter("highlight_thickness", 0.0f);
+	}
+
+	private void ApplyAvatarFrameLayout()
+	{
+		var frame = _visualStyle.AvatarFrame;
+		var avatarSize = new Vector2(frame.AvatarSize, frame.AvatarSize);
+
+		if (GetNodeOrNull<MarginContainer>(AvatarFrameMarginPath) is MarginContainer frameMargin)
+			SetMarginConstants(frameMargin, frame.FrameMargin);
+
+		if (GetNodeOrNull<MarginContainer>(AvatarInnerMarginPath) is MarginContainer innerMargin)
+			SetMarginConstants(innerMargin, frame.InnerMargin);
+
+		if (GetNodeOrNull<PanelContainer>(AvatarFramePath) is PanelContainer framePanel)
+		{
+			framePanel.ClipContents = true;
+			framePanel.AddThemeStyleboxOverride(
+				"panel",
+				CreatePanelStyle(new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0f), frame.PanelRadius, 0));
+		}
+
+		if (GetNodeOrNull<PanelContainer>(AvatarCardPath) is PanelContainer avatarCard)
+		{
+			var existing = avatarCard.GetThemeStylebox("panel") as StyleBoxFlat;
+			var background = existing?.BgColor ?? _visualStyle.Background.CardSurfaceAlt;
+			var border = existing?.BorderColor ?? WithAlpha(_visualStyle.Background.Accent, 0.62f);
+			var borderWidth = existing?.BorderWidthLeft ?? 1;
+			avatarCard.AddThemeStyleboxOverride("panel", CreatePanelStyle(background, border, frame.PanelRadius, borderWidth));
+		}
+
+		if (GetNodeOrNull<Control>(AvatarAspectPath) is Control aspect)
+		{
+			aspect.ClipContents = true;
+			aspect.CustomMinimumSize = avatarSize;
+		}
+
+		if (GetNodeOrNull<Control>(AvatarStackPath) is Control stack)
+		{
+			stack.ClipContents = true;
+			stack.CustomMinimumSize = avatarSize;
+		}
+
+		_avatar.ClipContents = true;
+		_avatar.CustomMinimumSize = avatarSize;
+		_avatar.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+		_avatar.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
+		_avatar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_avatar.OffsetLeft = 0f;
+		_avatar.OffsetTop = 0f;
+		_avatar.OffsetRight = 0f;
+		_avatar.OffsetBottom = 0f;
+	}
+
+	private static Color[] BuildCohesiveTileAccents(Color accent)
+	{
+		return new[]
+		{
+			WithAlpha(accent, 1f),
+			WithAlpha(ShiftHue(accent, -0.11f, saturationBoost: 0.05f, valueBoost: 0.03f), 1f),
+			WithAlpha(ShiftHue(accent, 0.14f, saturationBoost: 0.04f, valueBoost: 0.03f), 1f),
+			WithAlpha(Mix(ShiftHue(accent, 0.24f, saturationBoost: 0.02f, valueBoost: 0.02f), accent, 0.25f), 1f)
+		};
+	}
 
 	private void StyleTileGrid(string containerPath, Color sectionAccent, Color[] tileAccents)
 	{
@@ -2034,17 +2153,11 @@ public partial class Profile : Control
 			if (_friendDrawerPanel == null)
 				return;
 
-			var panelSurface = new Color(0.09f, 0.07f, 0.16f, 0.97f);
-			var panelBorder = new Color(0.90f, 0.74f, 1f, 0.46f);
-			var friendsAccent = new Color(0.96f, 0.74f, 0.86f, 1f);
-			var chipSurface = new Color(0.17f, 0.14f, 0.27f, 0.92f);
-			var tileAccents = new[]
-			{
-				new Color(1f, 0.73f, 0.86f, 1f),
-				new Color(0.52f, 0.87f, 1f, 1f),
-				new Color(1f, 0.81f, 0.48f, 1f),
-				new Color(0.72f, 0.89f, 0.67f, 1f)
-			};
+			var panelSurface = _visualStyle.Background.CardSurface;
+			var panelBorder = WithAlpha(_visualStyle.Background.Accent, 0.46f);
+			var friendsAccent = WithAlpha(_visualStyle.Background.FriendsAccent, 0.92f);
+			var chipSurface = _visualStyle.Background.ChipSurface;
+			var tileAccents = _visualStyle.Background.TileAccents;
 
 			_friendDrawerPanel.AddThemeStyleboxOverride("panel", CreatePanelStyle(panelSurface, panelBorder, 22, 1));
 
@@ -2127,6 +2240,14 @@ public partial class Profile : Control
 			separator.Modulate = color;
 	}
 
+	private static void SetMarginConstants(MarginContainer margin, int value)
+	{
+		margin.AddThemeConstantOverride("margin_left", value);
+		margin.AddThemeConstantOverride("margin_top", value);
+		margin.AddThemeConstantOverride("margin_right", value);
+		margin.AddThemeConstantOverride("margin_bottom", value);
+	}
+
 	private void ApplyCardStyle(string nodePath, Color background, Color border, int radius, int borderWidth)
 	{
 		var control = GetNodeOrNull<Control>(nodePath);
@@ -2157,7 +2278,7 @@ public partial class Profile : Control
 		button.AddThemeColorOverride("font_focus_color", new Color(0.95f, 0.94f, 1f, 0.98f));
 	}
 
-	private void StartBackgroundTransition()
+	private void StartBackgroundTransition(float duration = 1.5f)
 	{
 		var bg = GetNodeOrNull<GlobalBackground>("/root/GlobalBackground");
 		if (bg == null)
@@ -2168,7 +2289,7 @@ public partial class Profile : Control
 
 		try
 		{
-			bg.StartTransition("HomeScreen", 1.5f);
+			bg.StartProfileBackgroundTransition(_visualStyle.Background.Id, duration);
 		}
 		catch (Exception ex)
 		{
@@ -2221,6 +2342,78 @@ public partial class Profile : Control
 		return new Color(color.R, color.G, color.B, alpha);
 	}
 
+	private static Color ShiftHue(Color color, float hueOffset, float saturationBoost = 0f, float valueBoost = 0f)
+	{
+		RgbToHsv(color, out var hue, out var saturation, out var value);
+		return HsvToRgb(
+			Wrap01(hue + hueOffset),
+			Clamp01(saturation + saturationBoost),
+			Clamp01(value + valueBoost),
+			color.A);
+	}
+
+	private static void RgbToHsv(Color color, out float hue, out float saturation, out float value)
+	{
+		var max = MathF.Max(color.R, MathF.Max(color.G, color.B));
+		var min = MathF.Min(color.R, MathF.Min(color.G, color.B));
+		var delta = max - min;
+
+		value = max;
+		saturation = max <= 0f ? 0f : delta / max;
+
+		if (delta <= 0.00001f)
+		{
+			hue = 0f;
+			return;
+		}
+
+		if (MathF.Abs(max - color.R) <= 0.00001f)
+			hue = ((color.G - color.B) / delta) % 6f;
+		else if (MathF.Abs(max - color.G) <= 0.00001f)
+			hue = ((color.B - color.R) / delta) + 2f;
+		else
+			hue = ((color.R - color.G) / delta) + 4f;
+
+		hue = Wrap01(hue / 6f);
+	}
+
+	private static Color HsvToRgb(float hue, float saturation, float value, float alpha)
+	{
+		var h = Wrap01(hue) * 6f;
+		var c = value * saturation;
+		var x = c * (1f - MathF.Abs((h % 2f) - 1f));
+		var m = value - c;
+
+		float r;
+		float g;
+		float b;
+		if (h < 1f)
+			(r, g, b) = (c, x, 0f);
+		else if (h < 2f)
+			(r, g, b) = (x, c, 0f);
+		else if (h < 3f)
+			(r, g, b) = (0f, c, x);
+		else if (h < 4f)
+			(r, g, b) = (0f, x, c);
+		else if (h < 5f)
+			(r, g, b) = (x, 0f, c);
+		else
+			(r, g, b) = (c, 0f, x);
+
+		return new Color(r + m, g + m, b + m, alpha);
+	}
+
+	private static float Clamp01(float value)
+	{
+		return Math.Clamp(value, 0f, 1f);
+	}
+
+	private static float Wrap01(float value)
+	{
+		value %= 1f;
+		return value < 0f ? value + 1f : value;
+	}
+
 	private static Color Mix(Color from, Color to, float amount)
 	{
 		return new Color(
@@ -2267,6 +2460,24 @@ public partial class Profile : Control
 			AudioManager.Instance?.PlaySelect();
 			await OpenFriendDrawerAsync();
 		}
+
+	private void GoAchievements()
+	{
+		ResetUiNavigationState();
+		AudioManager.Instance?.PlayNavigation(1);
+		var tree = GetTree();
+		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+		tree.ChangeSceneToFile("res://Achievements.tscn");
+	}
+
+	private async void GoGameSelect()
+	{
+		ResetUiNavigationState();
+		AudioManager.Instance?.PlayNavigation(1);
+		var tree = GetTree();
+		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, false);
+	}
 
 	private async void OpenFriendProfileAsync(Button button)
 	{
@@ -2335,6 +2546,7 @@ public partial class Profile : Control
 
 		tree.SetMeta(SettingsParentReturnSceneMeta, returnScene);
 		tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
+		tree.SetMeta("pgemu_settings_tab", "profile");
 		tree.ChangeSceneToFile("res://Settings.tscn");
 	}
 

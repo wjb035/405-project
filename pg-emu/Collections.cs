@@ -47,6 +47,7 @@ public partial class Collections : Control
 	private Button _collectionPrompt;
 	private LineEdit _lineEdit;
 	private Button _gameSelect;
+	private HelpPopup _helpPopup = null!;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -101,6 +102,7 @@ public partial class Collections : Control
 		_gameSelect = GetNodeOrNull<Button>(GamePath);
 		
 		ApplyAesthetic();
+		SetupHelpPopup();
 
 		_prev.Pressed += () => Step(-1);
 		_next.Pressed += () => Step(1);
@@ -269,7 +271,13 @@ private void OnAnyButtonPressed()
 
 	private void OnHelpPressed()
 	{
-		GD.Print("Help pressed");
+		_helpPopup.ShowPopup();
+	}
+
+	private void SetupHelpPopup()
+	{
+		_helpPopup = new HelpPopup();
+		AddChild(_helpPopup);
 	}
 
 	private async void OpenSelectedPlatform()

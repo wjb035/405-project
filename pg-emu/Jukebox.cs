@@ -60,6 +60,7 @@ public partial class Jukebox : Control
 	private Button _chat;
 	private Button _settings;
 	private Button _help;
+	private HelpPopup _helpPopup = null!;
 	
 
 	private ScreenTransition Transition =>
@@ -111,6 +112,7 @@ public partial class Jukebox : Control
 		_chat = GetNode<Button>(ChatPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_help = GetNode<Button>(HelpPath);
+		SetupHelpPopup();
 
 		_pause.Icon = PauseIcon;
 		_shuffle.Icon = ShuffleOffIcon;
@@ -487,7 +489,13 @@ public partial class Jukebox : Control
 
 	private void OnHelpPressed()
 	{
-		GD.Print("Help pressed");
+		_helpPopup.ShowPopup();
+	}
+
+	private void SetupHelpPopup()
+	{
+		_helpPopup = new HelpPopup();
+		AddChild(_helpPopup);
 	}
 	
 	private async void GoBack()

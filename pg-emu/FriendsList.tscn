@@ -1,10 +1,7 @@
 [gd_scene format=3 uid="uid://1o5jd8p0jhve"]
 
-[ext_resource type="Script" path="res://FriendsList.cs" id="1_script"]
+[ext_resource type="Script" uid="uid://cw1hcrycnho4r" path="res://FriendsList.cs" id="1_script"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="2_theme"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d4x60"]
-bg_color = Color(1, 1, 1, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b8nuo"]
 bg_color = Color(0, 0, 0, 0.47843137)

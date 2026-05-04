@@ -148,7 +148,7 @@ theme_override_constants/v_separation = 12
 columns = 2
 
 [node name="PanelContainer2" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer" unique_id=1650978064]
-custom_minimum_size = Vector2(168, 168)
+custom_minimum_size = Vector2(144, 144)
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_yghs0")
@@ -173,13 +173,13 @@ theme_override_constants/margin_bottom = 1
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin" unique_id=1618703419]
 clip_contents = true
-custom_minimum_size = Vector2(156, 156)
+custom_minimum_size = Vector2(132, 132)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
 [node name="AvatarStack" type="Control" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer"]
-custom_minimum_size = Vector2(156, 156)
+custom_minimum_size = Vector2(132, 132)
 layout_mode = 2
 
 [node name="TextureRect" type="TextureRect" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer/AvatarStack" unique_id=430130487]
@@ -206,22 +206,23 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_k2f8d")
 [node name="MarginContainer" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer" unique_id=1939126699]
 layout_mode = 2
 theme = SubResource("Theme_yghs0")
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer" unique_id=876607360]
 layout_mode = 2
-theme_override_constants/separation = 7
+theme_override_constants/separation = 5
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1575913505]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 7
 
 [node name="GamerTag" type="Label" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderRow" unique_id=469702970]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_horizontal = 3
 label_settings = SubResource("LabelSettings_wi0ei")
@@ -254,9 +255,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_r2xaa")
 [node name="MarginContainer" type="MarginContainer" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer" unique_id=1485718439]
 layout_mode = 2
 theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
+theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_bottom = 8
 
 [node name="ProfileNote" type="Label" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer" unique_id=1488111209]
 custom_minimum_size = Vector2(0, 68)
@@ -325,6 +326,20 @@ custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 text = "Backlog Gems"
 alignment = 0
+
+[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 7
+
+[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow"]
+custom_minimum_size = Vector2(92, 28)
+layout_mode = 2
+text = "See All"
 
 [node name="GamesAndFriendsSeparator2" type="VSeparator" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=17158126]
 visible = false

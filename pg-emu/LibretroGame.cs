@@ -18,7 +18,10 @@ public partial class LibretroGame : Control
 	private LibretroPlayer _player = null!;
 	private string _returnScene = "res://GameSelect.tscn";
 	private readonly Godot.Collections.Array<InputEvent> _originalUiCancelEvents = new();
+	private GlobalBackground? _globalBackground;
 	private bool _uiCancelRemapped;
+	private bool _globalBackgroundSuppressed;
+	private bool _wasGlobalBackgroundVisible;
 
 	public override void _Ready()
 	{
@@ -61,6 +64,7 @@ public partial class LibretroGame : Control
 		_title.Text = string.IsNullOrWhiteSpace(request.GameTitle) ? "In-App Emulation" : request.GameTitle;
 		SetStatus($"Loading core: {Path.GetFileName(request.CorePath)}");
 		ConfigureGameplayCancelAction();
+		SuppressGlobalBackgroundForCore(request.CoreId);
 		_player.LoadGameWithCore(request.RomPath, request.CorePath, request.CoreId);
 		InputRoutingService.Instance?.UnlockUiInput();
 		SetStatus("Running in-app emulation. Press Esc or Guide to return.");
@@ -85,6 +89,7 @@ public partial class LibretroGame : Control
 	public override void _ExitTree()
 	{
 		RestoreGameplayCancelAction();
+		RestoreGlobalBackground();
 		_player?.StopGame();
 	}
 
@@ -98,6 +103,37 @@ public partial class LibretroGame : Control
 	private void SetStatus(string text)
 	{
 		_status.Text = text;
+	}
+
+	private void SuppressGlobalBackgroundForCore(string coreId)
+	{
+		if (!IsGbaCore(coreId))
+			return;
+
+		_globalBackground = GetNodeOrNull<GlobalBackground>("/root/GlobalBackground");
+		if (_globalBackground == null)
+			return;
+
+		_wasGlobalBackgroundVisible = _globalBackground.Visible;
+		_globalBackground.Visible = false;
+		_globalBackgroundSuppressed = true;
+	}
+
+	private void RestoreGlobalBackground()
+	{
+		if (!_globalBackgroundSuppressed || _globalBackground == null || !GodotObject.IsInstanceValid(_globalBackground))
+			return;
+
+		_globalBackground.Visible = _wasGlobalBackgroundVisible;
+		_globalBackgroundSuppressed = false;
+		_globalBackground = null;
+	}
+
+	private static bool IsGbaCore(string coreId)
+	{
+		return string.Equals(coreId, "gba", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(coreId, "mgba", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(coreId, "vbam", System.StringComparison.OrdinalIgnoreCase);
 	}
 
 	private void ConfigureGameplayCancelAction()

@@ -18,6 +18,15 @@ public class UserProfile
     [MaxLength(16)]
     public string Language { get; set; } = "en-US";
 
+    [MaxLength(16)]
+    public string ProfileAccent { get; set; } = "sky";
+
+    [MaxLength(16)]
+    public string AvatarFrame { get; set; } = "rounded";
+
+    [MaxLength(16)]
+    public string ProfileBackground { get; set; } = "original";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
