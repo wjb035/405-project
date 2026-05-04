@@ -354,6 +354,11 @@ namespace PGEmuBackend.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("AvatarFrame")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
                     b.Property<string>("Bio")
                         .HasColumnType("longtext");
 
@@ -365,6 +370,16 @@ namespace PGEmuBackend.Migrations
                         .HasColumnType("varchar(32)");
 
                     b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ProfileAccent")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ProfileBackground")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("varchar(16)");

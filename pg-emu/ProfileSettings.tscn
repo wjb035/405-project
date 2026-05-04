@@ -110,6 +110,141 @@ layout_mode = 2
 text = "Open Files
 "
 
+[node name="VisualStyleLabel" type="Label" parent="Margin/Root"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Profile Theme"
+
+[node name="VisualStylePanel" type="PanelContainer" parent="Margin/Root"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/VisualStylePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PreviewCard" type="PanelContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PreviewMargin" type="MarginContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="PreviewRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PreviewAvatar" type="PanelContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow"]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="PreviewText" type="VBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="PreviewName" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow/PreviewText"]
+layout_mode = 2
+text = "Player"
+
+[node name="PreviewBio" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow/PreviewText"]
+layout_mode = 2
+text = "No bio yet."
+
+[node name="AccentLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Accent"
+
+[node name="AccentSwatches" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AccentSky" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches"]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Sky"
+
+[node name="AccentMint" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches"]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Mint"
+
+[node name="AccentRose" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches"]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Rose"
+
+[node name="AccentGold" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches"]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Gold"
+
+[node name="AccentViolet" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches"]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Violet"
+
+[node name="BackgroundRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BackgroundLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/BackgroundRow"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+vertical_alignment = 1
+text = "Theme"
+
+[node name="BackgroundOption" type="OptionButton" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/BackgroundRow"]
+custom_minimum_size = Vector2(190, 30)
+layout_mode = 2
+
+[node name="FrameRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FrameLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/FrameRow"]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+vertical_alignment = 1
+text = "Avatar Frame"
+
+[node name="FrameOption" type="OptionButton" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/FrameRow"]
+custom_minimum_size = Vector2(190, 30)
+layout_mode = 2
+
+[node name="StyleActions" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SaveStyle" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/StyleActions"]
+custom_minimum_size = Vector2(104, 36)
+layout_mode = 2
+text = "Save Theme"
+
+[node name="ResetStyle" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/StyleActions"]
+custom_minimum_size = Vector2(120, 36)
+layout_mode = 2
+text = "Reset Theme"
+
 [node name="Status" type="Label" parent="Margin/Root" unique_id=1264118236]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.88, 0.96, 0.95)

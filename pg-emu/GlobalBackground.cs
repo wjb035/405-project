@@ -36,6 +36,14 @@ public partial class GlobalBackground : CanvasLayer
 			GD.Load<Texture2D>("res://ShaderSlop/Login2.tres"))},
 		{"JukeboxScreen",  (GD.Load<Texture2D>("res://ShaderSlop/Jukebox1.tres"),
 			GD.Load<Texture2D>("res://ShaderSlop/Jukebox2.tres"))},
+		{"ProfileOriginal", (GD.Load<Texture2D>("res://ShaderSlop/BluePurple.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/DarkPurple.tres"))},
+		{"ProfileStarryNight", (GD.Load<Texture2D>("res://ShaderSlop/Home1.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/Home2.tres"))},
+		{"ProfileEarthbound", (GD.Load<Texture2D>("res://ShaderSlop/Thing1.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/Game2.tres"))},
+		{"ProfileRusty", (GD.Load<Texture2D>("res://ShaderSlop/Jukebox1.tres"),
+			GD.Load<Texture2D>("res://ShaderSlop/Jukebox2.tres"))},
 	};
 	
 	public override void _Ready()
@@ -140,6 +148,12 @@ public partial class GlobalBackground : CanvasLayer
 
 		GD.Print($"Transition to '{screenName}' started.");
 		PrintShaderState();
+	}
+
+	public void StartProfileBackgroundTransition(string backgroundId, float duration = 1.5f)
+	{
+		var preset = ProfileVisualStyleCatalog.FindBackground(backgroundId);
+		StartTransition(preset.GlobalGradientKey, duration);
 	}
 
 	public override void _Process(double delta)

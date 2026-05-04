@@ -121,6 +121,29 @@ public partial class ProfileService : Node
 
 		GD.Print("Bio updated");
 	}
+
+	public async Task<bool> SetProfileStyleAsync(string? profileAccent, string? avatarFrame, string? profileBackground)
+	{
+		var resolved = ProfileVisualStyleCatalog.Resolve(profileAccent, avatarFrame, profileBackground);
+		var response = await Auth.SendAuthorizedRequest(
+			"http://localhost:5276/api/profile/style",
+			new
+			{
+				profileAccent = resolved.Accent.Id,
+				avatarFrame = resolved.AvatarFrame.Id,
+				profileBackground = resolved.Background.Id
+			},
+			HttpMethod.Put);
+
+		if (response == null)
+		{
+			GD.Print("Error: SetProfileStyle failed");
+			return false;
+		}
+
+		GD.Print("Profile style updated");
+		return true;
+	}
 	
 	public async Task<bool> SetAvatar(string filePath)
 	{

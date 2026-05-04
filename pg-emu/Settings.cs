@@ -157,6 +157,8 @@ public partial class Settings : Control
 		var requested = tree.HasMeta("pgemu_settings_tab")
 			? tree.GetMeta("pgemu_settings_tab").AsString()
 			: "appearance";
+		if (tree.HasMeta("pgemu_settings_tab"))
+			tree.RemoveMeta("pgemu_settings_tab");
 
 		SetVisibleScreen(string.IsNullOrWhiteSpace(requested) ? "appearance" : requested);
 	}

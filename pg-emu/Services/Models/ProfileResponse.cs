@@ -9,5 +9,8 @@ public class ProfileResponse
 	public string Username { get; set; }
 	public string Bio { get; set; }
 	public string AvatarUrl { get; set; }
+	public string ProfileAccent { get; set; }
+	public string AvatarFrame { get; set; }
+	public string ProfileBackground { get; set; }
 	
 }

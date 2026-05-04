@@ -13,5 +13,11 @@ public class ProfileCustomizationDTO
     public string? NewUsername { get; set; }
     
     public string? NewBio { get; set; }
+
+    public string? ProfileAccent { get; set; }
+
+    public string? AvatarFrame { get; set; }
+
+    public string? ProfileBackground { get; set; }
     //public DateTime CreatedAt { get; }
 }
