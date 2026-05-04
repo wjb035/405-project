@@ -1059,10 +1059,11 @@ private void OnAnyButtonPressed()
 			var isDs = !isMixedCollection && string.Equals(_platform?.Id, "ds", StringComparison.OrdinalIgnoreCase);
 			var isPs1 = !isMixedCollection && string.Equals(_platform?.Id, "ps1", StringComparison.OrdinalIgnoreCase);
 			var isN64 = !isMixedCollection && string.Equals(_platform?.Id, "N64", StringComparison.OrdinalIgnoreCase);
+			var isSnes = !isMixedCollection && string.Equals(_platform?.Id, "SNES", StringComparison.OrdinalIgnoreCase);
 			var platformIds = isMixedCollection
 				? _games.Select(game => game.platform?.Id).ToList()
 				: null;
-			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1, isN64, platformIds);
+			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1, isN64,isSnes, platformIds);
 			
 			ApplyThreeDBackFaceData();
 		}

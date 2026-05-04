@@ -59,6 +59,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private bool _isDs;
 	private bool _isPs1;
 	private bool _isN64;
+	private bool _isSnes;
 	private Texture2D? _gbaCartridgeLogoTexture;
 	
 	// Card spacing in 3D units
@@ -196,6 +197,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		bool isDs = false,
 		bool isPs1 = false,
 		bool isN64 = false,
+		bool isSnes = false,
 		IReadOnlyList<string?>? platformIds = null)
 	{
 		// Clear old boxes
@@ -213,6 +215,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_isDs = isDs;
 		_isPs1 = isPs1;
 		_isN64 = isN64;
+		_isSnes = isSnes;
 		
 		CarouselPos = WrapPos(initialPos);
 		_spinAudioPos = CarouselPos;
@@ -244,13 +247,18 @@ public partial class GameCarousel3DView : SubViewportContainer
 	{
 		var root = new Node3D();
 		var squareBox = _isPs1 || _isN64 || forceSquare;
+		var sidewaysBox = _isSnes;
 		root.SetMeta("pgemu_square_box", squareBox);
 		var boxSize = squareBox
 			? new Vector3(2.8f, 2.8f, 0.25f)
-			: new Vector3(2.6f, 3.6f, 0.25f);
+			: sidewaysBox
+				? new Vector3(3.6f, 2.6f, 0.25f)
+				: new Vector3(2.6f, 3.6f, 0.25f);
 		var coverSize = squareBox
 			? new Vector2(2.68f, 2.68f)
-			: new Vector2(2.5f, 3.5f);
+			: sidewaysBox
+				? new Vector2(3.5f, 2.5f)
+				: new Vector2(2.5f, 3.5f);
 
 		// Box mesh 
 		var mesh = new MeshInstance3D { Name = "Mesh" };

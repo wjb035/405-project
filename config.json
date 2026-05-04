@@ -4,7 +4,7 @@
     {
       "id": "gc",
       "name": "Nintendo GameCube",
-      "romPath": "D:/PGEmu Games/games/GameCube",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GameCube",
       "extensions": [
         ".iso",
         ".gcm",
@@ -20,7 +20,7 @@
     {
       "id": "gba",
       "name": "Game Boy Advance",
-      "romPath": "games/GBA",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GBA",
       "extensions": [
         ".gba"
       ],
@@ -30,7 +30,7 @@
     {
       "id": "ds",
       "name": "Nintendo DS",
-      "romPath": "D:/PGEmu Games/games/DS",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/DS",
       "extensions": [
         ".nds"
       ],
@@ -40,7 +40,7 @@
     {
       "id": "n64",
       "name": "Nintendo 64",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/N64",
       "extensions": [
         ".z64",
         ".n64",
@@ -53,7 +53,7 @@
     {
       "id": "snes",
       "name": "Super Nintendo",
-      "romPath": "D:/PGEmu Games/games/SNES",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/SNES",
       "extensions": [
         ".sfc",
         ".smc",
@@ -67,7 +67,7 @@
     {
       "id": "nes",
       "name": "Nintendo Entertainment System",
-      "romPath": "D:/PGEmu Games/games/NES",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/NES",
       "extensions": [
         ".nes",
         ".fds",
@@ -81,7 +81,7 @@
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "D:/PGEmu Games/games/Wii",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games//Wii",
       "extensions": [
         ".iso",
         ".gcz",
@@ -97,7 +97,7 @@
     {
       "id": "ps1",
       "name": "Sony PlayStation",
-      "romPath": "D:/PGEmu Games/games/PSX",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS1",
       "extensions": [
         ".cue",
         ".iso",
@@ -121,7 +121,7 @@
     {
       "id": "psp",
       "name": "Playstation Portable",
-      "romPath": "D:/PGEmu Games/games/PSP",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PSP",
       "extensions": [
         ".iso"
       ],
