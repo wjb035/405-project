@@ -2798,6 +2798,22 @@ private void OnAnyButtonPressed()
 		_coverArtWarmupCts?.Dispose();
 		_coverArtWarmupCts = null;
 
+		if (CollectionStorage.currentCollection != null)
+		{
+			var groupedGames = _games
+				.Where(game => !string.IsNullOrWhiteSpace(game.Path) && game.platform != null)
+				.GroupBy(game => game.platform)
+				.Select(group => (Platform: group.Key!, Games: (IReadOnlyList<GameEntry>)group.ToList()))
+				.ToList();
+
+			if (groupedGames.Count == 0)
+				return;
+
+			_coverArtWarmupCts = new CancellationTokenSource();
+			_ = WarmCollectionCoverArtAsync(groupedGames, _coverArtWarmupCts.Token);
+			return;
+		}
+
 		if (_platform == null)
 			return;
 
@@ -2867,6 +2883,33 @@ private void OnAnyButtonPressed()
 		catch (Exception ex)
 		{
 			GD.PrintErr($"Cover art warm-up failed: {ex.Message}");
+		}
+	}
+
+	private async Task WarmCollectionCoverArtAsync(
+		IReadOnlyList<(PlatformConfig Platform, IReadOnlyList<GameEntry> Games)> groupedGames,
+		CancellationToken cancellationToken)
+	{
+		try
+		{
+			foreach (var (platform, games) in groupedGames)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				await LibretroThumbnailService.PopulateCoverArtAsync(platform, games, cancellationToken);
+				QueueCoverArtRefresh();
+			}
+
+			var allGames = groupedGames.SelectMany(group => group.Games).ToList();
+			await PrefetchResolvedCoverArtAsync(allGames, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			QueueCoverArtRefresh();
+		}
+		catch (OperationCanceledException)
+		{
+		}
+		catch (Exception ex)
+		{
+			GD.PrintErr($"Collection cover art warm-up failed: {ex.Message}");
 		}
 	}
 
