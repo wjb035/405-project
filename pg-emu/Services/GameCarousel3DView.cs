@@ -58,6 +58,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private bool _isGba;
 	private bool _isDs;
 	private bool _isPs1;
+	private bool _isN64;
 	private Texture2D? _gbaCartridgeLogoTexture;
 	
 	// Card spacing in 3D units
@@ -194,6 +195,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		bool isGba = false,
 		bool isDs = false,
 		bool isPs1 = false,
+		bool isN64 = false,
 		IReadOnlyList<string?>? platformIds = null)
 	{
 		// Clear old boxes
@@ -210,6 +212,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_isGba = isGba;
 		_isDs = isDs;
 		_isPs1 = isPs1;
+		_isN64 = isN64;
+		
 		CarouselPos = WrapPos(initialPos);
 		_spinAudioPos = CarouselPos;
 		_lastSpinAudioCarouselPos = CarouselPos;
@@ -239,7 +243,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType, bool forceSquare = false)
 	{
 		var root = new Node3D();
-		var squareBox = _isPs1 || forceSquare;
+		var squareBox = _isPs1 || _isN64 || forceSquare;
 		root.SetMeta("pgemu_square_box", squareBox);
 		var boxSize = squareBox
 			? new Vector3(2.8f, 2.8f, 0.25f)
@@ -1641,7 +1645,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	{
 		return string.Equals(platformId, "ps1", System.StringComparison.OrdinalIgnoreCase) ||
 			string.Equals(platformId, "gba", System.StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(platformId, "ds", System.StringComparison.OrdinalIgnoreCase);
+			string.Equals(platformId, "ds", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "N64", System.StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static bool IsSquareBoxMesh(Node node)

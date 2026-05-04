@@ -20,12 +20,12 @@
     {
       "id": "gba",
       "name": "Game Boy Advance",
-      "romPath": "D:/PGEmu Games/games/GBA",
+      "romPath": "games/GBA",
       "extensions": [
         ".gba"
       ],
       "defaultEmulatorId": "ravba",
-      "retroachievementsPlatformID": 5
+      "retroachievementsPlatformID": -1
     },
     {
       "id": "ds",
@@ -40,7 +40,7 @@
     {
       "id": "n64",
       "name": "Nintendo 64",
-      "romPath": "D:/PGEmu Games/games/N64",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games",
       "extensions": [
         ".z64",
         ".n64",
@@ -261,17 +261,17 @@
       "corePathLinux": null
     },
     {
-          "id": "ravba",
-          "name": "RAVBA",
-          "exePath": "C:/Fun Stuff/RAVBA/RAVisualBoyAdvance-M.exe",
-          "argsTemplate": " \u0022{ROM}\u0022",
-          "exePathWindows": null,
-          "exePathMac": null,
-          "exePathLinux": null,
-          "corePath": null,
-          "corePathWindows": null,
-          "corePathMac": "",
-          "corePathLinux": null
-        }
+      "id": "ravba",
+      "name": "RAVBA",
+      "exePath": "C:/Fun Stuff/RAVBA/RAVisualBoyAdvance-M.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    }
   ]
 }
