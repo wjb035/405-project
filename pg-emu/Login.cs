@@ -187,6 +187,10 @@ public partial class Login : Control
 		var chatManager = GetNode<ChatManager>("/root/ChatManager");
 		chatManager.Username = _username.Text; 
 		chatManager.ConnectToChat();
+		chatManager.LoadUnreadMessages();
+		chatManager.LoadUnreadCounts();
+		var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		chatOverlay._isLoggedOut = false;
 		await Transition.ChangeScene("res://HomeScreen.tscn",  ScreenTransition.TransitionType.Radial, 0.55f, 0.5f, true);
 		
 	}

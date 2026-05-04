@@ -46,10 +46,10 @@ public partial class ChatOverlay : CanvasLayer
 	private Dictionary<string, int> _unread = new();
 	private HashSet<string> _onlineFriends = new();
 	
-	private List<(string fromUser, string message, string sentAt)> _missedMessages = new();
 	private List<(string fromUser, string message, string sentAt)> _displayedMessages = new();
 	
 	private ChatManager _chat;
+	public bool _isLoggedOut = true;
 	
 	public override void _Ready()
 	{
@@ -72,6 +72,8 @@ public partial class ChatOverlay : CanvasLayer
 		_inputField = GetNode<LineEdit>("Panel/VBox/MainArea/ChatTab/InputRow/TextField");
 		_sendButton = GetNode<Button>("Panel/VBox/MainArea/ChatTab/InputRow/SendButton");
 		_restingX = _panel.Position.X;
+		
+		_chat.UnreadCountUpdated += OnUnreadCountUpdated;
 		
 		// Chat is hidden on start, it should be the friends tab first
 		_panel.Hide();
@@ -116,6 +118,12 @@ public partial class ChatOverlay : CanvasLayer
 	// Overlay toggling ona nd off
 	public void ToggleOverlay()
 	{
+		if (_isLoggedOut)
+		{
+			if (_isOpen) CloseOverlay();
+			return;
+		}
+
 		if (_isOpen) CloseOverlay();
 		else OpenOverlay();
 	}
@@ -221,6 +229,8 @@ public partial class ChatOverlay : CanvasLayer
 
 			var avatarMat = new ShaderMaterial();
 			avatarMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			avatarMat.SetShaderParameter("stroke_width", 0.00f);
+			avatarMat.SetShaderParameter("edge_softness", 0.05f);
 			avatarImg.Material =  avatarMat;
 			
 			avatarWrapper.AddChild(avatarImg);
@@ -244,6 +254,8 @@ public partial class ChatOverlay : CanvasLayer
 				: new Color(0.44f, 0.40f, 0.62f);
 			var ringShaderMat = new ShaderMaterial();
 			ringShaderMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			ringShaderMat.SetShaderParameter("stroke_width", 0.00f);
+			ringShaderMat.SetShaderParameter("edge_softness", 0.05f);
 			ring.Material = ringShaderMat;
 			ring.MouseFilter = Control.MouseFilterEnum.Ignore;
 			avatarWrapper.AddChild(ring);
@@ -303,7 +315,6 @@ public partial class ChatOverlay : CanvasLayer
 		
 	}
 	
-	
 	// Onlinie handling
 	private void OnUserCameOnline(string username)
 	{
@@ -327,9 +338,10 @@ public partial class ChatOverlay : CanvasLayer
 		_myAvatarUrl = "";
 		_theirAvatarUrl = "";
 		_chat.SetDmRecipient(username);
+		_chat.MarkDmAsRead(username);
 		ClearMessages();
 		_loadMoreButton.Hide();
-		_unread.Remove(username);
+		_chat.MarkDmAsRead(username);
 		_ = RefreshFriendsList();
 		GoToChatTab(username);
 		_ = OpenDmAsync(username);
@@ -371,28 +383,20 @@ public partial class ChatOverlay : CanvasLayer
 		{
 			_displayedMessages.Add((fromUser, message, sentAt));
 			RebuildMessageLog();
+			_chat.MarkDmAsRead(fromUser);
 		}
 
 		else
 		{
-			if (!isMine)
-			{ 
-				_unread[fromUser] = _unread.GetValueOrDefault(fromUser, 0) + 1;
+			_unread[fromUser] = _unread.GetValueOrDefault(fromUser, 0) + 1;
 				_ = RefreshFriendsList();
-				if (!_isOpen)
-					_missedMessages.Add((fromUser, message, sentAt));
-			}
-			
 		}
 		
 	}
 	
-	// For  messages you missed
-	public List<(string fromUser, string message, string sentAt)> GetAndClearMissedMessages()
+	private void OnUnreadCountUpdated()
 	{
-		var copy = new List<(string, string, string)>(_missedMessages);
-		_missedMessages.Clear();
-		return copy;
+		_ = RefreshFriendsList();
 	}
 	
 	private void OnHistoryLoaded(string contextId, string messagesJson)
@@ -642,18 +646,23 @@ public partial class ChatOverlay : CanvasLayer
 			BorderColor = isMe
 				? new Color(0.65f, 0.42f, 0.92f, 0.4f)
 				: new Color(0.44f, 0.40f, 0.62f, 0.4f),
-			BorderWidthLeft = 1,
-			BorderWidthTop = 1,
-			BorderWidthRight = 1,
-			BorderWidthBottom = 1,
+			BorderWidthLeft = 0,
+			BorderWidthTop = 0,
+			BorderWidthRight = 0,
+			BorderWidthBottom = 0,
 		});
-
 		
 		var avatarImg = new TextureRect();
 		avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
 		avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
 		avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		container.AddChild(avatarImg);
+				
+		var avatarMat = new ShaderMaterial();
+		avatarMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+		avatarMat.SetShaderParameter("stroke_width", 0.00f);
+		avatarMat.SetShaderParameter("edge_softness", 0.05f);
+		avatarImg.Material =  avatarMat;
 
 		// Load avatar texture
 		var avatarUrl = isMe ? _myAvatarUrl : _theirAvatarUrl;
@@ -677,8 +686,11 @@ public partial class ChatOverlay : CanvasLayer
 		CallDeferred(nameof(DeferredScrollToBottom));
 	}
 
-	private void DeferredScrollToBottom()
+	private async void DeferredScrollToBottom()
 	{
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
 		if (GodotObject.IsInstanceValid(_messageScroll))
 			_messageScroll.ScrollVertical = (int)_messageScroll.GetVScrollBar().MaxValue;
 	}
@@ -694,10 +706,14 @@ public partial class ChatOverlay : CanvasLayer
 	// Converts time to the right time zone and formats it right
 	private string FormatTime(string isoString)
 	{
-		if (string.IsNullOrEmpty(isoString)) return "";
-		if (DateTime.TryParse(isoString, out var dt))
-			return dt.ToLocalTime().ToString("HH:mm");
-		return "";
+		if (!DateTime.TryParse(isoString, out var dt))
+			return "";
+
+		var local = dt.ToLocalTime();
+
+		return local.Date == DateTime.Now.Date
+			? local.ToString("HH:mm")
+			: local.ToString("MMM dd, HH:mm");
 	}
 	
 	

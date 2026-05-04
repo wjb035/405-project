@@ -77,6 +77,7 @@ public class ChatHub : Hub
           await Clients.Caller.SendAsync("ReceiveDirectMessage", fromUser, message, chat.SentAt);
      }
      
+
      // GROUOP SHIT
      public async Task CreateGroup(string owner, string groupName)
      {

@@ -158,7 +158,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var fill = new OmniLight3D
 		{
 			Position = new Vector3(0, 2, 2),
-			LightEnergy = 0.3f,
+			LightEnergy = 0.4f,
 			LightColor = new Color(1f, 0.98f, 0.92f)
 		};
 		_sceneRoot.AddChild(fill);
@@ -285,6 +285,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}
 		else{
 			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+			// mat = gold;
 		}
 		
 		_baseMaterials.Add(new List<StandardMaterial3D> { mat });

@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ChatGroup> ChatGroups => Set<ChatGroup>();
     public DbSet<ChatGroupMember> ChatGroupMembers => Set<ChatGroupMember>();
+    public DbSet<ChatReadState> ChatReadStates => Set<ChatReadState>();
     
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -168,6 +169,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChatMessage>()
             .HasIndex(m => m.GroupId);
         
+        modelBuilder.Entity<ChatReadState>()
+            .HasIndex(r => new { r.Username, r.OtherUser })
+            .IsUnique();
+        
         // Group chats
         modelBuilder.Entity<ChatGroupMember>()
             .HasOne(m => m.Group)
@@ -178,6 +183,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChatGroupMember>()
             .HasIndex(m => new { m.GroupId, m.Username })
             .IsUnique();
+        
+
     }
     
 }

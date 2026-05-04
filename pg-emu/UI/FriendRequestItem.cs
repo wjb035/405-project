@@ -15,6 +15,7 @@ public partial class FriendRequestItem : InboxItem
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		GD.Print("MissedMessageItem ready");
 		AcceptButton.Pressed += OnAccept;
 		DeclineButton.Pressed += OnDecline;
 		
@@ -30,6 +31,7 @@ public partial class FriendRequestItem : InboxItem
 			userId = dto.Id;
 			UsernameLabel.Text = dto.Username;
 		}
+		GD.Print($"Missed items created in UI");
 	}
 
   private async void OnAccept()

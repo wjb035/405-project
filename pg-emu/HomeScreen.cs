@@ -175,6 +175,10 @@ public partial class HomeScreen : Control
 		// background transition
 		StartBackgroundTransition();
 		
+		// For testing
+		var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		chatOverlay._isLoggedOut = false;
+		
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
 		InputRoutingService.Instance?.UnlockUiInput();
@@ -717,6 +721,10 @@ public partial class HomeScreen : Control
 		dialog.Confirmed += async () =>
 		{
 			AuthService.Instance.Logout();
+			var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+			chatOverlay._isLoggedOut = true;
+			chatOverlay.CloseOverlay();
+
 			await Transition.ChangeScene("res://WelcomeScreen.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 
 		};

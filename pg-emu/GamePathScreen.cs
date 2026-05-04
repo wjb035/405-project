@@ -10,18 +10,12 @@ public partial class GamePathScreen : Control
 
 	// NodePaths assigned in vault.tscn, keeps UI wiring in-editor instead of hardcoding node strings.
 	[Export] public NodePath BackPath;
-	[Export] public NodePath LibraryPathEditPath;
 	[Export] public NodePath BrowsePath;
-	[Export] public NodePath SavePath;
-	[Export] public NodePath StatusPath;
 	[Export] public NodePath FileDialogPath;
 
 	// Cached scene nodes, resolved in _Ready().
 	private Button _back = null!;
-	private LineEdit _libraryPathEdit = null!;
 	private Button _browse = null!;
-	private Button _save = null!;
-	private Label _status = null!;
 	private FileDialog _fileDialog = null!;
 	private LineEdit _curLine = null!;
 
@@ -37,10 +31,7 @@ public partial class GamePathScreen : Control
 		
 		// Resolve NodePaths into actual nodes.
 		_back = GetNode<Button>(BackPath);
-		_libraryPathEdit = GetNode<LineEdit>(LibraryPathEditPath);
 		_browse = GetNode<Button>(BrowsePath);
-		_save = GetNode<Button>(SavePath);
-		_status = GetNode<Label>(StatusPath);
 		_fileDialog = GetNode<FileDialog>(FileDialogPath);
 
 		VBoxContainer container = GetNode<VBoxContainer>("Margin/Root/Body/ScrollContainer/ButtonContainer");
@@ -88,9 +79,8 @@ public partial class GamePathScreen : Control
 			save.Pressed += () => {
 				_config.Platforms[index].RomPath = line.Text;
 				_config.LibraryRoot = "";
-				SaveConfig();
-				_status.Text = "Game directory has been saved, restart the app to see your games!";
-				};
+				SaveConfig(); 
+			};
 				
 				
 			UiStyle.StyleTopBarButton(save);
@@ -182,13 +172,9 @@ private static string ExpandHomePath(string path)
 		if (hint != null)
 			hint.Text = "Set your emulator executable paths!";
 		UiStyle.StyleMetaLabel(hint);
-
-		UiStyle.StyleLineEdit(_libraryPathEdit);
+		
 		UiStyle.StylePrimaryButton(_browse);
-		UiStyle.StylePrimaryButton(_save);
 		UiStyle.TightenButtonContentPadding(_browse, horizontal: 6f, vertical: 2f);
-		UiStyle.TightenButtonContentPadding(_save, horizontal: 6f, vertical: 2f);
-		UiStyle.StyleStatusLabel(_status);
 	}
 
 	private void GoBack()

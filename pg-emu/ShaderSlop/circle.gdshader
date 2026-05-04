@@ -15,6 +15,9 @@ void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
 	vec4 clipped = vec4(tex.rgb, tex.a * outer_mask);
 	vec4 stroke = vec4(stroke_color.rgb, stroke_color.a);
-	COLOR = mix(clipped, stroke, stroke_mask * stroke_color.a);
+	
+	vec4 base = COLOR;
+		
+	vec4 final_col = mix(clipped, stroke, stroke_mask * stroke_color.a);
 	COLOR.a = max(clipped.a, stroke_mask * stroke_color.a);
 }
