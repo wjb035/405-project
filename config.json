@@ -24,8 +24,8 @@
       "extensions": [
         ".gba"
       ],
-      "defaultEmulatorId": "mgba",
-      "retroachievementsPlatformID": -1
+      "defaultEmulatorId": "ravba",
+      "retroachievementsPlatformID": 5
     },
     {
       "id": "ds",
@@ -53,7 +53,7 @@
     {
       "id": "snes",
       "name": "Super Nintendo",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/SNES",
+      "romPath": "D:/PGEmu Games/games/SNES",
       "extensions": [
         ".sfc",
         ".smc",
@@ -61,13 +61,13 @@
         ".swc",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "snes9x",
       "retroachievementsPlatformID": 3
     },
     {
       "id": "nes",
       "name": "Nintendo Entertainment System",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/NES",
+      "romPath": "D:/PGEmu Games/games/NES",
       "extensions": [
         ".nes",
         ".fds",
@@ -75,7 +75,7 @@
         ".unif",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "ranes",
       "retroachievementsPlatformID": 7
     },
     {
@@ -233,6 +233,45 @@
       "corePathWindows": null,
       "corePathMac": "",
       "corePathLinux": null
-    }
+    },
+    {
+      "id": "snes9x",
+      "name": "SNES9X",
+      "exePath": "C:/Fun Stuff/RASnes9x-x64/RASnes9x.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "ranes",
+      "name": "RANes",
+      "exePath": "C:/Fun Stuff/NES Emulator/RANes.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+          "id": "ravba",
+          "name": "RAVBA",
+          "exePath": "C:/Fun Stuff/RAVBA/RAVisualBoyAdvance-M.exe",
+          "argsTemplate": " \u0022{ROM}\u0022",
+          "exePathWindows": null,
+          "exePathMac": null,
+          "exePathLinux": null,
+          "corePath": null,
+          "corePathWindows": null,
+          "corePathMac": "",
+          "corePathLinux": null
+        }
   ]
 }
