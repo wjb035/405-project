@@ -18,7 +18,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const double GbaSelectionOpen = 1.2;
 	private const double N64SelectionOpen = 1.0;
 	private const double GameCubeRestPose = 2.125;
-	private const float SelectionAnimationSpeedScale = 1.18f;
+	private const float SelectionAnimationSpeedScale = 2.18f;
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
@@ -275,16 +275,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			{
 			case ConsoleType.Wii:
 				SetWiiDiskVisible(model, false);
-				// CenterNode3D(model, ShouldIncludeWiiBodyBounds);
 				var wiiScale = ScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
 				model.Scale = new Vector3(wiiScale, wiiScale, wiiScale);
-				// model.Position = new Vector3(-0.8f, -.5f, 0f);
-				if (TryGetNodeBounds(model, Transform3D.Identity, out var wiiBounds, ShouldIncludeWiiBodyBounds))
-				{
-					var center = wiiBounds.GetCenter();
-					model.Position = new Vector3(-center.X, -center.Y, -center.Z);
-				}
 				model.RotateY(Mathf.DegToRad(40f));
+				CenterNode3D(model, ShouldIncludeWiiBodyBounds);
 				break;
 			case ConsoleType.NintendoDS:
 				CenterNode3D(model);
@@ -1010,7 +1004,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			SetGbaCartridgeVisible(selectedBox, true);
 
 		animationPlayer.Stop();
-		var playbackSpeed = requiredType == ConsoleType.PlayStation1 ? 1.75f : SelectionAnimationSpeedScale;
+		var playbackSpeed = requiredType == ConsoleType.PlayStation1 ? 3f : SelectionAnimationSpeedScale;
 		animationPlayer.SpeedScale = playbackSpeed;
 		animationPlayer.Play(animationName);
 		animationPlayer.Seek(startTime, true);
