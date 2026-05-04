@@ -38,8 +38,8 @@ public partial class FriendRequestItem : InboxItem
 		AcceptButton.Disabled = true;
 		DeclineButton.Disabled = true;
 
-		// var success = await FriendService.Instance.RespondToRequest(userId, true);
-		var success = await FakeRespondToRequest(); // test call
+		var success = await FriendService.Instance.RespondToRequest(userId, true);
+		// var success = await FakeRespondToRequest(); // test call
 		
 		if (success)
 		{
@@ -63,8 +63,8 @@ public partial class FriendRequestItem : InboxItem
 		AcceptButton.Disabled = true;
 		DeclineButton.Disabled = true;
 
-		//  var success = await FriendService.Instance.RespondToRequest(userId, false);
-		var success = await FakeRespondToRequest(); // test call
+		var success = await FriendService.Instance.RespondToRequest(userId, false);
+		// var success = await FakeRespondToRequest(); // test call
 		
 		if (success)
 		{
@@ -100,11 +100,9 @@ public partial class FriendRequestItem : InboxItem
 		// Match game selection controls to the same launcher palette and contrast rules.
 		// Nav buttons
 		UiStyle.StyleTopBarButton(AcceptButton);
-		UiStyle.ApplyParallaxShadow(AcceptButton);
 		UiStyle.AddHoverFeedback(AcceptButton);
 		
 		UiStyle.StyleTopBarButton(DeclineButton);
-		UiStyle.ApplyParallaxShadow(DeclineButton);
 		UiStyle.AddHoverFeedback(DeclineButton);
 
 		UiStyle.StyleTitleLabel(UsernameLabel);

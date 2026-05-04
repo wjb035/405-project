@@ -69,17 +69,13 @@ public partial class FriendService : Node
 	}
 
 	
-	public async void SendFriendRequest(string? userId)
+	public async Task<bool> SendFriendRequest(string? userId)
 	{
 		var response = await Auth.SendAuthorizedRequest(
 			$"{baseUrl}/request/{Guid.Parse(userId)}",
 			HttpMethod.Post);
 
-		if (response == null)
-		{
-			GD.Print("Error: SendFriendRequest failed");
-			return;
-		}
+		return response != null;
 	}
 	
 	public async void Block(string userId)

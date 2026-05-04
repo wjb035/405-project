@@ -782,6 +782,17 @@ public partial class ChatOverlay : CanvasLayer
 	}
 	
 	
+	// GE TME OUT!
+	public override void _ExitTree()
+	{
+		if (_chat == null) return;
+
+		_chat.DmReceived -= OnDmReceived;
+		_chat.UserCameOnline -= OnUserCameOnline;
+		_chat.UserWentOffline -= OnUserWentOffline;
+		_chat.HistoryLoaded -= OnHistoryLoaded;
+	}
+	
 	private void ApplyAesthetic()
 	{
 		// Buttons
