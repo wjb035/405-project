@@ -4,7 +4,7 @@
     {
       "id": "gc",
       "name": "Nintendo GameCube",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GameCube",
+      "romPath": "D:/PGEmu Games/games/GameCube",
       "extensions": [
         ".iso",
         ".gcm",
@@ -20,7 +20,7 @@
     {
       "id": "gba",
       "name": "Game Boy Advance",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GBA",
+      "romPath": "D:/PGEmu Games/games/GBA",
       "extensions": [
         ".gba"
       ],
@@ -30,11 +30,11 @@
     {
       "id": "ds",
       "name": "Nintendo DS",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/DS",
+      "romPath": "D:/PGEmu Games/games/DS",
       "extensions": [
         ".nds"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "melonds",
       "retroachievementsPlatformID": 18
     },
     {
@@ -81,7 +81,7 @@
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/Wii",
+      "romPath": "D:/PGEmu Games/games/Wii",
       "extensions": [
         ".iso",
         ".gcz",
@@ -121,7 +121,7 @@
     {
       "id": "psp",
       "name": "Playstation Portable",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PSP",
+      "romPath": "D:/PGEmu Games/games/PSP",
       "extensions": [
         ".iso"
       ],
@@ -193,6 +193,32 @@
       "corePath": null,
       "corePathWindows": null,
       "corePathMac": "cores/mgba_libretro.dylib",
+      "corePathLinux": null
+    },
+    {
+      "id": "melonds",
+      "name": "MelonDS",
+      "exePath": "C:/Fun Stuff/MelonDS/melonDS.exe",
+      "argsTemplate": " -f \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "duckstation",
+      "name": "DuckStation",
+      "exePath": "",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
       "corePathLinux": null
     }
   ]

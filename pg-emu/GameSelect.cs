@@ -411,8 +411,9 @@ private void OnAnyButtonPressed()
 	{
 		if (ShouldIgnoreUiInput())
 			return;
-
+		
 		var game = GetSelectedGame();
+		
 		if (game == null || string.IsNullOrWhiteSpace(game.Path))
 		{
 			SetStatus("No game selected.");
@@ -435,16 +436,18 @@ private void OnAnyButtonPressed()
 		
 		try
 		{
-			if (TryStartInProcessLaunch(_config, launchPlatform, game, out var inProcessStatus))
+			//commenting this out since this seems problematic
+			/*if (TryStartInProcessLaunch(_config, launchPlatform, game, out var inProcessStatus))
 			{
 				SetStatus(inProcessStatus);
 				return;
-			}
+			}*/
 			
 			//GetNode<Playtime>("/root/Playtime").killCur();
 			
 			
 			Launcher.LaunchFromConfig(_config, launchPlatform, game);
+			GD.Print("launching "+ game.Title);
 			//runningProcesses = Process.GetProcessesByName("dolphin");
 			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game);
 			

@@ -11,6 +11,16 @@
         "platform": null,
         "TimePlayed": 160,
         "AchievementNum": "8/77"
+      },
+      {
+        "Name": "Metroid Prime 2 - Echoes (USA)",
+        "Path": "D:\\PGEmu Games\\games\\GameCube\\Metroid Prime 2 - Echoes (USA).rvz",
+        "Title": "Metroid Prime 2 - Echoes (USA)",
+        "CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Metroid%20Prime%202%20-%20Echoes%20%28USA%29.png",
+        "retroAchievementsGameId": 7683,
+        "platform": null,
+        "TimePlayed": 70,
+        "AchievementNum": "7/68"
       }
     ]
   },
