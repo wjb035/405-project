@@ -1007,8 +1007,12 @@ private void OnAnyButtonPressed()
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GameCube);
 		else if (string.Equals(platform.Id, "gba", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GBA);
+		else if (string.Equals(platform.Id, "ps1", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PlayStation1);
 		else if (string.Equals(platform.Id, "ps2", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PlayStation2);
+		else if (string.Equals(platform.Id, "psp", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PSP);
 
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
 	}

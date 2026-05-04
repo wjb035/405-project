@@ -699,18 +699,18 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return _pspScreenLogoTexture;
 	}
 
-	private void ApplyPspLogoRecursive(Node node, Texture2D screenTexture, string hierarchyHint)
+	private void ApplyPspLogoRecursive(Node node, Texture2D screenTexture, string hierarchy)
 	{
 		var nodeName = node.Name.ToString();
-		var currentHint = string.IsNullOrEmpty(hierarchyHint) ? nodeName : $"{hierarchyHint}/{nodeName}";
+		var currentHint = string.IsNullOrEmpty(hierarchy) ? nodeName : $"{hierarchy}/{nodeName}";
 
 		if (node is MeshInstance3D mesh)
 		{
-			var meshName = mesh.Name.ToString();
-			var isLikelyScreenMesh =
-				currentHint.Contains("psp_Object_54", System.StringComparison.OrdinalIgnoreCase);
+			var ScreenMesh =
+				currentHint.Contains("psp_Object_54", System.StringComparison.OrdinalIgnoreCase) ||
+				MeshUsesMaterial(mesh, "Pantalla");
 
-			if (isLikelyScreenMesh)
+			if (ScreenMesh)
 			{
 				NormalizeMeshUvsToSingleTile(mesh);
 				var targetAspect = EstimateScreenAspect(mesh);
@@ -736,7 +736,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 						material.AlbedoTexture = screenTexture;
 						material.Metallic = 0f;
 						material.Roughness = 0.34f;
-						ApplyCenteredCropToMaterial(material, screenTexture, targetAspect);
+						material.EmissionEnabled = true;
+						material.Emission = new Color(0.55f, 0.42f, 1.0f);
+						material.EmissionEnergyMultiplier = 1.6f;
+						material.EmissionTexture = screenTexture;
+
+						ApplyCenteredCrop(material, screenTexture, targetAspect);
 						material.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
 						material.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
 					}
@@ -745,6 +750,22 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		foreach (var child in node.GetChildren())
 			ApplyPspLogoRecursive((Node)child, screenTexture, currentHint);
+	}
+
+	private static bool MeshUsesMaterial(MeshInstance3D mesh, string materialName)
+	{
+		if (mesh.Mesh == null)
+			return false;
+
+		var surfaceCount = mesh.Mesh.GetSurfaceCount();
+		for (int s = 0; s < surfaceCount; s++)
+		{
+			var material = mesh.GetSurfaceOverrideMaterial(s) ?? mesh.Mesh.SurfaceGetMaterial(s);
+			if (material?.ResourceName.Contains(materialName, System.StringComparison.OrdinalIgnoreCase) == true)
+				return true;
+		}
+
+		return false;
 	}
 
 	private static void NormalizeMeshUvsToSingleTile(MeshInstance3D mesh)
@@ -789,9 +810,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 							for (int i = 0; i < sourceUvs.Length; i++)
 							{
 								var uv = sourceUvs[i];
-								normalizedUvs[i] = new Vector2(
-									(uv.X - minU) / rangeU,
-									1f - ((uv.Y - minV) / rangeV));
+								var PspScreenNudgeU = 0.2f;
+								var u = (uv.X - minU) / rangeU;
+								var v = (uv.Y - minV) / rangeV;
+								normalizedUvs[i] = new Vector2(.92f - u, v);
 							}
 
 						arrays[(int)Mesh.ArrayType.TexUV] = normalizedUvs;
@@ -827,7 +849,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return dims[2] / shortSide;
 	}
 
-	private static void ApplyCenteredCropToMaterial(StandardMaterial3D material, Texture2D texture, float targetAspect)
+	private static void ApplyCenteredCrop(StandardMaterial3D material, Texture2D texture, float targetAspect)
 	{
 		var textureWidth = texture.GetWidth();
 		var textureHeight = texture.GetHeight();
@@ -856,10 +878,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var offsetU = ((1f - scaleU) * 0.5f) + PspScreenNudgeLeftU;
 		var offsetV = (1f - scaleV) * 0.5f;
 
-		material.Uv1Scale = new Vector3(scaleU, scaleV, 1f);
-		material.Uv1Offset = new Vector3(offsetU, offsetV, 0f);
-	}
-
+}
 	private void ConfigureConsoleAnimation(Node3D wrapper, Node3D model, ConsoleType type)
 	{
 		var animationPlayer = FindAnimationPlayer(model);
@@ -892,6 +911,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_consoleAnimationHoldTimes[wrapper] = GetConsoleConfiguredHoldTime(type, animation.Length);
 		if (type == ConsoleType.GameCube)
 			SetGameCubeDiskVisible(model, false);
+		if (type == ConsoleType.PlayStation1)
+			SetPs1DiskVisible(model, false);
 		if (type == ConsoleType.PlayStation2)
 			SetPs2DiskVisible(model, false);
 		if (type == ConsoleType.SNES)
@@ -927,7 +948,9 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			IsConsoleType(box, ConsoleType.SNES) ||
 			IsConsoleType(box, ConsoleType.NES) ||
 			IsConsoleType(box, ConsoleType.GameCube) ||
-			IsConsoleType(box, ConsoleType.PlayStation2);
+			IsConsoleType(box, ConsoleType.PlayStation1) ||
+			IsConsoleType(box, ConsoleType.PlayStation2) ||
+			IsConsoleType(box, ConsoleType.PSP);
 	}
 
 	public async Task PlaySelectedConsoleAnimationAsync(ConsoleType requiredType)
@@ -940,7 +963,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			return;
 
 		var selectedBox = _boxes[selectedIdx];
-		if (!IsConsoleType(selectedBox, requiredType) ||
+		if (!IsConsoleType(selectedBox, requiredType))
+			return;
+
+		if (
 			!_consoleAnimations.TryGetValue(selectedBox, out var animationPlayer) ||
 			!_consoleAnimationNames.TryGetValue(selectedBox, out var animationName))
 		{
@@ -971,17 +997,25 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			SetNesCartridgeVisible(selectedBox, true);
 		if (requiredType == ConsoleType.GameCube)
 			SetGameCubeDiskVisible(selectedBox, true);
+		if (requiredType == ConsoleType.PlayStation1)
+			SetPs1DiskVisible(selectedBox, true);
 		if (requiredType == ConsoleType.PlayStation2)
 			SetPs2DiskVisible(selectedBox, true);
+		if (requiredType == ConsoleType.PSP)
+		{
+			SetPspDiskVisible(selectedBox, true);
+			await PlayPspSelectionTurnAsync(selectedBox);
+		}
 		if (requiredType == ConsoleType.GBA)
 			SetGbaCartridgeVisible(selectedBox, true);
 
 		animationPlayer.Stop();
-		animationPlayer.SpeedScale = SelectionAnimationSpeedScale;
+		var playbackSpeed = requiredType == ConsoleType.PlayStation1 ? 1.75f : SelectionAnimationSpeedScale;
+		animationPlayer.SpeedScale = playbackSpeed;
 		animationPlayer.Play(animationName);
 		animationPlayer.Seek(startTime, true);
 
-		var waitTime = Mathf.Max((float)((holdTime - startTime) / SelectionAnimationSpeedScale), 0.05f);
+		var waitTime = Mathf.Max((float)((holdTime - startTime) / playbackSpeed), 0.05f);
 		await ToSignal(GetTree().CreateTimer(waitTime), SceneTreeTimer.SignalName.Timeout);
 		if (!GodotObject.IsInstanceValid(this) ||
 			!GodotObject.IsInstanceValid(selectedBox) ||
@@ -992,8 +1026,100 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		animationPlayer.SpeedScale = 1f;
 		SetConsoleAnimationPose(selectedBox, holdTime, holdPose: true);
+		if (requiredType == ConsoleType.PlayStation1)
+			SetPs1DiskVisible(selectedBox, true);
 		if (requiredType == ConsoleType.PlayStation2)
 			SetPs2DiskVisible(selectedBox, true);
+		if (requiredType == ConsoleType.PSP)
+			SetPspDiskVisible(selectedBox, true);
+	}
+
+	private async Task PlayPs1SelectionAnimationAsync(Node3D selectedBox, int selectedIdx)
+	{
+		ResetSelectionRotation(selectedBox, selectedIdx);
+		_manuallyClosedAnimatedConsoles.Remove(selectedBox);
+		_pendingConsoleCloseSounds.Remove(selectedBox);
+		_selectionAnimatedConsoles.Add(selectedBox);
+		_openAnimatedConsoles.Add(selectedBox);
+		SetPs1DiskVisible(selectedBox, true);
+
+		var lid = FindDescendantNode3D(selectedBox, "lid_low");
+		var disc = FindDescendantNode3D(selectedBox, "Disc_obj") ??
+			FindDescendantNode3D(selectedBox, "Disc.obj") ??
+			FindDescendantNode3D(selectedBox, "Object_2_001") ??
+			FindDescendantNode3D(selectedBox, "ps1_Object_0");
+		if (disc != null)
+		{
+			SetNodeAndDescendantsVisible(disc, true);
+			disc.Position += new Vector3(0f, -0.22f, 0f);
+		}
+
+		if (lid == null)
+		{
+			await ToSignal(GetTree().CreateTimer(0.6f), SceneTreeTimer.SignalName.Timeout);
+			return;
+		}
+
+		var targetRotation = lid.Rotation + new Vector3(Mathf.DegToRad(-76f), 0f, 0f);
+		var discTargetPosition = disc?.Position + new Vector3(0f, 0.22f, 0f);
+		var discTargetRotation = disc?.Rotation + new Vector3(0f, 0f, Mathf.Tau);
+		var tween = CreateTween();
+		tween.SetParallel(true);
+		tween.SetTrans(Tween.TransitionType.Cubic);
+		tween.SetEase(Tween.EaseType.Out);
+		tween.TweenProperty(lid, "rotation", targetRotation, 0.72f);
+		if (disc != null && discTargetPosition.HasValue && discTargetRotation.HasValue)
+		{
+			tween.TweenProperty(disc, "position", discTargetPosition.Value, 0.72f);
+			tween.TweenProperty(disc, "rotation", discTargetRotation.Value, 0.72f);
+		}
+		await ToSignal(tween, Tween.SignalName.Finished);
+		SetPs1DiskVisible(selectedBox, true);
+	}
+
+	private async Task PlayPspSelectionTurnAsync(Node3D selectedBox)
+	{
+		var pspPivot = selectedBox.GetNodeOrNull<Node3D>("PSPPivot");
+		if (pspPivot == null)
+			return;
+
+		var turnTween = CreateTween();
+		turnTween.SetTrans(Tween.TransitionType.Cubic);
+		turnTween.SetEase(Tween.EaseType.Out);
+		turnTween.TweenProperty(
+			pspPivot,
+			"rotation",
+			pspPivot.Rotation + new Vector3(0f, Mathf.Pi, 0f),
+			0.18f);
+
+		await ToSignal(turnTween, Tween.SignalName.Finished);
+	}
+
+	private static Node3D? FindDescendantNode3D(Node node, string nodeName)
+	{
+		if (node is Node3D node3D &&
+			node3D.Name.ToString().Contains(nodeName, System.StringComparison.OrdinalIgnoreCase))
+		{
+			return node3D;
+		}
+
+		foreach (Node child in node.GetChildren())
+		{
+			var found = FindDescendantNode3D(child, nodeName);
+			if (found != null)
+				return found;
+		}
+
+		return null;
+	}
+
+	private static void SetNodeAndDescendantsVisible(Node node, bool visible)
+	{
+		if (node is Node3D node3D)
+			node3D.Visible = visible;
+
+		foreach (Node child in node.GetChildren())
+			SetNodeAndDescendantsVisible(child, visible);
 	}
 
 	private void ResetSelectionRotation(Node3D selectedBox, int selectedIdx)
@@ -1374,12 +1500,21 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private static bool IsPs1DiskNode(Node3D node)
 	{
 		var nodeName = node.Name.ToString();
-		if (string.Equals(nodeName, "ps1_Object_0", System.StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(nodeName, "ps1_Object_0", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc.obj", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc_obj", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2.001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2_001", System.StringComparison.OrdinalIgnoreCase))
 			return true;
 
 		return node is MeshInstance3D mesh &&
 			mesh.Mesh != null &&
-			mesh.Mesh.ResourceName.Contains("ps1_Object_0", System.StringComparison.OrdinalIgnoreCase);
+			(mesh.Mesh.ResourceName.Contains("ps1_Object_0", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Disc.obj", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Disc_obj", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_2.001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_2_001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_0", System.StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static void SetPs1DiskVisible(Node node, bool visible)
@@ -1394,12 +1529,29 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private static bool IsPspDiskNode(Node3D node)
 	{
 		var nodeName = node.Name.ToString();
-		if (string.Equals(nodeName, "psp_path2120", System.StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(nodeName, "psp_path2120", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(nodeName, "path2160", System.StringComparison.OrdinalIgnoreCase))
 			return true;
 
-		return node is MeshInstance3D mesh &&
-			mesh.Mesh != null &&
-			mesh.Mesh.ResourceName.Contains("psp_path2120", System.StringComparison.OrdinalIgnoreCase);
+		if (node is not MeshInstance3D mesh || mesh.Mesh == null)
+			return false;
+
+		if (mesh.Mesh.ResourceName.Contains("psp_path2120", System.StringComparison.OrdinalIgnoreCase) ||
+			mesh.Mesh.ResourceName.Contains("path2160", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		var surfaceCount = mesh.Mesh.GetSurfaceCount();
+		for (int s = 0; s < surfaceCount; s++)
+		{
+			var material = mesh.GetSurfaceOverrideMaterial(s) ?? mesh.Mesh.SurfaceGetMaterial(s);
+			var materialName = material?.ResourceName ?? string.Empty;
+			if (materialName.Contains("UMD", System.StringComparison.OrdinalIgnoreCase))
+				return true;
+		}
+
+		return false;
 	}
 
 	private static void SetPspDiskVisible(Node node, bool visible)

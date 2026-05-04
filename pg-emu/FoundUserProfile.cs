@@ -1,4 +1,5 @@
 using Godot;
+using PGEmu.app;
 using PGEmu.Services;
 using PGEmu.Services.Models;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FriendRelationshipStatus = PGEmu.Services.FriendStatus;
 
 
 public partial class FoundUserProfile : Control
@@ -78,6 +80,7 @@ public partial class FoundUserProfile : Control
 		ProfileVisualStyleCatalog.Resolve(null, null, null);
 	private bool _openingFriendProfile;
 	private bool _openingSectionScene;
+	private FriendRelationshipStatus? _friendRelationshipStatus;
 	
 
 	public override async void _Ready()
@@ -548,6 +551,8 @@ public partial class FoundUserProfile : Control
 					_dropdownOptions.SetItemText(blockIndex, userBlocked ? "Unblock" : "Block");
 				}
 			}
+
+			await RefreshFriendActionButtonAsync();
 
 			if (!string.IsNullOrWhiteSpace(profile.AvatarUrl))
 			{
@@ -1375,17 +1380,75 @@ public partial class FoundUserProfile : Control
 			tree.RemoveMeta("pgemu_return_scene");
 		tree.ChangeSceneToFile("res://profile.tscn");
 	}
+
+	private async Task RefreshFriendActionButtonAsync()
+	{
+		if (_addFriend == null)
+			return;
+
+		if (string.IsNullOrWhiteSpace(profile.UserId) ||
+			string.Equals(profile.UserId, AuthService.Instance.UserId.ToString(), StringComparison.OrdinalIgnoreCase))
+		{
+			_addFriend.Hide();
+			ResetUiNavigationState();
+			CallDeferred(nameof(RefreshControllerFocusGraph));
+			return;
+		}
+
+		_addFriend.Show();
+		_addFriend.Disabled = true;
+		_addFriend.Text = "Checking...";
+
+		var relationship = await _friendService.GetRelationship(profile.UserId);
+		_friendRelationshipStatus = relationship.Status;
+
+		if (!GodotObject.IsInstanceValid(_addFriend))
+			return;
+
+		switch (_friendRelationshipStatus)
+		{
+			case FriendRelationshipStatus.Accepted:
+				_addFriend.Text = "Remove Friend";
+				_addFriend.Disabled = false;
+				break;
+			case FriendRelationshipStatus.Pending:
+				_addFriend.Text = "Pending";
+				_addFriend.Disabled = true;
+				break;
+			case FriendRelationshipStatus.Blocked:
+				_addFriend.Text = "Blocked";
+				_addFriend.Disabled = true;
+				break;
+			default:
+				_addFriend.Text = "Send Friend Request";
+				_addFriend.Disabled = false;
+				break;
+		}
+
+		ResetUiNavigationState();
+		CallDeferred(nameof(RefreshControllerFocusGraph));
+	}
 	
 	private async void AddFriend()
 	{
 		if (string.IsNullOrWhiteSpace(profile.UserId))
 			return;
 
-		_friendService.SendFriendRequest(profile.UserId);
-		_addFriend?.Hide();
-		ResetUiNavigationState();
-		CallDeferred(nameof(RefreshControllerFocusGraph));
-		//_cancelRequest.Show();
+		if (_addFriend != null)
+			_addFriend.Disabled = true;
+
+		var success = _friendRelationshipStatus == FriendRelationshipStatus.Accepted
+			? await _friendService.RemoveFriend(profile.UserId)
+			: await _friendService.SendFriendRequest(profile.UserId);
+
+		if (!success)
+		{
+			GD.PrintErr(_friendRelationshipStatus == FriendRelationshipStatus.Accepted
+				? "Could not remove friend."
+				: "Could not send friend request.");
+		}
+
+		await RefreshFriendActionButtonAsync();
 		
 	}
 	
@@ -1462,6 +1525,9 @@ public partial class FoundUserProfile : Control
 	{
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(1);
+		AchievementStorage.gameId = -1;
+		AchievementStorage.gameName = "Showcase";
+		AchievementStorage.achievementData = null;
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://FoundUserProfile.tscn");
 		tree.ChangeSceneToFile("res://Achievements.tscn");

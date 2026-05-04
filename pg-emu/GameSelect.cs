@@ -944,7 +944,7 @@ private void OnAnyButtonPressed()
 				});
 				CollectionStorage.SearchResult = null;
 			}
-			else{
+			else if (CollectionStorage.currentCollection == null){
 				_games.Sort((a, b) => string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase));
 			}
 			
@@ -1054,10 +1054,14 @@ private void OnAnyButtonPressed()
 				
 				return (g.Title, tex, awardType);
 			}).ToList();
-			var isGba = string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
-			var isDs = string.Equals(_platform?.Id, "ds", StringComparison.OrdinalIgnoreCase);
-			var isPs1 = string.Equals(_platform?.Id, "ps1", StringComparison.OrdinalIgnoreCase);
-			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1);
+			var isMixedCollection = CollectionStorage.currentCollection != null;
+			var isGba = !isMixedCollection && string.Equals(_platform?.Id, "gba", StringComparison.OrdinalIgnoreCase);
+			var isDs = !isMixedCollection && string.Equals(_platform?.Id, "ds", StringComparison.OrdinalIgnoreCase);
+			var isPs1 = !isMixedCollection && string.Equals(_platform?.Id, "ps1", StringComparison.OrdinalIgnoreCase);
+			var platformIds = isMixedCollection
+				? _games.Select(game => game.platform?.Id).ToList()
+				: null;
+			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1, platformIds);
 			
 			ApplyThreeDBackFaceData();
 		}

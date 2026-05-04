@@ -30,6 +30,11 @@ public partial class Playtime : Node
 
 
 	public void FindPlatform(PlatformConfig? platformCheck, GameEntry? currentGame){
+		if (currentGame == null)
+			return;
+
+		currentGame.LastPlayedUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
 		// iterate through all other emulators to kill their process
 		// For some reason, if PPSSPP is open beforehand, then it won't be closed
 		// (Since it has a different exeName, PPSSPPWindows64)
@@ -87,6 +92,7 @@ public partial class Playtime : Node
 						if (g.Name == currentGame.Name){
 							isGameInList = true;
 							currentRunningGame = g;
+							currentRunningGame.LastPlayedUnixTime = currentGame.LastPlayedUnixTime;
 							GD.Print("Yay, " + g.Name + " was in the list and has ran for " + currentRunningGame.TimePlayed);
 							break;
 						}

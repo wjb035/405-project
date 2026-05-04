@@ -193,7 +193,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		float initialPos,
 		bool isGba = false,
 		bool isDs = false,
-		bool isPs1 = false)
+		bool isPs1 = false,
+		IReadOnlyList<string?>? platformIds = null)
 	{
 		// Clear old boxes
 		foreach (var b in _boxes)
@@ -218,13 +219,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 		for (int i = 0; i < games.Count; i++)
 		{
 			var (title, coverArt, award) = games[i];
+			var platformId = platformIds != null && i < platformIds.Count ? platformIds[i] : null;
+			var useSquareBox = !_isGba && !_isDs && IsSquareBoxPlatform(platformId);
 			Node3D box;
 			if (_isGba)
 				box = BuildGbaCartridge(title, coverArt );
 			else if (_isDs)
 				box = BuildDsCartridge(title, coverArt);
 			else
-				box = BuildBox(title, coverArt, award);
+				box = BuildBox(title, coverArt, award, useSquareBox);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
 		}
@@ -233,13 +236,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 	}
 	
 	// Builds actual 3d geometry of the cases
-	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType)
+	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType, bool forceSquare = false)
 	{
 		var root = new Node3D();
-		var boxSize = _isPs1
+		var squareBox = _isPs1 || forceSquare;
+		root.SetMeta("pgemu_square_box", squareBox);
+		var boxSize = squareBox
 			? new Vector3(2.8f, 2.8f, 0.25f)
 			: new Vector3(2.6f, 3.6f, 0.25f);
-		var coverSize = _isPs1
+		var coverSize = squareBox
 			? new Vector2(2.68f, 2.68f)
 			: new Vector2(2.5f, 3.5f);
 
@@ -479,6 +484,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		CenterNode3D(model);
 		model.Scale = new Vector3(11.0f, 11.0f, 11.0f);
 		model.RotateX(Mathf.DegToRad(90f));
+		CenterNode3D(model);
 		var hasModelBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
 
 		var root = new Node3D();
@@ -587,9 +593,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void BuildBoxStyleBackFaceTexture(MeshInstance3D backMesh, string title, string description,
 		string genre, string releaseYear, string rating)
 	{
+		var squareBox = IsSquareBoxMesh(backMesh);
 		var vp = new SubViewport
 		{
-			Size = _isPs1 ? new Vector2I(2048, 2048) : new Vector2I(2048, 2896),
+			Size = squareBox ? new Vector2I(2048, 2048) : new Vector2I(2048, 2896),
 			TransparentBg = true,
 			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
 			Msaa2D = Viewport.Msaa.Msaa8X,
@@ -1628,6 +1635,24 @@ public partial class GameCarousel3DView : SubViewportContainer
 		coverMat.ResourceLocalToScene = true;
 		coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
 		return coverMat;
+	}
+
+	private static bool IsSquareBoxPlatform(string? platformId)
+	{
+		return string.Equals(platformId, "ps1", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "gba", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "ds", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool IsSquareBoxMesh(Node node)
+	{
+		for (Node? current = node; current != null; current = current.GetParent())
+		{
+			if (current.HasMeta("pgemu_square_box"))
+				return current.GetMeta("pgemu_square_box").AsBool();
+		}
+
+		return false;
 	}
 
 	private Texture2D? GetGbaCartridgeLogoTexture()

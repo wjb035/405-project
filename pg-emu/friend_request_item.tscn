@@ -1,7 +1,5 @@
 [gd_scene format=3 uid="uid://cq2r088enxgnq"]
 
-[ext_resource type="Script" uid="uid://dj1d84fq58e7p" path="res://UI/FriendRequestItem.cs" id="1_1ip1e"]
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ip1e"]
 content_margin_left = 5.0
 bg_color = Color(0.5863, 0.451, 0.82, 0.83137256)
@@ -12,16 +10,12 @@ corner_radius_bottom_left = 5
 shadow_color = Color(0, 0, 0.16, 0.13725491)
 shadow_size = 3
 
-[node name="Panel" type="Panel" unique_id=158150431 node_paths=PackedStringArray("UsernameLabel", "AcceptButton", "DeclineButton")]
+[node name="Panel" type="Panel" unique_id=158150431]
 custom_minimum_size = Vector2(300, 40)
 offset_right = 300.0
 offset_bottom = 40.0
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1ip1e")
-script = ExtResource("1_1ip1e")
-UsernameLabel = NodePath("HBoxContainer/Username Label")
-AcceptButton = NodePath("HBoxContainer/Accept Button")
-DeclineButton = NodePath("HBoxContainer/Decline Button")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1386711342]
 layout_mode = 1

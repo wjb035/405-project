@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using PGEmuBackend.DTOs.Social;
 using PGEmuBackend.Services;
+using PGEmuBackend.Models;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace PGEmuBackend.Controllers;
@@ -50,6 +51,36 @@ public class FriendsController : ControllerBase
         var success = await _friendService.DeclineRequestAsync(CurrentUserId, requesterId);
         if (!success) return BadRequest("Cannot decline friend request.");
         return Ok(new { message = "Friend request declined." });
+    }
+
+    [Authorize]
+    [HttpGet("relationship/{targetUserId}")]
+    public async Task<IActionResult> GetRelationship(Guid targetUserId)
+    {
+        var relationship = await _friendService.GetRelationshipAsync(CurrentUserId, targetUserId);
+        if (relationship == null)
+        {
+            return Ok(new
+            {
+                status = (FriendStatus?)null,
+                outgoing = false
+            });
+        }
+
+        return Ok(new
+        {
+            status = relationship.Status,
+            outgoing = relationship.SenderId == CurrentUserId
+        });
+    }
+
+    [Authorize]
+    [HttpDelete("{targetUserId}")]
+    public async Task<IActionResult> RemoveFriend(Guid targetUserId)
+    {
+        var success = await _friendService.RemoveFriendAsync(CurrentUserId, targetUserId);
+        if (!success) return BadRequest("Cannot remove friend.");
+        return Ok(new { message = "Friend removed." });
     }
 
     [Authorize]

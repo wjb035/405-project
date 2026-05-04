@@ -518,6 +518,8 @@ public partial class Profile : Control
 		{
 			AudioManager.Instance?.PlaySelect();
 			var tree = GetTree();
+			CollectionStorage.currentCollection = await LoadRecentGameEntriesAsync();
+			CollectionStorage.SearchResult = null;
 			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
 			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, false);
 		}
@@ -1623,27 +1625,15 @@ public partial class Profile : Control
 	{
 		try
 		{
-			var installedGames = LoadInstalledGames();
-			var playtimeLookup = await LoadPlaytimeLookupAsync();
-
-			foreach (var game in installedGames)
-				game.TimePlayed = ResolveTrackedPlaytime(playtimeLookup, game);
-
-			var recentGames = installedGames
-				.GroupBy(GetGameIdentity, StringComparer.OrdinalIgnoreCase)
-				.Select(group => group
-					.OrderByDescending(game => game.TimePlayed)
-					.ThenBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
-					.First())
-				.OrderByDescending(game => game.TimePlayed > 0)
-				.ThenByDescending(game => game.TimePlayed)
-				.ThenBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
-				.Take(MaxTileCount)
+			var recentGames = await LoadRecentGameEntriesAsync(MaxTileCount);
+			var labels = recentGames
 				.Select(FormatRecentGameLabel)
 				.ToArray();
 
-			if (recentGames.Length > 0)
-				return recentGames;
+			if (labels.Length > 0)
+				return labels;
+
+			var playtimeLookup = await LoadPlaytimeLookupAsync();
 
 			return playtimeLookup.Values
 				.GroupBy(GetGameIdentity, StringComparer.OrdinalIgnoreCase)
@@ -1661,6 +1651,38 @@ public partial class Profile : Control
 			GD.PrintErr($"Recent games load failed: {exception.Message}");
 			return Array.Empty<string>();
 		}
+	}
+
+	private async Task<List<GameEntry>> LoadRecentGameEntriesAsync(int? limit = null)
+	{
+		var installedGames = LoadInstalledGames()
+			.Where(game => game != null && !string.IsNullOrWhiteSpace(game.Path) && game.platform != null)
+			.ToList();
+		var playtimeLookup = await LoadPlaytimeLookupAsync();
+
+		foreach (var game in installedGames)
+		{
+			game.TimePlayed = ResolveTrackedPlaytime(playtimeLookup, game);
+			game.LastPlayedUnixTime = ResolveTrackedLastPlayed(playtimeLookup, game);
+		}
+
+		IEnumerable<GameEntry> recentGames = installedGames
+			.GroupBy(GetGameIdentity, StringComparer.OrdinalIgnoreCase)
+			.Select(group => group
+				.OrderByDescending(game => game.LastPlayedUnixTime)
+				.ThenByDescending(game => game.TimePlayed)
+				.ThenBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
+				.First())
+			.OrderByDescending(game => game.LastPlayedUnixTime > 0)
+			.ThenByDescending(game => game.LastPlayedUnixTime)
+			.ThenByDescending(game => game.TimePlayed > 0)
+			.ThenByDescending(game => game.TimePlayed)
+			.ThenBy(game => game.Name, StringComparer.OrdinalIgnoreCase);
+
+		if (limit.HasValue)
+			recentGames = recentGames.Take(limit.Value);
+
+		return recentGames.ToList();
 	}
 
 	private async Task<IReadOnlyList<FriendListEntry>> LoadFriendEntriesAsync()
@@ -1816,6 +1838,18 @@ public partial class Profile : Control
 		var normalizedName = NormalizeGameName(game.Name);
 		if (playtimeLookup.TryGetValue(normalizedName, out var nameMatch))
 			return nameMatch.TimePlayed;
+
+		return 0;
+	}
+
+	private static long ResolveTrackedLastPlayed(IReadOnlyDictionary<string, GameEntry> playtimeLookup, GameEntry game)
+	{
+		if (playtimeLookup.TryGetValue(GetGameIdentity(game), out var exactMatch))
+			return exactMatch.LastPlayedUnixTime;
+
+		var normalizedName = NormalizeGameName(game.Name);
+		if (playtimeLookup.TryGetValue(normalizedName, out var nameMatch))
+			return nameMatch.LastPlayedUnixTime;
 
 		return 0;
 	}
@@ -2465,6 +2499,9 @@ public partial class Profile : Control
 	{
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(1);
+		AchievementStorage.gameId = -1;
+		AchievementStorage.gameName = "Showcase";
+		AchievementStorage.achievementData = null;
 		var tree = GetTree();
 		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
 		tree.ChangeSceneToFile("res://Achievements.tscn");
@@ -2475,6 +2512,8 @@ public partial class Profile : Control
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
+		CollectionStorage.currentCollection = await LoadRecentGameEntriesAsync();
+		CollectionStorage.SearchResult = null;
 		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, false);
 	}

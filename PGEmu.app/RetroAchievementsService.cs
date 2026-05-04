@@ -120,6 +120,11 @@ public static class RetroAchievementsService
             return null;
         }
 
+        if (siteRelativePath.StartsWith("file:///Images/", StringComparison.OrdinalIgnoreCase))
+        {
+            siteRelativePath = siteRelativePath["file://".Length..];
+        }
+
         if (siteRelativePath.StartsWith("/", StringComparison.Ordinal))
         {
             return $"{MediaBaseUrl}{siteRelativePath}";
