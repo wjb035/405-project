@@ -10,6 +10,7 @@
         "retroAchievementsGameId": 9510,
         "platform": null,
         "TimePlayed": 160,
+        "LastPlayedUnixTime": 0,
         "AchievementNum": "8/77"
       },
       {
@@ -20,6 +21,7 @@
         "retroAchievementsGameId": 7683,
         "platform": null,
         "TimePlayed": 70,
+        "LastPlayedUnixTime": 0,
         "AchievementNum": "7/68"
       }
     ]
@@ -35,6 +37,7 @@
         "retroAchievementsGameId": 2689,
         "platform": null,
         "TimePlayed": 310,
+        "LastPlayedUnixTime": 0,
         "AchievementNum": "31/145"
       },
       {
@@ -45,7 +48,24 @@
         "retroAchievementsGameId": 2655,
         "platform": null,
         "TimePlayed": 20,
+        "LastPlayedUnixTime": 0,
         "AchievementNum": "0/150"
+      }
+    ]
+  },
+  {
+    "Key": "duckstation",
+    "Value": [
+      {
+        "Name": "Spyro the Dragon (USA)",
+        "Path": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS1/Spyro the Dragon (USA).cue",
+        "Title": "Spyro the Dragon (USA)",
+        "CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spyro%20the%20Dragon%20%28USA%29.png",
+        "retroAchievementsGameId": 11279,
+        "platform": null,
+        "TimePlayed": 130,
+        "LastPlayedUnixTime": 1777996462,
+        "AchievementNum": "2/65"
       }
     ]
   }

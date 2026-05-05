@@ -104,6 +104,9 @@ public partial class ChatOverlay : CanvasLayer
 	// Open chat by pressing C
 	public override void _Input(InputEvent @event)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+			return;
+
 		if (@event is InputEventKey key && key.Pressed && !key.Echo)
 		{
 			var focused = GetViewport().GuiGetFocusOwner();

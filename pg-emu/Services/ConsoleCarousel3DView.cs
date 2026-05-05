@@ -1615,6 +1615,11 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Handle when the mouse is clicked or dragged, kills velocity so it doesn't drift when you drag
 	public override void _GuiInput(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+		{
+			AcceptEvent();
+			return;
+		}
 		if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 		{
 			if (mb.Position.Y < 70f)
@@ -1680,6 +1685,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Handle when the mouse hovers over the box
 	public override void _Input(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+			return;
 		if (_boxes.Count == 0) return;
 		if (e is InputEventMouseMotion mm)
 		{

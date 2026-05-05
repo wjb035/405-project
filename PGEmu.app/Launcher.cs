@@ -7,7 +7,13 @@ namespace PGEmu.app;
 
 public static class Launcher
 {
-    public static void LaunchFromConfig(AppConfig cfg, PlatformConfig platform, GameEntry game)
+    /// <summary>
+    /// Launches the configured emulator for the given platform/game.
+    /// Returns the resolved absolute path to the emulator executable that was launched
+    /// (or null if launch is short-circuited). Callers can use this for things like
+    /// playtime tracking, where we need to know which process to attach to.
+    /// </summary>
+    public static string? LaunchFromConfig(AppConfig cfg, PlatformConfig platform, GameEntry game)
     {
         var emulatorId = platform.DefaultEmulatorId ?? cfg.Emulators.FirstOrDefault()?.Id;
         var emu = cfg.Emulators.FirstOrDefault(e => e.Id == emulatorId);
@@ -47,6 +53,7 @@ public static class Launcher
         var psi = BuildProcessStartInfo(fullExe, args);
 
         Process.Start(psi)?.Dispose();
+        return fullExe;
     }
     
     

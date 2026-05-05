@@ -446,10 +446,12 @@ private void OnAnyButtonPressed()
 			//GetNode<Playtime>("/root/Playtime").killCur();
 			
 			
-			Launcher.LaunchFromConfig(_config, launchPlatform, game);
+			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
+
+			var resolvedExe = Launcher.LaunchFromConfig(_config, launchPlatform, game);
 			GD.Print("launching "+ game.Title);
 			//runningProcesses = Process.GetProcessesByName("dolphin");
-			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game);
+			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game, resolvedExe);
 			
 			
 			foreach (var child in GetTree().Root.GetChildren())
@@ -463,7 +465,6 @@ private void OnAnyButtonPressed()
 			//}
 			
 			
-			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 			SetStatus($"Launching external emulator: {game.Title}");
 		}
 		catch (Exception ex)
