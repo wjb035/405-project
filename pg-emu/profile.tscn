@@ -256,7 +256,7 @@ size_flags_vertical = 0
 theme_override_constants/separation = 12
 
 [node name="ShowcaseSection" type="PanelContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends" unique_id=1865530727]
-custom_minimum_size = Vector2(180, 0)
+custom_minimum_size = Vector2(260, 0)
 layout_direction = 4
 layout_mode = 2
 size_flags_vertical = 0

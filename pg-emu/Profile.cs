@@ -10,7 +10,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using PGEmu.Helpers;
 using RetroAchievements.Api;
-using RetroAchievements.Api.Response.Users.Records;
 using FriendRecordStatus = PGEmu.Services.Models.FriendStatus;
 
 public partial class Profile : Control
@@ -30,6 +29,7 @@ public partial class Profile : Control
 	}
 
 	private const int MaxTileCount = 4;
+	private const int RecentGamesSeeAllLimit = 10;
 	private const float ControllerRowMergeThreshold = 36f;
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
 	private const string ReturnSceneMetaKey = "pgemu_return_scene";
@@ -58,7 +58,16 @@ public partial class Profile : Control
 	private const string HoverFeedbackAppliedMeta = "pgemu_profile_hover_feedback_applied";
 	private const string SceneBackgroundMaterialMeta = "pgemu_profile_scene_background_material_local";
 	private const string RetroAchievementsConnectPrompt = "Connect to retroachievements to view your trophies!";
-	private const string NoEarnedTrophiesText = "No trophies earned yet";
+	private const string NoEarnedAchievementsText = "No achievements unlocked yet";
+	private const int ShowcaseRecentlyPlayedFetchCount = 50;
+	private const int MaxShowcaseLabelLength = 32;
+
+	private sealed class ShowcaseTileEntry
+	{
+		public int GameId { get; init; }
+		public string GameTitle { get; init; } = string.Empty;
+		public string Label { get; init; } = string.Empty;
+	}
 
 	[Export] public NodePath BackPath;
 	[Export] public NodePath AvatarPath;
@@ -67,6 +76,7 @@ public partial class Profile : Control
 	private readonly ProfileService _profileService = new();
 	private readonly System.Net.Http.HttpClient _client = new();
 	private readonly Dictionary<Button, string> _friendTileUsernames = new();
+	private readonly Dictionary<Button, (int GameId, string GameTitle)> _showcaseGameTargets = new();
 	private readonly Dictionary<int, string> _friendSearchEntries = new();
 	private readonly Dictionary<string, ProfileResponse> _friendProfileCache = new(StringComparer.OrdinalIgnoreCase);
 	private readonly Dictionary<string, Texture2D> _avatarTextureCache = new(StringComparer.OrdinalIgnoreCase);
@@ -146,6 +156,7 @@ public partial class Profile : Control
 			ConnectIfNeeded(_recentGamesSeeAll, GoGameSelect);
 		ConnectFriendTileButtons();
 		ConnectRecentGameTileButtons();
+		ConnectShowcaseTileButtons();
 			if (_friendSearchDropdown != null)
 				_friendSearchDropdown.ItemSelected += OnFriendSearchSelected;
 			SetupFriendSearchDialog();
@@ -191,6 +202,7 @@ public partial class Profile : Control
 			? "res://ShaderSlop/circle.gdshader"
 			: "res://ShaderSlop/RoundedAvatarFrame.gdshader";
 	}
+
 
 		public override void _UnhandledInput(InputEvent @event)
 		{
@@ -499,6 +511,15 @@ public partial class Profile : Control
 			button.Pressed += () => OpenFriendProfileAsync(button);
 	}
 
+	private void ConnectShowcaseTileButtons()
+	{
+		foreach (var button in GetTileButtons(ShowcaseTileGridPath))
+		{
+			var captured = button;
+			captured.Pressed += () => OpenShowcaseTileTarget(captured);
+		}
+	}
+
 	private void ConnectRecentGameTileButtons()
 	{
 		foreach (var button in GetTileButtons(RecentGamesTileGridPath))
@@ -705,12 +726,24 @@ public partial class Profile : Control
 			};
 			content.AddChild(_friendDrawerScroll);
 
+			var listMargin = new MarginContainer
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+				SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+				MouseFilter = MouseFilterEnum.Ignore
+			};
+			listMargin.AddThemeConstantOverride("margin_left", 8);
+			listMargin.AddThemeConstantOverride("margin_right", 8);
+			listMargin.AddThemeConstantOverride("margin_top", 6);
+			listMargin.AddThemeConstantOverride("margin_bottom", 6);
+			_friendDrawerScroll.AddChild(listMargin);
+
 			_friendDrawerList = new VBoxContainer
 			{
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 			};
 			_friendDrawerList.AddThemeConstantOverride("separation", 10);
-			_friendDrawerScroll.AddChild(_friendDrawerList);
+			listMargin.AddChild(_friendDrawerList);
 		}
 
 		private void OnFriendDrawerScrimInput(InputEvent @event)
@@ -849,7 +882,6 @@ public partial class Profile : Control
 				CustomMinimumSize = new Vector2(0f, 74f),
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				Text = string.Empty,
-				ClipContents = true,
 				TooltipText = $"View {capturedUsername}'s profile"
 			};
 
@@ -912,7 +944,9 @@ public partial class Profile : Control
 			var nameLabel = new Label
 			{
 				MouseFilter = MouseFilterEnum.Ignore,
-				Text = capturedUsername
+				Text = capturedUsername,
+				ClipText = true,
+				TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
 			};
 			UiStyle.StyleTitleLabel(nameLabel);
 			nameLabel.AddThemeFontSizeOverride("font_size", 18);
@@ -922,7 +956,9 @@ public partial class Profile : Control
 			var detailLabel = new Label
 			{
 				MouseFilter = MouseFilterEnum.Ignore,
-				Text = BuildFriendDetailText(friend, null)
+				Text = BuildFriendDetailText(friend, null),
+				ClipText = true,
+				TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
 			};
 			UiStyle.StyleMetaLabel(detailLabel);
 			detailLabel.AddThemeFontSizeOverride("font_size", 13);
@@ -998,7 +1034,7 @@ public partial class Profile : Control
 			if (profile == null || string.IsNullOrWhiteSpace(profile.AvatarUrl))
 				return;
 
-			var avatarTexture = await LoadAvatarTextureAsync(profile.AvatarUrl);
+			var avatarTexture = await LoadDrawerAvatarTextureAsync(profile.AvatarUrl);
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 			if (requestId != _friendDrawerRequestId)
@@ -1075,6 +1111,141 @@ public partial class Profile : Control
 			GD.PrintErr("Failed to load image: " + exception.Message);
 			return null;
 		}
+	}
+
+	// Drawer avatars need rounded corners. The shader-on-TextureRect route
+	// kept failing in this nesting context, so we bake the same SDF shape
+	// (and stroke) produced by RoundedAvatarFrame.gdshader directly into
+	// the texture's alpha and color channels.
+	private async Task<Texture2D?> LoadDrawerAvatarTextureAsync(string url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return null;
+
+		var strokeColor = WithAlpha(_visualStyle.Background.Accent, 0.85f);
+		var normalizedUrl = NormalizeAvatarUrl(url);
+		var cacheKey = $"drawer-rounded:{strokeColor.ToHtml()}:{normalizedUrl}";
+		if (_avatarTextureCache.TryGetValue(cacheKey, out var cachedTexture))
+			return cachedTexture;
+
+		var baseTexture = await LoadAvatarTextureAsync(url);
+		if (baseTexture == null)
+			return null;
+
+		var sourceImage = baseTexture.GetImage();
+		if (sourceImage == null)
+			return null;
+
+		try
+		{
+			var rounded = BuildRoundedAvatarImage(sourceImage, targetSize: 96, strokeColor: strokeColor);
+			if (rounded == null)
+				return null;
+
+			var texture = ImageTexture.CreateFromImage(rounded);
+			_avatarTextureCache[cacheKey] = texture;
+			return texture;
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr("Failed to bake rounded avatar: " + exception.Message);
+			return null;
+		}
+	}
+
+	private static Image? BuildRoundedAvatarImage(Image source, int targetSize, Color strokeColor)
+	{
+		// Uses RoundedAvatarFrame.gdshader's SDF formula (rounded-box with
+		// width inset, plus stroke band between width and width-stroke_width).
+		// At 46-px display size the shader preset's tiny 0.12 radius is
+		// barely visible, so we use a larger radius (~30% of full extent)
+		// to match the bolder rounded look the drawer looked best with.
+		// EdgeSoftness is bumped above the shader's 0.006 because the CPU
+		// bake doesn't get GPU sub-pixel coverage for free; we need a ~1 px
+		// transition at bake resolution for smooth AA after downsample.
+		const float width = 1.0f;
+		const float radius = 0.6f;
+		const float strokeWidth = 0.06f;
+		const float edgeSoftness = 0.022f;
+
+		var image = (Image)source.Duplicate();
+		if (image.GetFormat() != Image.Format.Rgba8)
+			image.Convert(Image.Format.Rgba8);
+
+		int srcW = image.GetWidth();
+		int srcH = image.GetHeight();
+		if (srcW <= 0 || srcH <= 0)
+			return null;
+
+		if (srcW != srcH)
+		{
+			int side = Math.Min(srcW, srcH);
+			int xOffset = (srcW - side) / 2;
+			int yOffset = (srcH - side) / 2;
+			var square = Image.CreateEmpty(side, side, false, Image.Format.Rgba8);
+			square.BlitRect(image, new Rect2I(xOffset, yOffset, side, side), Vector2I.Zero);
+			image = square;
+		}
+
+		image.Resize(targetSize, targetSize, Image.Interpolation.Lanczos);
+
+		float invSize = 1f / targetSize;
+		float outerEffectiveRadius = radius * width;
+		float outerHalfExtent = width - outerEffectiveRadius;
+		float innerWidth = MathF.Max(width - strokeWidth, 0f);
+		float innerEffectiveRadius = radius * innerWidth;
+		float innerHalfExtent = innerWidth - innerEffectiveRadius;
+
+		for (int y = 0; y < targetSize; y++)
+		{
+			float uy = ((y + 0.5f) * invSize) * 2f - 1f;
+			for (int x = 0; x < targetSize; x++)
+			{
+				float ux = ((x + 0.5f) * invSize) * 2f - 1f;
+
+				float qxOuter = MathF.Abs(ux) - outerHalfExtent;
+				float qyOuter = MathF.Abs(uy) - outerHalfExtent;
+				float outsideOuter = MathF.Sqrt(
+					MathF.Max(qxOuter, 0f) * MathF.Max(qxOuter, 0f) +
+					MathF.Max(qyOuter, 0f) * MathF.Max(qyOuter, 0f));
+				float insideOuter = MathF.Min(MathF.Max(qxOuter, qyOuter), 0f);
+				float sdfOuter = outsideOuter + insideOuter - outerEffectiveRadius;
+				float outerMask = 1f - Smoothstep(0f, edgeSoftness, sdfOuter);
+
+				float qxInner = MathF.Abs(ux) - innerHalfExtent;
+				float qyInner = MathF.Abs(uy) - innerHalfExtent;
+				float outsideInner = MathF.Sqrt(
+					MathF.Max(qxInner, 0f) * MathF.Max(qxInner, 0f) +
+					MathF.Max(qyInner, 0f) * MathF.Max(qyInner, 0f));
+				float insideInner = MathF.Min(MathF.Max(qxInner, qyInner), 0f);
+				float sdfInner = outsideInner + insideInner - innerEffectiveRadius;
+				float innerMask = 1f - Smoothstep(0f, edgeSoftness, sdfInner);
+
+				float strokeMask = Mathf.Clamp(outerMask - innerMask, 0f, 1f);
+				float strokeWeight = strokeMask * strokeColor.A;
+
+				if (outerMask >= 0.999f && strokeWeight <= 0.001f)
+					continue;
+
+				var pixel = image.GetPixel(x, y);
+				float clippedA = pixel.A * outerMask;
+
+				float r = Mathf.Lerp(pixel.R, strokeColor.R, strokeWeight);
+				float g = Mathf.Lerp(pixel.G, strokeColor.G, strokeWeight);
+				float b = Mathf.Lerp(pixel.B, strokeColor.B, strokeWeight);
+				float a = MathF.Max(clippedA, strokeWeight);
+
+				image.SetPixel(x, y, new Color(r, g, b, a));
+			}
+		}
+
+		return image;
+	}
+
+	private static float Smoothstep(float edge0, float edge1, float x)
+	{
+		float t = Mathf.Clamp((x - edge0) / (edge1 - edge0), 0f, 1f);
+		return t * t * (3f - 2f * t);
 	}
 
 	private static string BuildFriendDetailText(FriendListEntry friend, ProfileResponse? profile)
@@ -1397,7 +1568,7 @@ public partial class Profile : Control
 	{
 		try
 		{
-			var trophyTask = LoadTrophyTileDataAsync();
+			var trophyTask = LoadShowcaseTileDataAsync();
 			var recentGamesTask = LoadRecentGameLabelsAsync();
 			var friendsTask = LoadFriendEntriesAsync();
 
@@ -1416,7 +1587,7 @@ public partial class Profile : Control
 			_friendEntries.Clear();
 			_friendEntries.AddRange(friendItems);
 
-			ApplyTileContent(ShowcaseTileGridPath, trophyData.Items, trophyData.EmptyText);
+			ApplyShowcaseTileContent(trophyData.Entries, trophyData.EmptyText);
 			ApplyTileContent(RecentGamesTileGridPath, recentGameItems, "No games found");
 			ApplyFriendTileContent(previewFriendItems, "No friends yet");
 			ConfigureFriendSearchDropdown(friendItems.Select(friend => friend.Username).ToArray());
@@ -1434,7 +1605,7 @@ public partial class Profile : Control
 				return;
 
 			_friendEntries.Clear();
-			ApplyTileContent(ShowcaseTileGridPath, Array.Empty<string>(), "Unable to load trophies right now");
+			ApplyShowcaseTileContent(Array.Empty<ShowcaseTileEntry>(), "Unable to load achievements right now");
 			ApplyTileContent(RecentGamesTileGridPath, Array.Empty<string>(), "No games found");
 			ApplyFriendTileContent(Array.Empty<string>(), "No friends yet");
 			ConfigureFriendSearchDropdown(Array.Empty<string>());
@@ -1543,6 +1714,72 @@ public partial class Profile : Control
 		}
 	}
 
+	private void ApplyShowcaseTileContent(IReadOnlyList<ShowcaseTileEntry> entries, string emptyText)
+	{
+		var buttons = GetTileButtons(ShowcaseTileGridPath);
+		if (buttons.Count == 0)
+			return;
+
+		_showcaseGameTargets.Clear();
+
+		if (entries.Count == 0)
+		{
+			for (int index = 0; index < buttons.Count; index++)
+			{
+				var button = buttons[index];
+				button.Visible = index == 0;
+				button.Disabled = index == 0;
+				button.Text = index == 0 ? emptyText : string.Empty;
+				button.TooltipText = index == 0 ? emptyText : string.Empty;
+				button.ClipText = true;
+			}
+
+			return;
+		}
+
+		for (int index = 0; index < buttons.Count; index++)
+		{
+			var button = buttons[index];
+			button.ClipText = true;
+
+			if (index < entries.Count)
+			{
+				var entry = entries[index];
+				button.Visible = true;
+				button.Disabled = entry.GameId <= 0;
+				button.Text = entry.Label;
+				button.TooltipText = string.IsNullOrWhiteSpace(entry.GameTitle)
+					? entry.Label
+					: $"View achievements for {entry.GameTitle}";
+
+				if (entry.GameId > 0)
+					_showcaseGameTargets[button] = (entry.GameId, entry.GameTitle);
+			}
+			else
+			{
+				button.Visible = false;
+				button.Disabled = false;
+				button.Text = string.Empty;
+				button.TooltipText = string.Empty;
+			}
+		}
+	}
+
+	private void OpenShowcaseTileTarget(Button button)
+	{
+		if (!_showcaseGameTargets.TryGetValue(button, out var target) || target.GameId <= 0)
+			return;
+
+		ResetUiNavigationState();
+		AudioManager.Instance?.PlayNavigation(1);
+		AchievementStorage.gameId = target.GameId;
+		AchievementStorage.gameName = target.GameTitle ?? string.Empty;
+		AchievementStorage.achievementData = null;
+		var tree = GetTree();
+		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
+		tree.ChangeSceneToFile("res://Achievements.tscn");
+	}
+
 	private void SetFooterVisible(string footerPath, bool visible)
 	{
 		if (GetNodeOrNull<Control>(footerPath) is Control footer)
@@ -1564,35 +1801,44 @@ public partial class Profile : Control
 			button.RemoveMeta("pgemu_friend_username");
 	}
 
-	private async Task<(IReadOnlyList<string> Items, string EmptyText)> LoadTrophyTileDataAsync()
+	private async Task<(IReadOnlyList<ShowcaseTileEntry> Entries, string EmptyText)> LoadShowcaseTileDataAsync()
 	{
 		if (!HasRetroAchievementsCredentials())
-			return (Array.Empty<string>(), RetroAchievementsConnectPrompt);
+			return (Array.Empty<ShowcaseTileEntry>(), RetroAchievementsConnectPrompt);
 
 		try
 		{
-			var response = await RetroAchievementsService.client.GetUserAwardsAsync(RetroAchievementsService.username);
-			if (response?.VisibleUserAwards == null)
-				return (Array.Empty<string>(), NoEarnedTrophiesText);
+			var response = await RetroAchievementsService.client
+				.GetUserRecentlyPlayedGamesAsync(RetroAchievementsService.username, 0, ShowcaseRecentlyPlayedFetchCount);
 
-			var trophies = response.VisibleUserAwards
-				.Where(IsTrophyAward)
-				.OrderBy(award => award.DisplayOrder)
-				.Select(FormatTrophyLabel)
-				.Where(label => !string.IsNullOrWhiteSpace(label))
-				.Distinct(StringComparer.OrdinalIgnoreCase)
+			var items = response?.Items;
+			if (items == null)
+				return (Array.Empty<ShowcaseTileEntry>(), NoEarnedAchievementsText);
+
+			var entries = items
+				.Where(game => game != null
+					&& game.GameId > 0
+					&& game.PossibleAchievementsCount > 0
+					&& game.EarnedAchievements > 0)
+				.GroupBy(game => game.GameId)
+				.Select(group => group.First())
+				.OrderByDescending(game => game.EarnedAchievements)
+				.ThenByDescending(game => game.LastPlayedDate)
 				.Take(MaxTileCount)
-				.Cast<string>()
+				.Select(game => new ShowcaseTileEntry
+				{
+					GameId = game.GameId,
+					GameTitle = game.Title?.Trim() ?? string.Empty,
+					Label = FormatShowcaseLabel(game.Title, game.EarnedAchievements, game.PossibleAchievementsCount)
+				})
 				.ToArray();
 
-			return trophies.Length == 0
-				? (Array.Empty<string>(), NoEarnedTrophiesText)
-				: (trophies, NoEarnedTrophiesText);
+			return (entries, NoEarnedAchievementsText);
 		}
 		catch (Exception exception)
 		{
-			GD.PrintErr($"Trophy load failed: {exception.Message}");
-			return (Array.Empty<string>(), "Unable to load trophies right now");
+			GD.PrintErr($"Showcase achievement load failed: {exception.Message}");
+			return (Array.Empty<ShowcaseTileEntry>(), "Unable to load achievements right now");
 		}
 	}
 
@@ -1602,23 +1848,15 @@ public partial class Profile : Control
 			!string.IsNullOrWhiteSpace(RetroAchievementsService.apiKey);
 	}
 
-	private static bool IsTrophyAward(VisibleUserAward award)
+	private static string FormatShowcaseLabel(string? gameTitle, int earned, int possible)
 	{
-		return string.Equals(award.AwardType, "Game Beaten", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(award.AwardType, "Mastery/Completion", StringComparison.OrdinalIgnoreCase);
-	}
-
-	private static string FormatTrophyLabel(VisibleUserAward award)
-	{
-		var title = award.Title?.Trim();
-		if (string.IsNullOrWhiteSpace(title))
-			return string.Empty;
-
-		var trophyType = string.Equals(award.AwardType, "Mastery/Completion", StringComparison.OrdinalIgnoreCase)
-			? "Mastery"
-			: "Beaten";
-
-		return $"{trophyType}: {title}";
+		var trimmedTitle = string.IsNullOrWhiteSpace(gameTitle) ? "Unknown Game" : gameTitle.Trim();
+		var counter = $"{earned}/{possible}";
+		var nameBudget = Math.Max(6, MaxShowcaseLabelLength - counter.Length - 4);
+		var displayTitle = trimmedTitle.Length > nameBudget
+			? trimmedTitle[..(nameBudget - 1)].TrimEnd() + "\u2026"
+			: trimmedTitle;
+		return $"{displayTitle}  |  {counter}";
 	}
 
 	private async Task<IReadOnlyList<string>> LoadRecentGameLabelsAsync()
@@ -1797,6 +2035,22 @@ public partial class Profile : Control
 			if (!File.Exists(playtimePath))
 				return new Dictionary<string, GameEntry>(StringComparer.OrdinalIgnoreCase);
 
+			// Entries written before LastPlayedUnixTime existed will deserialize with the
+			// default value of 0, which makes them sort below any game that has been played
+			// since the field was added. Fall back to the playtime.json's last-write time
+			// so legacy played games at least sort above never-played ones; once the user
+			// launches any of them, FindPlatform will overwrite this with a real timestamp.
+			long fallbackLastPlayedUnixTime = 0;
+			try
+			{
+				fallbackLastPlayedUnixTime = new DateTimeOffset(File.GetLastWriteTimeUtc(playtimePath))
+					.ToUnixTimeSeconds();
+			}
+			catch
+			{
+				// If we can't read the mtime, just leave legacy entries at 0.
+			}
+
 			await using var stream = File.OpenRead(playtimePath);
 			var playtimeGroups = await JsonSerializer.DeserializeAsync<List<KeyValuePair<string, List<GameEntry>>>>(
 				stream,
@@ -1815,6 +2069,9 @@ public partial class Profile : Control
 				{
 					if (game == null || string.IsNullOrWhiteSpace(game.Name))
 						continue;
+
+					if (game.TimePlayed > 0 && game.LastPlayedUnixTime == 0 && fallbackLastPlayedUnixTime > 0)
+						game.LastPlayedUnixTime = fallbackLastPlayedUnixTime;
 
 					UpdateLookupEntry(lookup, GetGameIdentity(game), game);
 					UpdateLookupEntry(lookup, NormalizeGameName(game.Name), game);
@@ -1892,8 +2149,21 @@ public partial class Profile : Control
 		if (string.IsNullOrWhiteSpace(key))
 			return;
 
-		if (!lookup.TryGetValue(key, out var existing) || game.TimePlayed > existing.TimePlayed)
+		if (!lookup.TryGetValue(key, out var existing))
+		{
 			lookup[key] = game;
+			return;
+		}
+
+		// When the same name/path appears under multiple emulator groups, prefer the
+		// entry that was played most recently so recency lookups stay correct. Only fall
+		// back to total playtime when neither side has a known LastPlayedUnixTime, or
+		// when both share the exact same timestamp.
+		if (game.LastPlayedUnixTime > existing.LastPlayedUnixTime ||
+			(game.LastPlayedUnixTime == existing.LastPlayedUnixTime && game.TimePlayed > existing.TimePlayed))
+		{
+			lookup[key] = game;
+		}
 	}
 
 	private static string NormalizeGameName(string? name)
@@ -2245,7 +2515,7 @@ public partial class Profile : Control
 		button.AddThemeColorOverride("font_hover_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_pressed_color", new Color(0.97f, 0.95f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_focus_color", new Color(0.97f, 0.95f, 1f, 0.98f));
-		ApplyProfileHoverFeedback(button, scaleUp: 1.03f, duration: 0.10f, shadowOffsetY: 2f);
+		ApplyProfileHoverFeedback(button, scaleUp: 1.015f, duration: 0.10f, shadowOffsetY: 2f);
 	}
 
 	private static void ApplyProfileHoverFeedback(Button? button, float scaleUp = 1.04f, float duration = 0.11f, float shadowOffsetY = 3f)
@@ -2512,7 +2782,7 @@ public partial class Profile : Control
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
-		CollectionStorage.currentCollection = await LoadRecentGameEntriesAsync();
+		CollectionStorage.currentCollection = await LoadRecentGameEntriesAsync(RecentGamesSeeAllLimit);
 		CollectionStorage.SearchResult = null;
 		tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.25f, 0.025f, false);

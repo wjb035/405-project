@@ -168,10 +168,10 @@ public partial class GameSelect : Control
    		container.AddChild(_optionButton);
 		//_optionButton.AddItem("Option A", 0);
 		_optionButton.Hide();
-		int i = 0;
+		int index = 0;
 		foreach (var c in CollectionStorage.collections){
-			_optionButton.AddItem(c.Key, i);
-			i++;
+			_optionButton.AddItem(c.Key, index);
+			index++;
 		}
 		 _optionButton.ItemSelected += SelectedOption;
 		UiStyle.StyleOptionButton(_optionButton);
@@ -457,8 +457,8 @@ private void OnAnyButtonPressed()
 			
 	 ActivityManager.SetActivity("Playing", game.Title, "GodotClient");
 
-		//	foreach (var p in runningProcesses){
-			//GD.Print(p.ProcessName +  " started at " + p.StartTime);
+		//	foreach (var position in runningProcesses){
+			//GD.Print(position.ProcessName +  " started at " + position.StartTime);
 				
 			//}
 			
@@ -545,7 +545,7 @@ private void OnAnyButtonPressed()
 			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "Sys") : null,
 		}
 		
-		.Where(p => !string.IsNullOrWhiteSpace(p))
+		.Where(position => !string.IsNullOrWhiteSpace(position))
 		.Cast<string>()
 		.Distinct(StringComparer.OrdinalIgnoreCase)
 		.ToArray();
@@ -584,7 +584,7 @@ private void OnAnyButtonPressed()
 			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "User") : null,
 			!string.IsNullOrWhiteSpace(cwd) ? Path.Combine(cwd, "dolphin-emu", "User") : null,
 		}
-		.Where(p => !string.IsNullOrWhiteSpace(p))
+		.Where(position => !string.IsNullOrWhiteSpace(position))
 		.Cast<string>()
 		.Distinct(StringComparer.OrdinalIgnoreCase)
 		.ToArray();
@@ -628,21 +628,21 @@ private void OnAnyButtonPressed()
 		int sectionStart = -1;
 		int sectionEnd = lines.Count;
 
-		for (int i = 0; i < lines.Count; i++)
+		for (int index = 0; index < lines.Count; index++)
 		{
-			var trimmed = lines[i].Trim();
+			var trimmed = lines[index].Trim();
 			if (sectionStart < 0)
 			{
 				if (string.Equals(trimmed, sectionHeader, StringComparison.OrdinalIgnoreCase))
 				{
-					sectionStart = i;
+					sectionStart = index;
 				}
 				continue;
 			}
 
 			if (trimmed.StartsWith("[", StringComparison.Ordinal) && trimmed.EndsWith("]", StringComparison.Ordinal))
 			{
-				sectionEnd = i;
+				sectionEnd = index;
 				break;
 			}
 		}
@@ -656,9 +656,9 @@ private void OnAnyButtonPressed()
 			return;
 		}
 
-		for (int i = sectionStart + 1; i < sectionEnd; i++)
+		for (int index = sectionStart + 1; index < sectionEnd; index++)
 		{
-			var trimmed = lines[i].TrimStart();
+			var trimmed = lines[index].TrimStart();
 			if (!trimmed.StartsWith(key, StringComparison.OrdinalIgnoreCase))
 				continue;
 
@@ -666,7 +666,7 @@ private void OnAnyButtonPressed()
 			if (equalsIndex < 0)
 				continue;
 
-			lines[i] = $"{key} = {value}";
+			lines[index] = $"{key} = {value}";
 			return;
 		}
 
@@ -722,11 +722,11 @@ private void OnAnyButtonPressed()
 		if (path.EndsWith(".app", StringComparison.OrdinalIgnoreCase))
 			return path;
 
-		var idx = path.LastIndexOf(".app", StringComparison.OrdinalIgnoreCase);
-		if (idx < 0)
+		var index = path.LastIndexOf(".app", StringComparison.OrdinalIgnoreCase);
+		if (index < 0)
 			return null;
 
-		return path.Substring(0, idx + 4);
+		return path.Substring(0, index + 4);
 	}
 
 	private static bool HasDolphinSysAssets(string sysDir)
@@ -829,8 +829,8 @@ private void OnAnyButtonPressed()
 			platformId = string.IsNullOrWhiteSpace(platformId) ? null : platformId;
 
 			_platform = platformId != null
-				? _config.Platforms.FirstOrDefault(p =>
-					string.Equals(p.Id, platformId, StringComparison.OrdinalIgnoreCase))
+				? _config.Platforms.FirstOrDefault(position =>
+					string.Equals(position.Id, platformId, StringComparison.OrdinalIgnoreCase))
 				: _config.Platforms.FirstOrDefault();
 			GD.Print("ABOVE PLATFORM NULL");
 			
@@ -1094,22 +1094,22 @@ private void OnAnyButtonPressed()
 
 	private int Count => _games.Count;
 
-	private int WrapIndex(int i)
+	private int WrapIndex(int index)
 	{
 		// Wrap an integer index into [0..Count-1] so the carousel loops.
 		if (Count == 0) return 0;
-		i %= Count;
-		if (i < 0) i += Count;
-		return i;
+		index %= Count;
+		if (index < 0) index += Count;
+		return index;
 	}
 
-	private float WrapPos(float p)
+	private float WrapPos(float position)
 	{
 		// Wrap a continuous position into [0..Count) for smooth looping motion.
 		if (Count == 0) return 0f;
-		p %= Count;
-		if (p < 0) p += Count;
-		return p;
+		position %= Count;
+		if (position < 0) position += Count;
+		return position;
 	}
 
 	private void Step(int dir)
@@ -1526,8 +1526,8 @@ private void OnAnyButtonPressed()
 		foreach (var row in rows)
 			ConfigureHorizontalNeighbors(row);
 
-		for (int i = 0; i < rows.Count - 1; i++)
-			ConfigureVerticalNeighbors(rows[i], rows[i + 1]);
+		for (int index = 0; index < rows.Count - 1; index++)
+			ConfigureVerticalNeighbors(rows[index], rows[index + 1]);
 	}
 
 	private void ResetFocusNeighbors(IReadOnlyList<Button> row)
@@ -1547,11 +1547,11 @@ private void OnAnyButtonPressed()
 		if (row.Count == 0)
 			return;
 
-		for (int i = 0; i < row.Count; i++)
+		for (int index = 0; index < row.Count; index++)
 		{
-			var current = row[i];
-			var left = row[(i - 1 + row.Count) % row.Count];
-			var right = row[(i + 1) % row.Count];
+			var current = row[index];
+			var left = row[(index - 1 + row.Count) % row.Count];
+			var right = row[(index + 1) % row.Count];
 			current.FocusNeighborLeft = current.GetPathTo(left);
 			current.FocusNeighborRight = current.GetPathTo(right);
 		}
@@ -1574,9 +1574,9 @@ private void OnAnyButtonPressed()
 		var nearest = row[0];
 		var nearestDistance = Mathf.Abs(GetControlCenterX(nearest) - sourceCenterX);
 
-		for (int i = 1; i < row.Count; i++)
+		for (int index = 1; index < row.Count; index++)
 		{
-			var candidate = row[i];
+			var candidate = row[index];
 			var distance = Mathf.Abs(GetControlCenterX(candidate) - sourceCenterX);
 			if (distance >= nearestDistance)
 				continue;
@@ -1614,10 +1614,10 @@ private void OnAnyButtonPressed()
 
 	private static int FindRowIndexContaining(IReadOnlyList<List<Button>> rows, Button button)
 	{
-		for (int i = 0; i < rows.Count; i++)
+		for (int index = 0; index < rows.Count; index++)
 		{
-			if (rows[i].Contains(button))
-				return i;
+			if (rows[index].Contains(button))
+				return index;
 		}
 
 		return Mathf.Max(0, rows.Count - 1);
@@ -1738,27 +1738,27 @@ private void OnAnyButtonPressed()
 		// Center of the cards container.
 		var center = _cardsRoot.Size * 0.5f;
 
-		for (int i = 0; i < Count; i++)
+		for (int index = 0; index < Count; index++)
 		{
-			var card = _cards[i];
+			var card = _cards[index];
 
 			// Distance from center in "card units".
-			var d = i - _carouselPos;
+			var offset = index - _carouselPos;
 
 			// Wrap distance so the shortest path is used (looping carousel illusion).
-			if (d > Count * 0.5f) d -= Count;
-			if (d < -Count * 0.5f) d += Count;
+			if (offset > Count * 0.5f) offset -= Count;
+			if (offset < -Count * 0.5f) offset += Count;
 
-			// t is how far a card is from center (clamped to keep falloff sane).
-			var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.2f);
+			// depth is how far a card is from center (clamped to keep falloff sane).
+			var depth = Mathf.Clamp(Mathf.Abs(offset), 0f, 1.2f);
 
 			// Scale and fade cards as they move away from the center.
-			var scale = Mathf.Lerp(1.0f, 0.78f, t);
-			var alpha = Mathf.Lerp(1.0f, 0.35f, t);
+			var scale = Mathf.Lerp(1.0f, 0.78f, depth);
+			var alpha = Mathf.Lerp(1.0f, 0.35f, depth);
 
 			// Position cards along X with a slight Y drop for depth.
-			var x = center.X + d * CarouselCardSpacing;
-			var y = center.Y + t * 40f;
+			var x = center.X + offset * CarouselCardSpacing;
+			var y = center.Y + depth * 40f;
 
 			// Pivot at center so scaling doesn't shift the card.
 			card.PivotOffset = card.Size * 0.5f;
@@ -1769,18 +1769,18 @@ private void OnAnyButtonPressed()
 			card.Modulate = new Color(1, 1, 1, alpha);
 
 			// Higher ZIndex for cards closer to center so overlap looks correct.
-			card.ZIndex = (int)(1000 - Mathf.Abs(d) * 100);
+			card.ZIndex = (int)(1000 - Mathf.Abs(offset) * 100);
 		}
 	}
 
 	private GameEntry? GetSelectedGame()
 	{
 		if (_games.Count == 0) return null;
-		var idx = _browseLayout == BrowseLayoutMode.Carousel
+		var index = _browseLayout == BrowseLayoutMode.Carousel
 			? WrapIndex(Mathf.RoundToInt(_carouselPos))
 			: Mathf.Clamp(_selectedIndex, 0, _games.Count - 1);
-		if (idx < 0 || idx >= _games.Count) return null;
-		return _games[idx];
+		if (index < 0 || index >= _games.Count) return null;
+		return _games[index];
 	}
 
 	private void UpdateSelectionUI()
@@ -1866,7 +1866,7 @@ private void OnAnyButtonPressed()
 		_carouselArea.AddChild(_gridShell);
 		_carouselArea.MoveChild(_gridShell, 2);
 		_carousel3D = new GameCarousel3DView { Name = "Carousel3D", Visible = false };
-		_carousel3D.SelectionChanged += idx => SetSelectedIndex(idx);
+		_carousel3D.SelectionChanged += index => SetSelectedIndex(index);
 		_carousel3D.LayoutMode = 1;
 		_carousel3D.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		_carousel3D.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -1996,9 +1996,9 @@ private void OnAnyButtonPressed()
 			return;
 		}
 
-		for (int i = 0; i < _games.Count; i++)
+		for (int index = 0; index < _games.Count; index++)
 		{
-			var row = CreateSelectableEntry(i, gridStyle: false);
+			var row = CreateSelectableEntry(index, gridStyle: false);
 			row.CustomMinimumSize = new Vector2(0f, 174f);
 			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
@@ -2069,13 +2069,13 @@ private void OnAnyButtonPressed()
 			{
 				Name = "PosterMonogram",
 				LayoutMode = 2,
-				Text = BuildGameMonogram(_games[i]),
+				Text = BuildGameMonogram(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			posterMonogram.AddThemeColorOverride("font_color", new Color(0.94f, 0.92f, 1f, 0.96f));
 			posterMonogram.AddThemeFontSizeOverride("font_size", 34);
-			BindCoverArt(posterArt, posterMonogram, _games[i]);
+			BindCoverArt(posterArt, posterMonogram, _games[index]);
 
 			var textColumn = new VBoxContainer
 			{
@@ -2096,7 +2096,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "TitleLabel",
 				LayoutMode = 2,
-				Text = _games[i].Title,
+				Text = _games[index].Title,
 				HorizontalAlignment = HorizontalAlignment.Left,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
@@ -2104,7 +2104,7 @@ private void OnAnyButtonPressed()
 			title.AddThemeColorOverride("font_color", new Color(0.96f, 0.94f, 1f, 0.98f));
 			title.AddThemeFontSizeOverride("font_size", 25);
 
-			var statusBadge = BuildGameBadge(_games[i]);
+			var statusBadge = BuildGameBadge(_games[index]);
 			PanelContainer? statusChip = string.IsNullOrWhiteSpace(statusBadge)
 				? null
 				: CreateChip(statusBadge, new Color(0.20f, 0.29f, 0.36f, 0.90f), "StateChip", 11);
@@ -2121,7 +2121,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "PlaytimeLabel",
 				LayoutMode = 2,
-				Text = BuildPlaytimeSummary(_games[i]),
+				Text = BuildPlaytimeSummary(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Left,
 			};
 			playtime.AddThemeColorOverride("font_color", new Color(0.72f, 0.90f, 1f, 0.88f));
@@ -2165,7 +2165,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "AchievementValue",
 				LayoutMode = 2,
-				Text = BuildAchievementDisplay(_games[i]),
+				Text = BuildAchievementDisplay(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Right,
 			};
 			achievements.AddThemeColorOverride("font_color", new Color(0.92f, 0.88f, 1f, 0.98f));
@@ -2175,7 +2175,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "ActionHint",
 				LayoutMode = 2,
-				Text = BuildActionHint(i == _selectedIndex),
+				Text = BuildActionHint(index == _selectedIndex),
 				HorizontalAlignment = HorizontalAlignment.Right,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			};
@@ -2224,9 +2224,9 @@ private void OnAnyButtonPressed()
 		}
 
 		_gridRows.Columns = _gridColumnCount;
-		for (int i = 0; i < _games.Count; i++)
+		for (int index = 0; index < _games.Count; index++)
 		{
-			var tile = CreateSelectableEntry(i, gridStyle: true);
+			var tile = CreateSelectableEntry(index, gridStyle: true);
 			tile.CustomMinimumSize = new Vector2(_gridTileSize, _gridTileSize);
 			tile.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
@@ -2261,14 +2261,14 @@ private void OnAnyButtonPressed()
 			{
 				Name = "ChannelTag",
 				LayoutMode = 2,
-				Text = $"CHANNEL {i + 1:00}",
+				Text = $"CHANNEL {index + 1:00}",
 				HorizontalAlignment = HorizontalAlignment.Left,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			};
 			channelTag.AddThemeColorOverride("font_color", new Color(0.78f, 0.74f, 0.92f, 0.82f));
 			channelTag.AddThemeFontSizeOverride("font_size", 11);
 
-			var statusBadge = BuildGameBadge(_games[i]);
+			var statusBadge = BuildGameBadge(_games[index]);
 			PanelContainer? readyTag = string.IsNullOrWhiteSpace(statusBadge)
 				? null
 				: CreateChip(statusBadge, new Color(0.21f, 0.29f, 0.36f, 0.90f), "GridStateChip", 10);
@@ -2313,20 +2313,20 @@ private void OnAnyButtonPressed()
 			{
 				Name = "GridMonogram",
 				LayoutMode = 1,
-				Text = BuildGameMonogram(_games[i]),
+				Text = BuildGameMonogram(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			monogram.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 			monogram.AddThemeColorOverride("font_color", new Color(0.75f, 0.88f, 1f, 0.92f));
 			monogram.AddThemeFontSizeOverride("font_size", 30);
-			BindCoverArt(gridArt, monogram, _games[i]);
+			BindCoverArt(gridArt, monogram, _games[index]);
 
 			var title = new Label
 			{
 				Name = "GridTitle",
 				LayoutMode = 2,
-				Text = _games[i].Title,
+				Text = _games[index].Title,
 				CustomMinimumSize = new Vector2(0f, 42f),
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
@@ -2348,7 +2348,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "FooterLeft",
 				LayoutMode = 2,
-				Text = BuildFormatLabel(_games[i]),
+				Text = BuildFormatLabel(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Left,
 				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			};
@@ -2359,7 +2359,7 @@ private void OnAnyButtonPressed()
 			{
 				Name = "FooterRight",
 				LayoutMode = 2,
-				Text = BuildAchievementDisplay(_games[i]),
+				Text = BuildAchievementDisplay(_games[index]),
 				HorizontalAlignment = HorizontalAlignment.Right,
 			};
 			footerRight.AddThemeColorOverride("font_color", new Color(0.82f, 0.90f, 1f, 0.90f));
@@ -2598,17 +2598,17 @@ private void OnAnyButtonPressed()
 
 	private void ApplySelectionToBrowseEntries()
 	{
-		for (int i = 0; i < _browseEntries.Count; i++)
+		for (int index = 0; index < _browseEntries.Count; index++)
 		{
-			if (_browseEntries[i] is PanelContainer panel)
+			if (_browseEntries[index] is PanelContainer panel)
 			{
-				var selected = i == _selectedIndex;
+				var selected = index == _selectedIndex;
 				var gridStyle = _browseLayout == BrowseLayoutMode.Grid;
 				ApplyBrowseEntryStyle(panel, selected, gridStyle);
 				if (gridStyle)
-					ApplyGridEntryContentStyle(panel, _games[i], i, selected);
+					ApplyGridEntryContentStyle(panel, _games[index], index, selected);
 				else
-					ApplyListEntryContentStyle(panel, _games[i], i, selected);
+					ApplyListEntryContentStyle(panel, _games[index], index, selected);
 			}
 		}
 	}
@@ -2969,32 +2969,32 @@ private void OnAnyButtonPressed()
 		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 			return;
 
-		for (int i = 0; i < _cards.Count && i < _games.Count; i++)
+		for (int index = 0; index < _cards.Count && index < _games.Count; index++)
 		{
-			if (!GodotObject.IsInstanceValid(_cards[i]))
+			if (!GodotObject.IsInstanceValid(_cards[index]))
 				continue;
 
-			var coverArt = _cards[i].GetNodeOrNull<TextureRect>("Panel/CoverArt");
-			var label = _cards[i].GetNodeOrNull<Label>("Panel/Name");
+			var coverArt = _cards[index].GetNodeOrNull<TextureRect>("Panel/CoverArt");
+			var label = _cards[index].GetNodeOrNull<Label>("Panel/Name");
 			if (coverArt != null && label != null)
-				BindCoverArt(coverArt, label, _games[i]);
+				BindCoverArt(coverArt, label, _games[index]);
 		}
 
-		for (int i = 0; i < _browseEntries.Count && i < _games.Count; i++)
+		for (int index = 0; index < _browseEntries.Count && index < _games.Count; index++)
 		{
-			if (!GodotObject.IsInstanceValid(_browseEntries[i]))
+			if (!GodotObject.IsInstanceValid(_browseEntries[index]))
 				continue;
 
-			if (_browseEntries[i].FindChild("PosterArt", true, false) is TextureRect posterArt &&
-				_browseEntries[i].FindChild("PosterMonogram", true, false) is Label posterMonogram)
+			if (_browseEntries[index].FindChild("PosterArt", true, false) is TextureRect posterArt &&
+				_browseEntries[index].FindChild("PosterMonogram", true, false) is Label posterMonogram)
 			{
-				BindCoverArt(posterArt, posterMonogram, _games[i]);
+				BindCoverArt(posterArt, posterMonogram, _games[index]);
 			}
 
-			if (_browseEntries[i].FindChild("GridArt", true, false) is TextureRect gridArt &&
-				_browseEntries[i].FindChild("GridMonogram", true, false) is Label gridMonogram)
+			if (_browseEntries[index].FindChild("GridArt", true, false) is TextureRect gridArt &&
+				_browseEntries[index].FindChild("GridMonogram", true, false) is Label gridMonogram)
 			{
-				BindCoverArt(gridArt, gridMonogram, _games[i]);
+				BindCoverArt(gridArt, gridMonogram, _games[index]);
 			}
 		}
 	}
@@ -3018,7 +3018,7 @@ private void OnAnyButtonPressed()
 		//GD.Print(achievementNumSplit[1]);
 		
 		
-		// Don't delete! This is progress bar work!
+		// Don'depth delete! This is progress bar work!
 		ProgressBar prog = new ProgressBar();
 		
 		prog.MinValue = 0;
@@ -3050,12 +3050,12 @@ private void OnAnyButtonPressed()
 			return;
 		
 		
-		for (int i = 0; i < _games.Count; i++)
+		for (int index = 0; index < _games.Count; index++)
 		{
-			var game = _games[i];
+			var game = _games[index];
 			ProgressBar prog = GetProgressBar(game);
 			_carousel3D.SetBackFaceData(
-				i,
+				index,
 				game.Title,
 				"No description yet.",
 				_platform?.Name ?? "Unknown",
@@ -3064,7 +3064,7 @@ private void OnAnyButtonPressed()
 			);
 			
 			if (prog != null){
-				_carousel3D.SetSideProgressBar(i, prog);
+				_carousel3D.SetSideProgressBar(index, prog);
 			}
 		}
 	}
@@ -3175,12 +3175,12 @@ private void OnAnyButtonPressed()
 
 			if (_carousel3D != null)
 			{
-				for (int i = 0; i < _games.Count; i++)
+				for (int index = 0; index < _games.Count; index++)
 				{
-					if (string.Equals(_games[i].CoverArtUrl?.Trim(), coverArtUrl.Trim(), 
+					if (string.Equals(_games[index].CoverArtUrl?.Trim(), coverArtUrl.Trim(), 
 							StringComparison.OrdinalIgnoreCase))
 					{
-						_carousel3D.UpdateCoverArt(i, finalTexture);
+						_carousel3D.UpdateCoverArt(index, finalTexture);
 					}
 				}
 			}
