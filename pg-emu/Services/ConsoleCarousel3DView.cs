@@ -20,6 +20,16 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const double GameCubeRestPose = 2.125;
 	private const float SelectionAnimationSpeedScale = 2.18f;
 	private const float Ps1SelectionAnimationSpeedScale = 3f;
+
+	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.8f, 5f);
+	private static readonly Vector3 CameraDefaultRotation = new(Mathf.DegToRad(-8f), 0f, 0f);
+	private const float CameraDefaultFov = 60f;
+	/// <summary>Closer / lower framing; X/Y/Z tweaked so the move reads as diving into the center unit.</summary>
+	private const float CameraZoomFov = 38f;
+	/// <summary>FOV at the end of the outgoing screen transition (deepest push).</summary>
+	private const float CameraTransitionPeakFov = 26f;
+	private const float SelectionCameraZoomInDuration = 1.1f;
+
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
@@ -61,6 +71,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Tweening animation
 	private int _hoveredIdx = -1;
 	private Tween? _hoverTween;
+	private Tween? _selectionCameraTween;
 	private double _mouseIdleTime = 0f;
 	private const double MouseIdleThreshold = 1.0; 
 	
@@ -134,11 +145,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_camera = new Camera3D
 		{
 			Name = "Camera",
-			Position = new Vector3(0, 0.8f, 5f),
-			
+			Position = CameraDefaultPosition,
+			Rotation = CameraDefaultRotation,
 		};
-		_camera.RotateX(Mathf.DegToRad(-8f));
-		_camera.Fov = 60f;
+		_camera.Fov = CameraDefaultFov;
 		_sceneRoot.AddChild(_camera);
 		
 		// Lighting
@@ -236,6 +246,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private void ClearConsoles()
 	{
+		ResetSelectionCameraFraming();
+
 		foreach (var box in _boxes)
 			box.QueueFree();
 
@@ -923,6 +935,105 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return consoleType.HasValue && SelectOnlyConsoleTypes.Contains(consoleType.Value);
 	}
 
+	private void KillSelectionCameraTween()
+	{
+		_selectionCameraTween?.Kill();
+		_selectionCameraTween = null;
+	}
+
+	private void ResetSelectionCameraFraming()
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera))
+			return;
+		KillSelectionCameraTween();
+		_camera.Position = CameraDefaultPosition;
+		_camera.Rotation = CameraDefaultRotation;
+		_camera.Fov = CameraDefaultFov;
+	}
+
+	private static Vector3 GetZoomPos(Node3D selectedBox)
+	{
+		var p = selectedBox.Position;
+		// Follow the console's carousel offset so the dive stays glued to the hardware.
+		var towardX = Mathf.Clamp(p.X * 0.62f, -1.35f, 1.35f);
+		var towardY = 0.28f + p.Y * 0.55f;
+		var towardZ = 1.55f + p.Z * 0.45f;
+		return new Vector3(towardX, towardY, towardZ);
+	}
+
+	private static Vector3 GetZoomRot(Node3D selectedBox)
+	{
+		var p = selectedBox.Position;
+		// Lean down into the face of the unit + subtle yaw toward its slot.
+		var pitch = Mathf.DegToRad(-18f);
+		var yaw = Mathf.Clamp(-p.X * 0.09f, -0.2f, 0.2f);
+		return new Vector3(pitch, yaw, 0f);
+	}
+
+	private static Vector3 GetPeakPos(Node3D selectedBox)
+	{
+		var mid = GetZoomPos(selectedBox);
+		var p = selectedBox.Position;
+		return mid + new Vector3(
+			Mathf.Clamp(p.X * 0.1f, -0.2f, 0.2f),
+			-0.28f,
+			-1.05f);
+	}
+
+	private static Vector3 GetPeakRot(Node3D selectedBox)
+	{
+		var mid = GetZoomRot(selectedBox);
+		return mid + new Vector3(Mathf.DegToRad(-9f), Mathf.Clamp(-selectedBox.Position.X * 0.05f, -0.1f, 0.1f), 0f);
+	}
+
+	/// <summary>
+	/// Continue the selection zoom while the outgoing screen transition runs.
+	/// Pass the same (duration + hold) values as <c>ScreenTransition.ChangeScene</c> for the outgoing swap.
+	/// Do not await; the scene may be freed mid-tween.
+	/// </summary>
+	public void StartSelectionCameraPush(float outgoingDurationSeconds)
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera) || outgoingDurationSeconds <= 0f)
+			return;
+
+		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (idx < 0 || idx >= _boxes.Count)
+			return;
+
+		var selectedBox = _boxes[idx];
+		if (!GodotObject.IsInstanceValid(selectedBox))
+			return;
+
+		KillSelectionCameraTween();
+		_selectionCameraTween = CreateTween();
+		_selectionCameraTween.SetParallel(true);
+		_selectionCameraTween.SetTrans(Tween.TransitionType.Expo);
+		_selectionCameraTween.SetEase(Tween.EaseType.In);
+		var peakPos = GetPeakPos(selectedBox);
+		var peakRot = GetPeakRot(selectedBox);
+		_selectionCameraTween.TweenProperty(_camera, "position", peakPos, outgoingDurationSeconds);
+		_selectionCameraTween.TweenProperty(_camera, "rotation", peakRot, outgoingDurationSeconds);
+		_selectionCameraTween.TweenProperty(_camera, "fov", CameraTransitionPeakFov, outgoingDurationSeconds);
+	}
+
+	private void StartSelectionCamZoom(Node3D selectedBox)
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera))
+			return;
+
+		KillSelectionCameraTween();
+		_selectionCameraTween = CreateTween();
+		_selectionCameraTween.SetParallel(true);
+		// Accelerate at the end so it feels like being pulled into the console.
+		_selectionCameraTween.SetTrans(Tween.TransitionType.Expo);
+		_selectionCameraTween.SetEase(Tween.EaseType.In);
+		var zoomPos = GetZoomPos(selectedBox);
+		var zoomRot = GetZoomRot(selectedBox);
+		_selectionCameraTween.TweenProperty(_camera, "position", zoomPos, SelectionCameraZoomInDuration);
+		_selectionCameraTween.TweenProperty(_camera, "rotation", zoomRot, SelectionCameraZoomInDuration);
+		_selectionCameraTween.TweenProperty(_camera, "fov", CameraZoomFov, SelectionCameraZoomInDuration);
+	}
+
 	public async Task PlaySelectedConsoleAnimationAsync(ConsoleType requiredType)
 	{
 		if (_boxes.Count == 0)
@@ -971,12 +1082,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		animationPlayer.Play(animationName);
 		animationPlayer.Seek(startTime, true);
 
+		StartSelectionCamZoom(selectedBox);
+
 		var waitTime = Mathf.Max((float)((holdTime - startTime) / playbackSpeed), 0.05f);
 		await ToSignal(GetTree().CreateTimer(waitTime), SceneTreeTimer.SignalName.Timeout);
 		if (!GodotObject.IsInstanceValid(this) ||
 			!GodotObject.IsInstanceValid(selectedBox) ||
 			!GodotObject.IsInstanceValid(animationPlayer))
 		{
+			ResetSelectionCameraFraming();
 			return;
 		}
 
@@ -1015,6 +1129,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	public void PlaySelectedConsoleReturnAnimation(ConsoleType requiredType)
 	{
+		ResetSelectionCameraFraming();
+
 		if (_boxes.Count == 0)
 			return;
 
