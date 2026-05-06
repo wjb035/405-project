@@ -12,10 +12,10 @@ public partial class Login : Control
 	[Export] public NodePath LoginButtonPath;
 	[Export] public NodePath RegisterButtonPath;
 	[Export] public NodePath ErrorLabelPath;
-    [Export] public NodePath ForgotButtonPath;
-    [Export] public NodePath ForgotPanelPath;
-    [Export] public NodePath ForgotEmailPath; 
-    [Export] public NodePath ForgotSubmitPath;
+	[Export] public NodePath ForgotButtonPath;
+	[Export] public NodePath ForgotPanelPath;
+	[Export] public NodePath ForgotEmailPath; 
+	[Export] public NodePath ForgotSubmitPath;
 
 	private LineEdit _username = null!;
 	private LineEdit _password = null!;

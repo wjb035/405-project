@@ -140,256 +140,256 @@ public static class UiStyle
 			optionButton.GetThemeIcon("arrow"));
 	}
 
-    // Single helper that keeps radius/border/content margins consistent for all controls.
-    public static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth, float padX = 10f, float padY = 6f)
-    {
-        return new StyleBoxFlat
-        {
-            BgColor = background,
-            BorderWidthLeft = borderWidth,
-            BorderWidthTop = borderWidth,
-            BorderWidthRight = borderWidth,
-            BorderWidthBottom = borderWidth,
-            BorderColor = border,
-            BorderBlend = true,
-            CornerRadiusTopLeft = 12,
-            CornerRadiusTopRight = 12,
-            CornerRadiusBottomRight = 12,
-            CornerRadiusBottomLeft = 12,
-            ContentMarginLeft = padX,
-            ContentMarginRight = padX,
-            ContentMarginTop = padY,
-            ContentMarginBottom = padY,
-        };
-    }
-    
-    public static void StyleTabBar(TabBar? tabBar)
-    {
-	    if (tabBar == null) return;
+	// Single helper that keeps radius/border/content margins consistent for all controls.
+	public static StyleBoxFlat CreateButtonStyle(Color background, Color border, int borderWidth, float padX = 10f, float padY = 6f)
+	{
+		return new StyleBoxFlat
+		{
+			BgColor = background,
+			BorderWidthLeft = borderWidth,
+			BorderWidthTop = borderWidth,
+			BorderWidthRight = borderWidth,
+			BorderWidthBottom = borderWidth,
+			BorderColor = border,
+			BorderBlend = true,
+			CornerRadiusTopLeft = 12,
+			CornerRadiusTopRight = 12,
+			CornerRadiusBottomRight = 12,
+			CornerRadiusBottomLeft = 12,
+			ContentMarginLeft = padX,
+			ContentMarginRight = padX,
+			ContentMarginTop = padY,
+			ContentMarginBottom = padY,
+		};
+	}
+	
+	public static void StyleTabBar(TabBar? tabBar)
+	{
+		if (tabBar == null) return;
 
-	    var inactiveTab = new StyleBoxFlat
-	    {
-		    BgColor = new Color(0.18f, 0.14f, 0.27f, 0.75f),
-		    BorderWidthBottom = 2,
-		    BorderColor = new Color(0.64f, 0.54f, 0.82f, 0.3f),
-		    CornerRadiusTopLeft = 12,
-		    CornerRadiusTopRight = 12,
-		    ContentMarginLeft = 12f,
-		    ContentMarginRight = 12f,
-		    ContentMarginTop = 6f,
-		    ContentMarginBottom = 6f,
-	    };
+		var inactiveTab = new StyleBoxFlat
+		{
+			BgColor = new Color(0.18f, 0.14f, 0.27f, 0.75f),
+			BorderWidthBottom = 2,
+			BorderColor = new Color(0.64f, 0.54f, 0.82f, 0.3f),
+			CornerRadiusTopLeft = 12,
+			CornerRadiusTopRight = 12,
+			ContentMarginLeft = 12f,
+			ContentMarginRight = 12f,
+			ContentMarginTop = 6f,
+			ContentMarginBottom = 6f,
+		};
 
-	    var activeTab = new StyleBoxFlat
-	    {
-		    BgColor = new Color(0.24f, 0.19f, 0.36f, 0.92f),
-		    BorderWidthBottom = 2,
-		    BorderColor = new Color(0.86f, 0.68f, 1f, 1f),
-		    CornerRadiusTopLeft = 12,
-		    CornerRadiusTopRight = 12,
-		    ContentMarginLeft = 12f,
-		    ContentMarginRight = 12f,
-		    ContentMarginTop = 6f,
-		    ContentMarginBottom = 6f,
-	    };
+		var activeTab = new StyleBoxFlat
+		{
+			BgColor = new Color(0.24f, 0.19f, 0.36f, 0.92f),
+			BorderWidthBottom = 2,
+			BorderColor = new Color(0.86f, 0.68f, 1f, 1f),
+			CornerRadiusTopLeft = 12,
+			CornerRadiusTopRight = 12,
+			ContentMarginLeft = 12f,
+			ContentMarginRight = 12f,
+			ContentMarginTop = 6f,
+			ContentMarginBottom = 6f,
+		};
 
-	    var hoverTab = new StyleBoxFlat
-	    {
-		    BgColor = new Color(0.24f, 0.19f, 0.35f, 0.9f),
-		    BorderWidthBottom = 2,
-		    BorderColor = new Color(0.88f, 0.72f, 1f, 0.95f),
-		    CornerRadiusTopLeft = 12,
-		    CornerRadiusTopRight = 12,
-		    ContentMarginLeft = 12f,
-		    ContentMarginRight = 12f,
-		    ContentMarginTop = 6f,
-		    ContentMarginBottom = 6f,
-	    };
+		var hoverTab = new StyleBoxFlat
+		{
+			BgColor = new Color(0.24f, 0.19f, 0.35f, 0.9f),
+			BorderWidthBottom = 2,
+			BorderColor = new Color(0.88f, 0.72f, 1f, 0.95f),
+			CornerRadiusTopLeft = 12,
+			CornerRadiusTopRight = 12,
+			ContentMarginLeft = 12f,
+			ContentMarginRight = 12f,
+			ContentMarginTop = 6f,
+			ContentMarginBottom = 6f,
+		};
 
-	    tabBar.AddThemeStyleboxOverride("tab_unselected", inactiveTab);
-	    tabBar.AddThemeStyleboxOverride("tab_selected", activeTab);
-	    tabBar.AddThemeStyleboxOverride("tab_hovered", hoverTab);
+		tabBar.AddThemeStyleboxOverride("tab_unselected", inactiveTab);
+		tabBar.AddThemeStyleboxOverride("tab_selected", activeTab);
+		tabBar.AddThemeStyleboxOverride("tab_hovered", hoverTab);
 
-	    tabBar.AddThemeColorOverride("font_selected_color", TextColor);
-	    tabBar.AddThemeColorOverride("font_unselected_color", new Color(0.70f, 0.67f, 0.82f, 0.8f));
-	    tabBar.AddThemeColorOverride("font_hovered_color", TextColor);
-	    tabBar.AddThemeFontSizeOverride("font_size", 13);
-    }
-    
-    
-    // Helper for assigning this in other scenes
-    public static void StyleGhostNav(float restingAlpha = 0.15f, params Button[] buttons)
-    {
-        foreach (var b in buttons)
-            StyleGhostNavButton(b, restingAlpha);
-    }
-    
-    // Nav arrows transparent and animate on hover
-    public static void StyleGhostNavButton(Button? button, float restingAlpha = 0.15f)
-    {
-        if (button == null) return;
+		tabBar.AddThemeColorOverride("font_selected_color", TextColor);
+		tabBar.AddThemeColorOverride("font_unselected_color", new Color(0.70f, 0.67f, 0.82f, 0.8f));
+		tabBar.AddThemeColorOverride("font_hovered_color", TextColor);
+		tabBar.AddThemeFontSizeOverride("font_size", 13);
+	}
+	
+	
+	// Helper for assigning this in other scenes
+	public static void StyleGhostNav(float restingAlpha = 0.15f, params Button[] buttons)
+	{
+		foreach (var b in buttons)
+			StyleGhostNavButton(b, restingAlpha);
+	}
+	
+	// Nav arrows transparent and animate on hover
+	public static void StyleGhostNavButton(Button? button, float restingAlpha = 0.15f)
+	{
+		if (button == null) return;
 
-        // Remove all backgrounds
-        var empty = new StyleBoxEmpty();
-        button.AddThemeStyleboxOverride("normal", empty);
-        button.AddThemeStyleboxOverride("hover", empty);
-        button.AddThemeStyleboxOverride("pressed", empty);
-        button.AddThemeStyleboxOverride("focus", empty);
+		// Remove all backgrounds
+		var empty = new StyleBoxEmpty();
+		button.AddThemeStyleboxOverride("normal", empty);
+		button.AddThemeStyleboxOverride("hover", empty);
+		button.AddThemeStyleboxOverride("pressed", empty);
+		button.AddThemeStyleboxOverride("focus", empty);
 
-        // Start semi transparent
-        button.Modulate = new Color(0.78f, 0.7f, 0.8f, restingAlpha);
+		// Start semi transparent
+		button.Modulate = new Color(0.78f, 0.7f, 0.8f, restingAlpha);
 
-        // Prevent layout stretching
-        button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
-        button.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+		// Prevent layout stretching
+		button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+		button.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
 
-        // Fix pivot after layout and on resize
-        _ = FixPivotNextFrame(button);
-        
-        button.Resized += () =>
-        {
-            button.PivotOffset = button.Size / 2f;
-        };
+		// Fix pivot after layout and on resize
+		_ = FixPivotNextFrame(button);
+		
+		button.Resized += () =>
+		{
+			button.PivotOffset = button.Size / 2f;
+		};
 
-        ConnectGhostNavHover(button, restingAlpha);
-    }
-    
-    // Connects the animation to mouse hover
-    private static void ConnectGhostNavHover(Button button, float restingAlpha = 0.15f)
-    {
-        button.MouseEntered += () => AnimateGhostNav(button, true, restingAlpha);
-        button.MouseExited += () => AnimateGhostNav(button, false, restingAlpha);
-    }
+		ConnectGhostNavHover(button, restingAlpha);
+	}
+	
+	// Connects the animation to mouse hover
+	private static void ConnectGhostNavHover(Button button, float restingAlpha = 0.15f)
+	{
+		button.MouseEntered += () => AnimateGhostNav(button, true, restingAlpha);
+		button.MouseExited += () => AnimateGhostNav(button, false, restingAlpha);
+	}
 
-    // Animates the arrows 
-    private static void AnimateGhostNav(Button button, bool hovered, float restingAlpha = 0.15f)
-    {
-        var tween = button.CreateTween();
-        tween.SetParallel(true);
-        tween.SetTrans(Tween.TransitionType.Back);
-        tween.SetEase(Tween.EaseType.Out);
+	// Animates the arrows 
+	private static void AnimateGhostNav(Button button, bool hovered, float restingAlpha = 0.15f)
+	{
+		var tween = button.CreateTween();
+		tween.SetParallel(true);
+		tween.SetTrans(Tween.TransitionType.Back);
+		tween.SetEase(Tween.EaseType.Out);
 
-        tween.TweenProperty(button, "scale",
-            hovered ? new Vector2(1.3f, 1.3f) : Vector2.One, 0.2f);
+		tween.TweenProperty(button, "scale",
+			hovered ? new Vector2(1.3f, 1.3f) : Vector2.One, 0.2f);
 
-        tween.TweenProperty(button, "modulate",
-            hovered
-                ? new Color(0.92f, 0.85f, 1f, 1f)  
-                : new Color(0.78f, 0.7f, 0.8f, restingAlpha), 
-            0.2f);
-        GD.Print(button.PivotOffset, " vs ", button.Size);
-    }
-    
-    // Drop shadow
-    public static void ApplyDropShadow(Control control, 
-	    float offsetX = 0f, float offsetY = 4f,
-	    float blur = 2, Color? color = null)
-    {
-	    var shadowColor = color ?? new Color(0.01f, 0.01f, 0.03f, 0.36f);
-	    
-	    string[] states = { "normal", "hover", "pressed", "focus", "disabled", "normal_mirrored", "hover_mirrored" };
-	    
-	    if (control is Button button)
-	    {
-		    foreach (var state in states)
-		    {
-			    if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
-				    continue;
-			    var styled = (StyleBoxFlat)flat.Duplicate();
-			    styled.ShadowColor = shadowColor;
-			    styled.ShadowSize = (int)blur;
-			    styled.ShadowOffset = new Vector2(offsetX, offsetY);
-			    button.AddThemeStyleboxOverride(state, styled);
-		    }
-		    return;
+		tween.TweenProperty(button, "modulate",
+			hovered
+				? new Color(0.92f, 0.85f, 1f, 1f)  
+				: new Color(0.78f, 0.7f, 0.8f, restingAlpha), 
+			0.2f);
+		GD.Print(button.PivotOffset, " vs ", button.Size);
+	}
+	
+	// Drop shadow
+	public static void ApplyDropShadow(Control control, 
+		float offsetX = 0f, float offsetY = 4f,
+		float blur = 2, Color? color = null)
+	{
+		var shadowColor = color ?? new Color(0.01f, 0.01f, 0.03f, 0.36f);
+		
+		string[] states = { "normal", "hover", "pressed", "focus", "disabled", "normal_mirrored", "hover_mirrored" };
+		
+		if (control is Button button)
+		{
+			foreach (var state in states)
+			{
+				if (button.GetThemeStylebox(state) is not StyleBoxFlat flat)
+					continue;
+				var styled = (StyleBoxFlat)flat.Duplicate();
+				styled.ShadowColor = shadowColor;
+				styled.ShadowSize = (int)blur;
+				styled.ShadowOffset = new Vector2(offsetX, offsetY);
+				button.AddThemeStyleboxOverride(state, styled);
+			}
+			return;
 
-	    }
-	    if (control.GetThemeStylebox("panel") is StyleBoxFlat panelFlat)
-	    {
-		    var styled = (StyleBoxFlat)panelFlat.Duplicate();
-		    styled.ShadowColor = shadowColor;
-		    styled.ShadowSize = (int)blur;
-		    styled.ShadowOffset = new Vector2(offsetX, offsetY);
-		    control.AddThemeStyleboxOverride("panel", styled);
-	    }
-    }
-    
-    public static void ApplyParallaxShadow(Control control, float blur = 2f, float offsetY = 3f, Color? color = null)
-    {
-	    async void Apply()
-	    {
-		    await control.ToSignal(control.GetTree(), SceneTree.SignalName.ProcessFrame);
-        
-		    var screenWidth = control.GetViewport().GetVisibleRect().Size.X;
-		    var centerX = control.GlobalPosition.X + control.Size.X * 0.5f;
-		    var t = (centerX / screenWidth) * 2f - 1f; // -1 left, +1 right
-		    
-		    var offsetX = t * 3f;
-        
-		    ApplyDropShadow(control, offsetX, offsetY, blur, color);
-	    }
-	    Apply();
-    }
-    
-    
-    // Feedback on hover, wil adjust as needed
-    public static void AddHoverFeedback(Button button, 
-	    float scaleUp = 1.08f, float duration = 0.12f)
-    
-    {
-	    
-	    _ = FixPivotNextFrame(button);
-	    button.Resized += () => button.PivotOffset = button.Size / 2f;
-	    
-	    Tween? activeTween = null;
-	    
-	    button.MouseEntered += () =>
-	    {
-		    AudioManager.Instance?.PlayButtonHover();
-		    
-		    activeTween?.Kill();
-		    activeTween = button.CreateTween();
-		    activeTween.SetTrans(Tween.TransitionType.Cubic);
-		    activeTween.SetEase(Tween.EaseType.Out);
-		    activeTween.TweenProperty(button, "scale", 
-			    new Vector2(scaleUp, scaleUp), duration);
-	    };
+		}
+		if (control.GetThemeStylebox("panel") is StyleBoxFlat panelFlat)
+		{
+			var styled = (StyleBoxFlat)panelFlat.Duplicate();
+			styled.ShadowColor = shadowColor;
+			styled.ShadowSize = (int)blur;
+			styled.ShadowOffset = new Vector2(offsetX, offsetY);
+			control.AddThemeStyleboxOverride("panel", styled);
+		}
+	}
+	
+	public static void ApplyParallaxShadow(Control control, float blur = 2f, float offsetY = 3f, Color? color = null)
+	{
+		async void Apply()
+		{
+			await control.ToSignal(control.GetTree(), SceneTree.SignalName.ProcessFrame);
+		
+			var screenWidth = control.GetViewport().GetVisibleRect().Size.X;
+			var centerX = control.GlobalPosition.X + control.Size.X * 0.5f;
+			var t = (centerX / screenWidth) * 2f - 1f; // -1 left, +1 right
+			
+			var offsetX = t * 3f;
+		
+			ApplyDropShadow(control, offsetX, offsetY, blur, color);
+		}
+		Apply();
+	}
+	
+	
+	// Feedback on hover, wil adjust as needed
+	public static void AddHoverFeedback(Button button, 
+		float scaleUp = 1.08f, float duration = 0.12f)
+	
+	{
+		
+		_ = FixPivotNextFrame(button);
+		button.Resized += () => button.PivotOffset = button.Size / 2f;
+		
+		Tween? activeTween = null;
+		
+		button.MouseEntered += () =>
+		{
+			AudioManager.Instance?.PlayButtonHover();
+			
+			activeTween?.Kill();
+			activeTween = button.CreateTween();
+			activeTween.SetTrans(Tween.TransitionType.Cubic);
+			activeTween.SetEase(Tween.EaseType.Out);
+			activeTween.TweenProperty(button, "scale", 
+				new Vector2(scaleUp, scaleUp), duration);
+		};
 
-	    button.MouseExited += () =>
-	    {
-		    activeTween?.Kill();
-		    activeTween = button.CreateTween();
-		    activeTween.SetTrans(Tween.TransitionType.Elastic);
-		    activeTween.SetEase(Tween.EaseType.InOut);
-		    activeTween.TweenProperty(button, "scale", 
-			    Vector2.One, 0.16f);
-	    };
+		button.MouseExited += () =>
+		{
+			activeTween?.Kill();
+			activeTween = button.CreateTween();
+			activeTween.SetTrans(Tween.TransitionType.Elastic);
+			activeTween.SetEase(Tween.EaseType.InOut);
+			activeTween.TweenProperty(button, "scale", 
+				Vector2.One, 0.16f);
+		};
 
-	    button.ButtonDown += () =>
-	    {
-		    activeTween?.Kill();
-		    activeTween = button.CreateTween();
-		    activeTween.SetTrans(Tween.TransitionType.Cubic);
-		    activeTween.SetEase(Tween.EaseType.Out);
-		    activeTween.TweenProperty(button, "scale",
-			    new Vector2(scaleUp * 0.9f, scaleUp * 0.9f), 0.08f);
-	    };
+		button.ButtonDown += () =>
+		{
+			activeTween?.Kill();
+			activeTween = button.CreateTween();
+			activeTween.SetTrans(Tween.TransitionType.Cubic);
+			activeTween.SetEase(Tween.EaseType.Out);
+			activeTween.TweenProperty(button, "scale",
+				new Vector2(scaleUp * 0.9f, scaleUp * 0.9f), 0.08f);
+		};
 
-	    button.ButtonUp += () =>
-	    {
-		    activeTween?.Kill();
-		    activeTween = button.CreateTween();
-		    activeTween.SetTrans(Tween.TransitionType.Cubic);
-		    activeTween.SetEase(Tween.EaseType.Out);
-		    activeTween.TweenProperty(button, "scale", new Vector2(scaleUp, scaleUp), duration);
-	    };
-    }
-    
-    
-    private static async System.Threading.Tasks.Task FixPivotNextFrame(Button button)
-    {
-        await button.ToSignal(button.GetTree(), SceneTree.SignalName.ProcessFrame);
+		button.ButtonUp += () =>
+		{
+			activeTween?.Kill();
+			activeTween = button.CreateTween();
+			activeTween.SetTrans(Tween.TransitionType.Cubic);
+			activeTween.SetEase(Tween.EaseType.Out);
+			activeTween.TweenProperty(button, "scale", new Vector2(scaleUp, scaleUp), duration);
+		};
+	}
+	
+	
+	private static async System.Threading.Tasks.Task FixPivotNextFrame(Button button)
+	{
+		await button.ToSignal(button.GetTree(), SceneTree.SignalName.ProcessFrame);
 
-        button.PivotOffset = button.Size / 2f;
-    }
+		button.PivotOffset = button.Size / 2f;
+	}
 }

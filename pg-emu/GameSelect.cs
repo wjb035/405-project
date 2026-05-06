@@ -14,6 +14,8 @@ using PGEmu.Helpers;
 using PGEmu.UI;
 using System.Text.RegularExpressions;
 
+namespace PGEmu.GameSelect;
+
 public partial class GameSelect : Control
 {
 	private const string GbaReturnEjectMetaKey = "pgemu_gba_return_eject_on_home";

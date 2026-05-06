@@ -20,7 +20,7 @@
     {
       "id": "gba",
       "name": "Game Boy Advance",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GBA",
+      "romPath": "D:/Games/PGEMU",
       "extensions": [
         ".gba"
       ],
@@ -185,7 +185,7 @@
     {
       "id": "mgba",
       "name": "mGBA",
-      "exePath": "",
+      "exePath": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\mGBA.lnk",
       "argsTemplate": null,
       "exePathWindows": null,
       "exePathMac": null,

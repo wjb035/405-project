@@ -1,0 +1,190 @@
+[gd_scene format=3 uid="uid://cdij54sdgtooe"]
+
+[ext_resource type="Script" uid="uid://bla3v0ml04r31" path="res://CartReader.cs" id="1_6nlxl"]
+[ext_resource type="StyleBox" uid="uid://bu2co241aj1r8" path="res://inbox_style_flat.tres" id="2_urc38"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6nlxl"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[node name="CartReader" type="PopupPanel" unique_id=1875642513]
+oversampling_override = 1.0
+size = Vector2i(600, 500)
+visible = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_6nlxl")
+script = ExtResource("1_6nlxl")
+ConsolePrompt = NodePath("Panel/ConsolePrompt")
+GameBoyChoicePath = NodePath("Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/RequestsList/GameBoy")
+N64ChoicePath = NodePath("Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/VBoxContainer/N64")
+NESChoicePath = NodePath("Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/RequestsList/NES")
+SNESChoicePath = NodePath("Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/VBoxContainer/SNES")
+CancelChoicePath = NodePath("Panel/ConsolePrompt/PromptSelections/VBoxContainer/Cancel")
+GameFoundMessagePath = NodePath("Panel/GameFoundMessage")
+LoadingMessagePath = NodePath("Panel/LoadingMessage")
+InstallMessagePath = NodePath("Panel/InstallMessage")
+CancelInstallPath = NodePath("Panel/InstallMessage/MarginContainer2/HBoxContainer/CancelSelection")
+InstallButtonPath = NodePath("Panel/InstallMessage/MarginContainer2/HBoxContainer/InstallSelection")
+
+[node name="Panel" type="Panel" parent="." unique_id=1080295194]
+offset_right = 600.0
+offset_bottom = 500.0
+theme_override_styles/panel = ExtResource("2_urc38")
+
+[node name="ConsolePrompt" type="VBoxContainer" parent="Panel" unique_id=1291777650]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ConsolePromptLabel" type="Label" parent="Panel/ConsolePrompt" unique_id=473659118]
+custom_minimum_size = Vector2(0, 75)
+layout_mode = 2
+size_flags_vertical = 0
+text = "Cartridge reader detected, select a console"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PromptSelections" type="MarginContainer" parent="Panel/ConsolePrompt" unique_id=1214661414]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/ConsolePrompt/PromptSelections" unique_id=2056902737]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer" unique_id=872983278]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="RequestsList" type="VBoxContainer" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer" unique_id=387283443]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="GameBoy" type="Button" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/RequestsList" unique_id=331112912]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Gameboy"
+
+[node name="NES" type="Button" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/RequestsList" unique_id=395933206]
+layout_mode = 2
+size_flags_vertical = 3
+text = "NES"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer" unique_id=1018942235]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="N64" type="Button" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/VBoxContainer" unique_id=1545059752]
+layout_mode = 2
+size_flags_vertical = 3
+text = "N64"
+
+[node name="SNES" type="Button" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer/HBoxContainer/VBoxContainer" unique_id=167190549]
+layout_mode = 2
+size_flags_vertical = 3
+text = "SNES"
+
+[node name="Cancel" type="Button" parent="Panel/ConsolePrompt/PromptSelections/VBoxContainer" unique_id=436255967]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.5
+text = "Cancel"
+
+[node name="InstallMessage" type="VBoxContainer" parent="Panel" unique_id=1245900239]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/InstallMessage" unique_id=423301403]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 225
+
+[node name="Label" type="Label" parent="Panel/InstallMessage/MarginContainer" unique_id=1973673224]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Game not found in vault, installing now..."
+horizontal_alignment = 1
+
+[node name="MarginContainer2" type="MarginContainer" parent="Panel/InstallMessage" unique_id=925253309]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 100
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/InstallMessage/MarginContainer2" unique_id=92701945]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 47
+
+[node name="CancelSelection" type="Button" parent="Panel/InstallMessage/MarginContainer2/HBoxContainer" unique_id=271551080]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[node name="InstallSelection" type="Button" parent="Panel/InstallMessage/MarginContainer2/HBoxContainer" unique_id=593709320]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Install"
+
+[node name="GameFoundMessage" type="VBoxContainer" parent="Panel" unique_id=1923251912]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/GameFoundMessage" unique_id=1147002820]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 225
+
+[node name="Label" type="Label" parent="Panel/GameFoundMessage/MarginContainer" unique_id=27933556]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Game found in vault, launching now..."
+horizontal_alignment = 1
+
+[node name="LoadingMessage" type="VBoxContainer" parent="Panel" unique_id=1710327993]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/LoadingMessage" unique_id=2062609088]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 225
+
+[node name="Label" type="Label" parent="Panel/LoadingMessage/MarginContainer" unique_id=1124752757]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Loading..."
+horizontal_alignment = 1

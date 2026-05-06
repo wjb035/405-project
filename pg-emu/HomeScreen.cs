@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+namespace PGEmu;
+
 public partial class HomeScreen : Control
 {
 	// Scene wiring (assigned in `HomeScreen.tscn`).
@@ -33,6 +35,9 @@ public partial class HomeScreen : Control
 	[Export] public NodePath CarouselAreaPath;
 	[Export] public NodePath SearchFilterPath;
 	
+	[Export] public NodePath CartridgePath;
+	[Export] public NodePath CartReaderPath;
+	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
 
@@ -53,6 +58,7 @@ public partial class HomeScreen : Control
 	private Button _collections;
 	private Button _music;
 	private Button _filter;
+	private Button _cartridge;
 	private TextEdit _searchBarText;
 	private Button _searchBarButton;
 	private Control _carouselArea;
@@ -64,6 +70,8 @@ public partial class HomeScreen : Control
 	private readonly List<string> _userSearchResultUsernames = new();
 	private readonly List<Button> _userSearchResultButtons = new();
 	private int _selectedUserSearchResultIndex = -1;
+	
+	private CartReader _cartReader;
 	
 	private readonly List<PlatformConfig> _platforms = new();
 
@@ -95,12 +103,12 @@ public partial class HomeScreen : Control
 	private int _userSearchRequestId;
 	
 	
-	private ScreenTransition Transition =>
-		GetNode<ScreenTransition>("/root/ScreenTransition");
+	private ScreenTransition Transition => GetNode<ScreenTransition>("/root/ScreenTransition");
 	
 	private List<String> AllGames = new();
 	public async override void _Ready()
 	{
+		
 		var chatManager = GetNode<ChatManager>("/root/ChatManager");
 
 		if (!chatManager.IsConnected && AuthService.Instance.IsLoggedIn())
@@ -134,9 +142,12 @@ public partial class HomeScreen : Control
 		_collections = GetNodeOrNull<Button>(CollectionsPath);
 		_music = GetNodeOrNull<Button>(MusicPath);
 		_filter = GetNodeOrNull<Button>(SearchFilterPath);
+		_cartridge = GetNodeOrNull<Button>(CartridgePath);
 		ApplyAesthetic();
 		SetupUserSearchResultsPopup();
 		SetupHelpPopup();
+		
+		_cartReader = GetNodeOrNull<CartReader>(CartReaderPath);
 
 		// Build the 3D console carousel
 		_carouselArea = GetNode<Control>(CarouselAreaPath);
@@ -169,6 +180,7 @@ public partial class HomeScreen : Control
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 		if (_music != null) _music.Pressed += OnMusicPressed;
 		if (_filter != null) _filter.Pressed += OnFilterPressed;
+		_cartridge.Pressed += () => _cartReader.CartReaderFound();
 		if (_collections != null && !_collections.IsConnected(Button.SignalName.Pressed, Callable.From(OnCollectionsPressed)))
 			_collections.Pressed += OnCollectionsPressed;
 		
@@ -536,9 +548,8 @@ public partial class HomeScreen : Control
 		return button;
 	}
 
-	private async Task OnGameSearchResultPressedAsync(string name)
+	public async Task OnGameSearchResultPressedAsync(string name)
 	{
-		
 
 		GD.Print(name);
 		var platformMatched = _platforms[0];
@@ -553,13 +564,15 @@ public partial class HomeScreen : Control
 		}
 		
 		if (platformMatched != null){
+
 			var tree = GetTree();
 			tree.SetMeta(SelectedPlatformMetaKey, platformMatched.Id);
 			if (_configPath != null)
 				tree.SetMeta("pgemu_config_path", _configPath);
 			//using this to just store how we sort by games;
 			CollectionStorage.SearchResult = name;
-			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.35f, 0f);
+			await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, .35f, 0f);
+		
 		}
 		else{
 			GD.Print("Error getting the platform!");
@@ -1510,6 +1523,10 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleTopBarButton(_music);
 		UiStyle.AddHoverFeedback(_music);
 		UiStyle.ApplyParallaxShadow(_music);
+		
+		UiStyle.StyleTopBarButton(_cartridge);
+		UiStyle.AddHoverFeedback(_cartridge);
+		UiStyle.ApplyParallaxShadow(_cartridge);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_selectedTitle);
