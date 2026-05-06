@@ -40,7 +40,7 @@ shader_parameter/highlight_thickness = 0.0150000007125
 shader = ExtResource("4_xj10s")
 shader_parameter/blur_amount = 3.0
 shader_parameter/tint = Color(0.08, 0.04, 0.12, 0.55)
-shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/highlight_color = Color(0.6392157, 0.5411765, 0.81960785, 0.7019608)
 shader_parameter/fade_strength = 0.47200002242
 shader_parameter/highlight_thickness = 0.02
 
@@ -162,9 +162,9 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(1040, 580)
 layout_mode = 3
 anchors_preset = 0
-offset_left = 18.0
+offset_left = -7.0
 offset_top = 2.1999855
-offset_right = 1134.0
+offset_right = 1155.0
 offset_bottom = 687.2
 
 [node name="Cards" type="Control" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=770127776]

@@ -84,6 +84,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private const float SwayAmplitude = 0.04f;
 	private const float SwaySpeed = 0.8f;
 	private const float SwayBobAmplitude = 0.03f;
+	private float _bobStrength = 1.0f; 
 	private readonly HashSet<int> _returningBoxes = new();
 	
 	public event System.Action<int>? SelectionChanged;
@@ -1146,14 +1147,16 @@ public partial class GameCarousel3DView : SubViewportContainer
 				swayAngle * 0.5f
 			);
 			
-			if (!IsCarouselMoving())
-			{
-				box.Position = new Vector3(
-					box.Position.X,
-					box.Position.Y + swayBob,
-					box.Position.Z
-				);
-			}
+			_bobStrength = IsCarouselMoving()
+				? Mathf.Lerp(_bobStrength, 0f, 8f * (float)delta)
+				: Mathf.Lerp(_bobStrength, 1f, 4f * (float)delta);
+
+			box.Position = new Vector3(
+				box.Position.X,
+				box.Position.Y + swayBob * _bobStrength,
+				box.Position.Z
+			);
+
 
 		}
 	}

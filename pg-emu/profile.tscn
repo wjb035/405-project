@@ -5,6 +5,7 @@
 [ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o4dpx"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="3_theme"]
 [ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_yghs0"]
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_khxjx"]
 shader = ExtResource("3_o4dpx")
 shader_parameter/blur_amount = 3.0
@@ -99,6 +100,10 @@ icon = ExtResource("3_yghs0")
 icon_alignment = 1
 expand_icon = true
 
+[node name="spacer" type="Control" parent="Margin/Root/TopBar" unique_id=1445400835]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+
 [node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=1273007195]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -169,7 +174,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
-[node name="AvatarStack" type="Control" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer"]
+[node name="AvatarStack" type="Control" parent="Margin/Root/BodyScroll/Body/MarginContainer/GridContainer/PanelContainer2/AvatarFrameMargin/AvatarFrame/AvatarInnerMargin/AspectRatioContainer" unique_id=228202594]
 custom_minimum_size = Vector2(132, 132)
 layout_mode = 2
 
@@ -311,16 +316,16 @@ layout_mode = 2
 text = "Backlog Gems"
 alignment = 0
 
-[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer"]
+[node name="FooterRow" type="HBoxContainer" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer" unique_id=533312778]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 7
 
-[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow"]
+[node name="Control" type="Control" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow" unique_id=1337084528]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Button" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow"]
+[node name="Button" type="Button" parent="Margin/Root/BodyScroll/Body/RecentGamesAndFriends/ShowcaseSection/ShowcaseMargin/VBoxContainer/FooterRow" unique_id=179109878]
 custom_minimum_size = Vector2(92, 28)
 layout_mode = 2
 text = "See All"

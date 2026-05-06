@@ -314,13 +314,13 @@ size_flags_horizontal = 4
 theme_override_constants/separation = 14
 
 [node name="BottomSpacer" type="Control" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1418049384]
-custom_minimum_size = Vector2(412, 0)
+custom_minimum_size = Vector2(424, 0)
 layout_mode = 2
 size_flags_vertical = 0
 
 [node name="Loop" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=158558345]
 z_index = 37
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 tooltip_text = "Loop"
@@ -330,7 +330,7 @@ expand_icon = true
 
 [node name="Prev" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=91526355]
 z_index = 37
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -350,7 +350,7 @@ expand_icon = true
 
 [node name="Next" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=198910844]
 z_index = 37
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("15_udcbl")
@@ -359,7 +359,7 @@ expand_icon = true
 
 [node name="Shuffle" type="Button" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1923761008]
 z_index = 37
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("16_1kv8w")
