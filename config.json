@@ -24,7 +24,7 @@
       "extensions": [
         ".gba"
       ],
-      "defaultEmulatorId": "mgba",
+      "defaultEmulatorId": "ravba",
       "retroachievementsPlatformID": -1
     },
     {
@@ -34,7 +34,7 @@
       "extensions": [
         ".nds"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "melonds",
       "retroachievementsPlatformID": 18
     },
     {
@@ -47,7 +47,7 @@
         ".v64",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "project64",
       "retroachievementsPlatformID": 2
     },
     {
@@ -61,7 +61,7 @@
         ".swc",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "snes9x",
       "retroachievementsPlatformID": 3
     },
     {
@@ -75,13 +75,13 @@
         ".unif",
         ".zip"
       ],
-      "defaultEmulatorId": "",
+      "defaultEmulatorId": "ranes",
       "retroachievementsPlatformID": 7
     },
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/Wii",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games//Wii",
       "extensions": [
         ".iso",
         ".gcz",
@@ -105,7 +105,7 @@
         ".pbp",
         ".m3u"
       ],
-      "defaultEmulatorId": "swanstation",
+      "defaultEmulatorId": "duckstation",
       "retroachievementsPlatformID": 12
     },
     {
@@ -193,6 +193,84 @@
       "corePath": null,
       "corePathWindows": null,
       "corePathMac": "cores/mgba_libretro.dylib",
+      "corePathLinux": null
+    },
+    {
+      "id": "melonds",
+      "name": "MelonDS",
+      "exePath": "C:/Fun Stuff/MelonDS/melonDS.exe",
+      "argsTemplate": " -f \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "duckstation",
+      "name": "DuckStation",
+      "exePath": "C:/Users/howto/AppData/Local/Programs/DuckStation/duckstation-qt-x64-ReleaseLTCG.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "project64",
+      "name": "Project64",
+      "exePath": "C:/Program Files (x86)/Project64 3.0/Project64.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "snes9x",
+      "name": "SNES9X",
+      "exePath": "C:/Fun Stuff/RASnes9x-x64/RASnes9x.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "ranes",
+      "name": "RANes",
+      "exePath": "C:/Fun Stuff/NES Emulator/RANes.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "ravba",
+      "name": "RAVBA",
+      "exePath": "C:/Fun Stuff/RAVBA/RAVisualBoyAdvance-M.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
       "corePathLinux": null
     }
   ]

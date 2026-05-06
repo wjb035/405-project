@@ -1,7 +1,9 @@
 using Godot;
 using System;
 using System.Diagnostics;
+using System.IO;
 using PGEmu.app;
+using PGEmu.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,129 +31,221 @@ public partial class Playtime : Node
 	}
 
 
-	public void FindPlatform(PlatformConfig? platformCheck, GameEntry? currentGame){
-		// iterate through all other emulators to kill their process
-		// For some reason, if PPSSPP is open beforehand, then it won't be closed
-		// (Since it has a different exeName, PPSSPPWindows64)
-		// However we wouldn't be tracking that so it's not going to intrude on that
-		foreach (var kvp in PlaytimeStorage.EmulatorToName){
-			if (kvp.Key == platformCheck.DefaultEmulatorId){
-				
-			}
-			else{
-				Process[] otherEmulators = Process.GetProcessesByName(kvp.Value);
-				foreach (var p in otherEmulators){
-					p.Kill();
-				}
-			}
+	public void FindPlatform(PlatformConfig? platformCheck, GameEntry? currentGame, string? emulatorExePath = null)
+	{
+		if (currentGame == null || platformCheck == null)
+			return;
+
+		currentGame.LastPlayedUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+		KillOtherEmulatorProcesses(platformCheck.DefaultEmulatorId);
+
+		var candidates = ResolveProcessNameCandidates(platformCheck.DefaultEmulatorId, emulatorExePath);
+		if (candidates.Count == 0)
+		{
+			GD.PrintErr(
+				$"Playtime: no process-name candidates for emulator '{platformCheck.DefaultEmulatorId}'. " +
+				"Configure the emulator's exePath or add an entry to PlaytimeStorage.EmulatorToName.");
+			return;
 		}
-		
-		Process[] processes = [];
-		if (PlaytimeStorage.EmulatorToName.TryGetValue(platformCheck.DefaultEmulatorId, out string ExeName)){
-			processes = Process.GetProcessesByName(ExeName);
-			GD.Print("The process existed under " + ExeName);
-		}
-		else{
-			GD.Print("Error setting up playtime!");
-			//return;
-		}
-		
-		//Process[] processes = Process.GetProcessesByName("platformCheck.DefaultEmulatorId");
-		GD.Print(processes.Length + " "+ platformCheck.DefaultEmulatorId + " processes were found");
-		/*
-		This is basically just to find what the name of each exe is when running to find
-		
-*/
-		foreach (var p in Process.GetProcesses())
-{
-			if (p.ProcessName.ToLower().Contains("ppsspp"))
+
+		GD.Print(
+			$"Playtime: looking for emulator process for '{platformCheck.DefaultEmulatorId}'. " +
+			$"Candidates: [{string.Join(", ", candidates)}]");
+		_ = AttachAndMonitorAsync(platformCheck, currentGame, candidates);
+	}
+
+	private static void KillOtherEmulatorProcesses(string? currentEmulatorId)
+	{
+		// Kill any other recognized emulator we know how to name. This keeps the
+		// behavior of "only one emulator runs at a time" without using a hardcoded
+		// list inside FindPlatform.
+		foreach (var kvp in PlaytimeStorage.EmulatorToName)
+		{
+			if (kvp.Key == currentEmulatorId)
+				continue;
+			try
 			{
-				GD.Print("Found: " + p.ProcessName);
-			}
-		
-		}
-		
-		
-		// if we have a single process, that's all we need
-		// in the future we will have to handle more of them, and also tying it to a game
-		
-		if (processes.Length == 1){
-			bool isPlatformInPlaytime = false;
-			foreach (var p in PlaytimeStorage.playtimeTracked){
-				if (p.Key == platformCheck.DefaultEmulatorId){
-					isPlatformInPlaytime = true;
-					bool isGameInList = false;
-					
-					// now that we know the platform exists in the list, we gotta see if the game is in the list
-					foreach (var g in p.Value){
-						if (g.Name == currentGame.Name){
-							isGameInList = true;
-							currentRunningGame = g;
-							GD.Print("Yay, " + g.Name + " was in the list and has ran for " + currentRunningGame.TimePlayed);
-							break;
-						}
-					}
-					
-					// if the game isn't in the list, add it, then grab a reference to the right one
-					if (!isGameInList){
-						GD.Print("Boo, " + currentGame.Name + " was NOT in the list");
-						p.Value.Add(currentGame);
-						foreach (var g in p.Value){
-							if (g.Name == currentGame.Name){
-								currentRunningGame = g;
-							}
-						}
-					}
-					
-					break;
+				foreach (var p in Process.GetProcessesByName(kvp.Value))
+				{
+					try { p.Kill(); } catch { /* ignore */ }
 				}
-		
 			}
-			// the platform was not found in all the playtimes, so we have a new platform to add
-			if (!isPlatformInPlaytime){
-				PlaytimeStorage.playtimeTracked.Add(new KeyValuePair<string, List<GameEntry>>(platformCheck.DefaultEmulatorId, new List<GameEntry>()));;
-				
-				GD.Print("LOL! There was no reference to " +  platformCheck.DefaultEmulatorId + " in the list!");
-				
-				foreach (var p in PlaytimeStorage.playtimeTracked){
-					if (p.Key == platformCheck.DefaultEmulatorId){
-					p.Value.Add(currentGame);
-							foreach (var g in p.Value){
-								if (g.Name == currentGame.Name){
-									currentRunningGame = g;
-								}
-							}
-						}
-						}
-			}
-			else{
-				GD.Print("Epic snakes, " +  platformCheck.DefaultEmulatorId + " was in the list!");
-			}
-				
-			
-			
-			StartMonitoring(processes[0]);
+			catch { /* ignore */ }
 		}
-		else if (processes.Length == 0){
-			GD.Print("We weren't able to detect any instances of "+ platformCheck.DefaultEmulatorId);
+	}
+
+	private static List<string> ResolveProcessNameCandidates(string? emulatorId, string? exePath)
+	{
+		// Build an ordered, de-duplicated list of plausible process names. We try
+		// the hardcoded EmulatorToName entry first (legacy behavior) and then derive
+		// extra candidates from the configured exePath so we still match on macOS,
+		// where the actual binary name (e.g. "PCSX2") rarely matches the Windows /
+		// Linux name (e.g. "PCSX2-v2.6.3" or "pcsx2-qt").
+		var seen = new HashSet<string>(StringComparer.Ordinal);
+		var ordered = new List<string>();
+
+		void Add(string? name)
+		{
+			if (string.IsNullOrWhiteSpace(name)) return;
+			if (seen.Add(name)) ordered.Add(name);
 		}
-		else if (processes.Length > 1){
-			// We want to sort the list of processes by when they were started
-			processes = processes
-	   	 	.OrderByDescending(p => p.StartTime)
-			.ToArray();
-			
-			foreach(var p in processes){
-				GD.Print(p.StartTime);
-			}
-			// Now that the newest is up front, kill EVERYTHING. 
-			for (int i = 1; i < processes.Length; i++){
-				processes[i].Kill();
-			}
-			
-			StartMonitoring(processes[0]);
+
+		if (!string.IsNullOrEmpty(emulatorId)
+			&& PlaytimeStorage.EmulatorToName.TryGetValue(emulatorId, out var primary))
+		{
+			Add(primary);
 		}
-		
+
+		if (!string.IsNullOrWhiteSpace(exePath))
+		{
+			var trimmed = exePath.TrimEnd('/', '\\');
+			var fileName = Path.GetFileName(trimmed);
+			var stripped = StripKnownExecutableExtension(fileName);
+			Add(stripped);
+
+			// Strip a trailing version suffix like "PCSX2-v2.6.3" -> "PCSX2".
+			var dashIdx = stripped.IndexOf('-');
+			if (dashIdx > 0)
+				Add(stripped.Substring(0, dashIdx));
+
+			// On macOS, the binary inside an .app bundle is whatever the Info.plist
+			// declares as CFBundleExecutable, which is what shows up in `ps`.
+			if (OperatingSystem.IsMacOS()
+				&& trimmed.EndsWith(".app", StringComparison.OrdinalIgnoreCase))
+			{
+				Add(TryReadAppBundleExecutable(trimmed));
+			}
+		}
+
+		return ordered;
+	}
+
+	private static string StripKnownExecutableExtension(string fileName)
+	{
+		foreach (var ext in new[] { ".app", ".exe" })
+		{
+			if (fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+				return fileName.Substring(0, fileName.Length - ext.Length);
+		}
+		return fileName;
+	}
+
+	private static string? TryReadAppBundleExecutable(string appBundlePath)
+	{
+		try
+		{
+			var infoPath = Path.Combine(appBundlePath, "Contents", "Info.plist");
+			if (!File.Exists(infoPath)) return null;
+
+			var content = File.ReadAllText(infoPath);
+			var keyIdx = content.IndexOf("<key>CFBundleExecutable</key>", StringComparison.Ordinal);
+			if (keyIdx < 0) return null;
+
+			var startIdx = content.IndexOf("<string>", keyIdx, StringComparison.Ordinal);
+			if (startIdx < 0) return null;
+			startIdx += "<string>".Length;
+
+			var endIdx = content.IndexOf("</string>", startIdx, StringComparison.Ordinal);
+			if (endIdx < 0) return null;
+
+			return content.Substring(startIdx, endIdx - startIdx).Trim();
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	private async Task AttachAndMonitorAsync(
+		PlatformConfig platform,
+		GameEntry currentGame,
+		List<string> candidateNames)
+	{
+		// Process detection has to poll because on macOS .app bundles are launched
+		// via `open -a`, which spawns the real emulator asynchronously. The actual
+		// process may not exist yet by the time we get here.
+		Process? found = null;
+		string? matchedName = null;
+		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+
+		while (DateTime.UtcNow < deadline)
+		{
+			foreach (var name in candidateNames)
+			{
+				Process[] procs;
+				try { procs = Process.GetProcessesByName(name); }
+				catch { continue; }
+
+				if (procs.Length == 0) continue;
+
+				var sorted = procs
+					.OrderByDescending(p =>
+					{
+						try { return p.StartTime; }
+						catch { return DateTime.MinValue; }
+					})
+					.ToArray();
+
+				// Newest process is the one we just launched; kill the rest so we
+				// don't have stray emulator instances running.
+				for (int i = 1; i < sorted.Length; i++)
+				{
+					try { sorted[i].Kill(); } catch { /* ignore */ }
+				}
+
+				found = sorted[0];
+				matchedName = name;
+				break;
+			}
+
+			if (found != null) break;
+			await Task.Delay(300);
+		}
+
+		if (found == null)
+		{
+			GD.PrintErr(
+				$"Playtime: emulator process not detected within timeout for '{platform.DefaultEmulatorId}'. " +
+				$"Tried: [{string.Join(", ", candidateNames)}]. Playtime will not be tracked for this session.");
+			InputRoutingService.Instance?.UnlockUiInput();
+			return;
+		}
+
+		GD.Print(
+			$"Playtime: tracking '{currentGame.Name}' via process '{matchedName}' (PID {found.Id}).");
+		AddOrUpdateTrackedGame(platform, currentGame);
+		StartMonitoring(found);
+	}
+
+	private void AddOrUpdateTrackedGame(PlatformConfig platform, GameEntry currentGame)
+	{
+		currentPlatform = platform.DefaultEmulatorId;
+
+		foreach (var p in PlaytimeStorage.playtimeTracked)
+		{
+			if (p.Key != platform.DefaultEmulatorId) continue;
+
+			foreach (var g in p.Value)
+			{
+				if (g.Name != currentGame.Name) continue;
+				currentRunningGame = g;
+				currentRunningGame.LastPlayedUnixTime = currentGame.LastPlayedUnixTime;
+				GD.Print($"Playtime: '{g.Name}' already tracked, total {currentRunningGame.TimePlayed}s.");
+				return;
+			}
+
+			p.Value.Add(currentGame);
+			currentRunningGame = currentGame;
+			GD.Print($"Playtime: added new entry for '{currentGame.Name}' under '{platform.DefaultEmulatorId}'.");
+			return;
+		}
+
+		PlaytimeStorage.playtimeTracked.Add(new KeyValuePair<string, List<GameEntry>>(
+			platform.DefaultEmulatorId ?? string.Empty,
+			new List<GameEntry> { currentGame }));
+		currentRunningGame = currentGame;
+		GD.Print($"Playtime: registered new emulator '{platform.DefaultEmulatorId}' with first game '{currentGame.Name}'.");
 	}
 	public void StartMonitoring(Process gameProcess)
 	{
@@ -169,6 +263,7 @@ public partial class Playtime : Node
 		{
 			GD.Print("Game closed!");
 			checkTimer.Stop();
+			InputRoutingService.Instance?.UnlockUiInput();
 			OnGameClosed();
 			PlaytimeStorage.SaveToJson();
 			GD.Print("Playtime Saved!");
@@ -200,8 +295,8 @@ public partial class Playtime : Node
 		 SendPlaytimeToServer(
 			jwtToken,
 			currentRunningGame.Name,     // your ExternalGameId
-			currentRunningGame.TimePlayed, 
-			"dolphin"                // placeholder
+			currentRunningGame.TimePlayed,
+			currentPlatform ?? "unknown"
 		);
 	}
 }

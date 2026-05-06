@@ -9,7 +9,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const ulong SettleSpinSuppressWindowMs = 40;
 	private const string GbaScreenLogoPath = "res://Models/gba_logo2.png";
 	private const string PspScreenLogoPath = "res://Models/psp_logo.png";
-	private const float PspScreenNudgeLeftU = 0.220f;
+	private const float PspScreenNudgeLeftU = 0f;
 	private const float GbaScreenUvScaleU = 3.074675f;
 	private const float GbaScreenUvScaleV = -4.6753664f;
 	private const float GbaScreenUvOffsetU = -1.825017f;
@@ -18,7 +18,18 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const double GbaSelectionOpen = 1.2;
 	private const double N64SelectionOpen = 1.0;
 	private const double GameCubeRestPose = 2.125;
-	private const float SelectionAnimationSpeedScale = 1.18f;
+	private const float SelectionAnimationSpeedScale = 2.18f;
+	private const float Ps1SelectionAnimationSpeedScale = 3f;
+
+	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.8f, 5f);
+	private static readonly Vector3 CameraDefaultRotation = new(Mathf.DegToRad(-8f), 0f, 0f);
+	private const float CameraDefaultFov = 60f;
+	/// <summary>Closer / lower framing; X/Y/Z tweaked so the move reads as diving into the center unit.</summary>
+	private const float CameraZoomFov = 38f;
+	/// <summary>FOV at the end of the outgoing screen transition (deepest push).</summary>
+	private const float CameraTransitionPeakFov = 26f;
+	private const float SelectionCameraZoomInDuration = 1.1f;
+
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
@@ -60,6 +71,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Tweening animation
 	private int _hoveredIdx = -1;
 	private Tween? _hoverTween;
+	private Tween? _selectionCameraTween;
 	private double _mouseIdleTime = 0f;
 	private const double MouseIdleThreshold = 1.0; 
 	
@@ -76,6 +88,30 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private readonly HashSet<Node3D> _pendingConsoleCloseSounds = new();
 	private Texture2D? _gbaScreenLogoTexture;
 	private Texture2D? _pspScreenLogoTexture;
+	private static readonly HashSet<ConsoleType> SelectOnlyConsoleTypes = new()
+	{
+		ConsoleType.Wii,
+		ConsoleType.Nintendo64,
+		ConsoleType.SNES,
+		ConsoleType.NES,
+		ConsoleType.GameCube,
+		ConsoleType.PlayStation1,
+		ConsoleType.PlayStation2,
+		ConsoleType.PSP,
+	};
+	private static readonly HashSet<ConsoleType> CartridgeSfxConsoleTypes = new()
+	{
+		ConsoleType.GBA,
+		ConsoleType.NintendoDS,
+	};
+	// Consoles that auto-open on hover but whose cart/disk should stay hidden until the
+	// explicit selection animation plays. The GBA's open animation has two phases: lid
+	// opens (auto), then the cart slides in (selection); the cart node must remain hidden
+	// during the auto-open phase.
+	private static readonly HashSet<ConsoleType> MediaHiddenUntilSelectionConsoleTypes = new()
+	{
+		ConsoleType.GBA,
+	};
 	
 	public event System.Action<int>? SelectionChanged;
 
@@ -109,11 +145,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_camera = new Camera3D
 		{
 			Name = "Camera",
-			Position = new Vector3(0, 0.8f, 5f),
-			
+			Position = CameraDefaultPosition,
+			Rotation = CameraDefaultRotation,
 		};
-		_camera.RotateX(Mathf.DegToRad(-8f));
-		_camera.Fov = 60f;
+		_camera.Fov = CameraDefaultFov;
 		_sceneRoot.AddChild(_camera);
 		
 		// Lighting
@@ -157,7 +192,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var worldEnv = new WorldEnvironment { Environment = env };
 		_sceneRoot.AddChild(worldEnv);
 		
-		// Ground for recieving shadows
+		// Ground for receiving shadows
 		var ground = new MeshInstance3D();
 		ground.Mesh = new PlaneMesh { Size = new Vector2(250f, 50f) };
 		// position below the consoles
@@ -182,37 +217,14 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_viewport.Msaa3D = Viewport.Msaa.Msaa8X;
 		_viewport.ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa;
 		_viewport.Scaling3DMode = SubViewport.Scaling3DModeEnum.Fsr;
-		_viewport.Scaling3DScale = 1.0f; 
+		_viewport.Scaling3DScale = 1.0f;
 		_viewport.FsrSharpness = 0.3f;
-		
-		//This ends up causing a blank screen so I'm commenting it out for now - Journey
-		/* var overlay = new ColorRect();
-		overlay.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		overlay.MouseFilter = MouseFilterEnum.Ignore; 
-		var overlayMat = new ShaderMaterial();
-		overlayMat.Shader = GD.Load<Shader>("res://ShaderSlop/PS1Effect.gdshader");
-		overlayMat.SetShaderParameter("resolution", new Vector2I(320, 240));
-		overlayMat.SetShaderParameter("jitter", 0.25f);
-		overlayMat.SetShaderParameter("affine_mapping", true);
-		overlay.Material = overlayMat;
-		AddChild(overlay); */
 	}
 
 	// Call this from GameSelect after loading games to clear everything and rebuild
 	public void Populate(List<ConsoleType> consoles, float initialPos = 0f)
 	{
-		// Clear old boxes
-		foreach (var b in _boxes)
-			b.QueueFree();
-		_boxes.Clear();
-		_consoleAnimations.Clear();
-		_consoleAnimationNames.Clear();
-		_consoleAnimationLengths.Clear();
-		_consoleAnimationHoldTimes.Clear();
-		_selectionAnimatedConsoles.Clear();
-		_returnAnimatedConsoles.Clear();
-		_openAnimatedConsoles.Clear();
-		_manuallyClosedAnimatedConsoles.Clear();
+		ClearConsoles();
 
 		
 		_count = consoles.Count;
@@ -231,27 +243,33 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		LayoutBoxes();
 	}
+
+	private void ClearConsoles()
+	{
+		ResetSelectionCameraFraming();
+
+		foreach (var box in _boxes)
+			box.QueueFree();
+
+		_boxes.Clear();
+		_consoleAnimations.Clear();
+		_consoleAnimationNames.Clear();
+		_consoleAnimationLengths.Clear();
+		_consoleAnimationHoldTimes.Clear();
+		_selectionAnimatedConsoles.Clear();
+		_returnAnimatedConsoles.Clear();
+		_openAnimatedConsoles.Clear();
+		_manuallyClosedAnimatedConsoles.Clear();
+		_pendingConsoleCloseSounds.Clear();
+		// Materials from freed consoles are no longer referenced anywhere; drop the cache so it
+		// doesn't keep growing across repopulates.
+		_originalColors.Clear();
+	}
 	
 	// Builds actual 3d geometry of the cases
 	private Node3D BuildConsole(ConsoleType type)
 	{
-		var modelPath = type switch
-		{
-			ConsoleType.Wii          => "res://Models/wii_console.glb",
-			ConsoleType.NintendoDS   => "res://Models/ds.glb",
-			ConsoleType.Nintendo64   => "res://Models/n64.glb",
-			ConsoleType.SNES         => "res://Models/SNES.glb",
-			ConsoleType.NES          => "res://Models/NES.glb",
-			ConsoleType.PlayStation1 => "res://Models/ps1.glb",
-			ConsoleType.PlayStation2 => "res://Models/ps2.glb",
-			ConsoleType.PSP          => "res://Models/psp.glb",
-			ConsoleType.GameCube     => "res://Models/gamecube.glb",
-			ConsoleType.GBA          => "res://Models/gba.glb",
-			_                        => null
-		};
-		
-		// GD.Print($"Looking for model at: {modelPath} — exists: {ResourceLoader.Exists(modelPath)}");
-
+		var modelPath = GetModelPath(type);
 		if (modelPath == null || !ResourceLoader.Exists(modelPath))
 		{
 			GD.PrintErr($"Model not found for {type}, using placeholder");
@@ -268,27 +286,28 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		else if (type == ConsoleType.GBA)
 			ApplyGbaScreenLogo(model);
 		EnableShadows(model);
+
 		var wrapper = new Node3D { Name = type.ToString() };
-		Node3D modelRoot = model;
-	   //  wrapper.RotateX(Mathf.DegToRad(-20f));
-			switch (type)
-			{
+		var modelRoot = SetupModel(type, model);
+		wrapper.AddChild(modelRoot);
+		ConfigureConsoleAnimation(wrapper, model, type);
+		return wrapper;
+	}
+
+	private static Node3D SetupModel(ConsoleType type, Node3D model)
+	{
+		switch (type)
+		{
 			case ConsoleType.Wii:
 				SetWiiDiskVisible(model, false);
-				// CenterNode3D(model, ShouldIncludeWiiBodyBounds);
-				var wiiScale = ScaleToFit(model, 2.5f, ShouldIncludeWiiBodyBounds);
+				var wiiScale = ScaleToFit(model, 2.65f, ShouldIncludeWiiBodyBounds);
 				model.Scale = new Vector3(wiiScale, wiiScale, wiiScale);
-				// model.Position = new Vector3(-0.8f, -.5f, 0f);
-				if (TryGetNodeBounds(model, Transform3D.Identity, out var wiiBounds, ShouldIncludeWiiBodyBounds))
-				{
-					var center = wiiBounds.GetCenter();
-					model.Position = new Vector3(-center.X, -center.Y, -center.Z);
-				}
 				model.RotateY(Mathf.DegToRad(40f));
+				CenterNode3D(model, ShouldIncludeWiiBodyBounds);
 				break;
 			case ConsoleType.NintendoDS:
 				CenterNode3D(model);
-				var dsScale = ScaleToFit(model, 2.65f);
+				var dsScale = ScaleToFit(model, 2.15f);
 				model.Scale = new Vector3(dsScale, dsScale, dsScale);
 				model.Position = new Vector3(0.05f, -0.58f, 0.35f);
 				model.RotateX(Mathf.DegToRad(7f));
@@ -316,7 +335,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				CenterNode3D(model);
 				var nesScale = ScaleToFit(model, 7.1f);
 				model.Scale = new Vector3(nesScale, nesScale, nesScale);
-				model.Position = new Vector3(1f, -0.55f, 0.08f);
+				model.Position = new Vector3(.8f, -0.55f, 0.08f);
 				model.RotateX(Mathf.DegToRad(1f));
 				model.RotateY(Mathf.DegToRad(108f));
 				SetNesCartridgeVisible(model, false);
@@ -332,11 +351,11 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				break;
 			case ConsoleType.PlayStation2:
 				SetPs2DiskVisible(model, false);
-				CenterNode3D(model);
-				var ps2Scale = ScaleToFit(model, 3.5f);
+				var ps2Scale = ScaleToFit(model, 2.5f, ShouldIncludePs2BodyBounds);
 				model.Scale = new Vector3(ps2Scale, ps2Scale, ps2Scale);
-				model.Position = new Vector3(-0.25f, -1f, .1f);
 				model.RotateY(Mathf.DegToRad(100f));
+				CenterNode3D(model, ShouldIncludePs2BodyBounds);
+				model.Position += new Vector3(0f, -.5f, 0f);
 				break;
 			case ConsoleType.PSP:
 				SetPspDiskVisible(model, false);
@@ -348,8 +367,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				pspPivot.RotateX(Mathf.DegToRad(10f));
 				pspPivot.RotateY(Mathf.DegToRad(-170f));
 				pspPivot.AddChild(model);
-				modelRoot = pspPivot;
-				break;
+				return pspPivot;
 			case ConsoleType.GameCube:
 				model.Scale = new Vector3(0.030f, 0.030f, 0.030f);
 				model.Position = new Vector3(0, -0.7f, 0);
@@ -364,101 +382,150 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				model.RotateY(Mathf.DegToRad(-18f));
 				SetGbaCartridgeVisible(model, false);
 				break;
-			}
-		wrapper.AddChild(modelRoot);
-		ConfigureConsoleAnimation(wrapper, model, type);
-		return wrapper;
-		
+		}
+
+		return model;
+	}
+
+	private static string? GetModelPath(ConsoleType type)
+	{
+		return type switch
+		{
+			ConsoleType.Wii => "res://Models/wii_console.glb",
+			ConsoleType.NintendoDS => "res://Models/ds.glb",
+			ConsoleType.Nintendo64 => "res://Models/n64.glb",
+			ConsoleType.SNES => "res://Models/SNES.glb",
+			ConsoleType.NES => "res://Models/NES.glb",
+			ConsoleType.PlayStation1 => "res://Models/ps1.glb",
+			ConsoleType.PlayStation2 => "res://Models/ps2.glb",
+			ConsoleType.PSP => "res://Models/psp.glb",
+			ConsoleType.GameCube => "res://Models/gamecube.glb",
+			ConsoleType.GBA => "res://Models/gba.glb",
+			_ => null
+		};
 	}
 	
-	//  Fallback for if the console doesnt have a model
+	// Fallback for if the console doesn't have a model
 	private Node3D BuildPlaceholder(ConsoleType type)
-{
-	var root = new Node3D { Name = type.ToString() };
-	var mesh = new MeshInstance3D { Name = "Mesh" };
-
-	switch (type)
 	{
-		case ConsoleType.Wii:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(0.8f, 3.2f, 0.4f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.92f, 0.92f, 0.90f)));
-			break;
-		case ConsoleType.NintendoDS:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.38f, 1.9f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.80f, 0.82f, 0.90f)));
-			break;
-		case ConsoleType.Nintendo64:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.5f, 0.55f, 1.8f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.15f)));
-			var cartridgeSlot = new MeshInstance3D();
-			cartridgeSlot.Mesh = new BoxMesh { Size = new Vector3(1.0f, 0.10f, 0.32f) };
-			cartridgeSlot.Position = new Vector3(0f, 0.32f, -0.18f);
-			cartridgeSlot.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.04f, 0.04f, 0.05f), metallic: 0.5f));
-			root.AddChild(cartridgeSlot);
-			break;
-		case ConsoleType.SNES:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.7f, 0.55f, 1.9f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.62f, 0.60f, 0.67f)));
-			break;
-		case ConsoleType.NES:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.8f, 0.5f, 1.8f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.55f, 0.55f, 0.58f)));
-			break;
-		case ConsoleType.PlayStation1:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.45f, 1.8f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.63f, 0.63f, 0.60f)));
-			var discLid = new MeshInstance3D();
-			discLid.Mesh = new CylinderMesh { TopRadius = 0.62f, BottomRadius = 0.62f, Height = 0.04f };
-			discLid.Position = new Vector3(-0.3f, 0.25f, 0.05f);
-			discLid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.48f, 0.48f, 0.46f)));
-			root.AddChild(discLid);
-			var buttons = new MeshInstance3D();
-			buttons.Mesh = new BoxMesh { Size = new Vector3(0.65f, 0.06f, 0.18f) };
-			buttons.Position = new Vector3(0.68f, 0.27f, -0.48f);
-			buttons.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.24f, 0.24f, 0.24f)));
-			root.AddChild(buttons);
-			break;
-		case ConsoleType.PlayStation2:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(1.2f, 3.0f, 0.7f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.05f, 0.08f)));
-			break;
-		case ConsoleType.PSP:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(3.2f, 1.5f, 0.3f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.16f)));
-			var screen = new MeshInstance3D();
-			screen.Mesh = new QuadMesh { Size = new Vector2(1.8f, 1.1f) };
-			screen.Position = new Vector3(-0.4f, 0.1f, 0.16f);
-			screen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
-			root.AddChild(screen);
-			break;
-		case ConsoleType.GameCube:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.2f, 2.2f, 2.2f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.25f, 0.22f, 0.35f)));
-			var lid = new MeshInstance3D();
-			lid.Mesh = new CylinderMesh { TopRadius = 0.7f, BottomRadius = 0.7f, Height = 0.05f };
-			lid.Position = new Vector3(0.2f, 0.6f, 1.12f);
-			lid.RotateX(Mathf.DegToRad(90f));
-			lid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.18f, 0.16f, 0.26f)));
-			root.AddChild(lid);
-			break;
-		case ConsoleType.GBA:
-			mesh.Mesh = new BoxMesh { Size = new Vector3(2.8f, 1.4f, 0.25f) };
-			mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.55f, 0.50f, 0.70f)));
-			var gbaScreen = new MeshInstance3D();
-			gbaScreen.Mesh = new QuadMesh { Size = new Vector2(1.2f, 0.9f) };
-			gbaScreen.Position = new Vector3(0f, 0.1f, 0.13f);
-			gbaScreen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
-			root.AddChild(gbaScreen);
-			break;
-	}
+		var root = new Node3D { Name = type.ToString() };
+		var mesh = new MeshInstance3D { Name = "Mesh" };
 
-	root.AddChild(mesh);
-	return root;
-}
+		switch (type)
+		{
+			case ConsoleType.Wii:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(0.8f, 3.2f, 0.4f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.92f, 0.92f, 0.90f)));
+				break;
+			case ConsoleType.NintendoDS:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.38f, 1.9f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.80f, 0.82f, 0.90f)));
+				break;
+			case ConsoleType.Nintendo64:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.5f, 0.55f, 1.8f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.15f)));
+				var cartridgeSlot = new MeshInstance3D();
+				cartridgeSlot.Mesh = new BoxMesh { Size = new Vector3(1.0f, 0.10f, 0.32f) };
+				cartridgeSlot.Position = new Vector3(0f, 0.32f, -0.18f);
+				cartridgeSlot.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.04f, 0.04f, 0.05f), metallic: 0.5f));
+				root.AddChild(cartridgeSlot);
+				break;
+			case ConsoleType.SNES:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.7f, 0.55f, 1.9f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.62f, 0.60f, 0.67f)));
+				break;
+			case ConsoleType.NES:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.8f, 0.5f, 1.8f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.55f, 0.55f, 0.58f)));
+				break;
+			case ConsoleType.PlayStation1:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.45f, 1.8f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.63f, 0.63f, 0.60f)));
+				var discLid = new MeshInstance3D();
+				discLid.Mesh = new CylinderMesh { TopRadius = 0.62f, BottomRadius = 0.62f, Height = 0.04f };
+				discLid.Position = new Vector3(-0.3f, 0.25f, 0.05f);
+				discLid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.48f, 0.48f, 0.46f)));
+				root.AddChild(discLid);
+				var buttons = new MeshInstance3D();
+				buttons.Mesh = new BoxMesh { Size = new Vector3(0.65f, 0.06f, 0.18f) };
+				buttons.Position = new Vector3(0.68f, 0.27f, -0.48f);
+				buttons.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.24f, 0.24f, 0.24f)));
+				root.AddChild(buttons);
+				break;
+			case ConsoleType.PlayStation2:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(1.2f, 3.0f, 0.7f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.05f, 0.08f)));
+				break;
+			case ConsoleType.PSP:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(3.2f, 1.5f, 0.3f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.12f, 0.12f, 0.16f)));
+				var screen = new MeshInstance3D();
+				screen.Mesh = new QuadMesh { Size = new Vector2(1.8f, 1.1f) };
+				screen.Position = new Vector3(-0.4f, 0.1f, 0.16f);
+				screen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
+				root.AddChild(screen);
+				break;
+			case ConsoleType.GameCube:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.2f, 2.2f, 2.2f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.25f, 0.22f, 0.35f)));
+				var lid = new MeshInstance3D();
+				lid.Mesh = new CylinderMesh { TopRadius = 0.7f, BottomRadius = 0.7f, Height = 0.05f };
+				lid.Position = new Vector3(0.2f, 0.6f, 1.12f);
+				lid.RotateX(Mathf.DegToRad(90f));
+				lid.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.18f, 0.16f, 0.26f)));
+				root.AddChild(lid);
+				break;
+			case ConsoleType.GBA:
+				mesh.Mesh = new BoxMesh { Size = new Vector3(2.8f, 1.4f, 0.25f) };
+				mesh.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.55f, 0.50f, 0.70f)));
+				var gbaScreen = new MeshInstance3D();
+				gbaScreen.Mesh = new QuadMesh { Size = new Vector2(1.2f, 0.9f) };
+				gbaScreen.Position = new Vector3(0f, 0.1f, 0.13f);
+				gbaScreen.SetSurfaceOverrideMaterial(0, MakeMat(new Color(0.05f, 0.08f, 0.15f), metallic: 0.8f));
+				root.AddChild(gbaScreen);
+				break;
+		}
+
+		root.AddChild(mesh);
+		return root;
+	}
 
 	
 	private static StandardMaterial3D MakeMat(Color color, float roughness = 0.5f, float metallic = 0.2f) =>
 		new StandardMaterial3D { AlbedoColor = color, Roughness = roughness, Metallic = metallic, SpecularMode = BaseMaterial3D.SpecularModeEnum.Disabled, };
+
+	// Returns a writable per-surface material, duplicating the mesh's base material if no override exists yet.
+	private static StandardMaterial3D? GetOrCreateOverrideMaterial(MeshInstance3D mesh, int surfaceIdx)
+	{
+		if (mesh.GetSurfaceOverrideMaterial(surfaceIdx) is StandardMaterial3D overrideMaterial)
+			return overrideMaterial;
+
+		if (mesh.Mesh?.SurfaceGetMaterial(surfaceIdx) is not StandardMaterial3D baseMaterial)
+			return null;
+
+		var duplicated = (StandardMaterial3D)baseMaterial.Duplicate();
+		mesh.SetSurfaceOverrideMaterial(surfaceIdx, duplicated);
+		return duplicated;
+	}
+
+	private static Texture2D? LoadImageTexture(string resourcePath, string label)
+	{
+		var absolutePath = ProjectSettings.GlobalizePath(resourcePath);
+		if (!FileAccess.FileExists(absolutePath))
+		{
+			GD.PrintErr($"Missing {label} at {absolutePath}");
+			return null;
+		}
+
+		var image = Image.LoadFromFile(absolutePath);
+		if (image.GetWidth() == 0 || image.GetHeight() == 0)
+		{
+			GD.PrintErr($"Unable to load {label} from {absolutePath}");
+			return null;
+		}
+
+		return ImageTexture.CreateFromImage(image);
+	}
 
 	private static void CenterNode3D(Node3D root, System.Func<Node3D, bool>? includeNode = null)
 	{
@@ -576,18 +643,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
 			for (int s = 0; s < surfaceCount; s++)
 			{
-				StandardMaterial3D? material = null;
-
-				if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
-				{
-					material = overrideMaterial;
-				}
-				else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
-				{
-					material = (StandardMaterial3D)baseMaterial.Duplicate();
-					mesh.SetSurfaceOverrideMaterial(s, material);
-				}
-
+				var material = GetOrCreateOverrideMaterial(mesh, s);
 				if (material == null)
 					continue;
 
@@ -612,25 +668,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private Texture2D? GetGbaScreenLogoTexture()
 	{
-		if (_gbaScreenLogoTexture != null)
-			return _gbaScreenLogoTexture;
-
-		var absolutePath = ProjectSettings.GlobalizePath(GbaScreenLogoPath);
-		if (!FileAccess.FileExists(absolutePath))
-		{
-			GD.PrintErr($"Missing GBA screen logo at {absolutePath}");
-			return null;
-		}
-
-		var image = Image.LoadFromFile(absolutePath);
-		if (image.GetWidth() == 0 || image.GetHeight() == 0)
-		{
-			GD.PrintErr($"Unable to load GBA screen logo from {absolutePath}");
-			return null;
-		}
-
-		_gbaScreenLogoTexture = ImageTexture.CreateFromImage(image);
-		return _gbaScreenLogoTexture;
+		return _gbaScreenLogoTexture ??= LoadImageTexture(GbaScreenLogoPath, "GBA screen logo");
 	}
 
 	private void ApplyGbaLogoRecursive(Node node, Texture2D screenTexture)
@@ -640,18 +678,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
 			for (int s = 0; s < surfaceCount; s++)
 			{
-				StandardMaterial3D? material = null;
-
-				if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
-				{
-					material = overrideMaterial;
-				}
-				else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
-				{
-					material = (StandardMaterial3D)baseMaterial.Duplicate();
-					mesh.SetSurfaceOverrideMaterial(s, material);
-				}
-
+				var material = GetOrCreateOverrideMaterial(mesh, s);
 				if (material == null)
 					continue;
 
@@ -678,73 +705,63 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private Texture2D? GetPspLogoTexture()
 	{
-		if (_pspScreenLogoTexture != null)
-			return _pspScreenLogoTexture;
-
-		var absolutePath = ProjectSettings.GlobalizePath(PspScreenLogoPath);
-		if (!FileAccess.FileExists(absolutePath))
-		{
-			GD.PrintErr($"Missing PSP screen logo at {absolutePath}");
-			return null;
-		}
-
-		var image = Image.LoadFromFile(absolutePath);
-		if (image.GetWidth() == 0 || image.GetHeight() == 0)
-		{
-			GD.PrintErr($"Unable to load PSP screen logo from {absolutePath}");
-			return null;
-		}
-
-		_pspScreenLogoTexture = ImageTexture.CreateFromImage(image);
-		return _pspScreenLogoTexture;
+		return _pspScreenLogoTexture ??= LoadImageTexture(PspScreenLogoPath, "PSP screen logo");
 	}
 
-	private void ApplyPspLogoRecursive(Node node, Texture2D screenTexture, string hierarchyHint)
+	private void ApplyPspLogoRecursive(Node node, Texture2D screenTexture, string hierarchy)
 	{
 		var nodeName = node.Name.ToString();
-		var currentHint = string.IsNullOrEmpty(hierarchyHint) ? nodeName : $"{hierarchyHint}/{nodeName}";
+		var currentHint = string.IsNullOrEmpty(hierarchy) ? nodeName : $"{hierarchy}/{nodeName}";
 
-		if (node is MeshInstance3D mesh)
+		if (node is MeshInstance3D mesh && IsPspScreenMesh(mesh, currentHint))
 		{
-			var meshName = mesh.Name.ToString();
-			var isLikelyScreenMesh =
-				currentHint.Contains("psp_Object_54", System.StringComparison.OrdinalIgnoreCase);
-
-			if (isLikelyScreenMesh)
+			NormalizeMeshUvsToSingleTile(mesh);
+			var targetAspect = EstimateScreenAspect(mesh);
+			var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
+			for (int s = 0; s < surfaceCount; s++)
 			{
-				NormalizeMeshUvsToSingleTile(mesh);
-				var targetAspect = EstimateScreenAspect(mesh);
-				var surfaceCount = mesh.Mesh?.GetSurfaceCount() ?? 0;
-				for (int s = 0; s < surfaceCount; s++)
-				{
-					StandardMaterial3D? material = null;
+				var material = GetOrCreateOverrideMaterial(mesh, s);
+				if (material == null)
+					continue;
 
-					if (mesh.GetSurfaceOverrideMaterial(s) is StandardMaterial3D overrideMaterial)
-					{
-						material = overrideMaterial;
-					}
-					else if (mesh.Mesh?.SurfaceGetMaterial(s) is StandardMaterial3D baseMaterial)
-					{
-						material = (StandardMaterial3D)baseMaterial.Duplicate();
-						mesh.SetSurfaceOverrideMaterial(s, material);
-					}
-
-					if (material == null)
-						continue;
-
-					material.AlbedoColor = Colors.White;
-						material.AlbedoTexture = screenTexture;
-						material.Metallic = 0f;
-						material.Roughness = 0.34f;
-						ApplyCenteredCropToMaterial(material, screenTexture, targetAspect);
-						material.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
-						material.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
-					}
-				}
+				material.AlbedoColor = Colors.White;
+				material.AlbedoTexture = screenTexture;
+				material.Metallic = 0f;
+				material.Roughness = 0.34f;
+				material.EmissionEnabled = true;
+				material.Emission = new Color(0.55f, 0.42f, 1.0f);
+				material.EmissionEnergyMultiplier = 1.6f;
+				material.EmissionTexture = screenTexture;
+				material.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
+				material.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
+				ApplyCenteredCrop(material, screenTexture, targetAspect);
 			}
+		}
 
 		foreach (var child in node.GetChildren())
 			ApplyPspLogoRecursive((Node)child, screenTexture, currentHint);
+	}
+
+	private static bool IsPspScreenMesh(MeshInstance3D mesh, string hierarchyHint)
+	{
+		return hierarchyHint.Contains("psp_Object_54", System.StringComparison.OrdinalIgnoreCase) ||
+			MeshUsesMaterial(mesh, "Pantalla");
+	}
+
+	private static bool MeshUsesMaterial(MeshInstance3D mesh, string materialName)
+	{
+		if (mesh.Mesh == null)
+			return false;
+
+		var surfaceCount = mesh.Mesh.GetSurfaceCount();
+		for (int s = 0; s < surfaceCount; s++)
+		{
+			var material = mesh.GetSurfaceOverrideMaterial(s) ?? mesh.Mesh.SurfaceGetMaterial(s);
+			if (material?.ResourceName.Contains(materialName, System.StringComparison.OrdinalIgnoreCase) == true)
+				return true;
+		}
+
+		return false;
 	}
 
 	private static void NormalizeMeshUvsToSingleTile(MeshInstance3D mesh)
@@ -786,13 +803,13 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 					if (rangeU > 0.0001f && rangeV > 0.0001f)
 					{
 						var normalizedUvs = new Vector2[sourceUvs.Length];
-							for (int i = 0; i < sourceUvs.Length; i++)
-							{
-								var uv = sourceUvs[i];
-								normalizedUvs[i] = new Vector2(
-									(uv.X - minU) / rangeU,
-									1f - ((uv.Y - minV) / rangeV));
-							}
+						for (int i = 0; i < sourceUvs.Length; i++)
+						{
+							var uv = sourceUvs[i];
+							var u = (uv.X - minU) / rangeU;
+							var v = (uv.Y - minV) / rangeV;
+							normalizedUvs[i] = new Vector2(.92f - u, v);
+						}
 
 						arrays[(int)Mesh.ArrayType.TexUV] = normalizedUvs;
 						changed = true;
@@ -827,7 +844,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return dims[2] / shortSide;
 	}
 
-	private static void ApplyCenteredCropToMaterial(StandardMaterial3D material, Texture2D texture, float targetAspect)
+	private static void ApplyCenteredCrop(StandardMaterial3D material, Texture2D texture, float targetAspect)
 	{
 		var textureWidth = texture.GetWidth();
 		var textureHeight = texture.GetHeight();
@@ -853,13 +870,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			scaleV = textureAspect / targetAspect;
 		}
 
-		var offsetU = ((1f - scaleU) * 0.5f) + PspScreenNudgeLeftU;
+		var offsetU = ((1f - scaleU) * 0.5f);
 		var offsetV = (1f - scaleV) * 0.5f;
 
 		material.Uv1Scale = new Vector3(scaleU, scaleV, 1f);
 		material.Uv1Offset = new Vector3(offsetU, offsetV, 0f);
 	}
-
 	private void ConfigureConsoleAnimation(Node3D wrapper, Node3D model, ConsoleType type)
 	{
 		var animationPlayer = FindAnimationPlayer(model);
@@ -883,21 +899,14 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		animation.LoopMode = Animation.LoopModeEnum.None;
 		animationPlayer.Play(animationName);
-		animationPlayer.Seek(atRest(type, animation.Length), true);
+		animationPlayer.Seek(RestPoseTime(type, animation.Length), true);
 		animationPlayer.Stop(true);
 
 		_consoleAnimations[wrapper] = animationPlayer;
 		_consoleAnimationNames[wrapper] = animationName;
 		_consoleAnimationLengths[wrapper] = animation.Length;
-		_consoleAnimationHoldTimes[wrapper] = GetConsoleConfiguredHoldTime(type, animation.Length);
-		if (type == ConsoleType.GameCube)
-			SetGameCubeDiskVisible(model, false);
-		if (type == ConsoleType.PlayStation2)
-			SetPs2DiskVisible(model, false);
-		if (type == ConsoleType.SNES)
-			SetSnesCartridgeVisible(model, false);
-		if (type == ConsoleType.NES)
-			SetNesCartridgeVisible(model, false);
+		_consoleAnimationHoldTimes[wrapper] = ConfiguredHoldTime(type, animation.Length);
+		SetMediaVisible(model, type, false);
 	}
 
 	private static AnimationPlayer? FindAnimationPlayer(Node node)
@@ -915,19 +924,114 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return null;
 	}
 
-	private static bool ShouldAutoOpenAnimatedConsole(Node3D box)
+	private static bool AutoOpens(Node3D box)
 	{
-		return !IsSelectOnlyAnimatedConsole(box);
+		return !SelectOnly(box);
 	}
 
-	private static bool IsSelectOnlyAnimatedConsole(Node3D box)
+	private static bool SelectOnly(Node3D box)
 	{
-		return IsConsoleType(box, ConsoleType.Wii) ||
-			IsConsoleType(box, ConsoleType.Nintendo64) ||
-			IsConsoleType(box, ConsoleType.SNES) ||
-			IsConsoleType(box, ConsoleType.NES) ||
-			IsConsoleType(box, ConsoleType.GameCube) ||
-			IsConsoleType(box, ConsoleType.PlayStation2);
+		var consoleType = TypeOf(box);
+		return consoleType.HasValue && SelectOnlyConsoleTypes.Contains(consoleType.Value);
+	}
+
+	private void KillSelectionCameraTween()
+	{
+		_selectionCameraTween?.Kill();
+		_selectionCameraTween = null;
+	}
+
+	private void ResetSelectionCameraFraming()
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera))
+			return;
+		KillSelectionCameraTween();
+		_camera.Position = CameraDefaultPosition;
+		_camera.Rotation = CameraDefaultRotation;
+		_camera.Fov = CameraDefaultFov;
+	}
+
+	private static Vector3 GetZoomPos(Node3D selectedBox)
+	{
+		var p = selectedBox.Position;
+		// Follow the console's carousel offset so the dive stays glued to the hardware.
+		var towardX = Mathf.Clamp(p.X * 0.62f, -1.35f, 1.35f);
+		var towardY = 0.28f + p.Y * 0.55f;
+		var towardZ = 1.55f + p.Z * 0.45f;
+		return new Vector3(towardX, towardY, towardZ);
+	}
+
+	private static Vector3 GetZoomRot(Node3D selectedBox)
+	{
+		var p = selectedBox.Position;
+		// Lean down into the face of the unit + subtle yaw toward its slot.
+		var pitch = Mathf.DegToRad(-18f);
+		var yaw = Mathf.Clamp(-p.X * 0.09f, -0.2f, 0.2f);
+		return new Vector3(pitch, yaw, 0f);
+	}
+
+	private static Vector3 GetPeakPos(Node3D selectedBox)
+	{
+		var mid = GetZoomPos(selectedBox);
+		var p = selectedBox.Position;
+		return mid + new Vector3(
+			Mathf.Clamp(p.X * 0.1f, -0.2f, 0.2f),
+			-0.28f,
+			-1.05f);
+	}
+
+	private static Vector3 GetPeakRot(Node3D selectedBox)
+	{
+		var mid = GetZoomRot(selectedBox);
+		return mid + new Vector3(Mathf.DegToRad(-9f), Mathf.Clamp(-selectedBox.Position.X * 0.05f, -0.1f, 0.1f), 0f);
+	}
+
+	/// <summary>
+	/// Continue the selection zoom while the outgoing screen transition runs.
+	/// Pass the same (duration + hold) values as <c>ScreenTransition.ChangeScene</c> for the outgoing swap.
+	/// Do not await; the scene may be freed mid-tween.
+	/// </summary>
+	public void StartSelectionCameraPush(float outgoingDurationSeconds)
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera) || outgoingDurationSeconds <= 0f)
+			return;
+
+		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (idx < 0 || idx >= _boxes.Count)
+			return;
+
+		var selectedBox = _boxes[idx];
+		if (!GodotObject.IsInstanceValid(selectedBox))
+			return;
+
+		KillSelectionCameraTween();
+		_selectionCameraTween = CreateTween();
+		_selectionCameraTween.SetParallel(true);
+		_selectionCameraTween.SetTrans(Tween.TransitionType.Expo);
+		_selectionCameraTween.SetEase(Tween.EaseType.In);
+		var peakPos = GetPeakPos(selectedBox);
+		var peakRot = GetPeakRot(selectedBox);
+		_selectionCameraTween.TweenProperty(_camera, "position", peakPos, outgoingDurationSeconds);
+		_selectionCameraTween.TweenProperty(_camera, "rotation", peakRot, outgoingDurationSeconds);
+		_selectionCameraTween.TweenProperty(_camera, "fov", CameraTransitionPeakFov, outgoingDurationSeconds);
+	}
+
+	private void StartSelectionCamZoom(Node3D selectedBox)
+	{
+		if (_camera == null || !GodotObject.IsInstanceValid(_camera))
+			return;
+
+		KillSelectionCameraTween();
+		_selectionCameraTween = CreateTween();
+		_selectionCameraTween.SetParallel(true);
+		// Accelerate at the end so it feels like being pulled into the console.
+		_selectionCameraTween.SetTrans(Tween.TransitionType.Expo);
+		_selectionCameraTween.SetEase(Tween.EaseType.In);
+		var zoomPos = GetZoomPos(selectedBox);
+		var zoomRot = GetZoomRot(selectedBox);
+		_selectionCameraTween.TweenProperty(_camera, "position", zoomPos, SelectionCameraZoomInDuration);
+		_selectionCameraTween.TweenProperty(_camera, "rotation", zoomRot, SelectionCameraZoomInDuration);
+		_selectionCameraTween.TweenProperty(_camera, "fov", CameraZoomFov, SelectionCameraZoomInDuration);
 	}
 
 	public async Task PlaySelectedConsoleAnimationAsync(ConsoleType requiredType)
@@ -940,7 +1044,10 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			return;
 
 		var selectedBox = _boxes[selectedIdx];
-		if (!IsConsoleType(selectedBox, requiredType) ||
+		if (!IsConsoleType(selectedBox, requiredType))
+			return;
+
+		if (
 			!_consoleAnimations.TryGetValue(selectedBox, out var animationPlayer) ||
 			!_consoleAnimationNames.TryGetValue(selectedBox, out var animationName))
 		{
@@ -961,39 +1068,53 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_manuallyClosedAnimatedConsoles.Remove(selectedBox);
 		_pendingConsoleCloseSounds.Remove(selectedBox);
 		_openAnimatedConsoles.Add(selectedBox);
-		if (requiredType == ConsoleType.Wii)
-			SetWiiDiskVisible(selectedBox, true);
-		if (requiredType == ConsoleType.Nintendo64)
-			SetN64CartridgeVisible(selectedBox, true);
-		if (requiredType == ConsoleType.SNES)
-			SetSnesCartridgeVisible(selectedBox, true);
-		if (requiredType == ConsoleType.NES)
-			SetNesCartridgeVisible(selectedBox, true);
-		if (requiredType == ConsoleType.GameCube)
-			SetGameCubeDiskVisible(selectedBox, true);
-		if (requiredType == ConsoleType.PlayStation2)
-			SetPs2DiskVisible(selectedBox, true);
-		if (requiredType == ConsoleType.GBA)
-			SetGbaCartridgeVisible(selectedBox, true);
+		SetMediaVisible(selectedBox, requiredType, true);
+		if (requiredType == ConsoleType.PSP)
+		{
+			await PlayPspSelectionTurnAsync(selectedBox);
+		}
 
 		animationPlayer.Stop();
-		animationPlayer.SpeedScale = SelectionAnimationSpeedScale;
+		var playbackSpeed = requiredType == ConsoleType.PlayStation1
+			? Ps1SelectionAnimationSpeedScale
+			: SelectionAnimationSpeedScale;
+		animationPlayer.SpeedScale = playbackSpeed;
 		animationPlayer.Play(animationName);
 		animationPlayer.Seek(startTime, true);
 
-		var waitTime = Mathf.Max((float)((holdTime - startTime) / SelectionAnimationSpeedScale), 0.05f);
+		StartSelectionCamZoom(selectedBox);
+
+		var waitTime = Mathf.Max((float)((holdTime - startTime) / playbackSpeed), 0.05f);
 		await ToSignal(GetTree().CreateTimer(waitTime), SceneTreeTimer.SignalName.Timeout);
 		if (!GodotObject.IsInstanceValid(this) ||
 			!GodotObject.IsInstanceValid(selectedBox) ||
 			!GodotObject.IsInstanceValid(animationPlayer))
 		{
+			ResetSelectionCameraFraming();
 			return;
 		}
 
-		animationPlayer.SpeedScale = 1f;
+		animationPlayer.SpeedScale = 2.5f;
 		SetConsoleAnimationPose(selectedBox, holdTime, holdPose: true);
-		if (requiredType == ConsoleType.PlayStation2)
-			SetPs2DiskVisible(selectedBox, true);
+		SetMediaVisible(selectedBox, requiredType, true);
+	}
+
+	private async Task PlayPspSelectionTurnAsync(Node3D selectedBox)
+	{
+		var pspPivot = selectedBox.GetNodeOrNull<Node3D>("PSPPivot");
+		if (pspPivot == null)
+			return;
+
+		var turnTween = CreateTween();
+		turnTween.SetTrans(Tween.TransitionType.Cubic);
+		turnTween.SetEase(Tween.EaseType.Out);
+		turnTween.TweenProperty(
+			pspPivot,
+			"rotation",
+			pspPivot.Rotation + new Vector3(0f, Mathf.Pi, 0f),
+			0.18f);
+
+		await ToSignal(turnTween, Tween.SignalName.Finished);
 	}
 
 	private void ResetSelectionRotation(Node3D selectedBox, int selectedIdx)
@@ -1008,6 +1129,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	public void PlaySelectedConsoleReturnAnimation(ConsoleType requiredType)
 	{
+		ResetSelectionCameraFraming();
+
 		if (_boxes.Count == 0)
 			return;
 
@@ -1024,7 +1147,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		}
 
 		var animationLength = _consoleAnimationLengths.GetValueOrDefault(selectedBox, 0.0);
-		var startTime = GetConsoleSelectionAnimationHoldTime(selectedBox, animationLength);
+		var startTime = SelectionHoldTime(selectedBox, animationLength);
 		var stopTime = _consoleAnimationHoldTimes.TryGetValue(selectedBox, out var configuredHoldTime)
 			? configuredHoldTime
 			: animationLength;
@@ -1036,8 +1159,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_pendingConsoleCloseSounds.Remove(selectedBox);
 		_openAnimatedConsoles.Add(selectedBox);
 		_returnAnimatedConsoles.Add(selectedBox);
-		if (requiredType == ConsoleType.GBA)
-			SetGbaCartridgeVisible(selectedBox, true);
+		SetMediaVisible(selectedBox, requiredType, true);
 
 		animationPlayer.Play(animationName);
 		animationPlayer.Seek(startTime, true);
@@ -1058,7 +1180,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			if (!_consoleAnimations.ContainsKey(box))
 				continue;
 
-			if (!ShouldAutoOpenAnimatedConsole(box))
+			if (!AutoOpens(box))
 			{
 				if (box != selectedBox && _openAnimatedConsoles.Contains(box))
 					CloseAnimatedConsole(box);
@@ -1105,8 +1227,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				{
 					_returnAnimatedConsoles.Remove(box);
 					SetConsoleAnimationPose(box, returnHoldTime, holdPose: true);
-					if (IsConsoleType(box, ConsoleType.GBA))
-						SetGbaCartridgeVisible(box, false);
+					SetMediaVisible(box, false);
 				}
 				continue;
 			}
@@ -1124,7 +1245,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			if (_selectionAnimatedConsoles.Contains(box) && animationPlayer.IsPlaying())
 				continue;
 
-			var defaultPoseTime = atRest(box, animationLength);
+			var defaultPoseTime = RestPoseTime(box, animationLength);
 			var isClosed = !animationPlayer.IsPlaying() ||
 				animationPlayer.CurrentAnimationPosition <= defaultPoseTime + 0.02;
 			if (_pendingConsoleCloseSounds.Contains(box) && isClosed)
@@ -1136,24 +1257,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			if (isClosed)
 			{
 				SetConsoleAnimationPose(box, defaultPoseTime, holdPose: false);
-				if (IsConsoleType(box, ConsoleType.Wii))
-					SetWiiDiskVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.Nintendo64))
-					SetN64CartridgeVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.SNES))
-					SetSnesCartridgeVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.NES))
-					SetNesCartridgeVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.GameCube))
-					SetGameCubeDiskVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.PlayStation1))
-					SetPs1DiskVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.PlayStation2))
-					SetPs2DiskVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.PSP))
-					SetPspDiskVisible(box, false);
-				if (IsConsoleType(box, ConsoleType.GBA))
-					SetGbaCartridgeVisible(box, false);
+				SetMediaVisible(box, false);
 			}
 		}
 	}
@@ -1181,26 +1285,25 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private double GetConsoleAnimationHoldTime(Node3D box, double animationLength)
 	{
 		if (_selectionAnimatedConsoles.Contains(box))
-			return GetConsoleSelectionAnimationHoldTime(box, animationLength);
+			return SelectionHoldTime(box, animationLength);
 
 		return _consoleAnimationHoldTimes.TryGetValue(box, out var configuredHoldTime)
 			? configuredHoldTime
 			: animationLength;
 	}
 
-	private static double GetConsoleSelectionAnimationHoldTime(Node3D box, double animationLength)
+	private static double SelectionHoldTime(Node3D box, double animationLength)
 	{
-		if (IsConsoleType(box, ConsoleType.GBA))
-			return Mathf.Min((float)animationLength, (float)GbaSelectionOpen);
-		if (IsConsoleType(box, ConsoleType.Nintendo64))
-			return Mathf.Min((float)animationLength, (float)N64SelectionOpen);
-		if (IsConsoleType(box, ConsoleType.GameCube))
-			return Mathf.Min((float)animationLength, (float)GameCubeRestPose);
-
-		return animationLength;
+		return TypeOf(box) switch
+		{
+			ConsoleType.GBA => Mathf.Min((float)animationLength, (float)GbaSelectionOpen),
+			ConsoleType.Nintendo64 => Mathf.Min((float)animationLength, (float)N64SelectionOpen),
+			ConsoleType.GameCube => Mathf.Min((float)animationLength, (float)GameCubeRestPose),
+			_ => animationLength,
+		};
 	}
 
-	private static double GetConsoleConfiguredHoldTime(ConsoleType type, double animationLength)
+	private static double ConfiguredHoldTime(ConsoleType type, double animationLength)
 	{
 		return type switch
 		{
@@ -1210,24 +1313,20 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		};
 	}
 
-	private static double atRest(ConsoleType type, double animationLength)
+	private static double RestPoseTime(ConsoleType type, double animationLength)
 	{
-		if (type == ConsoleType.NintendoDS)
-			return animationLength * 0.5;
-
-		return type == ConsoleType.GameCube
-			? Mathf.Min((float)animationLength, (float)GameCubeRestPose)
-			: 0.0;
+		return type switch
+		{
+			ConsoleType.NintendoDS => animationLength * 0.5,
+			ConsoleType.GameCube => Mathf.Min((float)animationLength, (float)GameCubeRestPose),
+			_ => 0.0,
+		};
 	}
 
-	private static double atRest(Node3D box, double animationLength)
+	private static double RestPoseTime(Node3D box, double animationLength)
 	{
-		if (IsConsoleType(box, ConsoleType.NintendoDS))
-			return animationLength * 0.5;
-
-		return IsConsoleType(box, ConsoleType.GameCube)
-			? Mathf.Min((float)animationLength, (float)GameCubeRestPose)
-			: 0.0;
+		var type = TypeOf(box);
+		return type.HasValue ? RestPoseTime(type.Value, animationLength) : 0.0;
 	}
 
 	private void OpenAnimatedConsole(Node3D box)
@@ -1240,22 +1339,19 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 		_manuallyClosedAnimatedConsoles.Remove(box);
 		_pendingConsoleCloseSounds.Remove(box);
-		if (IsConsoleType(box, ConsoleType.Wii))
-			SetWiiDiskVisible(box, true);
-		if (IsConsoleType(box, ConsoleType.Nintendo64))
-			SetN64CartridgeVisible(box, true);
-		if (IsConsoleType(box, ConsoleType.SNES))
-			SetSnesCartridgeVisible(box, true);
-		if (IsConsoleType(box, ConsoleType.NES))
-			SetNesCartridgeVisible(box, true);
+		// Consoles like the GBA only show their cart during the selection animation, not
+		// during the lid-open auto-animation; PlaySelectedConsoleAnimationAsync will reveal
+		// the cart at the right moment.
+		if (!MediaHiddenUntilSelection(box))
+			SetMediaVisible(box, true);
 		if (IsConsoleType(box, ConsoleType.NintendoDS) &&
 			_consoleAnimationLengths.TryGetValue(box, out var animationLength))
 		{
-			animationPlayer.Seek(atRest(box, animationLength), true);
+			animationPlayer.Seek(RestPoseTime(box, animationLength), true);
 		}
 		animationPlayer.Play(animationName);
 		_openAnimatedConsoles.Add(box);
-		if (IsConsoleType(box, ConsoleType.GBA) || IsConsoleType(box, ConsoleType.NintendoDS))
+		if (UsesCartSfx(box))
 			AudioManager.Instance?.PlayConsoleAnimationSfx(AudioManager.GbaOpenSfxPath);
 	}
 
@@ -1274,21 +1370,12 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		_selectionAnimatedConsoles.Remove(box);
 		_returnAnimatedConsoles.Remove(box);
 
-		if (IsConsoleType(box, ConsoleType.PlayStation2))
-			SetPs2DiskVisible(box, false);
-		if (IsConsoleType(box, ConsoleType.PlayStation1))
-			SetPs1DiskVisible(box, false);
-		if (IsConsoleType(box, ConsoleType.PSP))
-			SetPspDiskVisible(box, false);
-		if (IsConsoleType(box, ConsoleType.SNES))
-			SetSnesCartridgeVisible(box, false);
-		if (IsConsoleType(box, ConsoleType.NES))
-			SetNesCartridgeVisible(box, false);
+		SetMediaVisible(box, false);
 		if (_consoleAnimationHoldTimes.TryGetValue(box, out var holdTime))
 			animationPlayer.Seek(holdTime, true);
 		animationPlayer.PlayBackwards(animationName);
 		_openAnimatedConsoles.Remove(box);
-		if (IsConsoleType(box, ConsoleType.GBA) || IsConsoleType(box, ConsoleType.NintendoDS))
+		if (UsesCartSfx(box))
 			_pendingConsoleCloseSounds.Add(box);
 		else
 			_pendingConsoleCloseSounds.Remove(box);
@@ -1299,9 +1386,87 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		return string.Equals(box.Name.ToString(), type.ToString(), System.StringComparison.Ordinal);
 	}
 
+	private static ConsoleType? TypeOf(Node3D box)
+	{
+		foreach (var consoleType in System.Enum.GetValues<ConsoleType>())
+		{
+			if (IsConsoleType(box, consoleType))
+				return consoleType;
+		}
+
+		return null;
+	}
+
+	private static bool UsesCartSfx(Node3D box)
+	{
+		var consoleType = TypeOf(box);
+		return consoleType.HasValue && CartridgeSfxConsoleTypes.Contains(consoleType.Value);
+	}
+
+	private static bool MediaHiddenUntilSelection(Node3D box)
+	{
+		var consoleType = TypeOf(box);
+		return consoleType.HasValue && MediaHiddenUntilSelectionConsoleTypes.Contains(consoleType.Value);
+	}
+
+	private static void SetMediaVisible(Node node, ConsoleType type, bool visible)
+	{
+		switch (type)
+		{
+			case ConsoleType.Wii:
+				SetWiiDiskVisible(node, visible);
+				break;
+			case ConsoleType.Nintendo64:
+				SetN64CartridgeVisible(node, visible);
+				break;
+			case ConsoleType.SNES:
+				SetSnesCartridgeVisible(node, visible);
+				break;
+			case ConsoleType.NES:
+				SetNesCartridgeVisible(node, visible);
+				break;
+			case ConsoleType.GameCube:
+				SetGameCubeDiskVisible(node, visible);
+				break;
+			case ConsoleType.PlayStation1:
+				SetPs1DiskVisible(node, visible);
+				break;
+			case ConsoleType.PlayStation2:
+				SetPs2DiskVisible(node, visible);
+				break;
+			case ConsoleType.PSP:
+				SetPspDiskVisible(node, visible);
+				break;
+			case ConsoleType.GBA:
+				SetGbaCartridgeVisible(node, visible);
+				break;
+		}
+	}
+
+	private static void SetMediaVisible(Node3D box, bool visible)
+	{
+		var consoleType = TypeOf(box);
+		if (consoleType.HasValue)
+			SetMediaVisible(box, consoleType.Value, visible);
+	}
+
 	private static bool ShouldIncludeWiiBodyBounds(Node3D node)
 	{
 		return !IsWiiDiskNode(node);
+	}
+
+	private static bool ShouldIncludePs2BodyBounds(Node3D node)
+	{
+		return !IsPs2DiskNode(node);
+	}
+
+	private static void SetVisibleWhere(Node node, bool visible, System.Func<Node3D, bool> predicate)
+	{
+		if (node is Node3D node3D && predicate(node3D))
+			node3D.Visible = visible;
+
+		foreach (Node child in node.GetChildren())
+			SetVisibleWhere(child, visible, predicate);
 	}
 
 	private static bool IsWiiDiskNode(Node3D node)
@@ -1312,11 +1477,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetWiiDiskVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsWiiDiskNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetWiiDiskVisible(child, visible);
+		SetVisibleWhere(node, visible, IsWiiDiskNode);
 	}
 
 	private static bool IsGameCubeDiskNode(Node3D node)
@@ -1342,11 +1503,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetGameCubeDiskVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsGameCubeDiskNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetGameCubeDiskVisible(child, visible);
+		SetVisibleWhere(node, visible, IsGameCubeDiskNode);
 	}
 
 	private static bool IsPs2DiskNode(Node3D node)
@@ -1364,51 +1521,65 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetPs2DiskVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsPs2DiskNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetPs2DiskVisible(child, visible);
+		SetVisibleWhere(node, visible, IsPs2DiskNode);
 	}
 
 	private static bool IsPs1DiskNode(Node3D node)
 	{
 		var nodeName = node.Name.ToString();
-		if (string.Equals(nodeName, "ps1_Object_0", System.StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(nodeName, "ps1_Object_0", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc.obj", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Disc_obj", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2.001", System.StringComparison.OrdinalIgnoreCase) ||
+			nodeName.Contains("Object_2_001", System.StringComparison.OrdinalIgnoreCase))
 			return true;
 
 		return node is MeshInstance3D mesh &&
 			mesh.Mesh != null &&
-			mesh.Mesh.ResourceName.Contains("ps1_Object_0", System.StringComparison.OrdinalIgnoreCase);
+			(mesh.Mesh.ResourceName.Contains("ps1_Object_0", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Disc.obj", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Disc_obj", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_2.001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_2_001", System.StringComparison.OrdinalIgnoreCase) ||
+				mesh.Mesh.ResourceName.Contains("Object_0", System.StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static void SetPs1DiskVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsPs1DiskNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetPs1DiskVisible(child, visible);
+		SetVisibleWhere(node, visible, IsPs1DiskNode);
 	}
 
 	private static bool IsPspDiskNode(Node3D node)
 	{
 		var nodeName = node.Name.ToString();
-		if (string.Equals(nodeName, "psp_path2120", System.StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(nodeName, "psp_path2120", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(nodeName, "path2160", System.StringComparison.OrdinalIgnoreCase))
 			return true;
 
-		return node is MeshInstance3D mesh &&
-			mesh.Mesh != null &&
-			mesh.Mesh.ResourceName.Contains("psp_path2120", System.StringComparison.OrdinalIgnoreCase);
+		if (node is not MeshInstance3D mesh || mesh.Mesh == null)
+			return false;
+
+		if (mesh.Mesh.ResourceName.Contains("psp_path2120", System.StringComparison.OrdinalIgnoreCase) ||
+			mesh.Mesh.ResourceName.Contains("path2160", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+
+		var surfaceCount = mesh.Mesh.GetSurfaceCount();
+		for (int s = 0; s < surfaceCount; s++)
+		{
+			var material = mesh.GetSurfaceOverrideMaterial(s) ?? mesh.Mesh.SurfaceGetMaterial(s);
+			var materialName = material?.ResourceName ?? string.Empty;
+			if (materialName.Contains("UMD", System.StringComparison.OrdinalIgnoreCase))
+				return true;
+		}
+
+		return false;
 	}
 
 	private static void SetPspDiskVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsPspDiskNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetPspDiskVisible(child, visible);
+		SetVisibleWhere(node, visible, IsPspDiskNode);
 	}
 
 	private static bool IsGbaCartridgeNode(Node3D node)
@@ -1427,23 +1598,15 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetGbaCartridgeVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsGbaCartridgeNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetGbaCartridgeVisible(child, visible);
+		SetVisibleWhere(node, visible, IsGbaCartridgeNode);
 	}
 
 	private static void SetN64CartridgeVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D &&
-			node3D.Name.ToString().Contains("cartridge", System.StringComparison.OrdinalIgnoreCase))
-		{
-			node3D.Visible = visible;
-		}
-
-		foreach (Node child in node.GetChildren())
-			SetN64CartridgeVisible(child, visible);
+		SetVisibleWhere(
+			node,
+			visible,
+			node3D => node3D.Name.ToString().Contains("cartridge", System.StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static bool IsSnesCartridgeNode(Node3D node)
@@ -1463,11 +1626,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetSnesCartridgeVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsSnesCartridgeNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetSnesCartridgeVisible(child, visible);
+		SetVisibleWhere(node, visible, IsSnesCartridgeNode);
 	}
 
 	private static bool IsNesCartridgeNode(Node3D node)
@@ -1483,11 +1642,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 
 	private static void SetNesCartridgeVisible(Node node, bool visible)
 	{
-		if (node is Node3D node3D && IsNesCartridgeNode(node3D))
-			node3D.Visible = visible;
-
-		foreach (Node child in node.GetChildren())
-			SetNesCartridgeVisible(child, visible);
+		SetVisibleWhere(node, visible, IsNesCartridgeNode);
 	}
 
 	private bool TryToggleSelectedConsole(Vector2 localPos)
@@ -1506,7 +1661,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 		var selectedBox = _boxes[selectedIdx];
 		if (!_consoleAnimations.ContainsKey(selectedBox))
 			return false;
-		if (IsSelectOnlyAnimatedConsole(selectedBox))
+		if (SelectOnly(selectedBox))
 		{
 			return false;
 		}
@@ -1573,9 +1728,14 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	}
 	
 	
-	// Handle when the mouse is clicked or draggged, kills velocity so it doesnt drift when you drag
+	// Handle when the mouse is clicked or dragged, kills velocity so it doesn't drift when you drag
 	public override void _GuiInput(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+		{
+			AcceptEvent();
+			return;
+		}
 		if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 		{
 			if (mb.Position.Y < 70f)
@@ -1641,6 +1801,8 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	// Handle when the mouse hovers over the box
 	public override void _Input(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+			return;
 		if (_boxes.Count == 0) return;
 		if (e is InputEventMouseMotion mm)
 		{
@@ -1751,7 +1913,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 			0.6f); // elastic settle back
 	}
 	
-	// Wrapping logic: d is how far the box is from teh center and t prevents distortion with distnace
+	// Wrapping logic: d is how far the box is from the center and t prevents distortion with distance
 	private void LayoutBoxes()
 	{
 		if (_boxes.Count == 0) return;

@@ -8,13 +8,13 @@ public partial class LibretroGame : Control
 	[Export] public NodePath AudioPath;
 	[Export] public NodePath StatusPath;
 	[Export] public NodePath BackPath;
-	[Export] public NodePath TitlePath;
+	
 
 	private TextureRect _video = null!;
 	private AudioStreamPlayer _audio = null!;
 	private Label _status = null!;
 	private Button _back = null!;
-	private Label _title = null!;
+
 	private LibretroPlayer _player = null!;
 	private string _returnScene = "res://GameSelect.tscn";
 	private readonly Godot.Collections.Array<InputEvent> _originalUiCancelEvents = new();
@@ -29,7 +29,7 @@ public partial class LibretroGame : Control
 		_audio = GetNode<AudioStreamPlayer>(AudioPath);
 		_status = GetNode<Label>(StatusPath);
 		_back = GetNode<Button>(BackPath);
-		_title = GetNode<Label>(TitlePath);
+	
 
 		ConfigureVideoPresentation();
 
@@ -61,7 +61,6 @@ public partial class LibretroGame : Control
 			return;
 		}
 
-		_title.Text = string.IsNullOrWhiteSpace(request.GameTitle) ? "In-App Emulation" : request.GameTitle;
 		SetStatus($"Loading core: {Path.GetFileName(request.CorePath)}");
 		ConfigureGameplayCancelAction();
 		SuppressGlobalBackgroundForCore(request.CoreId);

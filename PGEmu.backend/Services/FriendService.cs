@@ -102,6 +102,30 @@ public class FriendService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<Friend?> GetRelationshipAsync(Guid currentUserId, Guid targetUserId)
+    {
+        return await _context.Friends
+            .FirstOrDefaultAsync(f =>
+                (f.SenderId == currentUserId && f.ReceiverId == targetUserId) ||
+                (f.SenderId == targetUserId && f.ReceiverId == currentUserId));
+    }
+
+    public async Task<bool> RemoveFriendAsync(Guid currentUserId, Guid targetUserId)
+    {
+        var friend = await _context.Friends
+            .FirstOrDefaultAsync(f =>
+                f.Status == FriendStatus.Accepted &&
+                ((f.SenderId == currentUserId && f.ReceiverId == targetUserId) ||
+                 (f.SenderId == targetUserId && f.ReceiverId == currentUserId)));
+
+        if (friend == null)
+            return false;
+
+        _context.Friends.Remove(friend);
+        await _context.SaveChangesAsync();
+        return true;
+    }
     
     // Block a user
     public async Task<bool> BlockUserAsync(Guid blockerId, Guid blockedId)

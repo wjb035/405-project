@@ -71,9 +71,40 @@ public partial class FriendService : Node
 	
 	public async Task<bool> SendFriendRequest(string? userId)
 	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return false;
+
 		var response = await Auth.SendAuthorizedRequest(
-			$"{baseUrl}/request/{Guid.Parse(userId)}",
-			HttpMethod.Post);
+			$"{baseUrl}/request/{targetUserId}",
+			method: HttpMethod.Post);
+
+		return response != null;
+	}
+
+	public async Task<FriendRelationshipDto> GetRelationship(string? userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return new FriendRelationshipDto();
+
+		var response = await Auth.SendAuthorizedRequest($"{baseUrl}/relationship/{targetUserId}");
+		if (response == null)
+			return new FriendRelationshipDto();
+
+		var relationship = JsonSerializer.Deserialize<FriendRelationshipDto>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+		return relationship ?? new FriendRelationshipDto();
+	}
+
+	public async Task<bool> RemoveFriend(string? userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return false;
+
+		var response = await Auth.SendAuthorizedRequest(
+			$"{baseUrl}/{targetUserId}",
+			method: HttpMethod.Delete);
 
 		return response != null;
 	}
@@ -223,6 +254,15 @@ public class FriendRequestDto
 	[JsonPropertyName("status")]
 	public FriendStatus Status { get; set; }
 	public bool blocked { get; set; }
+}
+
+public class FriendRelationshipDto
+{
+	[JsonPropertyName("status")]
+	public FriendStatus? Status { get; set; }
+
+	[JsonPropertyName("outgoing")]
+	public bool Outgoing { get; set; }
 }
 
 public enum FriendStatus

@@ -22,4 +22,5 @@ public partial class GameEntry : ObservableObject
     
     // time a game has been played in seconds
     public int TimePlayed {get; set;} = 0;
+    public long LastPlayedUnixTime { get; set; } = 0;
 }

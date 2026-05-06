@@ -15,20 +15,22 @@ public partial class MissedMessageItem : InboxItem
 	public override void _Ready()
 	{
 		_fromLabel = GetNode<Label>("HBox/FromLabel");
-		_previewLabel = GetNode<Label>("HBox/PreviewLabel");
+		_previewLabel = GetNode<Label>("HBox2/PreviewLabel");
 		_timeLabel = GetNode<Label>("HBox2/TimeLabel");
-		_replyButton = GetNode<Button>("HBox2/ReplyButton");
+		_replyButton = GetNode<Button>("HBox/ReplyButton");
 
 		UiStyle.StyleTopBarButton(_replyButton);
 		UiStyle.AddHoverFeedback(_replyButton);
 		_replyButton.Pressed += OnReply;
 	}
 
-	public void Setup(string fromUser, string preview, string sentAt)
+	public void Setup(string fromUser, string preview, string sentAt, int count)
 	{
 		_fromUser = fromUser;
 		_fromLabel.Text = fromUser;
-		_previewLabel.Text = preview.Length > 40 ? preview.Substring(0, 40) + "..." : preview;
+		_previewLabel.Text = count > 1
+			? $"{preview} (+{count - 1} more)"
+			: preview;
 		_timeLabel.Text = FormatTime(sentAt);
 	}
 
@@ -38,7 +40,8 @@ public partial class MissedMessageItem : InboxItem
 		var overlay = GetNode<ChatOverlay>("/root/ChatOverlay");
 		overlay.OpenDm(_fromUser);
 		overlay.OpenOverlay();
-
+		overlay.GetNode<ChatManager>("/root/ChatManager")
+			.MarkDmAsRead(_fromUser);
 		// Close the inbox
 		GetNode<FriendInbox>("/root/HomeScreen/FriendInboxPopup")?.HidePopup();
 	}

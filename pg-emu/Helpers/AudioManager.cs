@@ -228,7 +228,7 @@ public partial class AudioManager : Node
 
 	public void PlayClick() => PlayOnPlayer(_uiPlayer, ClickSfxPath);
 
-	public void PlaySelect() => PlayOnPlayer(_uiPlayer, SelectSfxPath);
+	public void PlaySelect() => PlayOnPlayer(_uiPlayer, SelectSfxPath, 6f);
 
 	public void PlayMessageOpen() => PlayOnPlayer(_uiPlayer, MessageOpenSfxPath, volumeDb: -5f);
 

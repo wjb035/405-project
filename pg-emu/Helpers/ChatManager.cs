@@ -19,12 +19,17 @@ public partial class ChatManager : Node
     [Signal] public delegate void GroupInviteReceivedEventHandler(string groupId, string groupName, string invitedBy);
     [Signal] public delegate void HistoryLoadedEventHandler(string contextId, string messagesJson);
     [Signal] public delegate void ErrorReceivedEventHandler(string message);
+    [Signal] public delegate void UnreadCountUpdatedEventHandler();
     
     // State handling
     private WebSocketPeer _ws = new WebSocketPeer();
     private string _serverUrl = "http://localhost:5276";
     private string _hubPath = "/chathub";
     private bool _connected = false;
+    
+    private Dictionary<string, int> _unreadCounts = new();
+
+    public Dictionary<string, int> GetUnreadCounts() => _unreadCounts;
 
     public string Username { get; set; } = "";
     public string CurrentDmRecipient { get; set; } = "";
@@ -277,6 +282,57 @@ public partial class ChatManager : Node
         if (!string.IsNullOrEmpty(before))
             url += "&before=" + Uri.EscapeDataString(before);
         HttpGet(url, json => EmitSignal(SignalName.HistoryLoaded, otherUser, json));
+    }
+    
+    public void LoadUnreadMessages()
+    {
+        string url = $"{_serverUrl}/api/chat/unread?user={Username}";
+        HttpGet(url, json =>
+            EmitSignal(SignalName.HistoryLoaded, "unread", json)
+        );
+    }
+    public void LoadUnreadCounts()
+    {
+        string url = $"{_serverUrl}/api/chat/unread-count?user={Username}";
+        HttpGet(url, json =>
+        {
+            var data = JsonSerializer.Deserialize<Dictionary<string, int>>(json);
+
+            if (data != null)
+                _unreadCounts = data;
+
+            EmitSignal(SignalName.UnreadCountUpdated);
+        });
+    }
+    public void MarkDmAsRead(string otherUser)
+    {
+        string url = $"{_serverUrl}/api/chat/mark-read";
+
+        var body = JsonSerializer.Serialize(new
+        {
+            username = Username,
+            otherUser = otherUser
+        });
+
+        var http = new HttpRequest();
+        AddChild(http);
+
+        http.RequestCompleted += (result, code, headers, bodyBytes) =>
+        {
+            http.QueueFree();
+            if (code == 200)
+            {
+                _unreadCounts.Remove(otherUser);
+                EmitSignal(SignalName.UnreadCountUpdated);
+            }
+        };
+
+        http.Request(
+            url,
+            new[] { "Content-Type: application/json" },
+            HttpClient.Method.Post,
+            body
+        );
     }
     
     // Group chat API

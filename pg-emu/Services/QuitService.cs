@@ -21,6 +21,12 @@ public partial class QuitService : CanvasLayer
 
 	public override void _Input(InputEvent @event)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+		{
+			GetViewport()?.SetInputAsHandled();
+			return;
+		}
+
 		if (!IsEscapePressed(@event))
 			return;
 

@@ -25,6 +25,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private const float GbaBackLabelHeightFactor = 0.78f;
 	private const float GbaBackLabelYOffsetFactor = 0.02f;
 	private const float GbaBackLabelDepthOffset = 0.016f;
+	private static readonly Vector3 N64BoxSize = new(3.6f, 3.6f * 4f / 7f, 0.25f);
+	private static readonly Vector2 N64CoverSize = new(3.5f, 3.5f * 4f / 7f);
 	private static readonly Vector2 GbaExpandedBackPanelSize = new(2.5f, 3.5f);
 	private const float GbaExpandedBackDepthOffset = 0.03f;
 	// Physics
@@ -58,10 +60,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private bool _isGba;
 	private bool _isDs;
 	private bool _isPs1;
+	private bool _isN64;
+	private bool _isSnes;
 	private Texture2D? _gbaCartridgeLogoTexture;
 	
 	// Card spacing in 3D units
-		private const float Spacing = 2.55f;
+	private const float Spacing = 2.55f;
 	private const float SelectedScale = 1.0f;
 	private const float UnselectedScale = 0.72f;
 
@@ -80,6 +84,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private const float SwayAmplitude = 0.04f;
 	private const float SwaySpeed = 0.8f;
 	private const float SwayBobAmplitude = 0.03f;
+	private float _bobStrength = 1.0f; 
 	private readonly HashSet<int> _returningBoxes = new();
 	
 	public event System.Action<int>? SelectionChanged;
@@ -156,7 +161,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var fill = new OmniLight3D
 		{
 			Position = new Vector3(0, 2, 2),
-			LightEnergy = 0.3f,
+			LightEnergy = 0.4f,
 			LightColor = new Color(1f, 0.98f, 0.92f)
 		};
 		_sceneRoot.AddChild(fill);
@@ -193,7 +198,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 		float initialPos,
 		bool isGba = false,
 		bool isDs = false,
-		bool isPs1 = false)
+		bool isPs1 = false,
+		bool isN64 = false,
+		bool isSnes = false,
+		IReadOnlyList<string?>? platformIds = null)
 	{
 		// Clear old boxes
 		foreach (var b in _boxes)
@@ -209,22 +217,29 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_isGba = isGba;
 		_isDs = isDs;
 		_isPs1 = isPs1;
+		_isN64 = isN64;
+		_isSnes = isSnes;
+		
 		CarouselPos = WrapPos(initialPos);
 		_spinAudioPos = CarouselPos;
 		_lastSpinAudioCarouselPos = CarouselPos;
 		_lastSpinAudioStep = Mathf.RoundToInt(_spinAudioPos);
 		_lastSpinAudioMs = 0;
 
-		for (int i = 0; i < games.Count; i++)
+		for (int index = 0; index < games.Count; index++)
 		{
-			var (title, coverArt, award) = games[i];
+			var (title, coverArt, award) = games[index];
+			var platformId = platformIds != null && index < platformIds.Count ? platformIds[index] : null;
+			var square = !_isGba && !_isDs && SquarePlatform(platformId);
+			var n64 = !_isGba && !_isDs && (_isN64 || N64Platform(platformId));
+			var sideways = !_isGba && !_isDs && SidewaysPlatform(platformId);
 			Node3D box;
 			if (_isGba)
 				box = BuildGbaCartridge(title, coverArt );
 			else if (_isDs)
 				box = BuildDsCartridge(title, coverArt);
 			else
-				box = BuildBox(title, coverArt, award);
+				box = BuildBox(title, coverArt, award, square, sideways, n64);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
 		}
@@ -233,15 +248,28 @@ public partial class GameCarousel3DView : SubViewportContainer
 	}
 	
 	// Builds actual 3d geometry of the cases
-	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType)
+	private Node3D BuildBox(string title, Texture2D? coverArt, string awardType, bool square = false, bool sideways = false, bool n64 = false)
 	{
 		var root = new Node3D();
-		var boxSize = _isPs1
+		var n64Box = n64;
+		var squareBox = !n64Box && (_isPs1 || square);
+		var sidewaysBox = _isSnes || sideways;
+		root.SetMeta("pgemu_square_box", squareBox);
+		root.SetMeta("pgemu_landscape_box", n64Box || sidewaysBox);
+		var boxSize = squareBox
 			? new Vector3(2.8f, 2.8f, 0.25f)
-			: new Vector3(2.6f, 3.6f, 0.25f);
-		var coverSize = _isPs1
+			: n64Box
+				? N64BoxSize
+				: sidewaysBox
+				? new Vector3(3.6f, 2.6f, 0.25f)
+				: new Vector3(2.6f, 3.6f, 0.25f);
+		var coverSize = squareBox
 			? new Vector2(2.68f, 2.68f)
-			: new Vector2(2.5f, 3.5f);
+			: n64Box
+				? N64CoverSize
+				: sidewaysBox
+				? new Vector2(3.5f, 2.5f)
+				: new Vector2(2.5f, 3.5f);
 
 		// Box mesh 
 		var mesh = new MeshInstance3D { Name = "Mesh" };
@@ -267,6 +295,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}
 		else{
 			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+			// mat = gold;
 		}
 		
 		_baseMaterials.Add(new List<StandardMaterial3D> { mat });
@@ -285,7 +314,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		
 		if (coverArt != null)
 		{
-			// Front face material with cover art
+			// Front face mat with cover art
 			var coverMat = new StandardMaterial3D
 			{
 				AlbedoTexture = coverArt,
@@ -388,7 +417,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		CenterNode3D(model);
 		model.Scale = new Vector3(2.8f, 2.8f, 2.8f);
 		model.RotateY(Mathf.DegToRad(-90f));
-		var hasModelBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
+		var hasBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
 
 		var root = new Node3D();
 		root.SetMeta("pgemu_title", title);
@@ -404,8 +433,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		{
 			labelMesh.Name = "CoverMesh";
 			var template = labelMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
-			var coverMaterial = ApplyGbaLabelTexture(labelMesh, title, coverArt, template);
-			_coverMaterials.Add(coverMaterial);
+			var coverMat = ApplyGbaLabelTexture(labelMesh, title, coverArt, template);
+			_coverMaterials.Add(coverMat);
 		}
 		else
 		{
@@ -414,12 +443,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}
 
 		var backMesh = new MeshInstance3D { Name = "BackMesh" };
-		var backLabelSize = hasModelBounds
+		var backLabelSize = hasBounds
 			? new Vector2(modelBounds.Size.X * GbaBackLabelWidthFactor, modelBounds.Size.Y * GbaBackLabelHeightFactor)
 			: new Vector2(2.15f, 1.55f);
 		backMesh.Mesh = new QuadMesh { Size = backLabelSize };
 
-		var backLabelPosition = hasModelBounds
+		var backLabelPosition = hasBounds
 			? new Vector3(
 				modelBounds.GetCenter().X,
 				modelBounds.GetCenter().Y + modelBounds.Size.Y * GbaBackLabelYOffsetFactor,
@@ -445,7 +474,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Visible = false,
 		};
 		detailBackMesh.Mesh = new QuadMesh { Size = GbaExpandedBackPanelSize };
-		detailBackMesh.Position = hasModelBounds
+		detailBackMesh.Position = hasBounds
 			? new Vector3(
 				modelBounds.GetCenter().X,
 				modelBounds.GetCenter().Y,
@@ -479,7 +508,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		CenterNode3D(model);
 		model.Scale = new Vector3(11.0f, 11.0f, 11.0f);
 		model.RotateX(Mathf.DegToRad(90f));
-		var hasModelBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
+		CenterNode3D(model);
+		var hasBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
 
 		var root = new Node3D();
 		root.SetMeta("pgemu_title", title);
@@ -497,8 +527,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		{
 			labelMesh.Name = "CoverMesh";
 			var template = labelMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
-			var coverMaterial = ApplyDsLabelTexture(labelMesh, coverArt, template);
-			_coverMaterials.Add(coverMaterial);
+			var coverMat = ApplyDsLabelTexture(labelMesh, coverArt, template);
+			_coverMaterials.Add(coverMat);
 		}
 		else
 		{
@@ -507,11 +537,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}
 
 		var backMesh = new MeshInstance3D { Name = "BackMesh" };
-		var backLabelSize = hasModelBounds
+		var backLabelSize = hasBounds
 			? new Vector2(modelBounds.Size.X * 0.82f, modelBounds.Size.Y * 0.86f)
 			: new Vector2(1.55f, 1.7f);
 		backMesh.Mesh = new QuadMesh { Size = backLabelSize };
-		backMesh.Position = hasModelBounds
+		backMesh.Position = hasBounds
 			? new Vector3(
 				modelBounds.GetCenter().X,
 				modelBounds.GetCenter().Y,
@@ -587,15 +617,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void BuildBoxStyleBackFaceTexture(MeshInstance3D backMesh, string title, string description,
 		string genre, string releaseYear, string rating)
 	{
-		var vp = new SubViewport
-		{
-			Size = _isPs1 ? new Vector2I(2048, 2048) : new Vector2I(2048, 2896),
-			TransparentBg = true,
-			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
-			Msaa2D = Viewport.Msaa.Msaa8X,
-			ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa,
-		};
-		_sceneRoot.AddChild(vp);
+		var squareBox = SquareBox(backMesh);
+		var landscapeBox = LandscapeBox(backMesh);
+		var vpSize = squareBox
+			? new Vector2I(2048, 2048)
+			: landscapeBox
+				? new Vector2I(2896, 1655)
+				: new Vector2I(2048, 2896);
+		var vp = AddViewport(vpSize, SubViewport.UpdateMode.WhenVisible, Viewport.Msaa.Msaa8X,
+			Viewport.ScreenSpaceAAEnum.Fxaa);
 		
 		// Root panel
 		var panel = new PanelContainer();
@@ -631,8 +661,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			HorizontalAlignment = HorizontalAlignment.Center,
 		};
-		titleLabel.AddThemeColorOverride("font_color", new Color(0.97f, 0.95f, 1f, 1f));
-		titleLabel.AddThemeFontSizeOverride("font_size", 96);
+		StyleLabel(titleLabel, new Color(0.97f, 0.95f, 1f, 1f), 96);
 		column.AddChild(titleLabel);
 
 		// Divider
@@ -659,12 +688,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 				Text = description,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			};
-			desc.AddThemeColorOverride("font_color", new Color(0.82f, 0.80f, 0.94f, 0.90f));
-			desc.AddThemeFontSizeOverride("font_size", 58);
+			StyleLabel(desc, new Color(0.82f, 0.80f, 0.94f, 0.90f), 58);
 			column.AddChild(desc);
 		}
 		
-		// Apply this viewport to the back face
+		// Apply this vp to the back face
 		var mat = backMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
 		if (mat != null)
 		{
@@ -676,15 +704,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void BuildGbaCompactBackFaceTexture(MeshInstance3D backMesh, string title,
 		string genre, string releaseYear, string rating)
 	{
-		var vp = new SubViewport
-		{
-			Size = new Vector2I(GbaBackLabelViewportWidth, GbaBackLabelViewportHeight),
-			TransparentBg = true,
-			RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
-			Msaa2D = Viewport.Msaa.Disabled,
-			ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
-		};
-		_sceneRoot.AddChild(vp);
+		var vp = AddViewport(
+			new Vector2I(GbaBackLabelViewportWidth, GbaBackLabelViewportHeight),
+			SubViewport.UpdateMode.Always,
+			Viewport.Msaa.Disabled,
+			Viewport.ScreenSpaceAAEnum.Disabled);
 
 		var margin = new MarginContainer();
 		margin.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -726,8 +750,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			HorizontalAlignment = HorizontalAlignment.Center,
 		};
-		titleLabel.AddThemeColorOverride("font_color", new Color(0.04f, 0.04f, 0.05f, 1f));
-		titleLabel.AddThemeFontSizeOverride("font_size", 168);
+		StyleLabel(titleLabel, new Color(0.04f, 0.04f, 0.05f, 1f), 168);
 		column.AddChild(titleLabel);
 
 		var divider = new ColorRect
@@ -743,8 +766,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 		};
-		metaLabel.AddThemeColorOverride("font_color", new Color(0.16f, 0.16f, 0.18f, 0.88f));
-		metaLabel.AddThemeFontSizeOverride("font_size", 104);
+		StyleLabel(metaLabel, new Color(0.16f, 0.16f, 0.18f, 0.88f), 104);
 		column.AddChild(metaLabel);
 
 		var hintLabel = new Label
@@ -752,8 +774,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Text = "Double-click for details",
 			HorizontalAlignment = HorizontalAlignment.Center,
 		};
-		hintLabel.AddThemeColorOverride("font_color", new Color(0.24f, 0.24f, 0.26f, 0.80f));
-		hintLabel.AddThemeFontSizeOverride("font_size", 56);
+		StyleLabel(hintLabel, new Color(0.24f, 0.24f, 0.26f, 0.80f), 56);
 		column.AddChild(hintLabel);
 
 		var mat = backMesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D;
@@ -778,8 +799,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		parent.AddChild(row);
 		
 		var keyLabel = new Label { Text = label };
-		keyLabel.AddThemeColorOverride("font_color", new Color(0.62f, 0.74f, 0.94f, 0.88f));
-		keyLabel.AddThemeFontSizeOverride("font_size", 52);
+		StyleLabel(keyLabel, new Color(0.62f, 0.74f, 0.94f, 0.88f), 52);
 		keyLabel.CustomMinimumSize = new Vector2(380, 0);
 		row.AddChild(keyLabel);
 
@@ -789,8 +809,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 		};
-		valueLabel.AddThemeColorOverride("font_color", new Color(0.95f, 0.93f, 1f, 0.96f));
-		valueLabel.AddThemeFontSizeOverride("font_size", 52);
+		StyleLabel(valueLabel, new Color(0.95f, 0.93f, 1f, 0.96f), 52);
 		row.AddChild(valueLabel);
 		
 	}
@@ -800,8 +819,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (string.IsNullOrWhiteSpace(value)) return;
 
 		var keyLabel = new Label { Text = label };
-		keyLabel.AddThemeColorOverride("font_color", new Color(0.24f, 0.24f, 0.26f, 0.88f));
-		keyLabel.AddThemeFontSizeOverride("font_size", 30);
+		StyleLabel(keyLabel, new Color(0.24f, 0.24f, 0.26f, 0.88f), 30);
 		parent.AddChild(keyLabel);
 
 		var valueLabel = new Label
@@ -810,8 +828,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 		};
-		valueLabel.AddThemeColorOverride("font_color", new Color(0.08f, 0.08f, 0.10f, 0.98f));
-		valueLabel.AddThemeFontSizeOverride("font_size", 30);
+		StyleLabel(valueLabel, new Color(0.08f, 0.08f, 0.10f, 0.98f), 30);
 		parent.AddChild(valueLabel);
 	}
 
@@ -840,9 +857,29 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Text = text,
 			HorizontalAlignment = HorizontalAlignment.Center,
 		};
-		label.AddThemeColorOverride("font_color", new Color(0.99f, 0.99f, 1f, 1f));
-		label.AddThemeFontSizeOverride("font_size", 42);
+		StyleLabel(label, new Color(0.99f, 0.99f, 1f, 1f), 42);
 		chip.AddChild(label);
+	}
+
+	private SubViewport AddViewport(Vector2I size, SubViewport.UpdateMode updateMode,
+		Viewport.Msaa msaa, Viewport.ScreenSpaceAAEnum screenAa = Viewport.ScreenSpaceAAEnum.Disabled)
+	{
+		var vp = new SubViewport
+		{
+			Size = size,
+			TransparentBg = true,
+			RenderTargetUpdateMode = updateMode,
+			Msaa2D = msaa,
+			ScreenSpaceAA = screenAa,
+		};
+		_sceneRoot.AddChild(vp);
+		return vp;
+	}
+
+	private static void StyleLabel(Label label, Color color, int fontSize)
+	{
+		label.AddThemeColorOverride("font_color", color);
+		label.AddThemeFontSizeOverride("font_size", fontSize);
 	}
 
 	private static string BuildCompactGbaMetaLine(string genre, string releaseYear, string rating)
@@ -916,15 +953,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (displayTexture == null)
 			return null;
 
-		var vp = new SubViewport
-		{
-			Size = new Vector2I(GbaFrontLabelViewportWidth, GbaFrontLabelViewportHeight),
-			TransparentBg = true,
-			RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
-			Msaa2D = Viewport.Msaa.Msaa8X,
-			ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Fxaa,
-		};
-		_sceneRoot.AddChild(vp);
+		var vp = AddViewport(
+			new Vector2I(GbaFrontLabelViewportWidth, GbaFrontLabelViewportHeight),
+			SubViewport.UpdateMode.Always,
+			Viewport.Msaa.Msaa8X,
+			Viewport.ScreenSpaceAAEnum.Fxaa);
 
 		var panel = new PanelContainer();
 		panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -1009,8 +1042,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 		};
-		titleLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.97f, 1f, 1f));
-		titleLabel.AddThemeFontSizeOverride("font_size", 42);
+		StyleLabel(titleLabel, new Color(0.98f, 0.97f, 1f, 1f), 42);
 		footer.AddChild(titleLabel);
 
 		return vp.GetTexture();
@@ -1032,14 +1064,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var sideMesh = FindMeshByName(_boxes[index], "SideMesh");
 		if (sideMesh == null) return;
 
-		var vp = new SubViewport
-		{
-			Size = new Vector2I(64, 512),
-			TransparentBg = true,
-			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
-			Msaa2D = Viewport.Msaa.Msaa4X,
-		};
-		_sceneRoot.AddChild(vp);
+		var vp = AddViewport(new Vector2I(64, 512), SubViewport.UpdateMode.WhenVisible, Viewport.Msaa.Msaa4X);
 		
 		
 		prog.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -1092,10 +1117,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		// Idle spin on selected cartridge
 		var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
-		for (int i = 0; i < _boxes.Count; i++)
+		for (int index = 0; index < _boxes.Count; index++)
 		{
-			if (i == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold && !_flippedBoxes.Contains(i))
-				_boxes[i].RotateY((float)delta * 0.4f);
+			if (index == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold && !_flippedBoxes.Contains(index))
+				_boxes[index].RotateY((float)delta * 0.4f);
 		}
 
 		LayoutBoxes();
@@ -1106,15 +1131,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		_currentSwayAngle = swayAngle;
 
-		for (int i = 0; i < _boxes.Count; i++)
+		for (int index = 0; index < _boxes.Count; index++)
 		{
 
-			if (i == _hoveredIdx || _animatingBoxes.Contains(i) || _returningBoxes.Contains(i))
+			if (index == _hoveredIdx || _animatingBoxes.Contains(index) || _returningBoxes.Contains(index))
 			{
 				continue;
 			}
 			
-			var box = _boxes[i];
+			var box = _boxes[index];
 			
 			box.Rotation = new Vector3(
 				swayAngle,
@@ -1122,14 +1147,16 @@ public partial class GameCarousel3DView : SubViewportContainer
 				swayAngle * 0.5f
 			);
 			
-			if (!IsCarouselMoving())
-			{
-				box.Position = new Vector3(
-					box.Position.X,
-					box.Position.Y + swayBob,
-					box.Position.Z
-				);
-			}
+			_bobStrength = IsCarouselMoving()
+				? Mathf.Lerp(_bobStrength, 0f, 8f * (float)delta)
+				: Mathf.Lerp(_bobStrength, 1f, 4f * (float)delta);
+
+			box.Position = new Vector3(
+				box.Position.X,
+				box.Position.Y + swayBob * _bobStrength,
+				box.Position.Z
+			);
+
 
 		}
 	}
@@ -1143,6 +1170,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 	// Handle when the mouse is clicked or draggged, kills velocity so it doesnt drift when you drag
 	public override void _GuiInput(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+		{
+			AcceptEvent();
+			return;
+		}
 		if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
 		{
 			if (mb.Pressed)
@@ -1202,6 +1234,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	// Handle when the mouse hovers over the box
 	public override void _Input(InputEvent e)
 	{
+		if (InputRoutingService.Instance?.IsUiInputBlocked == true)
+			return;
 		if (e is InputEventKey) return;
 		if (_boxes.Count == 0) return;
 		if (e is InputEventMouseMotion mm)
@@ -1236,10 +1270,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 	}
 	
 	// Methods for animating the boxes whenever they are hovered over
-	private void OnBoxHoverEnter(int idx, Vector2 mousePos)
+	private void OnBoxHoverEnter(int index, Vector2 mousePos)
 	{
-		if (idx >= _boxes.Count) return;
-		var box = _boxes[idx];
+		if (index >= _boxes.Count) return;
+		var box = _boxes[index];
 
 		if (!_dragging)
 			AudioManager.Instance?.PlayCarouselHover();
@@ -1250,7 +1284,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_hoverTween.SetEase(Tween.EaseType.Out);
 		
 		_hoverTween.TweenProperty(box, "rotation",
-			new Vector3(0f, _flippedBoxes.Contains(idx) ? Mathf.DegToRad(180f) : 0f, 0f),
+			new Vector3(0f, _flippedBoxes.Contains(index) ? Mathf.DegToRad(180f) : 0f, 0f),
 			0.15f);
 
 		_hoverTween.TweenProperty(box, "scale",
@@ -1258,10 +1292,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 			0.2f);
 	}
 
-	private void OnBoxHoverExit(int idx)
+	private void OnBoxHoverExit(int index)
 	{
-		if (idx >= _boxes.Count) return;
-		var box = _boxes[idx];
+		if (index >= _boxes.Count) return;
+		var box = _boxes[index];
 
 		AudioManager.Instance?.StopCarouselHover();
 
@@ -1271,8 +1305,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 		_hoverTween.SetTrans(Tween.TransitionType.Spring);
 		_hoverTween.SetEase(Tween.EaseType.Out);
 		
-		_returningBoxes.Add(idx);
-		_animatingBoxes.Add(idx);
+		_returningBoxes.Add(index);
+		_animatingBoxes.Add(index);
 		
 		
 		// Reset scale
@@ -1281,7 +1315,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 			0.6f);
 		
 		// Reset tilt
-		if (!_flippedBoxes.Contains(idx))
+		if (!_flippedBoxes.Contains(index))
 		{
 			_hoverTween.TweenProperty(box, "rotation",
 				new Vector3(_currentSwayAngle, 0f, _currentSwayAngle * 0.5f), 0.4f);
@@ -1292,7 +1326,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 				new Vector3(_currentSwayAngle, box.Rotation.Y, _currentSwayAngle * 0.5f), 0.4f);
 		}
 		
-		var capturedIdx = idx;
+		var capturedIdx = index;
 		_hoverTween.TweenCallback(Callable.From(() =>
 		{
 			_returningBoxes.Remove(capturedIdx);
@@ -1300,10 +1334,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 		}));
 	}
 
-	private void UpdateHoverTilt(int idx, Vector2 mousePos)
+	private void UpdateHoverTilt(int index, Vector2 mousePos)
 	{
-		if (idx >= _boxes.Count) return;
-		var box = _boxes[idx];
+		if (index >= _boxes.Count) return;
+		var box = _boxes[index];
 
 		// Map mouse position to tilt angle — center = no tilt, edges = max tilt
 		var nx = (mousePos.X / Size.X - 0.5f) * 2f;  // -1 to 1
@@ -1313,11 +1347,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var tiltY = Mathf.DegToRad( nx * 12f);  // tilt left/right
 
 		// Handled differently on flipped box
-		if (_flippedBoxes.Contains(idx))
+		if (_flippedBoxes.Contains(index))
 			tiltY = -tiltY;
 
 		// Target rotation for flip offset
-		var baseY = _flippedBoxes.Contains(idx) ? Mathf.DegToRad(180f) : 0f;
+		var baseY = _flippedBoxes.Contains(index) ? Mathf.DegToRad(180f) : 0f;
 		
 		// Smoothly interpolate current rotation toward target
 		var currentRot = box.Rotation;
@@ -1331,9 +1365,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 	// Method for snapping the game into place more fluidly after a swipe
 	private void ElasticSnapSelected()
 	{
-		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
-		if (idx >= _boxes.Count) return;
-		var box = _boxes[idx];
+		var index = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (index >= _boxes.Count) return;
+		var box = _boxes[index];
 
 		_hoverTween?.Kill();
 		_hoverTween = CreateTween();
@@ -1347,17 +1381,17 @@ public partial class GameCarousel3DView : SubViewportContainer
 			0.6f); // elastic settle back
 	}
 	
-	// Wrapping logic: d is how far the box is from teh center and t prevents distortion with distnace
+	// Wrapping logic: offset is how far the box is from teh center and depth prevents distortion with distnace
 	private void LayoutBoxes()
 	{
 		if (_boxes.Count == 0) return;
 
-		for (int i = 0; i < _boxes.Count; i++)
+		for (int index = 0; index < _boxes.Count; index++)
 		{
 			
-			var box = _boxes[i];
+			var box = _boxes[index];
 
-			var d = i - CarouselPos;
+			var d = index - CarouselPos;
 			if (d > _count * 0.5f) d -= _count;
 			if (d < -_count * 0.5f) d += _count;
 
@@ -1367,29 +1401,29 @@ public partial class GameCarousel3DView : SubViewportContainer
 			box.Position = new Vector3(d * Spacing, 0f, -t * 1.2f);
 			
 			// ONLY set scale and rotation if not hovered
-			if (i != _hoveredIdx && !_returningBoxes.Contains(i))
+			if (index != _hoveredIdx && !_returningBoxes.Contains(index))
 			{
 				var scale = Mathf.Lerp(SelectedScale, UnselectedScale, t);
 				box.Scale = new Vector3(scale, scale, scale);
-				if (!_flippedBoxes.Contains(i) && !_animatingBoxes.Contains(i))
+				if (!_flippedBoxes.Contains(index) && !_animatingBoxes.Contains(index))
 					box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
 			}
 
-			if (i < _baseMaterials.Count)
+			if (index < _baseMaterials.Count)
 			{
-				foreach (var material in _baseMaterials[i])
+				foreach (var mat in _baseMaterials[index])
 				{
-					material.AlbedoColor = new Color(
-						material.AlbedoColor.R,
-						material.AlbedoColor.G,
-						material.AlbedoColor.B,
+					mat.AlbedoColor = new Color(
+						mat.AlbedoColor.R,
+						mat.AlbedoColor.G,
+						mat.AlbedoColor.B,
 						alpha);
 				}
 			}
-			if (i < _coverMaterials.Count && _coverMaterials[i] != null)
+			if (index < _coverMaterials.Count && _coverMaterials[index] != null)
 			{
-				var coverMat = _coverMaterials[i];
-				if (i >= _baseMaterials.Count || !_baseMaterials[i].Contains(coverMat))
+				var coverMat = _coverMaterials[index];
+				if (index >= _baseMaterials.Count || !_baseMaterials[index].Contains(coverMat))
 				{
 					coverMat.AlbedoColor = new Color(
 						coverMat.AlbedoColor.R,
@@ -1409,12 +1443,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		return p;
 	}
 
-	private int WrapIndex(int i)
+	private int WrapIndex(int index)
 	{
 		if (_count == 0) return 0;
-		i %= _count;
-		if (i < 0) i += _count;
-		return i;
+		index %= _count;
+		if (index < 0) index += _count;
+		return index;
 	}
 
 	private void UpdateSpinAudioFromMotion()
@@ -1480,33 +1514,33 @@ public partial class GameCarousel3DView : SubViewportContainer
 	// FLIPPING THE GAME
 	public void FlipSelected()
 	{
-		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
-		if (idx >= _boxes.Count) return;
+		var index = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (index >= _boxes.Count) return;
 
 		AudioManager.Instance?.PlayFlip();
-		var box = _boxes[idx];
+		var box = _boxes[index];
 		
-		var isFlipped = _flippedBoxes.Contains(idx);
+		var isFlipped = _flippedBoxes.Contains(index);
 		if (isFlipped)
 		{
-			_flippedBoxes.Remove(idx);
-			CollapseExpandedGbaBack(idx);
+			_flippedBoxes.Remove(index);
+			CollapseExpandedGbaBack(index);
 		}
 		else
-			_flippedBoxes.Add(idx);
+			_flippedBoxes.Add(index);
 
 		var targetY = isFlipped ? 0f : Mathf.DegToRad(180f);
 		
 		var currentRot = box.Rotation;
 		
-		_animatingBoxes.Add(idx);
+		_animatingBoxes.Add(index);
 		_hoverTween?.Kill();
 		_hoverTween = CreateTween();
 		_hoverTween.SetTrans(Tween.TransitionType.Cubic);
 		_hoverTween.SetEase(Tween.EaseType.InOut);
 		_hoverTween.TweenProperty(box, "rotation",
 			new Vector3(currentRot.X, targetY, currentRot.Z), 0.5f);
-		var capturedIdx = idx;
+		var capturedIdx = index;
 		_hoverTween.TweenCallback(Callable.From(() =>
 			_animatingBoxes.Remove(capturedIdx)));
 	}
@@ -1514,20 +1548,20 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void UnflipSelected()
 	{
 		CollapseExpandedGbaBacks();
-		foreach (var idx in _flippedBoxes)
+		foreach (var index in _flippedBoxes)
 		{
-			if (idx >= _boxes.Count) continue;
+			if (index >= _boxes.Count) continue;
 			
-			_animatingBoxes.Add(idx);
-			var currentRot = _boxes[idx].Rotation;
+			_animatingBoxes.Add(index);
+			var currentRot = _boxes[index].Rotation;
 			
 			var tween = CreateTween();
 			tween.SetTrans(Tween.TransitionType.Cubic);
 			tween.SetEase(Tween.EaseType.InOut);
-			tween.TweenProperty(_boxes[idx], "rotation",
+			tween.TweenProperty(_boxes[index], "rotation",
 				new Vector3(currentRot.X, 0f, currentRot.Z), 0.4f);
 			
-			var capturedIdx = idx;
+			var capturedIdx = index;
 			tween.TweenCallback(Callable.From(() => 
 				_animatingBoxes.Remove(capturedIdx)));
 		}
@@ -1542,11 +1576,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		if (mousePosition.X < Size.X * 0.2f || mousePosition.X > Size.X * 0.8f)
 			return false;
 
-		var idx = WrapIndex(Mathf.RoundToInt(CarouselPos));
-		if (!_flippedBoxes.Contains(idx))
+		var index = WrapIndex(Mathf.RoundToInt(CarouselPos));
+		if (!_flippedBoxes.Contains(index))
 			return false;
 
-		ToggleGbaBackDetail(idx, !_expandedGbaBacks.Contains(idx));
+		ToggleGbaBackDetail(index, !_expandedGbaBacks.Contains(index));
 		return true;
 	}
 
@@ -1621,13 +1655,52 @@ public partial class GameCarousel3DView : SubViewportContainer
 		coverMat.AlbedoColor = new Color(1, 1, 1, 1);
 		coverMat.Roughness = template?.Roughness ?? 0.5f;
 		coverMat.Metallic = template?.Metallic ?? 0.1f;
-		// Preserve the source material's render mode so opaque imported meshes stay in
+		// Preserve the source mat's render mode so opaque imported meshes stay in
 		// Godot's opaque pass instead of breaking from alpha depth sorting.
 		coverMat.Transparency = template?.Transparency ?? BaseMaterial3D.TransparencyEnum.Disabled;
 		coverMat.TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic;
 		coverMat.ResourceLocalToScene = true;
 		coverMesh.SetSurfaceOverrideMaterial(0, coverMat);
 		return coverMat;
+	}
+
+	private static bool SquarePlatform(string? platformId)
+	{
+		return string.Equals(platformId, "ps1", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "gba", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "ds", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool N64Platform(string? platformId)
+	{
+		return string.Equals(platformId, "N64", System.StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(platformId, "n64", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool SidewaysPlatform(string? platformId)
+	{
+		return string.Equals(platformId, "snes", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool SquareBox(Node node)
+	{
+		return BoxMeta(node, "pgemu_square_box");
+	}
+
+	private static bool LandscapeBox(Node node)
+	{
+		return BoxMeta(node, "pgemu_landscape_box");
+	}
+
+	private static bool BoxMeta(Node node, string key)
+	{
+		for (Node? current = node; current != null; current = current.GetParent())
+		{
+			if (current.HasMeta(key))
+				return current.GetMeta(key).AsBool();
+		}
+
+		return false;
 	}
 
 	private Texture2D? GetGbaCartridgeLogoTexture()
@@ -1665,27 +1738,28 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 	private static MeshInstance3D? FindMeshByName(Node node, string name)
 	{
-		if (node is MeshInstance3D mesh && mesh.Name == name)
-			return mesh;
-
-		foreach (Node child in node.GetChildren())
-		{
-			var found = FindMeshByName(child, name);
-			if (found != null)
-				return found;
-		}
-
-		return null;
+		return FindMesh(node, mesh => mesh.Name == name);
 	}
 
 	private static MeshInstance3D? FindFirstMeshInstance(Node node)
 	{
-		if (node is MeshInstance3D mesh && mesh.Mesh != null)
+		return FindMesh(node, mesh => mesh.Mesh != null);
+	}
+
+	private static MeshInstance3D? FindMeshInstanceByDescriptor(Node node, string needle)
+	{
+		var lowerNeedle = needle.ToLowerInvariant();
+		return FindMesh(node, mesh => MeshDescriptorContains(mesh, lowerNeedle));
+	}
+
+	private static MeshInstance3D? FindMesh(Node node, System.Func<MeshInstance3D, bool> match)
+	{
+		if (node is MeshInstance3D mesh && match(mesh))
 			return mesh;
 
 		foreach (Node child in node.GetChildren())
 		{
-			var found = FindFirstMeshInstance(child);
+			var found = FindMesh(child, match);
 			if (found != null)
 				return found;
 		}
@@ -1693,34 +1767,26 @@ public partial class GameCarousel3DView : SubViewportContainer
 		return null;
 	}
 
-	private static MeshInstance3D? FindMeshInstanceByDescriptor(Node node, string needle)
+	private static bool MeshDescriptorContains(MeshInstance3D mesh, string needle)
 	{
-		if (node is MeshInstance3D mesh && mesh.Mesh != null)
+		if (mesh.Mesh == null)
+			return false;
+
+		var meshDescriptor = $"{mesh.Name} {mesh.Mesh.ResourceName} {mesh.Mesh.ResourcePath}".ToLowerInvariant();
+		if (meshDescriptor.Contains(needle, System.StringComparison.Ordinal))
+			return true;
+
+		for (int surface = 0; surface < mesh.Mesh.GetSurfaceCount(); surface++)
 		{
-			var meshDescriptor = $"{mesh.Name} {mesh.Mesh.ResourceName} {mesh.Mesh.ResourcePath}".ToLowerInvariant();
-			var lowerNeedle = needle.ToLowerInvariant();
-			if (meshDescriptor.Contains(lowerNeedle, System.StringComparison.Ordinal))
-				return mesh;
+			if (mesh.Mesh.SurfaceGetMaterial(surface) is not StandardMaterial3D mat)
+				continue;
 
-			for (int surface = 0; surface < mesh.Mesh.GetSurfaceCount(); surface++)
-			{
-				if (mesh.Mesh.SurfaceGetMaterial(surface) is not StandardMaterial3D material)
-					continue;
-
-				var materialDescriptor = $"{material.ResourceName} {material.ResourcePath}".ToLowerInvariant();
-				if (materialDescriptor.Contains(lowerNeedle, System.StringComparison.Ordinal))
-					return mesh;
-			}
+			var materialDescriptor = $"{mat.ResourceName} {mat.ResourcePath}".ToLowerInvariant();
+			if (materialDescriptor.Contains(needle, System.StringComparison.Ordinal))
+				return true;
 		}
 
-		foreach (Node child in node.GetChildren())
-		{
-			var found = FindMeshInstanceByDescriptor(child, needle);
-			if (found != null)
-				return found;
-		}
-
-		return null;
+		return false;
 	}
 
 	private static void CollectImportedMaterials(Node node, List<StandardMaterial3D> materials,
@@ -1748,9 +1814,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 			CollectImportedMaterials(child, materials, ref labelMesh);
 	}
 
-	private static bool MaterialLooksLikeGbaLabel(StandardMaterial3D material, MeshInstance3D mesh)
+	private static bool MaterialLooksLikeGbaLabel(StandardMaterial3D mat, MeshInstance3D mesh)
 	{
-		var descriptor = $"{material.ResourceName} {material.ResourcePath} {mesh.Name}".ToLowerInvariant();
+		var descriptor = $"{mat.ResourceName} {mat.ResourcePath} {mesh.Name}".ToLowerInvariant();
 		return descriptor.Contains("label") || descriptor.Contains("sticker");
 	}
 

@@ -33,6 +33,8 @@ public static class LibretroThumbnailService
     {
         ["gba"] = "Nintendo - Game Boy Advance",
         ["ds"] = "Nintendo - Nintendo DS",
+        ["nes"] = "Nintendo - Nintendo Entertainment System",
+        ["snes"] = "Nintendo - Super Nintendo Entertainment System",
         ["n64"] = "Nintendo - Nintendo 64",
         ["gc"] = "Nintendo - GameCube",
         ["wii"] = "Nintendo - Wii",
@@ -45,6 +47,11 @@ public static class LibretroThumbnailService
     {
         ["Game Boy Advance"] = "Nintendo - Game Boy Advance",
         ["Nintendo DS"] = "Nintendo - Nintendo DS",
+        ["Nintendo Entertainment System"] = "Nintendo - Nintendo Entertainment System",
+        ["NES"] = "Nintendo - Nintendo Entertainment System",
+        ["Super Nintendo"] = "Nintendo - Super Nintendo Entertainment System",
+        ["Super Nintendo Entertainment System"] = "Nintendo - Super Nintendo Entertainment System",
+        ["SNES"] = "Nintendo - Super Nintendo Entertainment System",
         ["Nintendo 64"] = "Nintendo - Nintendo 64",
         ["Nintendo GameCube"] = "Nintendo - GameCube",
         ["Nintendo Wii"] = "Nintendo - Wii",

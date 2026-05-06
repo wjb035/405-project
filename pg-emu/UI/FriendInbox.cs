@@ -15,11 +15,17 @@ public partial class FriendInbox : PopupPanel
 	[Export] private Label MissedMessagesLabel;
 	[Export] private Panel PopupContent;
 	
+	private ChatManager _chat;
+	private List<FriendRequestDto> _lastRequests = new();
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		Hide();
+		
+		_chat = GetNode<ChatManager>("/root/ChatManager");
+		
+		_chat.UnreadCountUpdated += OnUnreadCountUpdated;
 		// Load requests when shown
 	}
 	
@@ -74,30 +80,8 @@ public partial class FriendInbox : PopupPanel
 
 		// await ToSignal(GetTree().CreateTimer(1.0), "timeout"); // simulate delay
 
-		var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
-		var missed = chatOverlay.GetAndClearMissedMessages();
-		
-		if (missed.Count > 0)
-		{
-			var msgHeader = new Label();
-			msgHeader.Text = "Missed Messages";
-			UiStyle.StyleMetaLabel(msgHeader);
-			InboxList.AddChild(msgHeader);
-
-			foreach (var (fromUser, message, sentAt) in missed)
-			{
-				var item = MissedMessageItemScene.Instantiate<MissedMessageItem>();
-				InboxList.AddChild(item);
-				item.Setup(fromUser, message, sentAt);
-
-				item.Modulate = new Color(1, 1, 1, 0);
-				var tween = CreateTween();
-				tween.TweenProperty(item, "modulate:a", 1f, 0.2f);
-			}
-			
-			var separator = new HSeparator();
-			InboxList.AddChild(separator);
-		}
+		_chat.LoadUnreadCounts();
+		_chat.LoadUnreadMessages();
 		
 		List<FriendRequestDto> requests;
 		try
@@ -121,44 +105,61 @@ public partial class FriendInbox : PopupPanel
 		GD.Print($"Friend requests loaded: {requests.Count}");
 		foreach (var r in requests)
 			GD.Print($"Request from: {r.Username}, Id: {r.Id}");
+		_lastRequests = requests;
+		RenderInbox();
 		
-			
-		// If there arent requests, display there are none
-		if (requests == null || requests.Count == 0)
+	}
+	private void OnUnreadCountUpdated()
+	{
+		RenderInbox();
+	}
+	
+	private void RenderInbox()
+	{
+		foreach (Node child in InboxList.GetChildren())
+			child.QueueFree();
+
+		var unread = _chat.GetUnreadCounts();
+
+		bool hasRequests = _lastRequests != null && _lastRequests.Count > 0;
+		bool hasUnread = unread != null && unread.Count > 0;
+
+		// EMPTY STATE FIRST 
+		if (!hasRequests && !hasUnread)
 		{
-			if (missed.Count == 0)
-			{
-				StatusLabel.Text = "No notifications";
-				StatusLabel.Visible = true;
-			}
-			else
-			{
-				StatusLabel.Visible = false;
-			}
+			StatusLabel.Text = "No notifications";
+			StatusLabel.Visible = true;
 			return;
 		}
-		
-		if (missed.Count > 0)
-		{
-			var reqHeader = new Label();
-			reqHeader.Text = "Friend Requests";
-			UiStyle.StyleMetaLabel(reqHeader);
-			InboxList.AddChild(reqHeader);
-		}
-	
+
 		StatusLabel.Visible = false;
 
-		// If there are requests, display them
-		foreach (var req in requests)
+		// UNREAD SECTION
+		if (hasUnread)
 		{
-			var item = FriendRequestItemScene.Instantiate<FriendRequestItem>();
-			InboxList.AddChild(item);
-			item.Setup(req);
-			
-			// animation
-			item.Modulate = new Color(1,1,1,0);
-			var tween = CreateTween();
-			tween.TweenProperty(item, "modulate:a", 1f, 0.2f);
+			foreach (var kvp in unread)
+			{
+				var item = MissedMessageItemScene.Instantiate<MissedMessageItem>();
+				item.Setup(kvp.Key, "New messages", "", kvp.Value);
+				InboxList.AddChild(item);
+			}
+		}
+
+		// REQUEST SECTION
+		if (hasRequests)
+		{
+			var header = new Label();
+			header.Text = "Friend Requests";
+			UiStyle.StyleMetaLabel(header);
+			InboxList.AddChild(header);
+
+			foreach (var req in _lastRequests)
+			{
+				var item = FriendRequestItemScene.Instantiate<FriendRequestItem>();
+				item.Setup(req);
+				InboxList.AddChild(item);
+			}
 		}
 	}
+	
 }

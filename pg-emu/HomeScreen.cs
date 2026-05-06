@@ -187,6 +187,10 @@ public partial class HomeScreen : Control
 		// background transition
 		StartBackgroundTransition();
 		
+		// For testing
+		var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+		chatOverlay._isLoggedOut = false;
+		
 		// Load platforms from config, then build the carousel visuals.
 		ConnectAllButtons(this);
 		InputRoutingService.Instance?.UnlockUiInput();
@@ -222,7 +226,7 @@ public partial class HomeScreen : Control
 		// Populate carousel
 		_carousel.Populate(consoleTypes);
 		
-		RestoreSelectedPlatformSelection();
+		RestoreSelectedPlatform();
 		UpdateSelectedLabel();
 		StartSelectedPlatformCoverArtWarmup();
 		
@@ -730,6 +734,10 @@ public partial class HomeScreen : Control
 		dialog.Confirmed += async () =>
 		{
 			AuthService.Instance.Logout();
+			var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+			chatOverlay._isLoggedOut = true;
+			chatOverlay.CloseOverlay();
+
 			await Transition.ChangeScene("res://WelcomeScreen.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 
 		};
@@ -1020,13 +1028,20 @@ private void OnAnyButtonPressed()
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GameCube);
 		else if (string.Equals(platform.Id, "gba", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.GBA);
+		else if (string.Equals(platform.Id, "ps1", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PlayStation1);
 		else if (string.Equals(platform.Id, "ps2", StringComparison.OrdinalIgnoreCase))
 			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PlayStation2);
+		else if (string.Equals(platform.Id, "psp", StringComparison.OrdinalIgnoreCase))
+			await _carousel.PlaySelectedConsoleAnimationAsync(ConsoleCarousel3DView.ConsoleType.PSP);
 
-		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, 0.5f, 0.1f);
+		const float platformTransitionDuration = 0.68f;
+		const float platformTransitionHold = 0.14f;
+		_carousel.StartSelectionCameraPush(platformTransitionDuration + platformTransitionHold);
+		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Spiral, platformTransitionDuration, platformTransitionHold);
 	}
 
-	private void RestoreSelectedPlatformSelection()
+	private void RestoreSelectedPlatform()
 	{
 		if (Count == 0)
 			return;
@@ -1059,7 +1074,7 @@ private void OnAnyButtonPressed()
 		}
 	}
 
-	private void RememberSelectedPlatformSelection(int idx)
+	private void RememberSelectedPlatform(int idx)
 	{
 		if (idx < 0 || idx >= _platforms.Count)
 			return;
@@ -1098,7 +1113,7 @@ private void OnAnyButtonPressed()
 	{
 		if (index < 0 || index >= _platforms.Count) return;
 		_selectedTitle.Text = _platforms[index].Name;
-		RememberSelectedPlatformSelection(index);
+		RememberSelectedPlatform(index);
 	}
 	
 
@@ -1357,7 +1372,7 @@ private void OnAnyButtonPressed()
 				_status.Text = _configPath != null
 					? $"{_platforms[idx].Name} selected (loaded {_configPath})"
 					: $"{_platforms[idx].Name} selected";
-			RememberSelectedPlatformSelection(idx);
+			RememberSelectedPlatform(idx);
 		}
 	}
 

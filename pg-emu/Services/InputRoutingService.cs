@@ -10,7 +10,11 @@ public partial class InputRoutingService : Node
 
     public bool IsUiInputBlocked { get; private set; }
 
-    private bool _waitForFocusReturn;
+    private bool _minimizedForExternalLaunch;
+
+    /// <summary>Transparent full-window layer so mouse / focus never reach game UI below.</summary>
+    private CanvasLayer? _inputShieldLayer;
+    private ColorRect? _inputShield;
 
     public event Action<bool>? UiInputBlockChanged;
 
@@ -18,6 +22,7 @@ public partial class InputRoutingService : Node
     {
         Instance = this;
         ProcessMode = ProcessModeEnum.Always;
+        SetProcessInput(true);
     }
 
     public override void _ExitTree()
@@ -29,30 +34,86 @@ public partial class InputRoutingService : Node
     public void LockUiInputForExternalLaunch(bool minimizeWindow = true)
     {
         SetBlocked(true);
-        _waitForFocusReturn = true;
 
         if (!minimizeWindow)
+        {
+            _minimizedForExternalLaunch = false;
             return;
+        }
 
-        // Push the launcher into the background so the emulator can own focus/input.
         var window = GetWindow();
         if (window != null && window.Mode != Window.ModeEnum.Minimized)
+        {
             window.Mode = Window.ModeEnum.Minimized;
+            _minimizedForExternalLaunch = true;
+        }
+        else
+        {
+            _minimizedForExternalLaunch = false;
+        }
     }
 
     public void UnlockUiInput()
     {
-        _waitForFocusReturn = false;
+        if (_minimizedForExternalLaunch)
+        {
+            _minimizedForExternalLaunch = false;
+            var window = GetWindow();
+            // Bring the launcher back the same way the project is configured (fullscreen),
+            // instead of leaving it windowed after un-minimize.
+            if (window != null && window.Mode == Window.ModeEnum.Minimized)
+                window.Mode = Window.ModeEnum.Fullscreen;
+        }
+
         SetBlocked(false);
     }
 
-    public override void _Process(double delta)
+    public override void _Input(InputEvent @event)
     {
-        if (!_waitForFocusReturn)
+        if (!IsUiInputBlocked)
             return;
 
-        if (DisplayServer.WindowIsFocused())
-            UnlockUiInput();
+        GetViewport()?.SetInputAsHandled();
+    }
+
+    private void EnsureInputShield()
+    {
+        if (_inputShieldLayer != null)
+            return;
+
+        _inputShieldLayer = new CanvasLayer
+        {
+            Layer = 120,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(_inputShieldLayer);
+
+        _inputShield = new ColorRect
+        {
+            Color = Colors.Transparent,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+            FocusMode = Control.FocusModeEnum.All,
+        };
+        _inputShield.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _inputShield.OffsetLeft = 0;
+        _inputShield.OffsetTop = 0;
+        _inputShield.OffsetRight = 0;
+        _inputShield.OffsetBottom = 0;
+        _inputShieldLayer.AddChild(_inputShield);
+    }
+
+    private void SetInputShieldVisible(bool visible)
+    {
+        if (!visible)
+        {
+            if (_inputShieldLayer != null)
+                _inputShieldLayer.Visible = false;
+            return;
+        }
+
+        EnsureInputShield();
+        _inputShieldLayer!.Visible = true;
+        _inputShield!.CallDeferred("grab_focus");
     }
 
     private void SetBlocked(bool blocked)
@@ -61,6 +122,7 @@ public partial class InputRoutingService : Node
             return;
 
         IsUiInputBlocked = blocked;
+        SetInputShieldVisible(blocked);
         UiInputBlockChanged?.Invoke(blocked);
     }
 }

@@ -71,3 +71,5 @@ pg-emu/export_presets.cfg
 
 PGEmu.backend/appsettings.Development.json
 PGEmu.backend/appsettings.json
+config.json
+pg-emu/playtime.json
