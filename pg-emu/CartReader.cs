@@ -33,6 +33,8 @@ public partial class CartReader : PopupPanel
 	[Export] private NodePath CancelInstallPath;
 	[Export] private NodePath InstallButtonPath;
 	
+	[Export] private NodePath NowInstalledButtonPath;
+	
 	private VBoxContainer _consolePrompt;
 	private Button _gameBoySelection;
 	private Button _n64Selection;
@@ -47,6 +49,8 @@ public partial class CartReader : PopupPanel
 	private VBoxContainer _installMessage;
 	private Button _installButton;
 	private Button _cancelInstallButton;
+	
+	private VBoxContainer _nowInstalledMessage;
 	
 	//private CartReaderHelper _cartReaderHelper = new CartReaderHelper();
 	//private Thread _cartReaderFinder = null;
@@ -101,6 +105,8 @@ public partial class CartReader : PopupPanel
 		_installMessage = GetNode<VBoxContainer>(InstallMessagePath);
 		_installButton = GetNode<Button>(InstallButtonPath);
 		_cancelInstallButton = GetNode<Button>(CancelInstallPath);
+		
+		_nowInstalledMessage = GetNode<VBoxContainer>(NowInstalledButtonPath);
 		
 		
 		_gameBoySelection.Pressed += () => SendChoice(GAMEBOYNUM);
@@ -204,6 +210,9 @@ public partial class CartReader : PopupPanel
 						cartReaderActive = true;
 						//Thread.Sleep(2000);
 						Show();
+						_installMessage.CallDeferred("set_visible",false);
+						_loadingMessage.CallDeferred("set_visible",false);
+						_consolePrompt.CallDeferred("set_visible", true);
 						port = possiblePort;
 						port.DataReceived += OnDataRecieved;
 						return true;
@@ -605,6 +614,8 @@ public partial class CartReader : PopupPanel
 			{
 				cartReaderActive = false;
 				port.Close();
+				_installMessage.CallDeferred("set_visible", false);
+				_nowInstalledMessage.CallDeferred("set_visible", true);
 			}
 		}
 	

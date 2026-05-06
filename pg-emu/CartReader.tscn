@@ -27,6 +27,7 @@ LoadingMessagePath = NodePath("Panel/LoadingMessage")
 InstallMessagePath = NodePath("Panel/InstallMessage")
 CancelInstallPath = NodePath("Panel/InstallMessage/MarginContainer2/HBoxContainer/CancelSelection")
 InstallButtonPath = NodePath("Panel/InstallMessage/MarginContainer2/HBoxContainer/InstallSelection")
+NowInstalledButtonPath = NodePath("Panel/NowInstalledMessage")
 
 [node name="Panel" type="Panel" parent="." unique_id=1080295194]
 offset_right = 600.0
@@ -187,4 +188,24 @@ theme_override_constants/margin_top = 225
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Loading..."
+horizontal_alignment = 1
+
+[node name="NowInstalledMessage" type="VBoxContainer" parent="Panel" unique_id=261127924]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/NowInstalledMessage" unique_id=911855029]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 225
+
+[node name="Label" type="Label" parent="Panel/NowInstalledMessage/MarginContainer" unique_id=1871885485]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Game now installed."
 horizontal_alignment = 1
