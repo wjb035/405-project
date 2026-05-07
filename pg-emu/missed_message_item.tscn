@@ -4,7 +4,7 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ip1e"]
 content_margin_left = 5.0
-bg_color = Color(0.5863, 0.451, 0.82, 0.83137256)
+bg_color = Color(0.42352942, 0.3647059, 0.78039217, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
@@ -13,13 +13,14 @@ shadow_color = Color(0, 0, 0.16, 0.13725491)
 shadow_size = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_syhmf"]
-bg_color = Color(0.07281999, 0.0671, 0.11, 0.47843137)
+bg_color = Color(0.07281999, 0.0671, 0.11, 0.5568628)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [node name="Panel" type="Panel" unique_id=158150431]
+z_index = 1
 custom_minimum_size = Vector2(300, 40)
 offset_right = 300.0
 offset_bottom = 40.0
@@ -28,10 +29,11 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_1ip1e")
 script = ExtResource("1_syhmf")
 
 [node name="Panel" type="Panel" parent="." unique_id=1303617240]
+z_index = -1
 layout_mode = 0
-offset_top = 40.0
+offset_top = 32.0
 offset_right = 300.0
-offset_bottom = 162.0
+offset_bottom = 154.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_syhmf")
 
 [node name="HBox" type="HBoxContainer" parent="." unique_id=1386711342]
@@ -43,15 +45,17 @@ offset_right = 66.5
 offset_bottom = 40.0
 theme_override_constants/separation = 5
 
-[node name="UsernameLabel" type="Label" parent="HBox" unique_id=1073063703]
+[node name="FromLabel" type="Label" parent="HBox" unique_id=1073063703]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Username"
 
 [node name="ReplyButton" type="Button" parent="HBox" unique_id=1929210884]
+custom_minimum_size = Vector2(60, 30)
 layout_mode = 2
 size_flags_vertical = 4
 size_flags_stretch_ratio = 0.0
+theme_override_constants/h_separation = 4
 text = "Reply?"
 
 [node name="HBox2" type="HBoxContainer" parent="." unique_id=1820212522]
@@ -73,4 +77,5 @@ text = "Message Preview"
 [node name="TimeLabel" type="Label" parent="HBox2" unique_id=1685869814]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.58695, 0.567, 0.7, 1)
 text = "Time"

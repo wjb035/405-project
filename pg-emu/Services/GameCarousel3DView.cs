@@ -161,7 +161,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var fill = new OmniLight3D
 		{
 			Position = new Vector3(0, 2, 2),
-			LightEnergy = 0.4f,
+			LightEnergy = 0.5f,
 			LightColor = new Color(1f, 0.98f, 0.92f)
 		};
 		_sceneRoot.AddChild(fill);

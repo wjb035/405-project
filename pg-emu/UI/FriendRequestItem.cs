@@ -4,18 +4,23 @@ using PGEmu.Services;
 using PGEmu.UI;
 using System.Threading.Tasks;
 
+namespace PGEmu.UI;
+
 public partial class FriendRequestItem : InboxItem
 {
-	[Export] private Label UsernameLabel;
-	[Export] private Button AcceptButton;
-	[Export] private Button DeclineButton;
+	private Label UsernameLabel;
+	private Button AcceptButton;
+	private Button DeclineButton;
 
 	private string userId;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		GD.Print("MissedMessageItem ready");
+		UsernameLabel = GetNode<Label>("UsernameLabel");
+		AcceptButton = GetNode<Button>("AcceptButton");
+		DeclineButton = GetNode<Button>("DeclineButton");
+
 		AcceptButton.Pressed += OnAccept;
 		DeclineButton.Pressed += OnDecline;
 		
@@ -101,10 +106,8 @@ public partial class FriendRequestItem : InboxItem
 	{
 		// Match game selection controls to the same launcher palette and contrast rules.
 		// Nav buttons
-		UiStyle.StyleTopBarButton(AcceptButton);
 		UiStyle.AddHoverFeedback(AcceptButton);
 		
-		UiStyle.StyleTopBarButton(DeclineButton);
 		UiStyle.AddHoverFeedback(DeclineButton);
 
 		UiStyle.StyleTitleLabel(UsernameLabel);

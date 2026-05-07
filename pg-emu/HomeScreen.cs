@@ -11,6 +11,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PGEmu.UI;
 
 namespace PGEmu;
 
@@ -178,6 +179,8 @@ public partial class HomeScreen : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		if (_music != null) _music.Pressed += OnMusicPressed;
 		if (_filter != null) _filter.Pressed += OnFilterPressed;
 		_cartridge.Pressed += () => _cartReader.CartReaderFound();
@@ -736,8 +739,8 @@ public partial class HomeScreen : Control
 			AuthService.Instance.Logout();
 			var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
 			chatOverlay._isLoggedOut = true;
-			chatOverlay.CloseOverlay();
-
+			chatOverlay.ResetForLogout();
+			GetNode<ChatManager>("/root/ChatManager").Disconnect();
 			await Transition.ChangeScene("res://WelcomeScreen.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 
 		};

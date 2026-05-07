@@ -163,6 +163,8 @@ public partial class Register : Control
 			_registerButton.Text = "Register";
 			return;
 		}
+		
+		await SetDefaultAvatarAsync();
 
 		// Go to home screen
 		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
@@ -177,5 +179,25 @@ public partial class Register : Control
 
 		tree.ChangeSceneToFile(returnScene);
 		
+	}
+	
+	private async Task SetDefaultAvatarAsync()
+	{
+		try
+		{
+			var defaultAvatarPath = ProjectSettings.GlobalizePath("res://Images/default_avatar.png");
+			if (!FileAccess.FileExists(defaultAvatarPath))
+			{
+				GD.PrintErr("Default avatar not found at res://Images/default_avatar.png");
+				return;
+			}
+
+			var profileService = new ProfileService();
+			await profileService.SetAvatar(defaultAvatarPath);
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr($"SetDefaultAvatarAsync failed: {e.Message}");
+		}
 	}
 }

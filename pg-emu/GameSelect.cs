@@ -151,6 +151,9 @@ public partial class GameSelect : Control
 		_settings = GetNode<Button>(SettingsPath);
 		_collections = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnCollections");
 		_inbox = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnInbox");
+		var chatManager = GetNode<ChatManager>("/root/ChatManager");
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		_friends = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends");
 		_chat = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat");
 		_help = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp");
@@ -191,6 +194,8 @@ public partial class GameSelect : Control
 		_add.Pressed += addToCollection;
 		_flip.Pressed += () => _carousel3D?.FlipSelected();
 		_inbox.Pressed += OnInboxPressed;
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		_collections.Pressed += OnCollectionsPressed;
 
 		ApplyAesthetic();

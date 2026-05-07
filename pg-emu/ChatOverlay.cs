@@ -50,6 +50,8 @@ public partial class ChatOverlay : CanvasLayer
 	
 	private ChatManager _chat;
 	public bool _isLoggedOut = true;
+	private int _friendsRefreshVersion = 0;
+	private bool _isResetting = false;
 	
 	public override void _Ready()
 	{
@@ -143,7 +145,8 @@ public partial class ChatOverlay : CanvasLayer
 		tween.SetEase(Tween.EaseType.Out);
 		tween.TweenProperty(_panel, "position:x", _restingX, 0.28f);
 		
-		GoToFriendsTab();
+		if (string.IsNullOrEmpty(_currentDmUser))
+			GoToFriendsTab();
 		_ = RefreshFriendsList();
 	}
 
@@ -193,11 +196,15 @@ public partial class ChatOverlay : CanvasLayer
 	// Refreshes the friends list, this is the meat and potatoes of everything
 	private async System.Threading.Tasks.Task RefreshFriendsList(string filter = "")
 	{
+		int version = ++_friendsRefreshVersion;
+		
 		// Clear whatevers in there
 		foreach (Node child in _friendsList.GetChildren())
 			child.QueueFree();
 		
 		var friends = await FriendService.Instance.GetFriendUsernames();
+		if (_isResetting || version != _friendsRefreshVersion || !IsInsideTree())
+			return;
 		
 		var sorted = friends.OrderByDescending(f =>
 			_lastMessageTime.TryGetValue(f, out var t) ? t : DateTime.MinValue).ToList();
@@ -209,10 +216,15 @@ public partial class ChatOverlay : CanvasLayer
 			    !friend.Contains(filter, StringComparison.OrdinalIgnoreCase))
 				continue;
 			
-			
+			var wrapper = new Control();
+			wrapper.CustomMinimumSize = new Vector2(0, 48);
+			wrapper.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
 			var row = new HBoxContainer();
 			row.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			row.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 			
+			wrapper.AddChild(row);
 			
 			// Avatar in a cirlce 
 			var avatarWrapper = new Control();
@@ -288,8 +300,8 @@ public partial class ChatOverlay : CanvasLayer
 			btn.Pressed += () => OpenDm(captured);
 			row.AddChild(btn);
 			
-			
-			if (_unread.TryGetValue(friend, out int count) && count > 0)
+			var counts = _chat.GetUnreadCounts();
+			if (counts.TryGetValue(friend, out int count) && count > 0)
 			{
 				var badge = new Label();
 				badge.Text = count.ToString();
@@ -297,7 +309,7 @@ public partial class ChatOverlay : CanvasLayer
 				badge.AddThemeFontSizeOverride("font_size", 11);
 				badge.AddThemeStyleboxOverride("normal", new StyleBoxFlat
 				{
-					BgColor = new Color(0.55f, 0.2f, 0.8f, 1f),
+					BgColor = new Color(1f, 0.1f, 0.35f, 1f),
 					CornerRadiusTopLeft = 999,
 					CornerRadiusTopRight = 999,
 					CornerRadiusBottomLeft = 999,
@@ -307,13 +319,22 @@ public partial class ChatOverlay : CanvasLayer
 					ContentMarginTop = 2f,
 					ContentMarginBottom = 2f,
 				});
-				row.AddChild(badge);
+				badge.OffsetLeft = 24;
+				
+				var pulseTween = CreateTween();
+				pulseTween.SetLoops(2);
+				pulseTween.TweenProperty(badge, "scale", new Vector2(1.2f, 1.2f), 0.15f);
+				pulseTween.TweenProperty(badge, "scale", Vector2.One, 0.15f);
+				
+				wrapper.AddChild(badge);
+				
 			}
-			_friendsList.AddChild(row);
+			_friendsList.AddChild(wrapper);
 			
 			UiStyle.StyleTopBarButton(btn);
 			UiStyle.ApplyParallaxShadow(btn);
 			UiStyle.AddHoverFeedback(btn);
+			
 		}
 		
 	}
@@ -389,10 +410,9 @@ public partial class ChatOverlay : CanvasLayer
 			_chat.MarkDmAsRead(fromUser);
 		}
 
-		else
+		else if (!isMine)
 		{
-			_unread[fromUser] = _unread.GetValueOrDefault(fromUser, 0) + 1;
-				_ = RefreshFriendsList();
+			_ = RefreshFriendsList();
 		}
 		
 	}
@@ -810,6 +830,60 @@ public partial class ChatOverlay : CanvasLayer
 		_chat.UserCameOnline -= OnUserCameOnline;
 		_chat.UserWentOffline -= OnUserWentOffline;
 		_chat.HistoryLoaded -= OnHistoryLoaded;
+	}
+	
+	
+	// LOGOUT HANDLING
+	public void ResetForLogout()
+	{
+		_isResetting = true;
+
+		// invalidate pending async refreshes
+		_friendsRefreshVersion++;
+
+		// close UI
+		_isOpen = false;
+		_panel.Hide();
+
+		// reset tabs
+		_tabBar.CurrentTab = 0;
+		_friendsTab.Show();
+		_chatTab.Hide();
+
+		// clear DM state
+		_currentDmUser = "";
+		_oldestMessageTime = "";
+		_lastMessageSender = "";
+
+		// clear cached data
+		_displayedMessages.Clear();
+		_lastMessageTime.Clear();
+		_unread.Clear();
+		_onlineFriends.Clear();
+
+		// clear avatars
+		_avatarCache.Clear();
+		_myAvatarUrl = "";
+		_theirAvatarUrl = "";
+
+		// clear message UI
+		ClearMessages();
+
+		// clear friend list UI
+		foreach (Node child in _friendsList.GetChildren())
+			child.QueueFree();
+
+		// clear text fields
+		_searchBar.Clear();
+		_inputField.Clear();
+
+		// reset scroll
+		if (GodotObject.IsInstanceValid(_messageScroll))
+			_messageScroll.ScrollVertical = 0;
+
+		_loadMoreButton.Hide();
+
+		_isResetting = false;
 	}
 	
 	private void ApplyAesthetic()

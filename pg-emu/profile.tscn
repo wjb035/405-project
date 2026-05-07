@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cejuhmeuqr1a8" path="res://Images/funny desktop icon.png" id="2_wi0ei"]
 [ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o4dpx"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="3_theme"]
-[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_yghs0"]
+[ext_resource type="Texture2D" uid="uid://cdvfspl08i331" path="res://Images/back icon white.png" id="4_r2xaa"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_khxjx"]
 shader = ExtResource("3_o4dpx")
@@ -96,7 +96,7 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1235366535]
 custom_minimum_size = Vector2(46, 32)
 layout_mode = 2
-icon = ExtResource("3_yghs0")
+icon = ExtResource("4_r2xaa")
 icon_alignment = 1
 expand_icon = true
 

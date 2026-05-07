@@ -175,7 +175,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="TopSpacer" type="Control" parent="Margin/Root/Foreground1/TopBar" unique_id=969686858]
-custom_minimum_size = Vector2(350, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_vertical = 0
 
@@ -248,7 +248,8 @@ expand_icon = true
 [node name="BtnInbox" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=401324041]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-tooltip_text = "Notification Inbox"
+tooltip_text = "Notification Inbox 
+Hotkey: I"
 icon = ExtResource("7_iw72c")
 icon_alignment = 1
 expand_icon = true

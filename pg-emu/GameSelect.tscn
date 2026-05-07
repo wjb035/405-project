@@ -346,7 +346,8 @@ expand_icon = true
 [node name="BtnInbox" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1627789945]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-tooltip_text = "Inbox"
+tooltip_text = "Inbox
+Hotkey: I"
 icon = ExtResource("12_rhyj1")
 icon_alignment = 1
 expand_icon = true

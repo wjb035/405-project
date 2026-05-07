@@ -5,6 +5,7 @@ using System.IO;
 using PGEmu.app;
 using PGEmu.Helpers;
 using PGEmu.Services;
+using PGEmu.UI;
 
 public partial class Collections : Control
 {
@@ -115,6 +116,9 @@ public partial class Collections : Control
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_gameSelect != null) _gameSelect.Pressed += OnGamePressed;
 		_inbox.Pressed += OnInboxPressed;
+		var chatManager = GetNode<ChatManager>("/root/ChatManager");
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		
 
 		// background transition

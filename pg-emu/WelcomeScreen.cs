@@ -23,7 +23,8 @@ public partial class WelcomeScreen : Control
 	private GlobalBackground _bg = null!;
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
-	
+
+	private AudioStreamPlayer _welcomeMusic;
 	private Vector2 _welcomeOriginalPos;
 	private float _floatTime = 0f;
 	private bool _floatEnabled = false;
@@ -39,6 +40,7 @@ public partial class WelcomeScreen : Control
 		_shadow = GetNode<TextureRect>(ShadowPath);
 		_defaultContinuePrompt = _continue.Text;
 		_bg = GetNode<GlobalBackground>("/root/GlobalBackground");		
+		_welcomeMusic = GetNode<AudioStreamPlayer>("WelcomeMusic");
 		_continueButton.Pressed += OnContinuePressed;
 		Input.JoyConnectionChanged += OnJoyConnectionChanged;
 		UpdateContinuePrompt();
@@ -116,6 +118,13 @@ public partial class WelcomeScreen : Control
 		}
 		else
 		{
+			_welcomeMusic.VolumeDb = -80f;
+			_welcomeMusic.Play();
+
+			var tween = CreateTween();
+			tween.TweenProperty(_welcomeMusic, "volume_db", -6f, 4.0f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
 			_welcomeLabel.Text = "Welcome to PGEmu!";
 			UpdateContinuePrompt();
 		}
