@@ -55,6 +55,7 @@ public partial class Profile : Control
 	private const float FriendDrawerWidth = 392f;
 	private const float FriendDrawerScrimAlpha = 0.54f;
 	private const float FriendDrawerTweenSeconds = 0.22f;
+	private const string FriendDrawerAvatarShaderPath = "res://ShaderSlop/RoundedAvatarFrame.gdshader";
 	private const string HoverFeedbackAppliedMeta = "pgemu_profile_hover_feedback_applied";
 	private const string SceneBackgroundMaterialMeta = "pgemu_profile_scene_background_material_local";
 	private const string RetroAchievementsConnectPrompt = "Connect to retroachievements to view your trophies!";
@@ -110,6 +111,7 @@ public partial class Profile : Control
 	private VBoxContainer _friendDrawerList = null!;
 	private readonly List<Button> _friendDrawerButtons = new();
 	private Tween? _friendDrawerTween;
+	private Shader? _friendDrawerAvatarShader;
 	private bool _friendDrawerOpen;
 	private bool _friendDrawerAnimating;
 	private int _friendDrawerRequestId;
@@ -616,6 +618,8 @@ public partial class Profile : Control
 
 		private void SetupFriendDrawer()
 		{
+			_friendDrawerAvatarShader ??= GD.Load<Shader>(FriendDrawerAvatarShaderPath);
+
 			_friendDrawerOverlay = new Control
 			{
 				Name = "FriendDrawerOverlay",
@@ -905,32 +909,27 @@ public partial class Profile : Control
 			row.AddThemeConstantOverride("separation", 12);
 			margin.AddChild(row);
 
-			var avatarFrame = new PanelContainer
+			var avatarWrapper = new Control
 			{
 				CustomMinimumSize = new Vector2(46f, 46f),
+				SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
 				MouseFilter = MouseFilterEnum.Ignore
 			};
-			avatarFrame.AddThemeStyleboxOverride(
-				"panel",
-				CreatePanelStyle(
-					new Color(0.15f, 0.12f, 0.22f, 0.96f),
-					new Color(0.82f, 0.72f, 0.96f, 0.38f),
-					14,
-					1));
-			row.AddChild(avatarFrame);
+			row.AddChild(avatarWrapper);
 
 			var avatar = new TextureRect
 			{
 				MouseFilter = MouseFilterEnum.Ignore,
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-				StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
+				Material = CreateFriendDrawerAvatarMaterial()
 			};
 			avatar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 			avatar.OffsetLeft = 0f;
 			avatar.OffsetTop = 0f;
 			avatar.OffsetRight = 0f;
 			avatar.OffsetBottom = 0f;
-			avatarFrame.AddChild(avatar);
+			avatarWrapper.AddChild(avatar);
 
 			var textStack = new VBoxContainer
 			{
@@ -991,6 +990,21 @@ public partial class Profile : Control
 		}
 	}
 
+	private ShaderMaterial CreateFriendDrawerAvatarMaterial()
+	{
+		_friendDrawerAvatarShader ??= GD.Load<Shader>(FriendDrawerAvatarShaderPath);
+		var material = new ShaderMaterial
+		{
+			Shader = _friendDrawerAvatarShader
+		};
+		material.SetShaderParameter("width", 0.98f);
+		material.SetShaderParameter("radius", 0.60f);
+		material.SetShaderParameter("stroke_width", 0.06f);
+		material.SetShaderParameter("stroke_color", WithAlpha(_visualStyle.Background.Accent, 0.85f));
+		material.SetShaderParameter("edge_softness", 0.008f);
+		return material;
+	}
+
 	private void FocusFriendDrawerDefault()
 	{
 		ResetUiNavigationState();
@@ -1034,7 +1048,7 @@ public partial class Profile : Control
 			if (profile == null || string.IsNullOrWhiteSpace(profile.AvatarUrl))
 				return;
 
-			var avatarTexture = await LoadDrawerAvatarTextureAsync(profile.AvatarUrl);
+			var avatarTexture = await LoadAvatarTextureAsync(profile.AvatarUrl);
 			if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
 				return;
 			if (requestId != _friendDrawerRequestId)
@@ -1111,141 +1125,6 @@ public partial class Profile : Control
 			GD.PrintErr("Failed to load image: " + exception.Message);
 			return null;
 		}
-	}
-
-	// Drawer avatars need rounded corners. The shader-on-TextureRect route
-	// kept failing in this nesting context, so we bake the same SDF shape
-	// (and stroke) produced by RoundedAvatarFrame.gdshader directly into
-	// the texture's alpha and color channels.
-	private async Task<Texture2D?> LoadDrawerAvatarTextureAsync(string url)
-	{
-		if (string.IsNullOrWhiteSpace(url))
-			return null;
-
-		var strokeColor = WithAlpha(_visualStyle.Background.Accent, 0.85f);
-		var normalizedUrl = NormalizeAvatarUrl(url);
-		var cacheKey = $"drawer-rounded:{strokeColor.ToHtml()}:{normalizedUrl}";
-		if (_avatarTextureCache.TryGetValue(cacheKey, out var cachedTexture))
-			return cachedTexture;
-
-		var baseTexture = await LoadAvatarTextureAsync(url);
-		if (baseTexture == null)
-			return null;
-
-		var sourceImage = baseTexture.GetImage();
-		if (sourceImage == null)
-			return null;
-
-		try
-		{
-			var rounded = BuildRoundedAvatarImage(sourceImage, targetSize: 96, strokeColor: strokeColor);
-			if (rounded == null)
-				return null;
-
-			var texture = ImageTexture.CreateFromImage(rounded);
-			_avatarTextureCache[cacheKey] = texture;
-			return texture;
-		}
-		catch (Exception exception)
-		{
-			GD.PrintErr("Failed to bake rounded avatar: " + exception.Message);
-			return null;
-		}
-	}
-
-	private static Image? BuildRoundedAvatarImage(Image source, int targetSize, Color strokeColor)
-	{
-		// Uses RoundedAvatarFrame.gdshader's SDF formula (rounded-box with
-		// width inset, plus stroke band between width and width-stroke_width).
-		// At 46-px display size the shader preset's tiny 0.12 radius is
-		// barely visible, so we use a larger radius (~30% of full extent)
-		// to match the bolder rounded look the drawer looked best with.
-		// EdgeSoftness is bumped above the shader's 0.006 because the CPU
-		// bake doesn't get GPU sub-pixel coverage for free; we need a ~1 px
-		// transition at bake resolution for smooth AA after downsample.
-		const float width = 1.0f;
-		const float radius = 0.6f;
-		const float strokeWidth = 0.06f;
-		const float edgeSoftness = 0.022f;
-
-		var image = (Image)source.Duplicate();
-		if (image.GetFormat() != Image.Format.Rgba8)
-			image.Convert(Image.Format.Rgba8);
-
-		int srcW = image.GetWidth();
-		int srcH = image.GetHeight();
-		if (srcW <= 0 || srcH <= 0)
-			return null;
-
-		if (srcW != srcH)
-		{
-			int side = Math.Min(srcW, srcH);
-			int xOffset = (srcW - side) / 2;
-			int yOffset = (srcH - side) / 2;
-			var square = Image.CreateEmpty(side, side, false, Image.Format.Rgba8);
-			square.BlitRect(image, new Rect2I(xOffset, yOffset, side, side), Vector2I.Zero);
-			image = square;
-		}
-
-		image.Resize(targetSize, targetSize, Image.Interpolation.Lanczos);
-
-		float invSize = 1f / targetSize;
-		float outerEffectiveRadius = radius * width;
-		float outerHalfExtent = width - outerEffectiveRadius;
-		float innerWidth = MathF.Max(width - strokeWidth, 0f);
-		float innerEffectiveRadius = radius * innerWidth;
-		float innerHalfExtent = innerWidth - innerEffectiveRadius;
-
-		for (int y = 0; y < targetSize; y++)
-		{
-			float uy = ((y + 0.5f) * invSize) * 2f - 1f;
-			for (int x = 0; x < targetSize; x++)
-			{
-				float ux = ((x + 0.5f) * invSize) * 2f - 1f;
-
-				float qxOuter = MathF.Abs(ux) - outerHalfExtent;
-				float qyOuter = MathF.Abs(uy) - outerHalfExtent;
-				float outsideOuter = MathF.Sqrt(
-					MathF.Max(qxOuter, 0f) * MathF.Max(qxOuter, 0f) +
-					MathF.Max(qyOuter, 0f) * MathF.Max(qyOuter, 0f));
-				float insideOuter = MathF.Min(MathF.Max(qxOuter, qyOuter), 0f);
-				float sdfOuter = outsideOuter + insideOuter - outerEffectiveRadius;
-				float outerMask = 1f - Smoothstep(0f, edgeSoftness, sdfOuter);
-
-				float qxInner = MathF.Abs(ux) - innerHalfExtent;
-				float qyInner = MathF.Abs(uy) - innerHalfExtent;
-				float outsideInner = MathF.Sqrt(
-					MathF.Max(qxInner, 0f) * MathF.Max(qxInner, 0f) +
-					MathF.Max(qyInner, 0f) * MathF.Max(qyInner, 0f));
-				float insideInner = MathF.Min(MathF.Max(qxInner, qyInner), 0f);
-				float sdfInner = outsideInner + insideInner - innerEffectiveRadius;
-				float innerMask = 1f - Smoothstep(0f, edgeSoftness, sdfInner);
-
-				float strokeMask = Mathf.Clamp(outerMask - innerMask, 0f, 1f);
-				float strokeWeight = strokeMask * strokeColor.A;
-
-				if (outerMask >= 0.999f && strokeWeight <= 0.001f)
-					continue;
-
-				var pixel = image.GetPixel(x, y);
-				float clippedA = pixel.A * outerMask;
-
-				float r = Mathf.Lerp(pixel.R, strokeColor.R, strokeWeight);
-				float g = Mathf.Lerp(pixel.G, strokeColor.G, strokeWeight);
-				float b = Mathf.Lerp(pixel.B, strokeColor.B, strokeWeight);
-				float a = MathF.Max(clippedA, strokeWeight);
-
-				image.SetPixel(x, y, new Color(r, g, b, a));
-			}
-		}
-
-		return image;
-	}
-
-	private static float Smoothstep(float edge0, float edge1, float x)
-	{
-		float t = Mathf.Clamp((x - edge0) / (edge1 - edge0), 0f, 1f);
-		return t * t * (3f - 2f * t);
 	}
 
 	private static string BuildFriendDetailText(FriendListEntry friend, ProfileResponse? profile)
@@ -2271,7 +2150,7 @@ public partial class Profile : Control
 		UiStyle.StyleTopBarButton(_back);
 		ApplyProfileHoverFeedback(_back, scaleUp: 1.08f);
 		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
-		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
+		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true, borderWidth: 2);
 		UiStyle.StylePopupMenu(_visibilityToggle.GetPopup());
 		if (_friendSearchDropdown != null)
 			UiStyle.StylePopupMenu(_friendSearchDropdown.GetPopup());
@@ -2561,20 +2440,20 @@ public partial class Profile : Control
 		control.AddThemeStyleboxOverride("panel", CreatePanelStyle(background, border, radius, borderWidth));
 	}
 
-	private void ApplyButtonTheme(Button button, Color background, Color accent, bool isChip = false)
+	private void ApplyButtonTheme(Button button, Color background, Color accent, bool isChip = false, int borderWidth = 1)
 	{
-		int borderWidth = 1;
 		int radius = isChip ? 999 : 14;
 		float horizontalPadding = isChip ? 10f : 9f;
 		float verticalPadding = isChip ? 4f : 5f;
 		var hover = Mix(background, accent, 0.11f);
 		var pressed = Mix(background, accent, 0.05f);
 		var focusBorder = Mix(accent, new Color(0.76f, 0.90f, 1f, 1f), 0.25f);
+		var focusBorderWidth = Math.Max(borderWidth + 1, 2);
 
 		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, WithAlpha(accent, isChip ? 0.70f : 0.56f), borderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, accent, borderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, accent, borderWidth, radius, horizontalPadding, verticalPadding));
-		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 2, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, focusBorderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("disabled", CreateButtonStyle(new Color(0.20f, 0.20f, 0.23f, 0.55f), new Color(0.52f, 0.52f, 0.56f, 0.5f), 1, radius, horizontalPadding, verticalPadding));
 		button.AddThemeColorOverride("font_color", new Color(0.95f, 0.94f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_hover_color", new Color(0.95f, 0.94f, 1f, 0.98f));

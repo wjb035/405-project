@@ -609,7 +609,7 @@ public partial class FoundUserProfile : Control
 		UiStyle.StyleTopBarButton(_back);
 		ApplyProfileHoverFeedback(_back, scaleUp: 1.08f);
 		UiStyle.TightenButtonContentPadding(_back, horizontal: 8f, vertical: 3f);
-		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true);
+		ApplyButtonTheme(_back, chipSurface, showcaseAccent, isChip: true, borderWidth: 2);
 
 		if (_profileSettingsShortcut != null)
 		{
@@ -1205,20 +1205,20 @@ public partial class FoundUserProfile : Control
 		control.AddThemeStyleboxOverride("panel", CreatePanelStyle(background, border, radius, borderWidth));
 	}
 
-	private void ApplyButtonTheme(Button button, Color background, Color accent, bool isChip = false)
+	private void ApplyButtonTheme(Button button, Color background, Color accent, bool isChip = false, int borderWidth = 1)
 	{
-		int borderWidth = 1;
 		int radius = isChip ? 999 : 14;
 		float horizontalPadding = isChip ? 10f : 9f;
 		float verticalPadding = isChip ? 4f : 5f;
 		var hover = Mix(background, accent, 0.11f);
 		var pressed = Mix(background, accent, 0.05f);
 		var focusBorder = Mix(accent, new Color(0.76f, 0.90f, 1f, 1f), 0.25f);
+		var focusBorderWidth = Math.Max(borderWidth + 1, 2);
 
 		button.AddThemeStyleboxOverride("normal", CreateButtonStyle(background, WithAlpha(accent, isChip ? 0.70f : 0.56f), borderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("hover", CreateButtonStyle(hover, accent, borderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("pressed", CreateButtonStyle(pressed, accent, borderWidth, radius, horizontalPadding, verticalPadding));
-		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, 2, radius, horizontalPadding, verticalPadding));
+		button.AddThemeStyleboxOverride("focus", CreateButtonStyle(hover, focusBorder, focusBorderWidth, radius, horizontalPadding, verticalPadding));
 		button.AddThemeStyleboxOverride("disabled", CreateButtonStyle(new Color(0.20f, 0.20f, 0.23f, 0.55f), new Color(0.52f, 0.52f, 0.56f, 0.5f), 1, radius, horizontalPadding, verticalPadding));
 		button.AddThemeColorOverride("font_color", new Color(0.95f, 0.94f, 1f, 0.98f));
 		button.AddThemeColorOverride("font_hover_color", new Color(0.95f, 0.94f, 1f, 0.98f));

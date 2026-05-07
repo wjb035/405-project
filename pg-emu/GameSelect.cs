@@ -123,6 +123,7 @@ public partial class GameSelect : Control
 	private CancellationTokenSource? _metadataWarmupCts;
 	private int _pendingCoverArtRefresh;
 	private int _pendingMetadataRefresh;
+	private readonly HashSet<int> _builtThreeDBackFaceIndices = new();
 	private int _lastBrowseSelectionIndex = -1;
 	private int _lastBrowseSelectionCount = -1;
 	private BrowseLayoutMode _lastBrowseSelectionLayout = BrowseLayoutMode.ThreeD;
@@ -162,10 +163,6 @@ public partial class GameSelect : Control
 		CreateAlternateLayoutViews();
 		_browseLayout = BrowseLayoutSettings.GetLayout();
 			
-		// DEBUG
-		GD.Print($"CarouselArea size: {_carouselArea.Size}, position: {_carouselArea.Position}");
-		
-		
 		_optionButton.Name = "test";
 		var container = GetNode<HBoxContainer>("Margin/Root/CenterArea/Foreground1/HBoxContainer");
    		container.AddChild(_optionButton);
@@ -200,7 +197,6 @@ public partial class GameSelect : Control
 		StartBackgroundTransition();
 		
 		ConnectAllButtons(this);
-		GD.Print("IN GAME SELECT");
 		InputRoutingService.Instance?.UnlockUiInput();
 		ResetUiNavigationState();
 		// Load data and build UI.
@@ -275,7 +271,6 @@ private void OnAnyButtonPressed()
 	}
 	
 	private void addToCollection(){
-		GD.Print("button has been pressed!!!!!!");
 		if (_optionButton.Visible){
 			_optionButton.Hide();
 			RefreshControllerFocusGraph();
@@ -298,24 +293,18 @@ private void OnAnyButtonPressed()
 		string collectionName = _optionButton.GetItemText((int)index);
 		string gameName = GetSelectedGame().Name;
 
-		GD.Print("User selected: " + collectionName);
 		foreach (var c in CollectionStorage.collections){
 			if (c.Key == collectionName){
 				//GD.Print("found it!");
 				GetSelectedGame().platform = _platform;
 				c.Value.Add(GetSelectedGame());
-				foreach (var g in c.Value){
-					GD.Print(g.Name);
-				}
 				
 				CollectionStorage.saveToJson();
 				
 				ShowNotification($"{gameName} has been added to {collectionName}");
 			}
 		}
-		GD.Print(GetSelectedGame().Name);
-		
-		
+
 		_optionButton.Hide();
 		RefreshControllerFocusGraph();
 		ResetUiNavigationState();
@@ -432,10 +421,6 @@ private void OnAnyButtonPressed()
 			return;
 		}
 		
-		var authService = GetNode<AuthService>("/root/AuthService");
-		var uid = authService.getUID();
-		GD.Print("Current user ID: " + uid);
-		
 		try
 		{
 			//commenting this out since this seems problematic
@@ -451,15 +436,10 @@ private void OnAnyButtonPressed()
 			InputRoutingService.Instance?.LockUiInputForExternalLaunch();
 
 			var resolvedExe = Launcher.LaunchFromConfig(_config, launchPlatform, game);
-			GD.Print("launching "+ game.Title);
 			//runningProcesses = Process.GetProcessesByName("dolphin");
 			GetNode<Playtime>("/root/Playtime").FindPlatform(launchPlatform, game, resolvedExe);
-			
-			
-			foreach (var child in GetTree().Root.GetChildren())
-				GD.Print(child.Name);
-			
-	 ActivityManager.SetActivity("Playing", game.Title, "GodotClient");
+
+			ActivityManager.SetActivity("Playing", game.Title, "GodotClient");
 
 		//	foreach (var position in runningProcesses){
 			//GD.Print(position.ProcessName +  " started at " + position.StartTime);
@@ -791,16 +771,9 @@ private void OnAnyButtonPressed()
 
 	private async Task LoadContextAndGames()
 	{
-		GD.Print("in load context");
 		try
 		{
 			if (CollectionStorage.currentCollection == null){
-				GD.Print("IN TRY CATCH");
-				if (CollectionStorage.currentCollection !=null){
-				foreach (var g in CollectionStorage.currentCollection){
-					GD.Print(g.Name);
-				}
-				}
 			var tree = GetTree();
 
 			// Prefer config path passed from a previous scene, fall back to heuristics.
@@ -835,16 +808,13 @@ private void OnAnyButtonPressed()
 				? _config.Platforms.FirstOrDefault(position =>
 					string.Equals(position.Id, platformId, StringComparison.OrdinalIgnoreCase))
 				: _config.Platforms.FirstOrDefault();
-			GD.Print("ABOVE PLATFORM NULL");
 			
 			// if the platform is null AND we're not coming from collections
 			if (_platform == null && CollectionStorage.currentCollection == null)
 			{
 				SetStatus("No platform selected.");
-				GD.Print("ABOVE RETURN");
 				return;
 			}
-			GD.Print("BELOW PLATFORM NULL!");
 
 			// Scan the platform's library directory for compatible ROM files.
 			_games.Clear();
@@ -907,18 +877,13 @@ private void OnAnyButtonPressed()
 						_games.Add(g);
 					}
 				}
-			
-			GD.Print("above if else");
+
 			if (CollectionStorage.currentCollection != null){
 				_games.Clear();
 				//_games = CollectionStorage.currentCollection;
 				foreach (var g in CollectionStorage.currentCollection){
 					_games.Add(g);
-					GD.Print(g.Name);
 				}
-			}
-			else{
-				GD.Print("NULL NULL NULL");
 			}
 				//GameEntry? temp = _games[0];
 				//_games.Remove(temp);
@@ -954,13 +919,11 @@ private void OnAnyButtonPressed()
 			
 			if (_games.Count == 0)
 			{
-				GD.Print($"No games found for {_platform.Name}. Dir='{scanDir}', Extensions=[{string.Join(", ", _platform.Extensions)}].");
 				SetStatus(
 					$"No games found for {_platform.Name}.");
 			}
 		}
 		else{
-			GD.Print("hi in else");
 			var tree = GetTree();
 
 			// Prefer config path passed from a previous scene, fall back to heuristics.
@@ -986,8 +949,6 @@ private void OnAnyButtonPressed()
 		
 			foreach (var g in CollectionStorage.currentCollection){
 					_games.Add(g);
-					GD.Print(g.Name + "belongs to the ");
-					GD.Print(g.platform.Name	);
 				}
 		}
 		}
@@ -1047,16 +1008,12 @@ private void OnAnyButtonPressed()
 		
 		if (_carousel3D != null && _browseLayout == BrowseLayoutMode.ThreeD)
 		{
-			
-			var achNum = _games[0].AchievementNum;
-			GD.Print(achNum);
 			var gameData = _games.Select(g =>
 			{
 				Texture2D? tex = null;
 				if (!string.IsNullOrWhiteSpace(g.CoverArtUrl) &&
 					CoverArtImageCache.TryGetTexture(g.CoverArtUrl, out var cached))
 					tex = cached;
-				GD.Print($"3D populate: {g.Title} → tex={tex != null}"); 
 				
 				string awardType = isGameCompleted(g);
 				
@@ -1071,9 +1028,10 @@ private void OnAnyButtonPressed()
 			var platformIds = isMixedCollection
 				? _games.Select(game => game.platform?.Id).ToList()
 				: null;
+			_builtThreeDBackFaceIndices.Clear();
 			_carousel3D.Populate(gameData, _carouselPos, isGba, isDs, isPs1, isN64,isSnes, platformIds);
 			
-			ApplyThreeDBackFaceData();
+			ApplySelectedThreeDBackFaceData();
 		}
 
 		UpdateNavEnabled();
@@ -2571,7 +2529,10 @@ private void OnAnyButtonPressed()
 
 		UpdateSelectionUI();
 		if (previousIndex != _selectedIndex)
+		{
 			QueueCoverArtRefresh();
+			ApplySelectedThreeDBackFaceData();
+		}
 
 		if (ensureVisible && (_browseLayout == BrowseLayoutMode.List || _browseLayout == BrowseLayoutMode.Grid))
 			CallDeferred(nameof(EnsureSelectedEntryVisible));
@@ -3092,7 +3053,8 @@ private void OnAnyButtonPressed()
 		}
 
 		UpdateSelectionUI();
-		ApplyThreeDBackFaceData();
+		_builtThreeDBackFaceIndices.Clear();
+		ApplySelectedThreeDBackFaceData();
 	}
 	private ProgressBar? GetProgressBar(GameEntry game){
 		if (game.AchievementNum == "Loading..." || game.AchievementNum == "0/0"){
@@ -3131,29 +3093,31 @@ private void OnAnyButtonPressed()
 		
 		return prog;
 	}
-	private void ApplyThreeDBackFaceData()
+	private void ApplySelectedThreeDBackFaceData()
 	{
 		if (_carousel3D == null || _browseLayout != BrowseLayoutMode.ThreeD)
 			return;
+		if (_selectedIndex < 0 || _selectedIndex >= _games.Count)
+			return;
+		if (_builtThreeDBackFaceIndices.Contains(_selectedIndex))
+			return;
 		
+		var game = _games[_selectedIndex];
+		ProgressBar prog = GetProgressBar(game);
+		_carousel3D.SetBackFaceData(
+			_selectedIndex,
+			game.Title,
+			"No description yet.",
+			_platform?.Name ?? "Unknown",
+			"",
+			game.AchievementNum ?? ""
+		);
 		
-		for (int index = 0; index < _games.Count; index++)
-		{
-			var game = _games[index];
-			ProgressBar prog = GetProgressBar(game);
-			_carousel3D.SetBackFaceData(
-				index,
-				game.Title,
-				"No description yet.",
-				_platform?.Name ?? "Unknown",
-				"",
-				game.AchievementNum ?? ""
-			);
-			
-			if (prog != null){
-				_carousel3D.SetSideProgressBar(index, prog);
-			}
+		if (prog != null){
+			_carousel3D.SetSideProgressBar(_selectedIndex, prog);
 		}
+
+		_builtThreeDBackFaceIndices.Add(_selectedIndex);
 	}
 
 	private static string? BuildGameBadge(GameEntry game)
@@ -3443,7 +3407,6 @@ private void OnAnyButtonPressed()
 		try
 		{
 			bg.StartTransition("GameScreen", 1.5f);
-			GD.Print("Background transition finished!");
 		}
 		catch (Exception ex)
 		{

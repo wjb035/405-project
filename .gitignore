@@ -75,3 +75,4 @@ config.json
 pg-emu/playtime.json
 config.json
 pg-emu/playtime.json
+*.json
