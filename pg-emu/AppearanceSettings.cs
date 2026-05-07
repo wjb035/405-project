@@ -4,14 +4,12 @@ using System;
 
 public partial class AppearanceSettings : Control
 {
-	[Export] public NodePath CarouselButtonPath;
 	[Export] public NodePath ThreeDButtonPath;
 	[Export] public NodePath ListButtonPath;
 	[Export] public NodePath GridButtonPath;
 	[Export] public NodePath DescriptionTitlePath;
 	[Export] public NodePath DescriptionBodyPath;
 	[Export] public NodePath StatusPath;
-	[Export] public NodePath CarouselPreviewPath;
 	[Export] public NodePath ThreeDPreviewPath;
 	[Export] public NodePath ListPreviewPath;
 	[Export] public NodePath GridPreviewPath;
@@ -19,14 +17,12 @@ public partial class AppearanceSettings : Control
 
 
 
-	private Button _carouselButton = null!;
 	private Button _threeDButton = null!;
 	private Button _listButton = null!;
 	private Button _gridButton = null!;
 	private Label _descriptionTitle = null!;
 	private Label _descriptionBody = null!;
 	private Label _status = null!;
-	private Control _carouselPreview = null!;
 	private Control _threeDPreview = null!;
 	private Control _listPreview = null!;
 	private Control _gridPreview = null!;
@@ -34,14 +30,12 @@ public partial class AppearanceSettings : Control
 
 	public override void _Ready()
 	{
-		_carouselButton = ResolveNode<Button>(CarouselButtonPath, "Margin/Root/Modes/CarouselButton");
 		_threeDButton = ResolveNode<Button>(ThreeDButtonPath, "Margin/Root/Modes/3DCarouselButton");
 		_listButton = ResolveNode<Button>(ListButtonPath, "Margin/Root/Modes/ListButton");
 		_gridButton = ResolveNode<Button>(GridButtonPath, "Margin/Root/Modes/GridButton");
 		_descriptionTitle = ResolveNode<Label>(DescriptionTitlePath, "Margin/Root/Preview/Margin/PreviewRoot/CurrentLayout");
 		_descriptionBody = ResolveNode<Label>(DescriptionBodyPath, "Margin/Root/Preview/Margin/PreviewRoot/CurrentDescription");
 		_status = ResolveNode<Label>(StatusPath, "Margin/Root/Status");
-		_carouselPreview = ResolveNode<Control>(CarouselPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/CarouselPreview");
 		_threeDPreview = ResolveNode<Control>(ThreeDPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ThreeDPreview");
 		_listPreview = ResolveNode<Control>(ListPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ListPreview");
 		_gridPreview = ResolveNode<Control>(GridPreviewPath, "Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/GridPreview");
@@ -50,7 +44,6 @@ public partial class AppearanceSettings : Control
 
 		ApplyThemeAesthetic();
 
-		_carouselButton.Pressed += () => SaveLayout(BrowseLayoutMode.Carousel);
 		_listButton.Pressed += () => SaveLayout(BrowseLayoutMode.List);
 		_gridButton.Pressed += () => SaveLayout(BrowseLayoutMode.Grid);
 		_threeDButton.Pressed += () => SaveLayout(BrowseLayoutMode.ThreeD);
@@ -67,7 +60,9 @@ public partial class AppearanceSettings : Control
 
 	private void UpdateUi(BrowseLayoutMode layout, bool announceSave)
 	{
-		_carouselButton.ButtonPressed = layout == BrowseLayoutMode.Carousel;
+		if (layout == BrowseLayoutMode.Carousel)
+			layout = BrowseLayoutMode.ThreeD;
+
 		_listButton.ButtonPressed = layout == BrowseLayoutMode.List;
 		_gridButton.ButtonPressed = layout == BrowseLayoutMode.Grid;
 		_threeDButton.ButtonPressed   = layout == BrowseLayoutMode.ThreeD; 
@@ -81,10 +76,9 @@ public partial class AppearanceSettings : Control
 				"A wall of larger tiles, built for couch browsing, and quick pick-up play.",
 			BrowseLayoutMode.ThreeD => "A 3D shelf of animated game cases.",
 			_ =>
-				"The Default PGEmu carousel.",
+				"A 3D shelf of animated game cases.",
 		};
 
-		_carouselPreview.Visible = layout == BrowseLayoutMode.Carousel;
 		_threeDPreview.Visible = layout == BrowseLayoutMode.ThreeD;
 		_listPreview.Visible = layout == BrowseLayoutMode.List;
 		_gridPreview.Visible = layout == BrowseLayoutMode.Grid;
@@ -107,7 +101,6 @@ public partial class AppearanceSettings : Control
 		UiStyle.StyleMetaLabel(hint);
 		UiStyle.StyleMetaLabel(previewEyebrow);
 
-		StyleModeButton(_carouselButton);
 		StyleModeButton(_listButton);
 		StyleModeButton(_gridButton);
 		StyleModeButton(_threeDButton); 

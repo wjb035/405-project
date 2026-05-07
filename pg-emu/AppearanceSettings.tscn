@@ -63,6 +63,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="CarouselButton" type="Button" parent="Margin/Root/Modes" unique_id=81668965]
+visible = false
 custom_minimum_size = Vector2(180, 54)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -110,11 +111,11 @@ text = "Live Preview"
 [node name="CurrentLayout" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=1387000004]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "Carousel View"
+text = "3D View"
 
 [node name="CurrentDescription" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=2012465321]
 layout_mode = 2
-text = "The Default PGEmu carousel."
+text = "A 3D shelf of animated game cases."
 autowrap_mode = 3
 
 [node name="PreviewSamples" type="HBoxContainer" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=1363402111]
@@ -123,6 +124,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="CarouselPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=460855523]
+visible = false
 custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -134,7 +136,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ThreeDPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=503622564]
-visible = false
 custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 size_flags_horizontal = 3

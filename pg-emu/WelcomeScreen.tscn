@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cbe6jiv4kkuip" path="res://Images/pretty good emulator thumbs up pink.png" id="4_xrt5d"]
 [ext_resource type="Shader" uid="uid://buq1ti2e1ebm5" path="res://ShaderSlop/CRT.gdshader" id="5_xrt5d"]
 [ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="6_7jift"]
+[ext_resource type="AudioStream" uid="uid://dw6agtn2tva2h" path="res://audio/KeygenMain.mp3" id="7_keygen"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_qlnan"]
 font_size = 70
@@ -66,10 +67,15 @@ grow_vertical = 2
 scale = Vector2(0.65, 0.65)
 mouse_filter = 2
 stream = ExtResource("2_7kx2i")
-volume_db = -12.34
+volume_db = -80.0
 autoplay = true
 expand = true
 loop = true
+
+[node name="WelcomeMusic" type="AudioStreamPlayer" parent="." unique_id=1932635665]
+stream = ExtResource("7_keygen")
+volume_db = -12.34
+autoplay = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2070983030]
 

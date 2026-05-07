@@ -4,6 +4,7 @@ namespace PGEmu.Services;
 
 public enum BrowseLayoutMode
 {
+    // Legacy value kept so older saved configs deserialize cleanly.
     Carousel,
     List,
     Grid,
@@ -20,9 +21,9 @@ public static class BrowseLayoutSettings
     {
         var cfg = new ConfigFile();
         if (cfg.Load(SavePath) != Error.Ok)
-            return BrowseLayoutMode.Carousel;
+            return BrowseLayoutMode.ThreeD;
 
-        var raw = cfg.GetValue(Section, LayoutKey, "carousel").AsString();
+        var raw = cfg.GetValue(Section, LayoutKey, "threed").AsString();
         return FromStoredValue(raw);
     }
 
@@ -41,7 +42,7 @@ public static class BrowseLayoutSettings
             BrowseLayoutMode.List => "List View",
             BrowseLayoutMode.Grid => "Grid View",
             BrowseLayoutMode.ThreeD => "3D View",
-            _ => "Carousel View",
+            _ => "3D View",
         };
     }
 
@@ -52,7 +53,7 @@ public static class BrowseLayoutSettings
             "list" => BrowseLayoutMode.List,
             "grid" => BrowseLayoutMode.Grid,
             "threed" => BrowseLayoutMode.ThreeD, 
-            _ => BrowseLayoutMode.Carousel,
+            _ => BrowseLayoutMode.ThreeD,
         };
     }
 
@@ -63,7 +64,7 @@ public static class BrowseLayoutSettings
             BrowseLayoutMode.List => "list",
             BrowseLayoutMode.Grid => "grid",
             BrowseLayoutMode.ThreeD => "threed",
-            _ => "carousel",
+            _ => "threed",
         };
     }
 }
