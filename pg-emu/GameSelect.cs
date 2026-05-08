@@ -18,6 +18,7 @@ namespace PGEmu.GameSelect;
 
 public partial class GameSelect : Control
 {
+	private const string ReturnSceneMetaKey = "pgemu_return_scene";
 	private const string GbaReturnEjectMetaKey = "pgemu_gba_return_eject_on_home";
 
 	// NodePaths assigned in GameSelect.tscn so we can wire UI in-editor without hardcoding paths.
@@ -278,8 +279,19 @@ private void OnAnyButtonPressed()
 		CollectionStorage.currentCollection = null;
 		AudioManager.Instance?.PlayNavigation(-1);
 		FlagGbaReturnEjectIfNeeded();
-		// Navigate back to the home screen scene.
-		await Transition.ChangeScene("res://HomeScreen.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
+		var tree = GetTree();
+		var returnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: null;
+
+		if (string.IsNullOrWhiteSpace(returnScene) ||
+			string.Equals(returnScene, "res://GameSelect.tscn", StringComparison.OrdinalIgnoreCase))
+		{
+			returnScene = "res://HomeScreen.tscn";
+		}
+
+		tree.SetMeta(ReturnSceneMetaKey, returnScene);
+		await Transition.ChangeScene(returnScene, ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
 	

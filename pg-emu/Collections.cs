@@ -10,7 +10,10 @@ using PGEmu.UI;
 public partial class Collections : Control
 {
 	private const string ReturnSceneMetaKey = "pgemu_return_scene";
+	private const string CollectionsParentReturnSceneMetaKey = "pgemu_collections_parent_return_scene";
 	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
+	private const string CollectionsScenePath = "res://Collections.tscn";
+	private const string HomeScenePath = "res://HomeScreen.tscn";
 
 	// Scene wiring (assigned in `HomeScreen.tscn`).
 	[Export] public NodePath CardsPath;
@@ -77,6 +80,7 @@ public partial class Collections : Control
 
 	public override async void _Ready()
 	{
+		CaptureCollectionsParentReturnContext();
 		
 		// Resolve all node references up front; if a NodePath is wrong you'll fail here with a clear error.
 		_cardsRoot = GetNode<Control>("Margin/Root/CenterArea/Mid1/CarouselArea/Cards");
@@ -218,12 +222,7 @@ private void OnAnyButtonPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		var returnScene = tree.HasMeta(ReturnSceneMetaKey)
-			? tree.GetMeta(ReturnSceneMetaKey).AsString()
-			: "res://HomeScreen.tscn";
-
-		if (string.IsNullOrWhiteSpace(returnScene))
-			returnScene = "res://HomeScreen.tscn";
+		var returnScene = ResolveCollectionsBackScene();
 
 		tree.SetMeta(ReturnSceneMetaKey, returnScene);
 		await Transition.ChangeScene(returnScene, ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
@@ -233,11 +232,8 @@ private void OnAnyButtonPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
 		// Jump to the shared settings screen and return here afterward.
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
-		tree.SetMeta("pgemu_settings_tab", "appearance");
-		if (_configPath != null)
-			tree.SetMeta("pgemu_config_path", _configPath);
+		SetCollectionsReturnContext();
+		GetTree().SetMeta("pgemu_settings_tab", "appearance");
 		await Transition.ChangeScene("res://Settings.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 
 	}
@@ -245,9 +241,7 @@ private void OnAnyButtonPressed()
 	private async void OnFriendsPressed()
 	{
 		AudioManager.Instance?.PlayNavigation(1);
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		
+		SetCollectionsReturnContext();
 		await Transition.ChangeScene("res://profile.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
 	}
 	
@@ -258,21 +252,71 @@ private void OnAnyButtonPressed()
 	
 	private async void OnAchPressed(){
 		AudioManager.Instance?.PlayNavigation(1);
-		
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
-		
+		SetCollectionsReturnContext();
 		await Transition.ChangeScene("res://Achievements.tscn", ScreenTransition.TransitionType.Radial, 0.5f, 0f, true);
 		
 	}
 
 	private async void OnGamePressed(){
 		AudioManager.Instance?.PlayNavigation(1);
-		
-		var tree = GetTree();
-		tree.SetMeta("pgemu_return_scene", "res://Collections.tscn");
+		SetCollectionsReturnContext();
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f, false);
 	
+	}
+
+	private void SetCollectionsReturnContext()
+	{
+		var tree = GetTree();
+		PreserveCollectionsParentReturnContext(tree);
+		tree.SetMeta(ReturnSceneMetaKey, CollectionsScenePath);
+		if (_configPath != null)
+			tree.SetMeta("pgemu_config_path", _configPath);
+	}
+
+	private void CaptureCollectionsParentReturnContext()
+	{
+		PreserveCollectionsParentReturnContext(GetTree());
+	}
+
+	private void PreserveCollectionsParentReturnContext(SceneTree tree)
+	{
+		var returnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: null;
+
+		if (!string.IsNullOrWhiteSpace(returnScene) && !IsCollectionsScene(returnScene))
+		{
+			tree.SetMeta(CollectionsParentReturnSceneMetaKey, returnScene);
+			return;
+		}
+
+		if (!tree.HasMeta(CollectionsParentReturnSceneMetaKey))
+			tree.SetMeta(CollectionsParentReturnSceneMetaKey, HomeScenePath);
+	}
+
+	private string ResolveCollectionsBackScene()
+	{
+		var tree = GetTree();
+		var returnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: null;
+
+		if (!string.IsNullOrWhiteSpace(returnScene) && !IsCollectionsScene(returnScene))
+			return returnScene;
+
+		var parentReturnScene = tree.HasMeta(CollectionsParentReturnSceneMetaKey)
+			? tree.GetMeta(CollectionsParentReturnSceneMetaKey).AsString()
+			: null;
+
+		if (!string.IsNullOrWhiteSpace(parentReturnScene) && !IsCollectionsScene(parentReturnScene))
+			return parentReturnScene;
+
+		return HomeScenePath;
+	}
+
+	private static bool IsCollectionsScene(string scenePath)
+	{
+		return string.Equals(scenePath, CollectionsScenePath, StringComparison.OrdinalIgnoreCase);
 	}
 	
 	private void OnChatPressed()
@@ -316,9 +360,8 @@ private void OnAnyButtonPressed()
 		
 		// Pass selection to the next screen without needing a singleton.
 		var tree = GetTree();
+		SetCollectionsReturnContext();
 		tree.SetMeta("pgemu_selected_platform_id", platform.Id);
-		if (_configPath != null)
-			tree.SetMeta("pgemu_config_path", _configPath);
 
 		await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Noise, 0.5f, 0f, true);
 	}
