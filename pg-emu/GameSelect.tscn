@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="11_rhyj1"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="12_ak8ya"]
 [ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="12_rhyj1"]
+[ext_resource type="Texture2D" uid="uid://dlgdsw4vktmmm" path="res://Images/game-cartridge.png" id="13_mfxtp"]
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="19_p3i2b"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_p3i2b"]
@@ -66,6 +67,7 @@ SettingsPath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnSettings")
 AddPath = NodePath("Margin/Root/CenterArea/Foreground1/HBoxContainer/Add")
 FlipPath = NodePath("Margin/Root/CenterArea/Foreground1/BtnFlip")
 CardScene = ExtResource("2")
+CartridgePath = NodePath("Margin/Root/Foreground2/TopBar/TopIcons/BtnCartridge")
 FriendInboxPopup = NodePath("Inbox")
 
 [node name="Bg" type="ColorRect" parent="." unique_id=2052701266]
@@ -343,6 +345,16 @@ size_flags_vertical = 0
 
 [node name="TopIcons" type="HBoxContainer" parent="Margin/Root/Foreground2/TopBar" unique_id=2023052200]
 layout_mode = 2
+
+[node name="BtnCartridge" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=1248173175]
+visible = false
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Read Cartridge"
+theme_override_constants/icon_max_width = 31
+icon = ExtResource("13_mfxtp")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnAch" type="Button" parent="Margin/Root/Foreground2/TopBar/TopIcons" unique_id=514724767]
 layout_mode = 2

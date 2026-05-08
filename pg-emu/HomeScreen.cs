@@ -36,7 +36,6 @@ public partial class HomeScreen : Control
 	[Export] public NodePath SearchFilterPath;
 	
 	[Export] public NodePath CartridgePath;
-	[Export] public NodePath CartReaderPath;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
@@ -71,7 +70,7 @@ public partial class HomeScreen : Control
 	private readonly List<Button> _userSearchResultButtons = new();
 	private int _selectedUserSearchResultIndex = -1;
 	
-	private CartReader _cartReader;
+	
 	
 	private readonly List<PlatformConfig> _platforms = new();
 
@@ -147,8 +146,6 @@ public partial class HomeScreen : Control
 		SetupUserSearchResultsPopup();
 		SetupHelpPopup();
 		
-		_cartReader = GetNodeOrNull<CartReader>(CartReaderPath);
-
 		// Build the 3D console carousel
 		_carouselArea = GetNode<Control>(CarouselAreaPath);
 		_carousel = new ConsoleCarousel3DView();
@@ -180,7 +177,7 @@ public partial class HomeScreen : Control
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 		if (_music != null) _music.Pressed += OnMusicPressed;
 		if (_filter != null) _filter.Pressed += OnFilterPressed;
-		_cartridge.Pressed += () => _cartReader.CartReaderFound();
+		_cartridge.Pressed += () => CartReader.Instance.CartReaderFound();
 		if (_collections != null && !_collections.IsConnected(Button.SignalName.Pressed, Callable.From(OnCollectionsPressed)))
 			_collections.Pressed += OnCollectionsPressed;
 		
