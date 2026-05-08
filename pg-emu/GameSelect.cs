@@ -33,6 +33,11 @@ public partial class GameSelect : Control
 	[Export] public NodePath AddPath;
 	[Export] public NodePath FlipPath;
 
+	// Prefab for a single carousel card.
+	[Export] public PackedScene CardScene;
+	
+	//[Export] public NodePath CartridgePath;
+
 	// Cached scene nodes, resolved in _Ready().
 	private Control _carouselArea = null!;
 	private Button _prev = null!;
@@ -59,6 +64,7 @@ public partial class GameSelect : Control
 	private ScrollContainer _gridScroll = null!;
 	private Control _gridRows = null!;
 	OptionButton _optionButton = new OptionButton();
+	//private Button _cartridge;
 	
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
@@ -158,6 +164,7 @@ public partial class GameSelect : Control
 		_friends = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnFriends");
 		_chat = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnChat");
 		_help = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnHelp");
+		//_cartridge = GetNodeOrNull<Button>(CartridgePath);
 		SetupHelpPopup();
 		_achievement = GetNode<Button>("Margin/Root/Foreground2/TopBar/TopIcons/BtnAch");
 		_add = GetNode<Button>(AddPath);
@@ -194,6 +201,7 @@ public partial class GameSelect : Control
 		FriendInboxPopup.AttachBadgeButton(_inbox);
 		chatManager.LoadUnreadCounts();
 		_collections.Pressed += OnCollectionsPressed;
+		//_cartridge.Pressed += () => CartReader.Instance.CartReaderFound();
 
 		ApplyAesthetic();
 		
@@ -3505,6 +3513,10 @@ private void OnAnyButtonPressed()
 		UiStyle.StyleNavButton(_flip);
 		UiStyle.AddHoverFeedback(_flip);
 		UiStyle.ApplyParallaxShadow(_flip);
+		
+		//UiStyle.StyleTopBarButton(_cartridge);
+		//UiStyle.AddHoverFeedback(_cartridge);
+		//UiStyle.ApplyParallaxShadow(_cartridge);
 
 		// Labels
 		UiStyle.StyleTitleLabel(_title);

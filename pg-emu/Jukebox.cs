@@ -233,12 +233,12 @@ public partial class Jukebox : Control
 		
 		   
 		if (length <= 0) return;
-    
+	
 		_progressBar.MaxValue = length;
-    
+	
 		if (!_isScrubbing)
 			_progressBar.Value = position;
-    
+	
 		_currentTimeLabel.Text = FormatDuration(position);
 		_totalTimeLabel.Text = FormatDuration(length);
 	}

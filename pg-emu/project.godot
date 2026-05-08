@@ -32,6 +32,7 @@ GlobalBackground="*res://GlobalBackground.tscn"
 AchievementCredentialLoad="*uid://hosxeongpmm0"
 ChatManager="*uid://7cqil82wp2qx"
 ChatOverlay="*uid://1wtnmucvt428"
+CartReader="*uid://cdij54sdgtooe"
 
 [display]
 

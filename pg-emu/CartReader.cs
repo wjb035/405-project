@@ -32,6 +32,9 @@ public partial class CartReader : PopupPanel
 	[Export] private NodePath InstallMessagePath;
 	[Export] private NodePath CancelInstallPath;
 	[Export] private NodePath InstallButtonPath;
+	[Export] private NodePath InstallingLabelPath;
+	[Export] private NodePath ProgressBarPath;
+	[Export] private NodePath ProgressBarContainerPath;
 	
 	[Export] private NodePath NowInstalledButtonPath;
 	
@@ -49,9 +52,14 @@ public partial class CartReader : PopupPanel
 	private VBoxContainer _installMessage;
 	private Button _installButton;
 	private Button _cancelInstallButton;
+	private Label _installingLabel;
+	private ProgressBar _progressBar;
+	private MarginContainer _progressBarContainer;
 	
 	private VBoxContainer _nowInstalledMessage;
 	
+	public ScreenTransition Transition;
+
 	//private CartReaderHelper _cartReaderHelper = new CartReaderHelper();
 	//private Thread _cartReaderFinder = null;
 	//private bool _running = true; 
@@ -67,12 +75,17 @@ public partial class CartReader : PopupPanel
 	private bool _running = true; 
 	private List<byte> fileBuffer = new List<byte>();
 	
-	string fileName = null;
-	int fileSize = -1;
-	byte[] fileContent = null;
+	public string fileName = null;
+	public int fileSize = -1;
+	public byte[] fileContent = null;
 	bool readingRom = false;
 	private int platformNum = -1;
 	private string platformPath;
+	private int totalBytesRead = 0;
+	//private FileStream stream; 
+	
+	public static CartReader Instance { get; private set; }
+	
 	
 		private const string SelectedPlatformMetaKey = "pgemu_selected_platform_id";
 	
@@ -80,7 +93,6 @@ public partial class CartReader : PopupPanel
 	private string? _configPath;                // Base config.json path (shared).
 	private string? _localConfigPath;           // config.local.json path (user overrides).
 	
-	public ScreenTransition Transition;
 	
 	public bool cartReaderActive = false;
 	
@@ -91,6 +103,9 @@ public partial class CartReader : PopupPanel
 	
 	public override async void _Ready()
 	{
+		Transition = GetNode<ScreenTransition>("/root/ScreenTransition");
+		Instance = this;
+		
 		_consolePrompt = GetNode<VBoxContainer>(ConsolePrompt);
 		_gameBoySelection = GetNode<Button>(GameBoyChoicePath);
 		_n64Selection = GetNode<Button>(N64ChoicePath);
@@ -103,10 +118,14 @@ public partial class CartReader : PopupPanel
 		_loadingMessage = GetNode<VBoxContainer>(LoadingMessagePath);
 		
 		_installMessage = GetNode<VBoxContainer>(InstallMessagePath);
+		_installingLabel = GetNode<Label>(InstallingLabelPath);
+		_progressBar = GetNode<ProgressBar>(ProgressBarPath);
+		_progressBarContainer = GetNode<MarginContainer>(ProgressBarContainerPath);
 		_installButton = GetNode<Button>(InstallButtonPath);
 		_cancelInstallButton = GetNode<Button>(CancelInstallPath);
 		
 		_nowInstalledMessage = GetNode<VBoxContainer>(NowInstalledButtonPath);
+		
 		
 		
 		_gameBoySelection.Pressed += () => SendChoice(GAMEBOYNUM);
@@ -118,15 +137,9 @@ public partial class CartReader : PopupPanel
 		LoadConfigAndPlatforms();
 		
 
-		Transition = GetNode<ScreenTransition>("/root/ScreenTransition");
+
+		GD.Print("helllsursufre");
 		
-		if(!cartReaderActive) {
-			cartReaderActive = await CartReaderFound();
-		}
-		if (await CartReaderFound() == true)
-		
-		{GD.Print("helllsursufre");
-		}
 
 	}
 	
@@ -162,87 +175,75 @@ public partial class CartReader : PopupPanel
 		}
 	}
 	
+	
 	public async Task<bool> CartReaderFound()
 	{
+		GD.Print(fileName);
+		GD.Print(fileSize);
+		if(!cartReaderActive) {
+			GD.Print("false");
+		}else{GD.Print("true");}
 		if (!cartReaderActive) {
+			fileName = null;
+			GD.Print("-1 at cartsearch");
+			int fileSize = -1;
 		
-		string[] portNames = SerialPort.GetPortNames();
-		string? line;
-		foreach (string portName in portNames.Reverse())
-		{
-			try
+			string[] portNames = SerialPort.GetPortNames();
+			string? line;
+			foreach (string portName in portNames.Reverse())
 			{
-				GD.Print("finding CartREader");
-				GD.Print(portName);
-				var possiblePort = new SerialPort(portName, 250000);
-				possiblePort.ReadTimeout = 2000;
-				//possiblePort.WriteTimeout = 2000;
-				//possiblePort.DtrEnable = true;
-				//possiblePort.RtsEnable = true;
-				//possiblePort.Handshake = Handshake.None;
-				try
-				{
-					await Task.Run(() => possiblePort.Open());
-
-					line = await Task.Run(() => possiblePort.ReadLine().Trim());
-											GD.Print(line);
-					line = await Task.Run(() => possiblePort.ReadLine().Trim());
-											GD.Print("gunga" +line);
-					
-
-					//using (var reader = new StreamReader(possiblePort.BaseStream))
-					//{	
-						//line = await reader.ReadLineAsync();
-						//GD.Print(line);
-						//line = line.Trim();
-						//GD.Print(line);
-						//line = await reader.ReadLineAsync();
-						//GD.Print(line);
-						//line = line.Trim();
-						//GD.Print(line);
-						//
-					//}
-					GD.Print(" LLLIIIIIINNNENENNEEN : ");
-					GD.Print(line);
-					if (line == "OSCR Serial V15.5")
+					GD.Print("finding CartREader");
+					GD.Print(portName);
+					var possiblePort = new SerialPort(portName, 250000);
+					possiblePort.ReadTimeout = 4000;
+					//possiblePort.WriteTimeout = 2000;
+					//possiblePort.DtrEnable = true;
+					//possiblePort.RtsEnable = true;s
+					//possiblePort.Handshake = Handshake.None;
+					try
 					{
-						GD.Print("YOOOOOOO WE FOUND DA CART READDERR");
-						cartReaderActive = true;
-						//Thread.Sleep(2000);
-						Show();
-						_installMessage.CallDeferred("set_visible",false);
-						_loadingMessage.CallDeferred("set_visible",false);
-						_consolePrompt.CallDeferred("set_visible", true);
-						port = possiblePort;
-						port.DataReceived += OnDataRecieved;
-						return true;
+						await Task.Run(() => possiblePort.Open());
+
+						line = await Task.Run(() => possiblePort.ReadLine().Trim());
+												GD.Print(line);
+						line = await Task.Run(() => possiblePort.ReadLine().Trim());
+												GD.Print("gunga" +line);
+						
+						GD.Print(" LLLIIIIIINNNENENNEEN : ");
+						GD.Print(line);
+						if (line == "OSCR Serial V15.5")
+						{
+							GD.Print("YOOOOOOO WE FOUND DA CART READDERR");
+							cartReaderActive = true;
+							//Thread.Sleep(2000);
+							_installMessage.CallDeferred("set_visible", false);
+							_progressBar.CallDeferred("set_visible", false);
+							_nowInstalledMessage.CallDeferred("set_visible", false);
+							_loadingMessage.CallDeferred("set_visible", false);
+							_consolePrompt.CallDeferred("set_visible", true);
+							
+							Show();
+							port = possiblePort;
+							port.DataReceived += OnDataRecieved;
+							return true;
+						}
 					}
-				}
-				catch(System.Exception e){GD.Print("ERRRRRRR");}
-				//Thread.Sleep(1000);
-				
-				//string line = possiblePort.ReadLine().Trim();
-				//line = possiblePort.ReadLine().Trim();
-				//GD.Print(" LLLIIIIIINNNENENNEEN : ");
-				//GD.Print(line);
-				
-				//if (line == "OSCR Serial V15.5"){
-					//GD.Print("YOOOOOOO WE FOUND DA CART READDERR");
-				//
-					////Thread.Sleep(2000);
-					//port = possiblePort;
-					////ShowConsolePrompt(possiblePort);
-					//return true;
-				//}
-				possiblePort.Close();
-			
-			
+					catch(System.Exception e){GD.Print("ERRRRRRR");}
+					possiblePort.Close();
 			}
-			catch{}
 		}
-	}
+		if (port.IsOpen)
+		{
+			GD.Print("Cart reader found");
+			Show();
+			return false;
+		}
+		GD.Print("CartReader not found, restarting search");
+		cartReaderActive = false;
+		CartReaderFound();
 		return false;
 	}
+	
 	
 	
 	
@@ -312,7 +313,6 @@ public partial class CartReader : PopupPanel
 	private void ProcessData()
 	{
 		// check if cart reader needs confirmation and write to serial
-		ConfirmOptions();
 		// get file name, size, and content
 		// if name or size found, dont look again to prevent incorrect data
 		if (fileName == null)
@@ -324,6 +324,8 @@ public partial class CartReader : PopupPanel
 		{
 			fileSize = FindFileSize();
 		} 
+		
+		ConfirmOptions();
 		
 		if ((fileName != null) && (fileSize != -1))
 		{
@@ -411,7 +413,6 @@ public partial class CartReader : PopupPanel
 		// file name vars
 		byte[] nameBytes;
 
-		
 		nameMarkerBytes = System.Text.Encoding.ASCII.GetBytes("NAME: ");
 		nameMarkerIndex = FindString(fileBuffer, System.Text.Encoding.ASCII.GetBytes("NAME: "));
 
@@ -428,32 +429,29 @@ public partial class CartReader : PopupPanel
 				GD.Print("Name: " + fileName);
 				
 				fileBuffer.RemoveRange(0, nameLineEndIndex + 1);
-				if (GameIsInLibrary(fileName, 1))
+				if (GameIsInLibrary(fileName, 1) && new FileInfo(path).Length != 0)
 				{
 					// close port to prevent game install since no longer needed
 					port.DataReceived -= OnDataRecieved;
 					port.Close();
 					GD.Print("Game found in libraryyy");
-					cartReaderActive = false;
 					await GoToGame(fileName[..^4]);
-					//Sleep(2000);
-					//tree 
-					//tree.SetMeta("pgemu_config_path", _configPath);
-
-					//_config = AppConfig.Load(_configPath);
-					//parent.OnGameSearchResultPressedAsync(fileName[..^4]);
-					//var transition = GetTree().Root.GetNode("ScreenTransition");
-					//transition.CallDeferred("ChangeScene", "res://GameSelect.tscn", default(Variant), .35f, 0f);
-
-					//await Transition.ChangeScene("res://GameSelect.tscn", ScreenTransition.TransitionType.Wipe, 1f, .5f, true);
+					this.CallDeferred("set_visible", false);
+					_loadingMessage.CallDeferred("set_visible", false);
 					
+					GD.Print("resetting cart reader name and file size");
+					fileName = null;
+					
+					fileSize = -1;
+					cartReaderActive = false;
+
 				}
 				// otherwise, install it
-				else
 				{
 					GD.Print("Game not found, installing now");
-				_loadingMessage.CallDeferred("set_visible", false);
-				_installMessage.CallDeferred("set_visible", true);
+					_installingLabel.CallDeferred(Label.MethodName.SetText, "Saving " + fileName[..^4] + " to cartridge reader...");
+					_loadingMessage.CallDeferred("set_visible", false);
+					_installMessage.CallDeferred("set_visible", true);
 				}
 			}
 		} 
@@ -494,6 +492,11 @@ public partial class CartReader : PopupPanel
 				
 				// remove all data up to now, as file content comes next
 				fileBuffer.RemoveRange(0, sizeLineEndIndex + 1);
+				_progressBar.Value = 0;
+				_progressBar.SetDeferred(ProgressBar.PropertyName.MaxValue, size);
+				GD.Print("biiig: " + _progressBar.MaxValue);
+				_progressBar.CallDeferred("set_visible", true);
+				_installingLabel.SetDeferred(Label.PropertyName.Text, "Transferring " + fileName[..^4] + " to PC...");
 				
 				return size;
 			}
@@ -515,6 +518,8 @@ public partial class CartReader : PopupPanel
 		
 		port.DataReceived -= OnDataRecieved;
 		var portStream = port.BaseStream;
+		GD.Print("starting file write");
+		
 		// read bytes chunk at a time and check checksum to verify no bytes lost
 		while(true)
 		{
@@ -522,7 +527,6 @@ public partial class CartReader : PopupPanel
 			{	
 
 				length = port.ReadByte();
-			
 				//if((fileSize - totalBytesRead) < 64) 
 				//{
 					//GD.Print("shit almost done" + (fileSize - totalBytesRead));
@@ -533,7 +537,7 @@ public partial class CartReader : PopupPanel
 				if (length == 0)
 				{
 					GD.Print("EOF byte read, finalizing file");
-					cartReaderActive = false;
+					//cartReaderActive = false;
 					break;
 				}
 				if (buffer != null)
@@ -561,8 +565,41 @@ public partial class CartReader : PopupPanel
 				{ 
 					// for some reason this bunk ass shit sends duplicate lines at start, dont write those lines so shit stay right
 					if (count > 2) {
-						WriteToFile(buffer);
+						if (WriteToFile(buffer))
+						{
+							return;
+						}
+
+						//stream.Write(buffer, 0, buffer.Length);
+						totalBytesRead += 16;
+						if (totalBytesRead == 4096) 
+						{
+							_progressBar.SetDeferred(ProgressBar.PropertyName.Value, _progressBar.Value + 4096);
+							totalBytesRead = 0;
+						}
 					}
+					
+					//if(stream.Length == fileSize)
+					//{
+						////stream.close();
+						//GD.Print("File write done");
+						//cartReaderActive = false;
+						//port.Close();
+						//_installMessage.CallDeferred("set_visible", false);
+						//_progressBar.CallDeferred("set_visible", false);
+						//_nowInstalledMessage.CallDeferred("set_visible", true);
+						//this.CallDeferred("Show");
+										//if(stream.Length == fileSize)
+					//{
+						////stream.close();
+						//GD.Print("File write done");
+						//cartReaderActive = false;
+						//port.Close();
+						//_installMessage.CallDeferred("set_visible", false);
+						//_progressBar.CallDeferred("set_visible", false);
+						//_nowInstalledMessage.CallDeferred("set_visible", true);
+						//this.CallDeferred("Show");
+						
 					else
 					{
 						count += 1;	
@@ -577,9 +614,10 @@ public partial class CartReader : PopupPanel
 					port.Write("N");
 				}
 			}
-			catch (TimeoutException)
+			catch (Exception e)
 			{
 				GD.Print("timeout >:(");
+				GD.Print(e.Message);
 				// bruh, arduino buggin >:( send that shit again 
 				port.Write("N");
 			}	
@@ -606,19 +644,28 @@ public partial class CartReader : PopupPanel
 		fileContent = null;
 	}
 	
-	private void WriteToFile(byte[] buffer) {
+	private bool WriteToFile(byte[] buffer) {
 		using (FileStream stream = new FileStream(path, FileMode.Append, System.IO.FileAccess.Write))
 		{
 			stream.Write(buffer, 0, buffer.Length);
+
 			if(stream.Length == fileSize)
 			{
-				cartReaderActive = false;
+				//stream.close();
+				GD.Print("File write done");
+//				cartReaderActive = false;
 				port.Close();
-				_installMessage.CallDeferred("set_visible", false);
+				_installMessage.CallDeferred("set_visible", false);	
+				_progressBar.CallDeferred("set_visible", false);
 				_nowInstalledMessage.CallDeferred("set_visible", true);
+				this.CallDeferred("Show");
+			
+				fileName = null;
+				fileSize = -1;
+				return true;
 			}
 		}
-	
+		return false;
 	}
 	
 	public void LoadConfig()
@@ -641,7 +688,6 @@ public partial class CartReader : PopupPanel
 				_localConfigPath = Path.Combine(Path.GetDirectoryName(_configPath)!, "config.local.json");
 				GD.Print("Pathhhhh: "+ _config.LibraryRoot);
 				platformPath = _config.Platforms[platformNum].RomPath;
-				//return _config.Platforms[1].RomPath;
 			}
 
 			// No config.json found, start with a blank/default config.
@@ -667,6 +713,8 @@ public partial class CartReader : PopupPanel
 				return i;
 			}
 		}
+		
+
 		return -1;
 	}
 	
@@ -686,7 +734,7 @@ public partial class CartReader : PopupPanel
 		public async Task GoToGame(string name)
 	{
 
-		GD.Print(name);
+		GD.Print("Going to select: " + name);
 		var platformMatched = _platforms[0];
 		foreach (var p in _platforms){
 			var scanned = LibraryScanner.Scan(p, _config.LibraryRoot, out var scanDir);
@@ -818,6 +866,7 @@ public partial class CartReader : PopupPanel
 	private void CancelRead() 
 	{
 		Hide();
+		port.Close();
 		cartReaderActive = false;
 	}
 	
