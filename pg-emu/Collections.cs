@@ -26,7 +26,7 @@ public partial class Collections : Control
 	[Export] public NodePath HelpPath;
 	[Export] public NodePath GamePath;
 
-	// Card prefab spawned into the carousel.
+	// Legacy 2D card prefab kept on the scene for compatibility with saved node exports.
 	[Export] public PackedScene CardScene;
 	
 	private ScreenTransition Transition =>
@@ -49,22 +49,19 @@ public partial class Collections : Control
 	private LineEdit _lineEdit;
 	private Button _gameSelect;
 	private HelpPopup _helpPopup = null!;
+	private CollectionCarousel3DView _carousel3D = null!;
 	
 	// Friend Inbox popup
 	[Export] public FriendInbox FriendInboxPopup;
 
-	private readonly List<Control> _cards = new();
 	private readonly List<PlatformConfig> _platforms = new();
 
 	// Loaded from `config.json`
 	private AppConfig? _config;
 	private string? _configPath;
 
-	// Carousel state. `_carouselPos` is continuous so it feels smooth when dragging
+	// Carousel state mirrored from the 3D collection carousel.
 	private float _carouselPos = 0f;
-	private float _dragStartPos;
-	private float _dragStartCarouselPos;
-	private bool _dragging;
 
 	// Gamepad navigation (left stick + d-pad)
 	private const float AxisDeadzone = 0.55f;
@@ -77,8 +74,6 @@ public partial class Collections : Control
 	private long _uiVerticalAxisNextMs;
 	private int _uiRowIndex = -1;
 	private int _uiColumnIndex = -1;
-
-	private Tween _tween;
 
 	public override async void _Ready()
 	{
@@ -94,6 +89,7 @@ public partial class Collections : Control
 		_collectionPrompt = GetNode<Button>("Margin/Root/CenterArea/Mid1/FriendsRow/CollectionPrompt");
 		_lineEdit = GetNode<LineEdit>("Margin/Root/CenterArea/Mid1/CarouselArea/LineEdit");
 		_lineEdit.Visible = false;
+		SetupCollectionCarousel();
 
 		_back = GetNodeOrNull<Button>("Margin/Root/Foreground1/TopBar/BtnBack");
 		_friends = GetNodeOrNull<Button>(FriendsPath);
@@ -134,7 +130,26 @@ public partial class Collections : Control
 		LoadConfigAndPlatforms();
 		SpawnCards();
 		ApplyRequestedCollectionFocus();
-		LayoutCards();
+		_carousel3D.SetCarouselPos(_carouselPos);
+		UpdateSelectedLabel();
+	}
+
+	private void SetupCollectionCarousel()
+	{
+		_carousel3D = new CollectionCarousel3DView { Name = "CollectionCarousel3D" };
+		_carousel3D.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_carousel3D.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		_carousel3D.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		_carousel3D.SelectionChanged += OnCollectionCarouselSelectionChanged;
+		_cardsRoot.AddChild(_carousel3D);
+	}
+
+	private void OnCollectionCarouselSelectionChanged(int index)
+	{
+		if (Count == 0)
+			return;
+
+		_carouselPos = WrapPos(index);
 		UpdateSelectedLabel();
 	}
 
@@ -173,12 +188,8 @@ private void OnAnyButtonPressed()
 		_lineEdit.Visible = true;
 
 	_cardsRoot.MouseFilter = Control.MouseFilterEnum.Ignore;
-
-	foreach (var c in _cards)
-	{
-		c.Visible = false;
-		c.MouseFilter = Control.MouseFilterEnum.Ignore;
-	}
+	_carousel3D.Visible = false;
+	_carousel3D.MouseFilter = Control.MouseFilterEnum.Ignore;
 
 	_lineEdit.GrabFocus(); // important
 }
@@ -194,11 +205,8 @@ private void OnAnyButtonPressed()
 		_lineEdit.Visible = false;
 
 		_cardsRoot.MouseFilter = Control.MouseFilterEnum.Stop;
-		foreach (var c in _cards)
-		{
-			c.Visible = true;
-			c.MouseFilter = Control.MouseFilterEnum.Stop;
-	}
+		_carousel3D.Visible = true;
+		_carousel3D.MouseFilter = Control.MouseFilterEnum.Pass;
 		_lineEdit.Clear();
 		_selectPlatform.Show();
 		ResetUiNavigationState();
@@ -317,10 +325,6 @@ private void OnAnyButtonPressed()
 
 	private void SpawnCards()
 	{
-		// Clear old cards (e.g. after a reload).
-		foreach (var c in _cards)
-			c.QueueFree();
-		_cards.Clear();
 		_platforms.Clear();
 			
 			
@@ -330,13 +334,6 @@ private void OnAnyButtonPressed()
 			//_platforms.AddRange(platforms);
 			_platforms.Add(new PlatformConfig { Id = "No collections", Name = "No Collections Yet!" });
 			_selectPlatform.Visible = false;
-			var card = (Control)CardScene.Instantiate();
-				_cardsRoot.AddChild(card);
-				_cards.Add(card);
-
-				// `platform_card.tscn` includes a `Panel/Name` label.
-				var label = card.GetNodeOrNull<Label>("Panel/Name");
-				if (label != null) label.Text = "No collections yet!";
 		}
 		else
 		{
@@ -347,29 +344,20 @@ private void OnAnyButtonPressed()
 			foreach (var g in CollectionStorage.collections){
 				_platforms.Add(new PlatformConfig { Id = "test", Name = g.Key });
 			}
-			
-			//foreach (var p in CollectionStorage.collections)
-			foreach (var p in _platforms)
-			{
-				var card = (Control)CardScene.Instantiate();
-				_cardsRoot.AddChild(card);
-				_cards.Add(card);
-
-				// `platform_card.tscn` includes a `Panel/Name` label.
-				var label = card.GetNodeOrNull<Label>("Panel/Name");
-				if (label != null) label.Text = p.Name;
+			_selectPlatform.Visible = true;
 		}
-		}
+		var collectionNames = new List<string>();
+		foreach (var platform in _platforms)
+			collectionNames.Add(platform.Name);
 
-		//foreach (var p in _platforms)
-		
-		
-
+		_carousel3D.Visible = true;
+		_carousel3D.MouseFilter = Control.MouseFilterEnum.Pass;
+		_carousel3D.Populate(collectionNames, _carouselPos);
 		UpdateSelectedLabel();
 		UpdateNavEnabled();
 	}
 
-	private int Count => _cards.Count;
+	private int Count => _platforms.Count;
 
 	private void ApplyRequestedCollectionFocus()
 	{
@@ -416,88 +404,20 @@ private void OnAnyButtonPressed()
 	{
 		if (Count <= 1) return;
 		AudioManager.Instance?.PlayNavigation(dir);
-		SnapTo(_carouselPos + dir, true);
-	}
-
-	private void SnapTo(float targetPos, bool overshoot)
-	{
-		// Programmatic move (buttons/wheel): tween to the target position and snap to the nearest item.
-		targetPos = WrapPos(targetPos);
-
-		_tween?.Kill();
-		_tween = CreateTween();
-
-		// Cubic out feels like a launcher UI, not a robot
-		_tween.SetTrans(Tween.TransitionType.Cubic);
-		_tween.SetEase(Tween.EaseType.Out);
-
-		if (overshoot)
-		{
-			// Tiny overshoot using Back
-			_tween.SetTrans(Tween.TransitionType.Back);
-			_tween.TweenProperty(this, nameof(_carouselPos), targetPos, 0.25f);
-		}
-		else
-		{
-			_tween.TweenProperty(this, nameof(_carouselPos), targetPos, 0.22f);
-		}
-
-		_tween.TweenCallback(Callable.From(() =>
-		{
-			_carouselPos = WrapPos(_carouselPos);
-			LayoutCards();
-			UpdateSelectedLabel();
-		}));
+		_carousel3D.StepDirection(dir);
 	}
 
 	public override void _Process(double delta)
 	{
-		// Keep layout in sync while tweening and while `_carouselPos` is updated by dragging.
-		LayoutCards();
+		if (_carousel3D != null && Count > 0)
+			_carouselPos = _carousel3D.CarouselPos;
+		UpdateSelectedLabel();
 	}
 
 	public override void _GuiInput(InputEvent e)
 	{
-		if (ShouldIgnoreUiInput()) return;
-		if (Count == 0) return;
-		if (Count == 1) return;
-
-		if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
-		{
-			if (mb.Pressed)
-			{
-				// Start drag gesture (cancel any in-flight tween).
-				_dragging = true;
-				_dragStartPos = mb.Position.X;
-				_dragStartCarouselPos = _carouselPos;
-				_tween?.Kill();
-			}
-			else
-			{
-				if (_dragging)
-				{
-					_dragging = false;
-					// On release, snap to the closest card.
-					var nearest = Mathf.Round(_carouselPos);
-					SnapTo(nearest, false);
-				}
-			}
-		}
-
-		if (_dragging && e is InputEventMouseMotion mm)
-		{
-			var dx = mm.Position.X - _dragStartPos;
-
-			// Tune sensitivity. Bigger divisor means slower drag.
-			_carouselPos = WrapPos(_dragStartCarouselPos - (dx / 520f));
-			UpdateSelectedLabel();
-		}
-
-		if (e is InputEventMouseButton wheel && wheel.Pressed)
-		{
-			if (wheel.ButtonIndex == MouseButton.WheelUp) Step(-1);
-			if (wheel.ButtonIndex == MouseButton.WheelDown) Step(1);
-		}
+		if (ShouldIgnoreUiInput())
+			AcceptEvent();
 	}
 
 	public override void _UnhandledInput(InputEvent e)
@@ -702,44 +622,6 @@ private void OnAnyButtonPressed()
 	private bool HandleAxis(float value, ref int heldDir, ref long nextMs)
 	{
 		return ControllerService.TryHandleMenuAxis(value, ref heldDir, ref nextMs, Step);
-	}
-
-	private void LayoutCards()
-	{
-		if (Count == 0) return;
-
-		// Cards are laid out around the container center.
-		// The centered card (d ~= 0) is full size/alpha; others scale down and fade out.
-		var center = _cardsRoot.Size * 0.5f;
-		var spacing = 520f;
-
-		// Render a window around the center, but keep all nodes alive
-		for (int i = 0; i < Count; i++)
-		{
-			var card = _cards[i];
-
-			// Distance from current position, wrapped to [-Count/2, Count/2].
-			var d = i - _carouselPos;
-			if (d > Count * 0.5f) d -= Count;
-			if (d < -Count * 0.5f) d += Count;
-
-			var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.2f);
-
-			var scale = Mathf.Lerp(1.0f, 0.78f, t);
-			var alpha = Mathf.Lerp(1.0f, 0.35f, t);
-
-			var x = center.X + d * spacing;
-			var y = center.Y + t * 40f;
-
-			card.PivotOffset = card.Size * 0.5f;
-			card.Position = new Vector2(x, y) - card.PivotOffset;
-
-			card.Scale = new Vector2(scale, scale);
-			card.Modulate = new Color(1, 1, 1, alpha);
-
-			// Z order so center is on top
-			card.ZIndex = (int)(1000 - Mathf.Abs(d) * 100);
-		}
 	}
 
 	private void UpdateSelectedLabel()
