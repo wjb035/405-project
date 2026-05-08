@@ -117,7 +117,8 @@ public partial class FriendInbox : PopupPanel
 		try
 		{
 			_lastRequests = await requestsTask ?? new List<FriendRequestDto>();
-			
+			UpdateBadge();
+
 		}
 		catch (System.Exception ex)
 		{
@@ -192,6 +193,7 @@ public partial class FriendInbox : PopupPanel
 		if (hasUnread)
 		{
 			var header = new Label { Text = "Unread Messages" };
+			header.Position = new Vector2(10, 0);
 			UiStyle.StyleTitleLabel(header);
 			InboxList.AddChild(header);
 			
@@ -214,11 +216,13 @@ public partial class FriendInbox : PopupPanel
 		{
 			var header = new Label();
 			header.Text = "Friend Requests";
+			header.Position = new Vector2(10, 0);
 			UiStyle.StyleTitleLabel(header);
 			InboxList.AddChild(header);
 
 			foreach (var req in _lastRequests)
 			{
+				
 				var item = FriendRequestItemScene.Instantiate<FriendRequestItem>();
 				item.Setup(req);
 				InboxList.AddChild(item);
@@ -276,10 +280,28 @@ public partial class FriendInbox : PopupPanel
 	{
 		if (_badgeWrapper == null || !GodotObject.IsInstanceValid(_badgeWrapper)) return;
     
-		var total = _chat.GetUnreadCounts().Values.Sum();
+		int unreadConversations = _chat.GetUnreadCounts()
+			.Count(kvp => kvp.Value > 0);
+		int friendRequests = _lastRequests?.Count ?? 0;
+		
+		int total = unreadConversations + friendRequests;
+		
 		_badgeLabel.Text = total > 99 ? "99+" : total.ToString();
 		_badgeWrapper.Visible = total > 0;
 
+	}
+	
+	public void RefreshBadge()
+	{
+		UpdateBadge();
+	}
+
+	public void RemoveRequest(string userId)
+	{
+		_lastRequests.RemoveAll(r => r.Id == userId);
+
+		UpdateBadge();
+		RenderInbox();
 	}
 	
 	public override void _ExitTree()

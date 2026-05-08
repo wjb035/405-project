@@ -20,7 +20,7 @@ size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1ip1e")
 script = ExtResource("1_1ip1e")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1386711342]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1386711342]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.015
@@ -29,18 +29,18 @@ offset_right = 66.5
 offset_bottom = 40.0
 theme_override_constants/separation = 5
 
-[node name="Username Label" type="Label" parent="HBoxContainer" unique_id=1073063703]
+[node name="UsernameLabel" type="Label" parent="HBox" unique_id=1073063703]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Username"
 
-[node name="Accept Button" type="Button" parent="HBoxContainer" unique_id=1929210884]
+[node name="AcceptButton" type="Button" parent="HBox" unique_id=1929210884]
 layout_mode = 2
 size_flags_vertical = 4
 size_flags_stretch_ratio = 0.0
 text = "Accept"
 
-[node name="Decline Button" type="Button" parent="HBoxContainer" unique_id=1804425905]
+[node name="DeclineButton" type="Button" parent="HBox" unique_id=1804425905]
 layout_mode = 2
 size_flags_vertical = 4
 text = "Decline"

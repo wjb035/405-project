@@ -17,9 +17,9 @@ public partial class FriendRequestItem : InboxItem
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		UsernameLabel = GetNode<Label>("UsernameLabel");
-		AcceptButton = GetNode<Button>("AcceptButton");
-		DeclineButton = GetNode<Button>("DeclineButton");
+		UsernameLabel = GetNode<Label>("HBox/UsernameLabel");
+		AcceptButton = GetNode<Button>("HBox/AcceptButton");
+		DeclineButton = GetNode<Button>("HBox/DeclineButton");
 
 		AcceptButton.Pressed += OnAccept;
 		DeclineButton.Pressed += OnDecline;
@@ -31,6 +31,10 @@ public partial class FriendRequestItem : InboxItem
 	// Gets the userID and username
 	public override void Setup(object data)
 	{
+		UsernameLabel ??= GetNode<Label>("HBox/UsernameLabel");
+		AcceptButton ??= GetNode<Button>("HBox/AcceptButton");
+		DeclineButton ??= GetNode<Button>("HBox/DeclineButton");
+		
 		if (data is FriendRequestDto dto)
 		{
 			userId = dto.Id;
@@ -78,6 +82,7 @@ public partial class FriendRequestItem : InboxItem
 			// remove from UI
 			var tween = GetTree().CreateTween();
 			tween.TweenProperty(this, "modulate:a", 0f, 0.2f).From(1f);
+			FriendInbox.Instance?.RemoveRequest(userId);
 			tween.TweenCallback(Callable.From(() => QueueFree())); 
 		}
 		else
