@@ -480,7 +480,7 @@ public partial class ChatOverlay : CanvasLayer
 		_chat.LoadDmHistory(_currentDmUser, _oldestMessageTime);
 		
 		// 2 frame delay for rebuildmessagelog
-		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		// await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		
 		
