@@ -17,18 +17,23 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private const float GbaCartridgeUvOffsetU = -0.23596f;
 	private const float GbaCartridgeUvScaleV = -2.8823564f;
 	private const float GbaCartridgeUvOffsetV = 1.874445f;
-	private const int GbaFrontLabelViewportWidth = 1280;
-	private const int GbaFrontLabelViewportHeight = 760;
-	private const int GbaBackLabelViewportWidth = 4096;
-	private const int GbaBackLabelViewportHeight = 3072;
+	private const int GbaFrontLabelViewportWidth = 1024;
+	private const int GbaFrontLabelViewportHeight = 608;
+	private const int GbaBackLabelViewportWidth = 1280;
+	private const int GbaBackLabelViewportHeight = 960;
 	private const float GbaBackLabelWidthFactor = 0.94f;
 	private const float GbaBackLabelHeightFactor = 0.78f;
 	private const float GbaBackLabelYOffsetFactor = 0.02f;
 	private const float GbaBackLabelDepthOffset = 0.016f;
+	private static readonly Vector2I SquareBackViewportSize = new(1536, 1536);
+	private static readonly Vector2I LandscapeBackViewportSize = new(2172, 1241);
+	private static readonly Vector2I PortraitBackViewportSize = new(1536, 2172);
 	private static readonly Vector3 N64BoxSize = new(3.6f, 3.6f * 4f / 7f, 0.25f);
 	private static readonly Vector2 N64CoverSize = new(3.5f, 3.5f * 4f / 7f);
 	private static readonly Vector2 GbaExpandedBackPanelSize = new(2.5f, 3.5f);
 	private const float GbaExpandedBackDepthOffset = 0.03f;
+	private const float VisibleCarouselDistance = 4.25f;
+	private const float AlphaUpdateEpsilon = 0.003f;
 	// Physics
 	private const float HoverMotionThreshold = 0.001f;
 	private float _velocity = 0f;
@@ -49,6 +54,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private int _lastSpinAudioStep = 0;
 	private ulong _lastSpinAudioMs;
 	private float _spinSpeed = 0f;
+	private const ulong SpinAudioCooldownMs = 70;
+	private ulong _lastSpinTickMs = 0;
 
 	// 3D scene internals
 	private SubViewport _viewport;
@@ -57,12 +64,19 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private readonly List<Node3D> _boxes = new();
 	private readonly List<List<StandardMaterial3D>> _baseMaterials = new();
 	private readonly List<StandardMaterial3D?> _coverMaterials = new();
+	private readonly List<float> _lastAppliedAlphas = new();
+	private readonly List<int> _visibleBoxIndices = new();
+	private readonly Dictionary<MeshInstance3D, SubViewport> _textureViewports = new();
 	private bool _isGba;
 	private bool _isDs;
 	private bool _isPs1;
 	private bool _isN64;
 	private bool _isSnes;
 	private Texture2D? _gbaCartridgeLogoTexture;
+	private PackedScene? _gbaCartridgeScene;
+	private PackedScene? _dsCartridgeScene;
+	private bool _layoutDirty = true;
+	private float _lastLaidOutCarouselPos = float.NaN;
 	
 	// Card spacing in 3D units
 	private const float Spacing = 2.55f;
@@ -88,18 +102,6 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private readonly HashSet<int> _returningBoxes = new();
 	
 	public event System.Action<int>? SelectionChanged;
-	private StandardMaterial3D gold = new StandardMaterial3D
-	{
-		AlbedoColor = new Color(1.0f, 0.733f, 0.336f),
-		Metallic = 1.0f,
-		Roughness = 0.08f
-	};
-	private StandardMaterial3D silver = new StandardMaterial3D
-	{
-		AlbedoColor = new Color(0.9f, 0.9f, 0.9f),
-		Metallic = 1.0f,
-		Roughness = 0.05f
-	};
 	public override void _Ready()
 	{
 		// Builds the SubViewport, which basically renders a 3d sub scene in a 2d UI.
@@ -107,7 +109,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		{
 			Name = "Viewport3D",
 			TransparentBg = true,
-			RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+			RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
 		};
 		AddChild(_viewport);
 		Stretch = true;
@@ -161,7 +163,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var fill = new OmniLight3D
 		{
 			Position = new Vector3(0, 2, 2),
-			LightEnergy = 0.4f,
+			LightEnergy = 0.5f,
 			LightColor = new Color(1f, 0.98f, 0.92f)
 		};
 		_sceneRoot.AddChild(fill);
@@ -204,14 +206,20 @@ public partial class GameCarousel3DView : SubViewportContainer
 		IReadOnlyList<string?>? platformIds = null)
 	{
 		// Clear old boxes
+		ClearTextureViewports();
+		_hoverTween?.Kill();
+		_hoverTween = null;
 		foreach (var b in _boxes)
 			b.QueueFree();
 		_boxes.Clear();
 		_baseMaterials.Clear();
 		_coverMaterials.Clear();
+		_lastAppliedAlphas.Clear();
+		_visibleBoxIndices.Clear();
 		_flippedBoxes.Clear();
 		_animatingBoxes.Clear();
 		_expandedGbaBacks.Clear();
+		_returningBoxes.Clear();
 
 		_count = games.Count;
 		_isGba = isGba;
@@ -242,8 +250,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 				box = BuildBox(title, coverArt, award, square, sideways, n64);
 			_sceneRoot.AddChild(box);
 			_boxes.Add(box);
+			_lastAppliedAlphas.Add(float.NaN);
 		}
 
+		MarkLayoutDirty();
 		LayoutBoxes();
 	}
 	
@@ -288,10 +298,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 			Metallic = 0.05f,
 		};
 		if (awardType == "Mastery/Completion"){
-			mat = gold;
+			mat = CreateAwardMaterial(new Color(1.0f, 0.733f, 0.336f), 0.08f);
 		}
 		else if (awardType == "Game Beaten"){
-			mat = silver;
+			mat = CreateAwardMaterial(new Color(0.9f, 0.9f, 0.9f), 0.05f);
 		}
 		else{
 			mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
@@ -394,25 +404,29 @@ public partial class GameCarousel3DView : SubViewportContainer
 		sideMesh.SetSurfaceOverrideMaterial(0, sideMat);
 		root.AddChild(sideMesh);
 		
-		// DEBUG
-		if (coverArt != null)
-			GD.Print($"Cover art found for: {title}");
-		else
-			GD.Print($"No cover art for: {title}");
-		
 		return root;
 		
 	}
 
+	private static StandardMaterial3D CreateAwardMaterial(Color color, float roughness)
+	{
+		return new StandardMaterial3D
+		{
+			AlbedoColor = color,
+			Metallic = 1.0f,
+			Roughness = roughness,
+		};
+	}
+
 	private Node3D BuildGbaCartridge(string title, Texture2D? coverArt)
 	{
-		if (!ResourceLoader.Exists(GbaCartridgeModelPath))
+		var scene = LoadPackedScene(GbaCartridgeModelPath, ref _gbaCartridgeScene);
+		if (scene == null)
 		{
 			GD.PrintErr($"GBA cartridge model not found at {GbaCartridgeModelPath}, falling back to box geometry");
 			return BuildBox(title, coverArt, "none");
 		}
 
-		var scene = GD.Load<PackedScene>(GbaCartridgeModelPath);
 		var model = scene.Instantiate<Node3D>();
 		CenterNode3D(model);
 		model.Scale = new Vector3(2.8f, 2.8f, 2.8f);
@@ -497,16 +511,16 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 	private Node3D BuildDsCartridge(string title, Texture2D? coverArt)
 	{
-		if (!ResourceLoader.Exists(DsCartridgeModelPath))
+		var scene = LoadPackedScene(DsCartridgeModelPath, ref _dsCartridgeScene);
+		if (scene == null)
 		{
 			GD.PrintErr($"DS cartridge model not found at {DsCartridgeModelPath}, falling back to box geometry");
 			return BuildBox(title, coverArt, "none");
 		}
 
-		var scene = GD.Load<PackedScene>(DsCartridgeModelPath);
 		var model = scene.Instantiate<Node3D>();
 		CenterNode3D(model);
-		model.Scale = new Vector3(11.0f, 11.0f, 11.0f);
+		model.Scale = new Vector3(20f, 20f, 20f);
 		model.RotateX(Mathf.DegToRad(90f));
 		CenterNode3D(model);
 		var hasBounds = TryGetNodeBounds(model, Transform3D.Identity, out var modelBounds);
@@ -591,7 +605,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 			if (previousIdx >= 0)
 				baseMaterials[previousIdx] = coverMat;
 		}
-		
+
+		InvalidateMaterialAlpha(index);
 	}
 	
 	// Build the texture on the back
@@ -620,11 +635,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var squareBox = SquareBox(backMesh);
 		var landscapeBox = LandscapeBox(backMesh);
 		var vpSize = squareBox
-			? new Vector2I(2048, 2048)
+			? SquareBackViewportSize
 			: landscapeBox
-				? new Vector2I(2896, 1655)
-				: new Vector2I(2048, 2896);
-		var vp = AddViewport(vpSize, SubViewport.UpdateMode.WhenVisible, Viewport.Msaa.Msaa8X,
+				? LandscapeBackViewportSize
+				: PortraitBackViewportSize;
+		var vp = AddTextureViewport(backMesh, vpSize, SubViewport.UpdateMode.Once, Viewport.Msaa.Msaa8X,
 			Viewport.ScreenSpaceAAEnum.Fxaa);
 		
 		// Root panel
@@ -704,9 +719,10 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private void BuildGbaCompactBackFaceTexture(MeshInstance3D backMesh, string title,
 		string genre, string releaseYear, string rating)
 	{
-		var vp = AddViewport(
+		var vp = AddTextureViewport(
+			backMesh,
 			new Vector2I(GbaBackLabelViewportWidth, GbaBackLabelViewportHeight),
-			SubViewport.UpdateMode.Always,
+			SubViewport.UpdateMode.Once,
 			Viewport.Msaa.Disabled,
 			Viewport.ScreenSpaceAAEnum.Disabled);
 
@@ -861,9 +877,15 @@ public partial class GameCarousel3DView : SubViewportContainer
 		chip.AddChild(label);
 	}
 
-	private SubViewport AddViewport(Vector2I size, SubViewport.UpdateMode updateMode,
+	private SubViewport AddTextureViewport(MeshInstance3D owner, Vector2I size, SubViewport.UpdateMode updateMode,
 		Viewport.Msaa msaa, Viewport.ScreenSpaceAAEnum screenAa = Viewport.ScreenSpaceAAEnum.Disabled)
 	{
+		if (_textureViewports.TryGetValue(owner, out var oldViewport) &&
+			GodotObject.IsInstanceValid(oldViewport))
+		{
+			oldViewport.QueueFree();
+		}
+
 		var vp = new SubViewport
 		{
 			Size = size,
@@ -873,7 +895,19 @@ public partial class GameCarousel3DView : SubViewportContainer
 			ScreenSpaceAA = screenAa,
 		};
 		_sceneRoot.AddChild(vp);
+		_textureViewports[owner] = vp;
 		return vp;
+	}
+
+	private void ClearTextureViewports()
+	{
+		foreach (var viewport in _textureViewports.Values)
+		{
+			if (GodotObject.IsInstanceValid(viewport))
+				viewport.QueueFree();
+		}
+
+		_textureViewports.Clear();
 	}
 
 	private static void StyleLabel(Label label, Color color, int fontSize)
@@ -926,7 +960,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private StandardMaterial3D ApplyGbaLabelTexture(MeshInstance3D coverMesh, string title, Texture2D? coverTexture,
 		StandardMaterial3D? template)
 	{
-		var labelTexture = BuildGbaFrontLabelTexture(title, coverTexture) ?? coverTexture ?? GetGbaCartridgeLogoTexture();
+		var labelTexture = BuildGbaFrontLabelTexture(coverMesh, title, coverTexture) ??
+			coverTexture ??
+			GetGbaCartridgeLogoTexture();
 
 		var coverMat = template != null
 			? (StandardMaterial3D)template.Duplicate()
@@ -947,15 +983,16 @@ public partial class GameCarousel3DView : SubViewportContainer
 		return coverMat;
 	}
 
-	private Texture2D? BuildGbaFrontLabelTexture(string title, Texture2D? coverTexture)
+	private Texture2D? BuildGbaFrontLabelTexture(MeshInstance3D coverMesh, string title, Texture2D? coverTexture)
 	{
 		var displayTexture = coverTexture ?? GetGbaCartridgeLogoTexture();
 		if (displayTexture == null)
 			return null;
 
-		var vp = AddViewport(
+		var vp = AddTextureViewport(
+			coverMesh,
 			new Vector2I(GbaFrontLabelViewportWidth, GbaFrontLabelViewportHeight),
-			SubViewport.UpdateMode.Always,
+			SubViewport.UpdateMode.Once,
 			Viewport.Msaa.Msaa8X,
 			Viewport.ScreenSpaceAAEnum.Fxaa);
 
@@ -1064,11 +1101,11 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var sideMesh = FindMeshByName(_boxes[index], "SideMesh");
 		if (sideMesh == null) return;
 
-		var vp = AddViewport(new Vector2I(64, 512), SubViewport.UpdateMode.WhenVisible, Viewport.Msaa.Msaa4X);
+		var vp = AddTextureViewport(sideMesh, new Vector2I(64, 512), SubViewport.UpdateMode.Once, Viewport.Msaa.Msaa4X);
 		
 		
 		prog.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		prog.FillMode = (int)ProgressBar.FillModeEnum.TopToBottom; 
+		prog.FillMode = (int)ProgressBar.FillModeEnum.BottomToTop; 
 		prog.ShowPercentage = true;
 		vp.AddChild(prog);
 		
@@ -1088,8 +1125,9 @@ public partial class GameCarousel3DView : SubViewportContainer
 	public override void _Process(double delta)
 	{
 		_mouseIdleTime += delta;
+		var wasMoving = IsCarouselMoving();
 
-		if (IsCarouselMoving() && _hoveredIdx != -1)
+		if (wasMoving && _hoveredIdx != -1)
 		{
 			OnBoxHoverExit(_hoveredIdx);
 			_hoveredIdx = -1;
@@ -1099,6 +1137,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		{
 			CarouselPos += _velocity * (float)delta;
 			CarouselPos = WrapPos(CarouselPos);
+			MarkLayoutDirty();
 			UpdateSpinAudioFromMotion();
 			_velocity = Mathf.Lerp(_velocity, 0f, Friction * (float)delta);
 
@@ -1108,6 +1147,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 				_velocity = 0f;
 				var nearest = Mathf.Round(CarouselPos);
 				CarouselPos = WrapPos(nearest);
+				MarkLayoutDirty();
 				SelectionChanged?.Invoke(WrapIndex(Mathf.RoundToInt(CarouselPos)));
 				UnflipSelected();
 				ElasticSnapSelected();
@@ -1117,48 +1157,20 @@ public partial class GameCarousel3DView : SubViewportContainer
 
 		// Idle spin on selected cartridge
 		var selectedIdx = WrapIndex(Mathf.RoundToInt(CarouselPos));
-		for (int index = 0; index < _boxes.Count; index++)
+		if (selectedIdx >= 0 &&
+			selectedIdx < _boxes.Count &&
+			!_dragging &&
+			_mouseIdleTime > MouseIdleThreshold &&
+			!_flippedBoxes.Contains(selectedIdx) &&
+			_boxes[selectedIdx].Visible)
 		{
-			if (index == selectedIdx && !_dragging && _mouseIdleTime > MouseIdleThreshold && !_flippedBoxes.Contains(index))
-				_boxes[index].RotateY((float)delta * 0.4f);
+			_boxes[selectedIdx].RotateY((float)delta * 0.4f);
 		}
 
-		LayoutBoxes();
-		
-		_swayTime += delta;
-		var swayAngle = Mathf.Sin((float)_swayTime * SwaySpeed) * SwayAmplitude;
-		var swayBob = Mathf.Sin((float)_swayTime * SwaySpeed * 2.0f) * SwayBobAmplitude;
+		if (_layoutDirty || !Mathf.IsEqualApprox(CarouselPos, _lastLaidOutCarouselPos))
+			LayoutBoxes();
 
-		_currentSwayAngle = swayAngle;
-
-		for (int index = 0; index < _boxes.Count; index++)
-		{
-
-			if (index == _hoveredIdx || _animatingBoxes.Contains(index) || _returningBoxes.Contains(index))
-			{
-				continue;
-			}
-			
-			var box = _boxes[index];
-			
-			box.Rotation = new Vector3(
-				swayAngle,
-				box.Rotation.Y,
-				swayAngle * 0.5f
-			);
-			
-			_bobStrength = IsCarouselMoving()
-				? Mathf.Lerp(_bobStrength, 0f, 8f * (float)delta)
-				: Mathf.Lerp(_bobStrength, 1f, 4f * (float)delta);
-
-			box.Position = new Vector3(
-				box.Position.X,
-				box.Position.Y + swayBob * _bobStrength,
-				box.Position.Z
-			);
-
-
-		}
+		ApplyPassiveSway(delta, wasMoving);
 	}
 
 	public override void _ExitTree()
@@ -1214,6 +1226,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 				UnflipSelected();
 			
 			CarouselPos = WrapPos(_dragStartPos - dx * DragScale * 5f);
+			MarkLayoutDirty();
 			UpdateSpinAudioFromMotion();
 
 			// Track velocity for fling
@@ -1386,6 +1399,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	{
 		if (_boxes.Count == 0) return;
 
+		_visibleBoxIndices.Clear();
+
 		for (int index = 0; index < _boxes.Count; index++)
 		{
 			
@@ -1394,6 +1409,14 @@ public partial class GameCarousel3DView : SubViewportContainer
 			var d = index - CarouselPos;
 			if (d > _count * 0.5f) d -= _count;
 			if (d < -_count * 0.5f) d += _count;
+
+			var visible = Mathf.Abs(d) <= VisibleCarouselDistance;
+			if (box.Visible != visible)
+				box.Visible = visible;
+			if (!visible)
+				continue;
+
+			_visibleBoxIndices.Add(index);
 
 			var t = Mathf.Clamp(Mathf.Abs(d), 0f, 1.5f);
 			var alpha = Mathf.Lerp(1.0f, 0.55f, t);
@@ -1409,30 +1432,89 @@ public partial class GameCarousel3DView : SubViewportContainer
 					box.Rotation = new Vector3(0, Mathf.DegToRad(d * -8f), 0);
 			}
 
-			if (index < _baseMaterials.Count)
-			{
-				foreach (var mat in _baseMaterials[index])
-				{
-					mat.AlbedoColor = new Color(
-						mat.AlbedoColor.R,
-						mat.AlbedoColor.G,
-						mat.AlbedoColor.B,
-						alpha);
-				}
-			}
-			if (index < _coverMaterials.Count && _coverMaterials[index] != null)
-			{
-				var coverMat = _coverMaterials[index];
-				if (index >= _baseMaterials.Count || !_baseMaterials[index].Contains(coverMat))
-				{
-					coverMat.AlbedoColor = new Color(
-						coverMat.AlbedoColor.R,
-						coverMat.AlbedoColor.G,
-						coverMat.AlbedoColor.B,
-						alpha);
-				}
-			}
+			ApplyMaterialAlpha(index, alpha);
 		}
+
+		_lastLaidOutCarouselPos = CarouselPos;
+		_layoutDirty = false;
+	}
+
+	private void ApplyPassiveSway(double delta, bool carouselMoving)
+	{
+		_swayTime += delta;
+		var swayAngle = Mathf.Sin((float)_swayTime * SwaySpeed) * SwayAmplitude;
+		var swayBob = Mathf.Sin((float)_swayTime * SwaySpeed * 2.0f) * SwayBobAmplitude;
+
+		_currentSwayAngle = swayAngle;
+		_bobStrength = carouselMoving
+			? Mathf.Lerp(_bobStrength, 0f, 8f * (float)delta)
+			: Mathf.Lerp(_bobStrength, 1f, 4f * (float)delta);
+
+		foreach (var index in _visibleBoxIndices)
+		{
+			if (index == _hoveredIdx || _animatingBoxes.Contains(index) || _returningBoxes.Contains(index))
+				continue;
+
+			var box = _boxes[index];
+
+			box.Rotation = new Vector3(
+				swayAngle,
+				box.Rotation.Y,
+				swayAngle * 0.5f
+			);
+
+			box.Position = new Vector3(
+				box.Position.X,
+				swayBob * _bobStrength,
+				box.Position.Z
+			);
+		}
+	}
+
+	private void ApplyMaterialAlpha(int index, float alpha)
+	{
+		if (index < _lastAppliedAlphas.Count &&
+			!float.IsNaN(_lastAppliedAlphas[index]) &&
+			Mathf.Abs(_lastAppliedAlphas[index] - alpha) < AlphaUpdateEpsilon)
+		{
+			return;
+		}
+
+		if (index < _baseMaterials.Count)
+		{
+			foreach (var mat in _baseMaterials[index])
+				SetMaterialAlpha(mat, alpha);
+		}
+		if (index < _coverMaterials.Count && _coverMaterials[index] != null)
+		{
+			var coverMat = _coverMaterials[index];
+			if (index >= _baseMaterials.Count || !_baseMaterials[index].Contains(coverMat))
+				SetMaterialAlpha(coverMat, alpha);
+		}
+
+		if (index < _lastAppliedAlphas.Count)
+			_lastAppliedAlphas[index] = alpha;
+	}
+
+	private static void SetMaterialAlpha(StandardMaterial3D mat, float alpha)
+	{
+		mat.AlbedoColor = new Color(
+			mat.AlbedoColor.R,
+			mat.AlbedoColor.G,
+			mat.AlbedoColor.B,
+			alpha);
+	}
+
+	private void MarkLayoutDirty()
+	{
+		_layoutDirty = true;
+	}
+
+	private void InvalidateMaterialAlpha(int index)
+	{
+		if (index >= 0 && index < _lastAppliedAlphas.Count)
+			_lastAppliedAlphas[index] = float.NaN;
+		MarkLayoutDirty();
 	}
 
 	private float WrapPos(float p)
@@ -1477,7 +1559,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var currentStep = Mathf.RoundToInt(_spinAudioPos);
 		if (currentStep == _lastSpinAudioStep)
 			return;
-
+		
+		var now = Time.GetTicksMsec();
+		if (now - _lastSpinTickMs < SpinAudioCooldownMs)
+			return;
+		
+		_lastSpinTickMs = now;
 		_lastSpinAudioStep = currentStep;
 		PlaySpinAudio();
 	}
@@ -1507,6 +1594,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var target = WrapPos(current + dir);
 		_velocity = 0f;
 		CarouselPos = WrapPos(current);
+		MarkLayoutDirty();
 		
 		_velocity = dir * 3.5f;
 	}
@@ -1680,6 +1768,18 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private static bool SidewaysPlatform(string? platformId)
 	{
 		return string.Equals(platformId, "snes", System.StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static PackedScene? LoadPackedScene(string path, ref PackedScene? cachedScene)
+	{
+		if (cachedScene != null)
+			return cachedScene;
+
+		if (!ResourceLoader.Exists(path))
+			return null;
+
+		cachedScene = GD.Load<PackedScene>(path);
+		return cachedScene;
 	}
 
 	private static bool SquareBox(Node node)

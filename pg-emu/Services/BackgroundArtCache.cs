@@ -14,6 +14,7 @@ public partial class BackgroundArtCache : Node
 	public static BackgroundArtCache? Instance { get; private set; }
 
 	private const int StartupWarmupPerPlatformLimit = 48;
+	private const int TexturePrefetchConcurrency = 3;
 	private readonly HashSet<string> _warmedPlatformIds = new(StringComparer.OrdinalIgnoreCase);
 	private readonly ConcurrentDictionary<string, CachedPlatformLibrary> _libraryCache = new(StringComparer.OrdinalIgnoreCase);
 	private CancellationTokenSource? _warmupCts;
@@ -203,13 +204,17 @@ public partial class BackgroundArtCache : Node
 			.Distinct(StringComparer.OrdinalIgnoreCase)
 			.ToList();
 
-		var tasks = coverArtUrls.Select(async coverArtUrl =>
+		foreach (var batch in coverArtUrls.Chunk(TexturePrefetchConcurrency))
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			await CoverArtImageCache.GetTextureAsync(coverArtUrl);
-		});
+			var tasks = batch.Select(async coverArtUrl =>
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				await CoverArtImageCache.GetTextureAsync(coverArtUrl);
+			});
 
-		await Task.WhenAll(tasks);
+			await Task.WhenAll(tasks);
+		}
 	}
 
 	private static List<GameEntry> CloneGames(IEnumerable<GameEntry> games)

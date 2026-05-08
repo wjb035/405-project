@@ -73,3 +73,6 @@ PGEmu.backend/appsettings.Development.json
 PGEmu.backend/appsettings.json
 config.json
 pg-emu/playtime.json
+config.json
+pg-emu/playtime.json
+*.json

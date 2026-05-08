@@ -2,6 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_6hyr3"]
 [ext_resource type="Script" uid="uid://5meg1c2i140w" path="res://Login.cs" id="1_aidc3"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_gbykt"]
 [ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="3_p8x2n"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_aidc3"]
@@ -65,7 +66,9 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=480669133]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+icon = ExtResource("3_gbykt")
+icon_alignment = 1
+expand_icon = true
 
 [node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=954672764]
 layout_mode = 2

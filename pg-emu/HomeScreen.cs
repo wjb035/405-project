@@ -11,6 +11,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PGEmu.UI;
 
 namespace PGEmu;
 
@@ -175,6 +176,8 @@ public partial class HomeScreen : Control
 		if (_chat != null) _chat.Pressed += OnChatPressed;
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		if (_music != null) _music.Pressed += OnMusicPressed;
 		if (_filter != null) _filter.Pressed += OnFilterPressed;
 		_cartridge.Pressed += () => CartReader.Instance.CartReaderFound();
@@ -733,8 +736,8 @@ public partial class HomeScreen : Control
 			AuthService.Instance.Logout();
 			var chatOverlay = GetNode<ChatOverlay>("/root/ChatOverlay");
 			chatOverlay._isLoggedOut = true;
-			chatOverlay.CloseOverlay();
-
+			chatOverlay.ResetForLogout();
+			GetNode<ChatManager>("/root/ChatManager").Disconnect();
 			await Transition.ChangeScene("res://WelcomeScreen.tscn", ScreenTransition.TransitionType.Radial, 1f, 0.5f);
 
 		};
@@ -831,12 +834,32 @@ private void ConnectAllButtons(Node node)
 
 		for (int i = 0; i < Mathf.Min(3, fullList.Count); i++)
 		{
-			if (friendsRow.GetNodeOrNull<Control>($"Friend{i + 1}") is not Control friendSlot)
+			if (friendsRow.GetNodeOrNull<Button>($"Friend{i + 1}") is not Button friendSlot)
 				continue;
 
 			friendSlot.Visible = true;
+			UiStyle.AddHoverFeedback(friendSlot);
+			UiStyle.ApplyParallaxShadow(friendSlot);
+			var username = fullList[i].Key;
 			var statusText = BuildFriendStatusText(fullList[i].Value.Key, fullList[i].Value.Value);
 			friendSlot.TooltipText = BuildFriendTooltip(fullList[i].Key, statusText);
+			
+			// ACTUALLY GETTING PRPOFILE PIC
+			var avatarImg = new TextureRect();
+			avatarImg.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+			avatarImg.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
+			avatarImg.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			
+			var circleMat = new ShaderMaterial();
+			circleMat.Shader = GD.Load<Shader>("res://ShaderSlop/circle.gdshader");
+			circleMat.SetShaderParameter("stroke_width", 0.00f);
+			circleMat.SetShaderParameter("edge_softness", 0.05f);
+			avatarImg.Material = circleMat;
+			friendSlot.AddChild(avatarImg);
+			
+			string capturedUsername = username;
+			TextureRect capturedRect = avatarImg;
+			_ = LoadFriendSlotAvatarAsync(capturedUsername, capturedRect);
 		}
 
 		if (fullList.Count > 3 && friendsRow.GetNodeOrNull<Label>("MoreFriends") is Label moreFriends)
@@ -846,6 +869,38 @@ private void ConnectAllButtons(Node node)
 		}
 	}
 
+	private async Task LoadFriendSlotAvatarAsync(string username, TextureRect rect)
+	{
+		try
+		{
+			var profileService = new ProfileService();
+			var profile = await profileService.GetUserProfile(username);
+			if (profile == null || string.IsNullOrEmpty(profile.AvatarUrl))
+				return;
+
+			var normalized = profile.AvatarUrl.StartsWith("/")
+				? $"http://localhost:5276{profile.AvatarUrl}"
+				: profile.AvatarUrl;
+
+			var bytes = await _client.GetByteArrayAsync(normalized);
+			if (bytes.Length < 8) return;
+
+			var image = new Image();
+			var err = image.LoadPngFromBuffer(bytes);
+			if (err != Error.Ok) err = image.LoadJpgFromBuffer(bytes);
+			if (err != Error.Ok) err = image.LoadWebpFromBuffer(bytes);
+			if (err != Error.Ok) return;
+
+			var texture = ImageTexture.CreateFromImage(image);
+			if (GodotObject.IsInstanceValid(rect))
+				rect.Texture = texture;
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr($"LoadFriendSlotAvatarAsync failed for {username}: {e.Message}");
+		}
+	}
+	
 	private static bool TryReadFriendActivity(JsonElement activityElement, out string activity, out DateTime updatedAt)
 	{
 		activity = "In the Menus";
@@ -948,7 +1003,6 @@ private void OnAnyButtonPressed()
 	
 	private async void OnMusicPressed()
 	{
-		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		await Transition.ChangeScene("res://Jukebox.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);

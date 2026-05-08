@@ -20,6 +20,7 @@ public partial class ChatManager : Node
     [Signal] public delegate void HistoryLoadedEventHandler(string contextId, string messagesJson);
     [Signal] public delegate void ErrorReceivedEventHandler(string message);
     [Signal] public delegate void UnreadCountUpdatedEventHandler();
+    [Signal] public delegate void UnreadMessagesLoadedEventHandler(string messagesJson);
     
     // State handling
     private WebSocketPeer _ws = new WebSocketPeer();
@@ -30,6 +31,8 @@ public partial class ChatManager : Node
     private Dictionary<string, int> _unreadCounts = new();
 
     public Dictionary<string, int> GetUnreadCounts() => _unreadCounts;
+    private List<Dictionary<string, object>> _unreadMessages = new();
+    public List<Dictionary<string, object>> GetUnreadMessages() => _unreadMessages;
 
     public string Username { get; set; } = "";
     public string CurrentDmRecipient { get; set; } = "";
@@ -59,12 +62,30 @@ public partial class ChatManager : Node
         AddChild(http);
         http.RequestCompleted += (result, responseCode,headers, body)
             => OnNegotiateComplete(result, responseCode, headers, body, http);
-
+        GD.Print($"ChatManager instance: {GetInstanceId()}");
         http.Request(
             url,
             new string[] { "Content-Type: application/json" },
             HttpClient.Method.Post
         );
+    }
+    public void Disconnect()
+    {
+        GD.Print("ChatManager Disconnect called");
+
+        _connected = false;
+
+        try
+        {
+            _ws.Close();
+        }
+        catch { }
+
+        _ws = new WebSocketPeer();
+
+        _unreadCounts.Clear();
+        _unreadMessages.Clear();
+        CurrentDmRecipient = "";
     }
     
     // Comoplete the negotiation
@@ -270,7 +291,7 @@ public partial class ChatManager : Node
         http.Request(url);
     }
     
-    // DM Api
+    // DM Api, handles unread messages and unread counts too
     public void SetDmRecipient(string user) => CurrentDmRecipient = user;
 
     public void SendDm(string message) =>
@@ -288,8 +309,9 @@ public partial class ChatManager : Node
     {
         string url = $"{_serverUrl}/api/chat/unread?user={Username}";
         HttpGet(url, json =>
-            EmitSignal(SignalName.HistoryLoaded, "unread", json)
-        );
+        {
+            EmitSignal(SignalName.UnreadMessagesLoaded, json);
+        });
     }
     public void LoadUnreadCounts()
     {
@@ -303,6 +325,11 @@ public partial class ChatManager : Node
 
             EmitSignal(SignalName.UnreadCountUpdated);
         });
+    }
+    public void SetUnreadCounts(Dictionary<string, int> counts)
+    {
+        _unreadCounts = counts;
+        EmitSignal(SignalName.UnreadCountUpdated);
     }
     public void MarkDmAsRead(string otherUser)
     {

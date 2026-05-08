@@ -16,7 +16,7 @@ public partial class AudioManager : Node
 	public const string ForwardSfxPath = "res://audio/fwd2.mp3";
 	public const string SelectSfxPath = "res://audio/select3.mp3";
 	public const string MessageOpenSfxPath = "res://audio/notif_smooth.mp3";
-	public const string AmbientTrackPath = "res://audio/Keygen_1.mp3";
+	public const string AmbientTrackPath = "res://audio/KeygenMain.mp3";
 	public const string CarouselSpinSfxPath = "res://audio/spin2.mp3";
 	public const string CarouselHoverSfxPath = "res://audio/hover.mp3";
 	public const string GbaOpenSfxPath = "res://audio/gba_open.mp3";

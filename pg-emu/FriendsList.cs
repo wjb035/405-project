@@ -10,7 +10,17 @@ using PGEmu.Services.Models;
 
 public partial class FriendsList : Control
 {	
+	private const string ReturnSceneMetaKey = "pgemu_return_scene";
 	private const string FriendsListOwnerMeta = "pgemu_friends_list_owner_username";
+	private const string FriendsListReturnSceneMeta = "pgemu_friends_list_return_scene";
+	private const string FriendsListFoundProfileRootReturnSceneMeta = "pgemu_friends_list_found_profile_root_return_scene";
+	private const string FriendsListFoundProfileBackStackMeta = "pgemu_friends_list_found_profile_back_stack";
+	private const string FoundProfileRootReturnSceneMeta = "pgemu_found_profile_root_return_scene";
+	private const string FoundProfileBackStackMeta = "pgemu_found_profile_back_stack";
+	private const string FoundProfileUsernameMeta = "pgemu_found_profile_username";
+	private const string FoundProfileUserIdMeta = "pgemu_found_profile_user_id";
+	private const string FriendsListScene = "res://FriendsList.tscn";
+	private const string FoundUserProfileScene = "res://FoundUserProfile.tscn";
 	private const string DefaultReturnScene = "res://profile.tscn";
 	private const string AvatarShaderPath = "res://ShaderSlop/RoundedAvatarFrame.gdshader";
 	private const string DefaultAvatarPath = "res://Images/funny desktop icon.png";
@@ -40,6 +50,7 @@ public partial class FriendsList : Control
 		_ownerUsername = tree.HasMeta(FriendsListOwnerMeta)
 			? (tree.GetMeta(FriendsListOwnerMeta).AsString() ?? string.Empty).Trim()
 			: string.Empty;
+		CaptureReturnScene();
 
 		if (!string.IsNullOrWhiteSpace(_ownerUsername))
 			_title.Text = $"{_ownerUsername}'s Friends";
@@ -71,13 +82,109 @@ public partial class FriendsList : Control
 	{
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		var returnScene = tree.HasMeta("pgemu_return_scene")
-			? tree.GetMeta("pgemu_return_scene").AsString()
-			: null;
-		returnScene = string.IsNullOrWhiteSpace(returnScene) ? DefaultReturnScene : returnScene;
+		var returnScene = tree.HasMeta(FriendsListReturnSceneMeta)
+			? tree.GetMeta(FriendsListReturnSceneMeta).AsString()
+			: tree.HasMeta(ReturnSceneMetaKey)
+				? tree.GetMeta(ReturnSceneMetaKey).AsString()
+				: null;
+		returnScene = string.IsNullOrWhiteSpace(returnScene) || IsFriendsListScene(returnScene)
+			? DefaultReturnScene
+			: returnScene.Trim();
+
+		if (IsFoundUserProfileScene(returnScene))
+			RestoreOwnerFoundProfileContext(tree);
+
+		if (tree.HasMeta(FriendsListReturnSceneMeta))
+			tree.RemoveMeta(FriendsListReturnSceneMeta);
+		if (tree.HasMeta(FriendsListFoundProfileRootReturnSceneMeta))
+			tree.RemoveMeta(FriendsListFoundProfileRootReturnSceneMeta);
+		if (tree.HasMeta(FriendsListFoundProfileBackStackMeta))
+			tree.RemoveMeta(FriendsListFoundProfileBackStackMeta);
 		if (tree.HasMeta(FriendsListOwnerMeta))
 			tree.RemoveMeta(FriendsListOwnerMeta);
+		tree.SetMeta(ReturnSceneMetaKey, returnScene);
 		tree.ChangeSceneToFile(returnScene);
+	}
+
+	private void CaptureReturnScene()
+	{
+		var tree = GetTree();
+		var incomingReturnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: null;
+
+		if (string.IsNullOrWhiteSpace(incomingReturnScene))
+		{
+			tree.SetMeta(FriendsListReturnSceneMeta, DefaultReturnScene);
+			return;
+		}
+
+		if (!IsFriendsListScene(incomingReturnScene))
+		{
+			var normalizedReturnScene = incomingReturnScene.Trim();
+			tree.SetMeta(FriendsListReturnSceneMeta, normalizedReturnScene);
+
+			if (IsFoundUserProfileScene(normalizedReturnScene))
+			{
+				CopyOrRemoveMeta(tree, FoundProfileRootReturnSceneMeta, FriendsListFoundProfileRootReturnSceneMeta);
+				CopyOrRemoveMeta(tree, FoundProfileBackStackMeta, FriendsListFoundProfileBackStackMeta);
+			}
+			else
+			{
+				RemoveMetaIfPresent(tree, FriendsListFoundProfileRootReturnSceneMeta);
+				RemoveMetaIfPresent(tree, FriendsListFoundProfileBackStackMeta);
+			}
+		}
+		else if (!tree.HasMeta(FriendsListReturnSceneMeta))
+		{
+			tree.SetMeta(FriendsListReturnSceneMeta, DefaultReturnScene);
+		}
+	}
+
+	private void RestoreOwnerFoundProfileContext(SceneTree tree)
+	{
+		if (!string.IsNullOrWhiteSpace(_ownerUsername))
+		{
+			Global.foundProfile = new ProfileResponse
+			{
+				Username = _ownerUsername,
+				UserId = string.Empty,
+				Bio = "No bio yet.",
+				AvatarUrl = string.Empty,
+				ProfileAccent = string.Empty,
+				AvatarFrame = string.Empty,
+				ProfileBackground = string.Empty
+			};
+			tree.SetMeta(FoundProfileUsernameMeta, _ownerUsername);
+			RemoveMetaIfPresent(tree, FoundProfileUserIdMeta);
+		}
+
+		CopyOrRemoveMeta(tree, FriendsListFoundProfileRootReturnSceneMeta, FoundProfileRootReturnSceneMeta);
+		CopyOrRemoveMeta(tree, FriendsListFoundProfileBackStackMeta, FoundProfileBackStackMeta);
+	}
+
+	private static void CopyOrRemoveMeta(SceneTree tree, string sourceKey, string destinationKey)
+	{
+		if (tree.HasMeta(sourceKey))
+			tree.SetMeta(destinationKey, tree.GetMeta(sourceKey));
+		else
+			RemoveMetaIfPresent(tree, destinationKey);
+	}
+
+	private static void RemoveMetaIfPresent(SceneTree tree, string key)
+	{
+		if (tree.HasMeta(key))
+			tree.RemoveMeta(key);
+	}
+
+	private static bool IsFriendsListScene(string? scene)
+	{
+		return string.Equals(scene?.Trim(), FriendsListScene, StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool IsFoundUserProfileScene(string? scene)
+	{
+		return string.Equals(scene?.Trim(), FoundUserProfileScene, StringComparison.OrdinalIgnoreCase);
 	}
 
 	private async Task PopulateFriendsAsync()
@@ -328,10 +435,10 @@ public partial class FriendsList : Control
 
 			Global.foundProfile = profile;
 			var tree = GetTree();
-			tree.SetMeta("pgemu_found_profile_username", profile.Username ?? string.Empty);
-			tree.SetMeta("pgemu_found_profile_user_id", profile.UserId ?? string.Empty);
-			tree.SetMeta("pgemu_return_scene", "res://profile.tscn");
-			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+			tree.SetMeta(FoundProfileUsernameMeta, profile.Username ?? string.Empty);
+			tree.SetMeta(FoundProfileUserIdMeta, profile.UserId ?? string.Empty);
+			tree.SetMeta(ReturnSceneMetaKey, FriendsListScene);
+			tree.ChangeSceneToFile(FoundUserProfileScene);
 		}
 		catch (Exception exception)
 		{

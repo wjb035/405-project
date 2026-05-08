@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://8g3qdgpudmbv"]
 
 [ext_resource type="Script" uid="uid://dx6v201kx0ckj" path="res://Register.cs" id="1_jjghk"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_n65uq"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="2_tpu1w"]
+[ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="4_bsba4"]
 
 [node name="Register" type="Control" unique_id=921608592]
 layout_mode = 3
@@ -9,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_n65uq")
 script = ExtResource("1_jjghk")
 BackPath = NodePath("Margin/Root/TopBar/BtnBack")
 UsernamePath = NodePath("Margin/Root/Body/GridContainer/UserInput")
@@ -53,17 +57,20 @@ size_flags_vertical = 0
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=77279881]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-text = "←"
+icon = ExtResource("2_tpu1w")
+icon_alignment = 1
+expand_icon = true
 
 [node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=1669941617]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.94, 1, 0.98)
-theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("4_bsba4")
+theme_override_font_sizes/font_size = 40
 text = "Create Account"
 horizontal_alignment = 1
 
-[node name="TopBarRightPad" type="Control" parent="Margin/Root/TopBar"]
+[node name="TopBarRightPad" type="Control" parent="Margin/Root/TopBar" unique_id=2092594260]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
 
@@ -71,21 +78,23 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
-alignment = 1
 theme_override_constants/separation = 12
+alignment = 1
 
 [node name="Hint" type="Label" parent="Margin/Root/Body" unique_id=362895523]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+theme_override_font_sizes/font_size = 18
 text = "Set up your profile and start playing."
 horizontal_alignment = 1
 
 [node name="GridContainer" type="GridContainer" parent="Margin/Root/Body" unique_id=888061499]
 layout_mode = 2
 size_flags_horizontal = 4
-columns = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 8
+columns = 2
 
 [node name="UserLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=255736130]
 layout_mode = 2

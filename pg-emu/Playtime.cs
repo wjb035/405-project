@@ -37,6 +37,8 @@ public partial class Playtime : Node
 			return;
 
 		currentGame.LastPlayedUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+		AddOrUpdateTrackedGame(platformCheck, currentGame);
+		PlaytimeStorage.SaveToJson();
 
 		KillOtherEmulatorProcesses(platformCheck.DefaultEmulatorId);
 
@@ -214,7 +216,6 @@ public partial class Playtime : Node
 
 		GD.Print(
 			$"Playtime: tracking '{currentGame.Name}' via process '{matchedName}' (PID {found.Id}).");
-		AddOrUpdateTrackedGame(platform, currentGame);
 		StartMonitoring(found);
 	}
 

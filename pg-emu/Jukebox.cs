@@ -6,6 +6,7 @@ using PGEmu.Services;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using PGEmu.Helpers;
+using PGEmu.UI;
 
 public partial class Jukebox : Control
 {  
@@ -109,6 +110,9 @@ public partial class Jukebox : Control
 		
 		_friends = GetNode<Button>(FriendsPath);
 		_inbox = GetNode<Button>(InboxPath);
+		var chatManager = GetNode<ChatManager>("/root/ChatManager");
+		FriendInboxPopup.AttachBadgeButton(_inbox);
+		chatManager.LoadUnreadCounts();
 		_chat = GetNode<Button>(ChatPath);
 		_settings = GetNode<Button>(SettingsPath);
 		_help = GetNode<Button>(HelpPath);

@@ -19,6 +19,7 @@
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="12_oy6yd"]
 [ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
 [ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
+[ext_resource type="StyleBox" uid="uid://dpuvjs4e3ei5o" path="res://button icon.tres" id="21_d6nnr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_26m5w"]
 shader = ExtResource("5_kf1hi")
@@ -38,26 +39,7 @@ shader_parameter/highlight_thickness = 0.0150000007125
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kf1hi"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend1"]
-bg_color = Color(0.1882353, 0.1882353, 0.1882353, 1)
-corner_radius_top_left = 13
-corner_radius_top_right = 13
-corner_radius_bottom_right = 13
-corner_radius_bottom_left = 13
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend2"]
-bg_color = Color(0.6901961, 0.3529412, 0.6509804, 1)
-corner_radius_top_left = 13
-corner_radius_top_right = 13
-corner_radius_bottom_right = 13
-corner_radius_bottom_left = 13
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_friend3"]
-bg_color = Color(0.33333334, 0.7137255, 0.9098039, 1)
-corner_radius_top_left = 13
-corner_radius_top_right = 13
-corner_radius_bottom_right = 13
-corner_radius_bottom_left = 13
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t52sk"]
 
 [node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
 layout_mode = 3
@@ -169,7 +151,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="TopSpacer" type="Control" parent="Margin/Root/Foreground1/TopBar" unique_id=969686858]
-custom_minimum_size = Vector2(350, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_vertical = 0
 
@@ -242,7 +224,8 @@ expand_icon = true
 [node name="BtnInbox" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=401324041]
 custom_minimum_size = Vector2(44, 36)
 layout_mode = 2
-tooltip_text = "Notification Inbox"
+tooltip_text = "Notification Inbox 
+Hotkey: I"
 icon = ExtResource("7_iw72c")
 icon_alignment = 1
 expand_icon = true
@@ -298,20 +281,6 @@ offset_top = 51.0
 offset_right = 1155.0
 offset_bottom = 681.2635
 
-[node name="Cards" type="Control" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=199542670]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -520.0
-offset_top = -230.0
-offset_right = 520.0
-offset_bottom = 230.0
-grow_horizontal = 2
-grow_vertical = 2
-
 [node name="Foreground2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=185503270]
 
 [node name="BtnPrev2" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=1708621407]
@@ -360,34 +329,50 @@ texture = ExtResource("15_oy6yd")
 expand_mode = 1
 
 [node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Foreground2" unique_id=942896159]
-offset_left = 18.0
-offset_top = 74.55
-offset_right = 1134.0
-offset_bottom = 74.55
+offset_left = 110.0
+offset_top = 9.0
+offset_right = 332.0
+offset_bottom = 45.0
 alignment = 1
 
-[node name="Friend1" type="Panel" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=786063363]
+[node name="Friend1" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=1455478848]
 visible = false
-custom_minimum_size = Vector2(26, 26)
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_friend1")
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
 
-[node name="Friend2" type="Panel" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=1635445053]
+[node name="Friend2" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=284851846]
 visible = false
-custom_minimum_size = Vector2(26, 26)
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_friend2")
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
 
-[node name="Friend3" type="Panel" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=1106734720]
+[node name="Friend3" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=213527195]
 visible = false
-custom_minimum_size = Vector2(26, 26)
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_friend3")
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
 
 [node name="MoreFriends" type="Label" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=463979683]
 visible = false
 layout_mode = 2
-text = "+2 more"
+theme = ExtResource("1_iw72c")
+text = " +2 more"
 
 [node name="Mid2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=34568176]
 
