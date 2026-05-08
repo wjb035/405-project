@@ -14,6 +14,7 @@ public partial class FriendInbox : PopupPanel
 	[Export] private PackedScene FriendRequestItemScene;
 	[Export] private PackedScene MissedMessageItemScene;
 	[Export] private Panel PopupContent;
+	private Timer _notificationRefreshTimer;
 	
 	private ChatManager _chat;
 	private List<FriendRequestDto> _lastRequests = new();
@@ -37,7 +38,18 @@ public partial class FriendInbox : PopupPanel
 		_chat.UnreadCountUpdated += OnUnreadCountUpdated;
 		_chat.UnreadMessagesLoaded += OnUnreadMessagesLoaded;
 		
-		// Load requests when shown
+		_chat.LoadUnreadCounts();
+		_chat.LoadUnreadMessages();
+		
+		RefreshNotifications();
+		
+		_notificationRefreshTimer = new Timer();
+		_notificationRefreshTimer.WaitTime = 10.0f;
+		_notificationRefreshTimer.Autostart = true;
+		_notificationRefreshTimer.OneShot = false;
+		_notificationRefreshTimer.Timeout += RefreshNotifications;
+
+		AddChild(_notificationRefreshTimer);
 	}
 	
 	public override void _Input(InputEvent @event)
@@ -135,11 +147,31 @@ public partial class FriendInbox : PopupPanel
 		
 		RenderInbox();
 	}
+	
+	private async void RefreshNotifications()
+	{
+		try
+		{
+			_lastRequests = await FriendService.Instance.GetPendingRequests() ?? new List<FriendRequestDto>();
+
+			UpdateBadge();
+
+			// only rerender if popup visible
+			if (Visible)
+				RenderInbox();
+		}
+		catch (System.Exception ex)
+		{
+			GD.PrintErr($"Failed to refresh notifications: {ex.Message}");
+		}
+	}
+	
 	private void OnUnreadCountUpdated()
 	{
 		if (!GodotObject.IsInstanceValid(this) || !IsInsideTree()) return;
 		UpdateBadge();
-		RenderInbox();
+		if (Visible)
+			RenderInbox();
 	}
 	
 	private void OnUnreadMessagesLoaded(string json)
@@ -163,7 +195,8 @@ public partial class FriendInbox : PopupPanel
 				_unreadPreviews[fromUser] = (content, sentAt);
 		}
     
-		RenderInbox();
+		if (Visible)
+			RenderInbox();
 	}
 	
 	private void RenderInbox()

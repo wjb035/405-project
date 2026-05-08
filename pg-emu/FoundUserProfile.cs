@@ -1599,6 +1599,12 @@ public partial class FoundUserProfile : Control
 		{
 			case 0:
 				// messaging needs to be implemented
+				
+				var overlay = GetNode<ChatOverlay>("/root/ChatOverlay");
+				overlay.OpenOverlay();
+				overlay.OpenDm(profile.Username);
+				overlay.GetNode<ChatManager>("/root/ChatManager")
+					.MarkDmAsRead(profile.Username);
 				break;
 			case 1:
 				var actionLabel = _dropdownOptions.GetItemText(_dropdownOptions.GetItemIndex(1));

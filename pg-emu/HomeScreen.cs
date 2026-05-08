@@ -863,6 +863,11 @@ private void ConnectAllButtons(Node node)
 			string capturedUsername = username;
 			TextureRect capturedRect = avatarImg;
 			_ = LoadFriendSlotAvatarAsync(capturedUsername, capturedRect);
+			
+			friendSlot.Pressed += async () =>
+			{
+				await OpenUserProfileByUsernameAsync(username);
+			};
 		}
 
 		if (fullList.Count > 3 && friendsRow.GetNodeOrNull<Label>("MoreFriends") is Label moreFriends)
