@@ -72,11 +72,18 @@ public partial class Register : Control
 		}
 
 		UiStyle.StyleTopBarButton(_back);
+		UiStyle.AddHoverFeedback(_back);
+		UiStyle.ApplyParallaxShadow(_back);
+		
 		UiStyle.StyleLineEdit(_username);
 		UiStyle.StyleLineEdit(_email);
 		UiStyle.StyleLineEdit(_password);
 		UiStyle.StyleLineEdit(_confirmPassword);
+		
 		UiStyle.StylePrimaryButton(_registerButton);
+		UiStyle.AddHoverFeedback(_registerButton);
+		UiStyle.ApplyParallaxShadow(_registerButton);
+		
 		UiStyle.TightenButtonContentPadding(_registerButton, horizontal: 6f, vertical: 2f);
 
 		_registerButton.Text = "Create Account";
@@ -93,10 +100,10 @@ public partial class Register : Control
 		UiStyle.StyleMetaLabel(emailLabel);
 		UiStyle.StyleMetaLabel(passLabel);
 		UiStyle.StyleMetaLabel(confirmLabel);
-		if (userLabel != null) userLabel.HorizontalAlignment = HorizontalAlignment.Left;
-		if (emailLabel != null) emailLabel.HorizontalAlignment = HorizontalAlignment.Left;
-		if (passLabel != null) passLabel.HorizontalAlignment = HorizontalAlignment.Left;
-		if (confirmLabel != null) confirmLabel.HorizontalAlignment = HorizontalAlignment.Left;
+		if (userLabel != null) userLabel.HorizontalAlignment = HorizontalAlignment.Right;
+		if (emailLabel != null) emailLabel.HorizontalAlignment = HorizontalAlignment.Right;
+		if (passLabel != null) passLabel.HorizontalAlignment = HorizontalAlignment.Right;
+		if (confirmLabel != null) confirmLabel.HorizontalAlignment = HorizontalAlignment.Right;
 
 		_error.AddThemeColorOverride("font_color", new Color(1f, 0.53f, 0.62f, 0.95f));
 	}
@@ -175,7 +182,7 @@ public partial class Register : Control
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
 		var returnScene = tree.HasMeta("pgemu_return_scene") ? tree.GetMeta("pgemu_return_scene").AsString() : null;
-		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://HomeScreen.tscn" : returnScene;
+		returnScene = string.IsNullOrWhiteSpace(returnScene) ? "res://LoginScreen.tscn" : returnScene;
 
 		tree.ChangeSceneToFile(returnScene);
 		

@@ -3086,7 +3086,7 @@ private void OnAnyButtonPressed()
 		progBg.SetCornerRadiusAll(8);
 		
 		var fill = new StyleBoxFlat();
-		fill.BgColor = new Color(0.65f, 0.3f, 0.4f);
+		fill.BgColor = new Color(0.25f, 0.1f, 0.45f);
 		fill.SetCornerRadiusAll(8); 
 		
 		prog.AddThemeStyleboxOverride("background", progBg);

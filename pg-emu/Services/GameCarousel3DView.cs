@@ -54,6 +54,8 @@ public partial class GameCarousel3DView : SubViewportContainer
 	private int _lastSpinAudioStep = 0;
 	private ulong _lastSpinAudioMs;
 	private float _spinSpeed = 0f;
+	private const ulong SpinAudioCooldownMs = 70;
+	private ulong _lastSpinTickMs = 0;
 
 	// 3D scene internals
 	private SubViewport _viewport;
@@ -1103,7 +1105,7 @@ public partial class GameCarousel3DView : SubViewportContainer
 		
 		
 		prog.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		prog.FillMode = (int)ProgressBar.FillModeEnum.TopToBottom; 
+		prog.FillMode = (int)ProgressBar.FillModeEnum.BottomToTop; 
 		prog.ShowPercentage = true;
 		vp.AddChild(prog);
 		
@@ -1557,7 +1559,12 @@ public partial class GameCarousel3DView : SubViewportContainer
 		var currentStep = Mathf.RoundToInt(_spinAudioPos);
 		if (currentStep == _lastSpinAudioStep)
 			return;
-
+		
+		var now = Time.GetTicksMsec();
+		if (now - _lastSpinTickMs < SpinAudioCooldownMs)
+			return;
+		
+		_lastSpinTickMs = now;
 		_lastSpinAudioStep = currentStep;
 		PlaySpinAudio();
 	}

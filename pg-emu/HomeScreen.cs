@@ -1006,7 +1006,6 @@ private void OnAnyButtonPressed()
 	
 	private async void OnMusicPressed()
 	{
-		AudioManager.Instance?.PlayNavigation(1);
 		var tree = GetTree();
 		tree.SetMeta("pgemu_return_scene", "res://HomeScreen.tscn");
 		await Transition.ChangeScene("res://Jukebox.tscn", ScreenTransition.TransitionType.Wipe, 0.25f, 0f);
