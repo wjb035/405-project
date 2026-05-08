@@ -14,6 +14,10 @@ public partial class FoundUserProfile : Control
 {
 	private const string SettingsParentReturnSceneMeta = "pgemu_profile_settings_parent_return_scene";
 	private const string ReturnSceneMetaKey = "pgemu_return_scene";
+	private const string FoundUserProfileScene = "res://FoundUserProfile.tscn";
+	private const string DefaultReturnScene = "res://profile.tscn";
+	private const string FoundProfileRootReturnSceneMeta = "pgemu_found_profile_root_return_scene";
+	private const string FoundProfileBackStackMeta = "pgemu_found_profile_back_stack";
 	private const string CollectionsFocusMetaKey = "pgemu_collections_focus_name";
 	private const string FoundProfileUsernameMeta = "pgemu_found_profile_username";
 	private const string FoundProfileUserIdMeta = "pgemu_found_profile_user_id";
@@ -81,11 +85,23 @@ public partial class FoundUserProfile : Control
 	private bool _openingFriendProfile;
 	private bool _openingSectionScene;
 	private FriendRelationshipStatus? _friendRelationshipStatus;
+
+	private sealed class FoundProfileBackEntry
+	{
+		public string Username { get; set; } = string.Empty;
+		public string UserId { get; set; } = string.Empty;
+		public string Bio { get; set; } = string.Empty;
+		public string AvatarUrl { get; set; } = string.Empty;
+		public string ProfileAccent { get; set; } = string.Empty;
+		public string AvatarFrame { get; set; } = string.Empty;
+		public string ProfileBackground { get; set; } = string.Empty;
+	}
 	
 
 	public override async void _Ready()
 	{
 		profile = ResolveInitialProfile();
+		CaptureRootReturnScene();
 
 		_back = GetNode<Button>(BackPath);
 		if (!_back.IsConnected(Button.SignalName.Pressed, Callable.From(GoBack)))
@@ -470,6 +486,99 @@ public partial class FoundUserProfile : Control
 		resolved.AvatarUrl ??= string.Empty;
 		resolved.UserId ??= string.Empty;
 		return resolved;
+	}
+
+	private void CaptureRootReturnScene()
+	{
+		var tree = GetTree();
+		var incomingReturnScene = tree.HasMeta(ReturnSceneMetaKey)
+			? tree.GetMeta(ReturnSceneMetaKey).AsString()
+			: null;
+
+		if (IsFoundUserProfileScene(incomingReturnScene))
+			return;
+
+		var rootReturnScene = string.IsNullOrWhiteSpace(incomingReturnScene)
+			? DefaultReturnScene
+			: incomingReturnScene.Trim();
+
+		tree.SetMeta(FoundProfileRootReturnSceneMeta, rootReturnScene);
+		if (tree.HasMeta(FoundProfileBackStackMeta))
+			tree.RemoveMeta(FoundProfileBackStackMeta);
+	}
+
+	private static bool IsFoundUserProfileScene(string? scene)
+	{
+		return string.Equals(scene?.Trim(), FoundUserProfileScene, StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static List<FoundProfileBackEntry> ReadFoundProfileBackStack(SceneTree tree)
+	{
+		if (!tree.HasMeta(FoundProfileBackStackMeta))
+			return new List<FoundProfileBackEntry>();
+
+		var rawStack = tree.GetMeta(FoundProfileBackStackMeta).AsString();
+		if (string.IsNullOrWhiteSpace(rawStack))
+			return new List<FoundProfileBackEntry>();
+
+		try
+		{
+			return JsonSerializer.Deserialize<List<FoundProfileBackEntry>>(rawStack, JsonOptions)
+				?? new List<FoundProfileBackEntry>();
+		}
+		catch (Exception exception)
+		{
+			GD.PrintErr($"FoundUserProfile: could not read profile back stack: {exception.Message}");
+			return new List<FoundProfileBackEntry>();
+		}
+	}
+
+	private static void SaveFoundProfileBackStack(SceneTree tree, List<FoundProfileBackEntry> stack)
+	{
+		if (stack.Count == 0)
+		{
+			if (tree.HasMeta(FoundProfileBackStackMeta))
+				tree.RemoveMeta(FoundProfileBackStackMeta);
+			return;
+		}
+
+		tree.SetMeta(FoundProfileBackStackMeta, JsonSerializer.Serialize(stack, JsonOptions));
+	}
+
+	private void PushCurrentFoundProfileForBack(SceneTree tree)
+	{
+		var stack = ReadFoundProfileBackStack(tree);
+		stack.Add(new FoundProfileBackEntry
+		{
+			Username = profile.Username ?? string.Empty,
+			UserId = profile.UserId ?? string.Empty,
+			Bio = profile.Bio ?? string.Empty,
+			AvatarUrl = profile.AvatarUrl ?? string.Empty,
+			ProfileAccent = profile.ProfileAccent ?? string.Empty,
+			AvatarFrame = profile.AvatarFrame ?? string.Empty,
+			ProfileBackground = profile.ProfileBackground ?? string.Empty
+		});
+
+		SaveFoundProfileBackStack(tree, stack);
+		tree.SetMeta(ReturnSceneMetaKey, FoundUserProfileScene);
+	}
+
+	private static void RestoreFoundProfile(SceneTree tree, FoundProfileBackEntry entry)
+	{
+		var restored = new ProfileResponse
+		{
+			Username = string.IsNullOrWhiteSpace(entry.Username) ? "Player" : entry.Username.Trim(),
+			UserId = entry.UserId ?? string.Empty,
+			Bio = string.IsNullOrWhiteSpace(entry.Bio) ? "No bio yet." : entry.Bio,
+			AvatarUrl = entry.AvatarUrl ?? string.Empty,
+			ProfileAccent = entry.ProfileAccent ?? string.Empty,
+			AvatarFrame = entry.AvatarFrame ?? string.Empty,
+			ProfileBackground = entry.ProfileBackground ?? string.Empty
+		};
+
+		Global.foundProfile = restored;
+		tree.SetMeta(FoundProfileUsernameMeta, restored.Username);
+		tree.SetMeta(FoundProfileUserIdMeta, restored.UserId);
 	}
 
 	private static ProfileResponse? CloneProfile(ProfileResponse? source)
@@ -1093,10 +1202,10 @@ public partial class FoundUserProfile : Control
 
 			Global.foundProfile = friendProfile;
 			var tree = GetTree();
+			PushCurrentFoundProfileForBack(tree);
 			tree.SetMeta(FoundProfileUsernameMeta, friendProfile.Username ?? string.Empty);
 			tree.SetMeta(FoundProfileUserIdMeta, friendProfile.UserId ?? string.Empty);
-			tree.SetMeta(ReturnSceneMetaKey, "res://profile.tscn");
-			tree.ChangeSceneToFile("res://FoundUserProfile.tscn");
+			tree.ChangeSceneToFile(FoundUserProfileScene);
 		}
 		catch (Exception exception)
 		{
@@ -1376,9 +1485,38 @@ public partial class FoundUserProfile : Control
 		ResetUiNavigationState();
 		AudioManager.Instance?.PlayNavigation(-1);
 		var tree = GetTree();
-		if (tree.HasMeta("pgemu_return_scene"))
-			tree.RemoveMeta("pgemu_return_scene");
-		tree.ChangeSceneToFile("res://profile.tscn");
+		var stack = ReadFoundProfileBackStack(tree);
+		if (stack.Count > 0)
+		{
+			var previousProfile = stack[^1];
+			stack.RemoveAt(stack.Count - 1);
+			SaveFoundProfileBackStack(tree, stack);
+			RestoreFoundProfile(tree, previousProfile);
+			tree.SetMeta(ReturnSceneMetaKey, FoundUserProfileScene);
+			tree.ChangeSceneToFile(FoundUserProfileScene);
+			return;
+		}
+
+		var returnScene = tree.HasMeta(FoundProfileRootReturnSceneMeta)
+			? tree.GetMeta(FoundProfileRootReturnSceneMeta).AsString()
+			: null;
+
+		if (string.IsNullOrWhiteSpace(returnScene) || IsFoundUserProfileScene(returnScene))
+		{
+			returnScene = tree.HasMeta(ReturnSceneMetaKey)
+				? tree.GetMeta(ReturnSceneMetaKey).AsString()
+				: null;
+		}
+
+		if (string.IsNullOrWhiteSpace(returnScene) || IsFoundUserProfileScene(returnScene))
+			returnScene = DefaultReturnScene;
+
+		if (tree.HasMeta(FoundProfileRootReturnSceneMeta))
+			tree.RemoveMeta(FoundProfileRootReturnSceneMeta);
+		if (tree.HasMeta(FoundProfileBackStackMeta))
+			tree.RemoveMeta(FoundProfileBackStackMeta);
+		tree.SetMeta(ReturnSceneMetaKey, returnScene);
+		tree.ChangeSceneToFile(returnScene);
 	}
 
 	private async Task RefreshFriendActionButtonAsync()
