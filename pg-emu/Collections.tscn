@@ -216,9 +216,9 @@ offset_bottom = 657.2
 
 [node name="LineEdit" type="LineEdit" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=830702412]
 layout_mode = 0
-offset_left = 422.0
+offset_left = 445.0
 offset_top = 189.5
-offset_right = 702.0
+offset_right = 725.0
 offset_bottom = 309.5
 
 [node name="Cards" type="Control" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=1058513954]
@@ -226,7 +226,9 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 3.0
 offset_top = -2.0000038
+offset_right = 3.0
 offset_bottom = -10.200012
 grow_horizontal = 2
 grow_vertical = 2
