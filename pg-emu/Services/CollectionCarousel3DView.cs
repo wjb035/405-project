@@ -12,7 +12,7 @@ public partial class CollectionCarousel3DView : SubViewportContainer
 	private static readonly Color FolderPaperColor = new(0.95f, 0.93f, 1.0f, 1f);
 	private static readonly Color FolderDarkColor = new(0.18f, 0.14f, 0.32f, 1f);
 
-	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.48f, 4.75f);
+	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.2f, 3.8f);
 	private static readonly Vector3 CameraDefaultRotation = new(Mathf.DegToRad(-5f), 0f, 0f);
 	private const float CameraDefaultFov = 57f;
 
@@ -50,11 +50,11 @@ public partial class CollectionCarousel3DView : SubViewportContainer
 	private readonly List<Node3D> _boxes = new();
 
 	// Card spacing in 3D units
-	private const float Spacing = 2.30f;
-	private const float SelectedScale = 1.0f;
-	private const float UnselectedScale = 0.62f;
-	private const float SelectedDepth = 0.35f;
-	private const float UnselectedDepth = -0.08f;
+	private const float Spacing = 2.66f;
+	private const float SelectedScale = 1.12f;
+	private const float UnselectedScale = 0.58f;
+	private const float SelectedDepth = 0.1f;
+	private const float UnselectedDepth = -0.28f;
 	private const float FolderBaselineY = -0.18f;
 
 	// Tweening animation
@@ -152,9 +152,9 @@ public partial class CollectionCarousel3DView : SubViewportContainer
 
 		// Ground for receiving shadows
 		var ground = new MeshInstance3D();
-		ground.Mesh = new PlaneMesh { Size = new Vector2(80f, 24f) };
-		ground.Position = new Vector3(0f, -1.12f, 0.55f);
-		ground.RotateX(Mathf.DegToRad(-3f));
+		ground.Mesh = new PlaneMesh { Size = new Vector2(250f, 50f) };
+		ground.Position = new Vector3(-30f, -1.2f, 2f);
+		ground.RotateX(Mathf.DegToRad(-4f));
 
 		var groundMat = new StandardMaterial3D
 		{
@@ -245,7 +245,7 @@ public partial class CollectionCarousel3DView : SubViewportContainer
 		model.Scale = new Vector3(scale, scale, scale);
 		model.Position = new Vector3(0f, -0.40f, 0f);
 		model.RotateX(Mathf.DegToRad(-5f));
-		model.RotateY(Mathf.DegToRad(-18f));
+		model.RotateY(Mathf.DegToRad(-6f));
 		return model;
 	}
 

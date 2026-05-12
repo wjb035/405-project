@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c11cb76j3att8"
+path="res://.godot/imported/Sweetest Perfection.mp3-747e2d3e37b4b37a1249438d0934bd64.mp3str"
+
+[deps]
+
+source_file="res://JukeboxMusic/Sweetest Perfection.mp3"
+dest_files=["res://.godot/imported/Sweetest Perfection.mp3-747e2d3e37b4b37a1249438d0934bd64.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

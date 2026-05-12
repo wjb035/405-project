@@ -189,8 +189,11 @@ public partial class AudioManager : Node
 	}
 	public void MusicPlay(string path){
 		_musicPlayer = GetNode<AudioStreamPlayer>("Music");
-		AudioStream newTrack = GD.Load<AudioStream>(path);
-		 _musicPlayer.Stream = newTrack;
+		var absolutePath = ProjectSettings.GlobalizePath(path);
+		var bytes = System.IO.File.ReadAllBytes(absolutePath);
+		var mp3Stream = new AudioStreamMP3();
+		mp3Stream.Data = bytes;
+		_musicPlayer.Stream = mp3Stream;
 		_musicPlayer.Play();
 	}
 	
@@ -327,6 +330,16 @@ public partial class AudioManager : Node
 		return _musicPlayer.Stream != null
 			? (float)_musicPlayer.Stream.GetLength()
 			: 0f;
+	}
+	
+	public float GetMusicVolume()
+	{
+		return Mathf.DbToLinear(_musicPlayer.VolumeDb);
+	}
+
+	public void SetMusicVolume(float linear)
+	{
+		_musicPlayer.VolumeDb = linear <= 0.001f ? -80f : Mathf.LinearToDb(linear);
 	}
 
 }

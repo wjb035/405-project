@@ -22,7 +22,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	private const float SelectionAnimationSpeedScale = 2.18f;
 	private const float Ps1SelectionAnimationSpeedScale = 3f;
 
-	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.8f, 5f);
+	private static readonly Vector3 CameraDefaultPosition = new(0f, 0.7f, 4.75f);
 	private static readonly Vector3 CameraDefaultRotation = new(Mathf.DegToRad(-8f), 0f, 0f);
 	private const float CameraDefaultFov = 60f;
 	/// <summary>Closer / lower framing; X/Y/Z tweaked so the move reads as diving into the center unit.</summary>
@@ -66,7 +66,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 	
 	// Card spacing in 3D units
 	private const float Spacing = 2.2f;
-	private const float SelectedScale = 1.0f;
+	private const float SelectedScale = 1.1f;
 	private const float UnselectedScale = 0.72f;
 
 	// Tweening animation
@@ -346,7 +346,7 @@ public partial class ConsoleCarousel3DView : SubViewportContainer
 				CenterNode3D(model);
 				var ps1Scale = ScaleToFit(model, 2.75f);
 				model.Scale = new Vector3(ps1Scale, ps1Scale, ps1Scale);
-				model.Position = new Vector3(0.02f, -0.5f, 0.1f);
+				model.Position = new Vector3(0.02f, -1f, 0.1f);
 				model.RotateX(Mathf.DegToRad(8f));
 				model.RotateY(Mathf.DegToRad(10f));
 				break;

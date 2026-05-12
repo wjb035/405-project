@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PGEmu.Helpers;
 using PGEmu.Services;
 
 
@@ -24,6 +25,8 @@ public partial class Register : Control
 	private Button _back = null!;
 	private Label _error = null!;
 
+	private ScreenTransition Transition =>
+		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
 	public override void _Ready()
 	{
@@ -174,7 +177,7 @@ public partial class Register : Control
 		await SetDefaultAvatarAsync();
 
 		// Go to home screen
-		GetTree().ChangeSceneToFile("res://HomeScreen.tscn");
+		await Transition.ChangeScene("res://HomeScreen.tscn",  ScreenTransition.TransitionType.Radial, 0.55f, 0.5f, true);
 	}
 
 	private void GoBack()

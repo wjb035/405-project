@@ -41,6 +41,14 @@ public partial class Jukebox : Control
 	[Export] public Texture2D ShuffleOnIcon;
 	[Export] public Texture2D ShuffleOffIcon;
 	
+	// Volume
+	[Export] public NodePath VolumeButtonPath;
+	[Export] public NodePath VolumePath;
+	[Export] public Texture2D MuteIcon;
+	[Export] public Texture2D UnmuteIcon;
+	
+	[Export] public NodePath ImportButtonPath;
+	
 	// Cached scene nodes, resolved in _Ready().
 	private Button _back = null!;
 	private Button _prev= null!;
@@ -63,7 +71,14 @@ public partial class Jukebox : Control
 	private Button _help;
 	private HelpPopup _helpPopup = null!;
 	
-
+	private HSlider _volumeSlider;
+	private Button _volumeButton;
+	private float _preMuteVolume = 1f;
+	private bool _isMuted = false;
+	
+	private FileDialog _importDialog;
+	private Button _importButton;
+	
 	private ScreenTransition Transition =>
 		GetNode<ScreenTransition>("/root/ScreenTransition");
 	
@@ -107,9 +122,11 @@ public partial class Jukebox : Control
 		_progressBar = GetNode<HSlider>(ProgressPath);
 		_currentTimeLabel = GetNode<Label>(CurrentTimePath);
 		_totalTimeLabel = GetNode<Label>(TotalTimePath);
-		
+		_volumeSlider = GetNode<HSlider>(VolumePath);
+		_volumeButton = GetNode<Button>(VolumeButtonPath);
 		_friends = GetNode<Button>(FriendsPath);
 		_inbox = GetNode<Button>(InboxPath);
+		
 		var chatManager = GetNode<ChatManager>("/root/ChatManager");
 		FriendInboxPopup.AttachBadgeButton(_inbox);
 		chatManager.LoadUnreadCounts();
@@ -117,6 +134,8 @@ public partial class Jukebox : Control
 		_settings = GetNode<Button>(SettingsPath);
 		_help = GetNode<Button>(HelpPath);
 		SetupHelpPopup();
+		
+		_importButton = GetNode<Button>(ImportButtonPath);
 
 		_pause.Icon = PauseIcon;
 		_shuffle.Icon = ShuffleOffIcon;
@@ -136,6 +155,7 @@ public partial class Jukebox : Control
 		if (_pause != null) _pause.Pressed += Pause;
 		if (_loop != null) _loop.Pressed += Loop;
 		if (_shuffle != null) _shuffle.Pressed += Shuffle;
+		if (_volumeButton != null) _volumeButton.Pressed += Mute;
 		
 		if (_settings != null) _settings.Pressed += OnSettingsPressed;
 		if (_friends != null) _friends.Pressed += OnFriendsPressed;
@@ -143,13 +163,26 @@ public partial class Jukebox : Control
 		if (_help != null) _help.Pressed += OnHelpPressed;
 		if (_inbox != null) _inbox.Pressed += OnInboxPressed;
 		
+		// Volume slider stuff
+		_volumeSlider.MinValue = 0.0;
+		_volumeSlider.MaxValue = 1.0;
+		_volumeSlider.Step = 0.01;
+		_volumeSlider.Value = audioMan.GetMusicVolume();
+		_volumeSlider.ValueChanged += (value) =>
+		{
+			if (_isMuted && value > 0.001)
+			{
+				_isMuted = false;
+				_volumeButton.Icon = UnmuteIcon;
+			}
+			audioMan.SetMusicVolume((float)value);
+		};
+		
 		audioMan.results = FindMusic();
 		
-		
-		if (audioMan.MusicPlaying()){
-			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
-		}
-		
+		_playing.Text = audioMan.MusicPlaying()
+			? FormatTrackName(audioMan.results[audioMan.currentIndex])
+			: "Nothing Playing";
 		
 		// Progress bar intiialization
 		_progressBar.MinValue = 0;
@@ -164,6 +197,31 @@ public partial class Jukebox : Control
 				audioMan.SeekMusic((float)_progressBar.Value);
 		};
 		
+		// Song importing
+		_importButton.Pressed += OpenImportDialog;
+		_importDialog = new FileDialog
+		{
+			FileMode = FileDialog.FileModeEnum.OpenFile,
+			Access = FileDialog.AccessEnum.Filesystem,
+			Title = "Import Song",
+			Filters = new string[] { "*.mp3 ; MP3 Files" },
+			Size = new Vector2I(800, 500),
+		};
+		_importDialog.FileSelected += OnSongImported;
+		AddChild(_importDialog);
+		
+		RebuildSongList();
+	}
+	
+	// Replaced the ready building with a rebuild method
+	private void RebuildSongList()
+	{
+		var container = GetNode<VBoxContainer>("Margin/Root/Body/Mid1/ScrollContainer/ButtonContainer");
+
+		// Clear existing buttons and then rebuild
+		foreach (Node child in container.GetChildren())
+			child.QueueFree();
+		
 		//int audioMan.currentIndex = -1;
 		for (int i = 0; i < audioMan.results.Count; i++)
 		{
@@ -172,7 +230,7 @@ public partial class Jukebox : Control
 			int index = i;
 			
 			
-			btn.Text = Regex.Replace(title, ".mp3$", "");
+			btn.Text = Regex.Replace(System.IO.Path.GetFileName(title), @"\.mp3$", "", RegexOptions.IgnoreCase);
 			btn.CustomMinimumSize = new Vector2(300, 80);
 			btn.Alignment = HorizontalAlignment.Left;
 			btn.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -215,13 +273,13 @@ public partial class Jukebox : Control
 				audioMan.currentIndex = index;
 				GD.Print("Pressed " + title);
 				_pause.Icon = PauseIcon;
-				_playing.Text = "Currently Playing: " + title;
-				audioMan.MusicPlay("res://JukeboxMusic/" + title);
+				_playing.Text = FormatTrackName(title);
+				audioMan.MusicPlay(title);			
 			};
 			
 			container.AddChild(btn);
 		}
-		
+
 	}
 
 	public override void _Process(double delta)
@@ -248,6 +306,9 @@ public partial class Jukebox : Control
 		var t = TimeSpan.FromSeconds(seconds);
 		return $"{(int)t.TotalMinutes}:{t.Seconds:D2}";
 	}
+	
+	private string FormatTrackName(string path) =>
+		System.IO.Path.GetFileNameWithoutExtension(path);
 
 	public void Shuffle(){
 		if (audioMan.musicSetting == "shuffle"){
@@ -330,7 +391,7 @@ public partial class Jukebox : Control
 		}
 		else if (audioMan.musicSetting == "shuffle"){
 				audioMan.NextShuffle();
-				_playing.Text = audioMan.results[audioMan.currentIndex];
+				_playing.Text = FormatTrackName(audioMan.results[audioMan.currentIndex]);
 		}
 	}
 	public void Prev(){
@@ -343,8 +404,7 @@ public partial class Jukebox : Control
 		}
 		else if (audioMan.musicSetting == "shuffle"){
 				audioMan.PrevShuffle();
-				_playing.Text = audioMan.results[audioMan.currentIndex];
-				
+				_playing.Text = FormatTrackName(audioMan.results[audioMan.currentIndex]);				
 		}
 		
 	}
@@ -353,43 +413,62 @@ public partial class Jukebox : Control
 		if (audioMan.currentIndex != -1){
 			audioMan.currentIndex+=1;
 			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
-			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
-			audioMan.MusicPlay("res://JukeboxMusic/" + audioMan.results[audioMan.currentIndex]);
+			_playing.Text = FormatTrackName(audioMan.results[audioMan.currentIndex]);
+			audioMan.MusicPlay(audioMan.results[audioMan.currentIndex]);
+			
 		}
 	}
 	public void PrevSongSequentially(){
 		if (audioMan.currentIndex != -1){
 			audioMan.currentIndex=audioMan.currentIndex+audioMan.results.Count-1;
 			audioMan.currentIndex = audioMan.currentIndex % audioMan.results.Count;
-			_playing.Text = "Currently Playing: " + audioMan.results[audioMan.currentIndex];
-			audioMan.MusicPlay("res://JukeboxMusic/" + audioMan.results[audioMan.currentIndex]);
+			_playing.Text = FormatTrackName(audioMan.results[audioMan.currentIndex]);
+			audioMan.MusicPlay(audioMan.results[audioMan.currentIndex]);
+			
 		}
 	}
 
-	public List<String> FindMusic(){
-		
-		List<String> result = new();
-		using var dir = DirAccess.Open("res://JukeboxMusic/");
-		if (dir != null)
+	public List<String> FindMusic()
 	{
+
+		var result = new List<string>();
+		ScanMusicDir("res://JukeboxMusic/", result);
+		ScanMusicDir("user://JukeboxMusic/", result);
+		return result;
+	}
+	private void ScanMusicDir(string godotPath, List<string> result)
+	{
+		using var dir = DirAccess.Open(godotPath);
+		if (dir == null) return;
+
 		dir.ListDirBegin();
 		string fileName = dir.GetNext();
-		 
 		while (fileName != "")
 		{
-			
-			if (Regex.IsMatch(fileName, @"^.*\.mp3$", RegexOptions.IgnoreCase)){
-				//GD.Print($"Found file: {fileName}");
-				result.Add(fileName);
-			}
-			
-			
+			if (Regex.IsMatch(fileName, @"^.*\.mp3$", RegexOptions.IgnoreCase))
+				result.Add(godotPath + fileName); // full path
 			fileName = dir.GetNext();
 		}
 	}
-		return result;
+
+	public void Mute()
+	{
+		if (_isMuted)
+		{
+			audioMan.SetMusicVolume(_preMuteVolume);
+			_volumeSlider.Value = _preMuteVolume;
+			_isMuted = false;
+			_volumeButton.Icon = UnmuteIcon;
+		}
+		else
+		{
+			_preMuteVolume = (float)_volumeSlider.Value;
+			audioMan.SetMusicVolume(0f);
+			_volumeSlider.Value = 0f;
+			_isMuted = true;
+			_volumeButton.Icon = MuteIcon;
+		}
 	}
-	
 	
 	public override void _UnhandledInput(InputEvent @event)
 	{
@@ -397,6 +476,31 @@ public partial class Jukebox : Control
 			return;
 
 		GetViewport()?.SetInputAsHandled();
+	}
+	
+	// Import an mp3
+	private void OpenImportDialog()
+	{
+		_importDialog.PopupCentered();
+	}
+	
+	private void OnSongImported(string path)
+	{
+		var fileName = System.IO.Path.GetFileName(path);
+		var userMusicDir = "user://JukeboxMusic/";
+		var absoluteDir = ProjectSettings.GlobalizePath(userMusicDir);
+
+		if (!System.IO.Directory.Exists(absoluteDir))
+			System.IO.Directory.CreateDirectory(absoluteDir);
+
+		var absoluteDest = System.IO.Path.Combine(absoluteDir, fileName);
+		if (!System.IO.File.Exists(absoluteDest))
+			System.IO.File.Copy(path, absoluteDest);
+
+		audioMan.results = FindMusic();
+		RebuildSongList();
+		
+		GD.Print($"Imported: {fileName}");
 	}
 
 	private void ApplyThemeAesthetic()
@@ -425,7 +529,14 @@ public partial class Jukebox : Control
 		UiStyle.StylePrimaryButton(_shuffle);
 		UiStyle.ApplyParallaxShadow(_shuffle, offsetY: 5f);
 		
-		UiStyle.StyleGhostNav(1f,_prev, _next, _pause, _loop, _shuffle);
+		UiStyle.StylePrimaryButton(_volumeButton);
+		UiStyle.ApplyParallaxShadow(_volumeButton, offsetY: 5f);
+		
+		UiStyle.StyleGhostNav(1f,_prev, _next, _pause, _loop, _shuffle, _volumeButton);
+		
+		UiStyle.StylePrimaryButton(_importButton);
+		UiStyle.AddHoverFeedback(_importButton);
+		UiStyle.ApplyParallaxShadow(_importButton);
 		
 		UiStyle.StyleTopBarButton(_back);
 		UiStyle.AddHoverFeedback(_back);

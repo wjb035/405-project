@@ -6,7 +6,7 @@
 		"Name": "Super Monkey Ball (USA)",
 		"Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball (USA).ciso",
 		"Title": "Super Monkey Ball (USA)",
-		"CoverArtUrl": null,
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Monkey%20Ball%20%28USA%29.png",
 		"retroAchievementsGameId": 9510,
 		"platform": {
 		  "Id": "gc",
@@ -32,18 +32,20 @@
 		"Name": "Ape Escape 3 (USA)",
 		"Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
 		"Title": "Ape Escape 3 (USA)",
-		"CoverArtUrl": null,
+		"CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Ape%20Escape%203%20%28USA%29.png",
 		"retroAchievementsGameId": 2689,
-		"platform": {
-		  "Id": "ps2",
-		  "Name": "Playstation 2",
-		  "RomPath": "games/PS2",
-		  "Extensions": [
-            ".iso"
-		  ],
-		  "DefaultEmulatorId": "pcsx2",
-		  "retroachievementsPlatformID": 21
-		},
+		"platform": null,
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "31/145"
+	  },
+	  {
+		"Name": "Ape Escape 3 (USA)",
+		"Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+		"Title": "Ape Escape 3 (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Ape%20Escape%203%20%28USA%29.png",
+		"retroAchievementsGameId": 2689,
+		"platform": null,
 		"TimePlayed": 0,
 		"LastPlayedUnixTime": 0,
 		"AchievementNum": "31/145"

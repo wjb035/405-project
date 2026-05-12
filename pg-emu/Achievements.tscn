@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
 [ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dsana"]
-[ext_resource type="Texture2D" uid="uid://cvb3h4i4yd27r" path="res://Images/arrow left icon.png" id="2_uqn2r"]
-[ext_resource type="Shader" path="res://ShaderSlop/BottomBar.gdshader" id="3_o5fs0"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o5fs0"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="4_o5fs0"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ss6l3"]
 shader = ExtResource("3_o5fs0")
@@ -63,10 +63,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
+[node name="Control" type="Control" parent="Margin/Root/TopBar" unique_id=798929023]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
 [node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=581318012]
 custom_minimum_size = Vector2(56, 40)
 layout_mode = 2
-icon = ExtResource("2_uqn2r")
+icon = ExtResource("4_o5fs0")
 icon_alignment = 1
 expand_icon = true
 
@@ -83,6 +87,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
+
+[node name="Control" type="Control" parent="Margin/Root" unique_id=541565765]
+layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1997757442]
 layout_mode = 0

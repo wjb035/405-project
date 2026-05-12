@@ -266,13 +266,13 @@ public partial class HomeScreen : Control
 	}
 	private void OnFilterPressed(){
 		if (filterType == "Both"){
-			_searchBarText.PlaceholderText = "Search Games";
+			_searchBarText.PlaceholderText = "Search games";
 			_filter.Text = "Games";
 			filterType = "Games";
 			
 		}
 		else if (filterType == "Games"){
-			_searchBarText.PlaceholderText = "Search Users";
+			_searchBarText.PlaceholderText = "Search users";
 			_filter.Text = "Users";
 			filterType = "Users";
 		}

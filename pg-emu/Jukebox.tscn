@@ -14,6 +14,8 @@
 [ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="7_8n0sc"]
 [ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="8_vwnrk"]
 [ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="9_62mf5"]
+[ext_resource type="Texture2D" uid="uid://dl35mrycm7nsn" path="res://Images/mute icon.png" id="9_f514c"]
+[ext_resource type="Texture2D" uid="uid://bglhjqya3jh1t" path="res://Images/volume icon.png" id="10_6a2l1"]
 [ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="10_kf6uw"]
 [ext_resource type="Texture2D" uid="uid://bmueo5w7d0ujy" path="res://Images/flip icon.png" id="12_ptp4k"]
 [ext_resource type="Texture2D" uid="uid://da0o0qcet8xfs" path="res://Images/step back icon.png" id="13_j76dh"]
@@ -109,6 +111,11 @@ LoopOnIcon = ExtResource("4_udcbl")
 LoopOffIcon = ExtResource("12_ptp4k")
 ShuffleOnIcon = ExtResource("6_1kv8w")
 ShuffleOffIcon = ExtResource("16_1kv8w")
+VolumeButtonPath = NodePath("Margin/Root/Body/Mid2/BottomBar/Volume")
+VolumePath = NodePath("Margin/Root/Body/Mid2/BottomBar/VolumeSlider")
+MuteIcon = ExtResource("9_f514c")
+UnmuteIcon = ExtResource("10_6a2l1")
+ImportButtonPath = NodePath("Margin/Root/Foreground2/ImportButton")
 FriendInboxPopup = NodePath("Inbox")
 
 [node name="Inbox" parent="." unique_id=873650772 instance=ExtResource("2_uvchp")]
@@ -242,6 +249,18 @@ icon = ExtResource("10_kf6uw")
 icon_alignment = 1
 expand_icon = true
 
+[node name="ImportButton" type="Button" parent="Margin/Root/Foreground2" unique_id=50182656]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -51.5
+offset_top = 12.0
+offset_right = 51.5
+offset_bottom = 43.0
+grow_horizontal = 2
+theme = ExtResource("1_1kv8w")
+text = "Import Song"
+
 [node name="Body" type="Control" parent="Margin/Root" unique_id=1172736966]
 anchors_preset = 0
 offset_top = 50.0
@@ -294,16 +313,6 @@ offset_right = 1127.0
 offset_bottom = 581.0
 size_flags_horizontal = 3
 size_flags_vertical = 0
-
-[node name="Playing" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1861771206]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 26.0
-offset_right = 201.0
-offset_bottom = 49.0
-size_flags_horizontal = 4
-theme = ExtResource("1_1kv8w")
-text = "Currently Playing: "
 
 [node name="ButtonRow" type="HBoxContainer" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=483072578]
 z_index = 37
@@ -368,12 +377,54 @@ icon = ExtResource("16_1kv8w")
 icon_alignment = 1
 expand_icon = true
 
+[node name="BottomSpacer2" type="Control" parent="Margin/Root/Body/Mid2/BottomBar/ButtonRow" unique_id=1840161758]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Playing" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1861771206]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 38.0
+offset_right = 225.0
+offset_bottom = 61.0
+size_flags_horizontal = 4
+theme = ExtResource("1_1kv8w")
+text = "Nothing Playing"
+horizontal_alignment = 1
+
+[node name="Volume" type="Button" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1778233415]
+z_index = 37
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 0
+offset_left = 938.0
+offset_top = 33.0
+offset_right = 962.0
+offset_bottom = 57.0
+size_flags_vertical = 4
+icon = ExtResource("10_6a2l1")
+icon_alignment = 1
+expand_icon = true
+
+[node name="VolumeSlider" type="HSlider" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=288837100]
+custom_minimum_size = Vector2(110, 5)
+layout_mode = 0
+offset_left = 969.0
+offset_top = 42.0
+offset_right = 1079.0
+offset_bottom = 47.0
+theme_override_icons/grabber = SubResource("PlaceholderTexture2D_1kv8w")
+theme_override_icons/grabber_disabled = SubResource("PlaceholderTexture2D_4bmip")
+theme_override_styles/slider = SubResource("StyleBoxFlat_f514c")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_1kv8w")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_4bmip")
+
 [node name="HSlider" type="HSlider" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=917953753]
-custom_minimum_size = Vector2(500, 5)
+custom_minimum_size = Vector2(450, 5)
 layout_mode = 0
 offset_left = 319.0
 offset_top = 62.0
-offset_right = 819.0
+offset_right = 794.0
 offset_bottom = 78.0
 theme_override_icons/grabber = SubResource("PlaceholderTexture2D_1kv8w")
 theme_override_icons/grabber_disabled = SubResource("PlaceholderTexture2D_4bmip")
@@ -394,9 +445,9 @@ text = "0:00"
 
 [node name="TotalTime" type="Label" parent="Margin/Root/Body/Mid2/BottomBar" unique_id=1930123671]
 layout_mode = 0
-offset_left = 828.0
+offset_left = 804.0
 offset_top = 61.0
-offset_right = 868.0
+offset_right = 844.0
 offset_bottom = 84.0
 theme = ExtResource("1_1kv8w")
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
