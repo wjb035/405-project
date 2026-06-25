@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://d4nir8xtcs6rk"]
+
+[ext_resource type="Script" uid="uid://c2mtnbcsb556s" path="res://AchievementScreen.cs" id="1_dpmwc"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dsana"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="3_o5fs0"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="4_o5fs0"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ss6l3"]
+shader = ExtResource("3_o5fs0")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.108255014, 0.0903, 0.21, 0.9529412)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
+[node name="Achievements" type="Control" unique_id=1415120403]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dsana")
+script = ExtResource("1_dpmwc")
+
+[node name="Background" type="ColorRect" parent="." unique_id=464318315]
+material = SubResource("ShaderMaterial_ss6l3")
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -35.0
+offset_top = -680.1
+offset_right = 1.0
+offset_bottom = 133.80005
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=2134684232]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_right = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=833965304]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=602062154]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="Control" type="Control" parent="Margin/Root/TopBar" unique_id=798929023]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=581318012]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+icon = ExtResource("4_o5fs0")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=749932390]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 28
+text = "Achievements"
+horizontal_alignment = 1
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=1369656815]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 2
+
+[node name="Control" type="Control" parent="Margin/Root" unique_id=541565765]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1997757442]
+layout_mode = 0
+offset_left = 62.0
+offset_top = 72.0
+offset_right = 1134.0
+offset_bottom = 624.0
+
+[node name="ButtonContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=1554392756]
+layout_mode = 2

@@ -1,0 +1,60 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="PGEmu"
+run/main_scene="res://WelcomeScreen.tscn"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+boot_splash/bg_color=Color(0.06666667, 0.047058824, 0.12156863, 1)
+boot_splash/image="uid://xkh3cgm7foyb"
+config/icon="uid://d0i1e1w3kdi63"
+
+[autoload]
+
+FriendService="*res://Services/FriendService.cs"
+AuthService="*res://Services/AuthService.cs"
+AudioManager="*res://AudioManager.tscn"
+InputRoutingService="*res://Services/InputRoutingService.cs"
+QuitService="*res://Services/QuitService.cs"
+BackgroundArtCache="*res://Services/BackgroundArtCache.cs"
+ControllerService="*res://Services/ControllerService.cs"
+ScreenTransition="*res://UI/ScreenTransition.tscn"
+Playtime="*res://Playtime.cs"
+GlobalBackground="*res://GlobalBackground.tscn"
+AchievementCredentialLoad="*uid://hosxeongpmm0"
+ChatManager="*uid://7cqil82wp2qx"
+ChatOverlay="*uid://1wtnmucvt428"
+CartReader="*uid://cdij54sdgtooe"
+
+[display]
+
+window/size/mode=3
+window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="PGEmu"
+
+[input]
+
+game_flip={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":70,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

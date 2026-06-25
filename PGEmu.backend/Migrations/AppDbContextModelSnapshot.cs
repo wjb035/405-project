@@ -22,6 +22,120 @@ namespace PGEmuBackend.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("PGEmuBackend.Models.ChatGroup", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatGroups");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.ChatGroupMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("GroupId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId", "Username")
+                        .IsUnique();
+
+                    b.ToTable("ChatGroupMembers");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FromUser")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("GroupId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsGroupMessage")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ToUser")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("FromUser", "ToUser");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.ChatReadState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LastReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OtherUser")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username", "OtherUser")
+                        .IsUnique();
+
+                    b.ToTable("ChatReadStates");
+                });
+
             modelBuilder.Entity("PGEmuBackend.Models.CollectionGame", b =>
                 {
                     b.Property<int>("CollectionId")
@@ -58,6 +172,38 @@ namespace PGEmuBackend.Migrations
                     b.HasIndex("ReceiverId");
 
                     b.ToTable("Friends");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.PasswordResetCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("Used")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetCodes");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.RefreshToken", b =>
@@ -232,6 +378,11 @@ namespace PGEmuBackend.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("AvatarFrame")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("longtext");
 
@@ -246,6 +397,16 @@ namespace PGEmuBackend.Migrations
                         .HasColumnType("varchar(32)");
 
                     b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ProfileAccent")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("ProfileBackground")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("varchar(16)");
@@ -301,6 +462,17 @@ namespace PGEmuBackend.Migrations
                     b.ToTable("UserStatuses");
                 });
 
+            modelBuilder.Entity("PGEmuBackend.Models.ChatGroupMember", b =>
+                {
+                    b.HasOne("PGEmuBackend.Models.ChatGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
             modelBuilder.Entity("PGEmuBackend.Models.CollectionGame", b =>
                 {
                     b.HasOne("PGEmuBackend.Models.UserCollection", "Collection")
@@ -329,6 +501,17 @@ namespace PGEmuBackend.Migrations
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.PasswordResetCode", b =>
+                {
+                    b.HasOne("PGEmuBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.RefreshToken", b =>
@@ -406,6 +589,11 @@ namespace PGEmuBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PGEmuBackend.Models.ChatGroup", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("PGEmuBackend.Models.User", b =>

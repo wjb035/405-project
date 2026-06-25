@@ -1,0 +1,355 @@
+[gd_scene format=3 uid="uid://cnhi4ie170wvg"]
+
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_c58cc"]
+[ext_resource type="Script" uid="uid://dgm0r1qq55ebg" path="res://Collections.cs" id="1_pmjb3"]
+[ext_resource type="PackedScene" path="res://platform_card.tscn" id="2_nbbm3"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_fupj7"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="4_fupj7"]
+[ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="4_gqrw3"]
+[ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="4_h06ym"]
+[ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="5_rlxaj"]
+[ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="6_c58cc"]
+[ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="6_h06ym"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="6_n23tr"]
+[ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="7_c58cc"]
+[ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="8_gqrw3"]
+[ext_resource type="Texture2D" uid="uid://dlhc0hkofta0r" path="res://Images/controller icon.png" id="8_jpbjf"]
+[ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="9_fupj7"]
+[ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="10_rlxaj"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xb240"]
+shader = ExtResource("6_n23tr")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.53506005, 0.44640002, 0.93, 0.20392157)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_c58cc"]
+shader = ExtResource("3_fupj7")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.64, 0.54, 0.82, 0.7)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0150000007125
+
+[node name="Collections" type="Control" unique_id=430325591 node_paths=PackedStringArray("FriendInboxPopup")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_c58cc")
+script = ExtResource("1_pmjb3")
+CardsPath = NodePath("Margin/Root/CenterArea/Mid1/CarouselArea/Cards")
+PrevPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnPrev")
+NextPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnNext")
+SelectedTitlePath = NodePath("Margin/Root/CenterArea/Mid2/SelectedTitle")
+StatusPath = NodePath("Margin/Root/CenterArea/Mid2/Status")
+SelectPlatformPath = NodePath("Margin/Root/CenterArea/Mid2/BottomRow/BtnSelect")
+BackPath = NodePath("Margin/Root/Foreground1/TopBar/BtnBack")
+FriendsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnFriends")
+ChatPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnChat")
+SettingsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnSettings")
+HelpPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnHelp")
+GamePath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnGame")
+CardScene = ExtResource("2_nbbm3")
+FriendInboxPopup = NodePath("Inbox")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=107527972]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06666667, 0.047058824, 0.12156863, 1)
+
+[node name="ParallaxUi" type="Node" parent="." unique_id=1243057297 node_paths=PackedStringArray("MidLayers", "ForegroundLayers")]
+script = ExtResource("4_gqrw3")
+MidLayers = [NodePath("../Margin/Root/CenterArea/Mid1"), NodePath("../Margin/Root/CenterArea/Mid2")]
+ForegroundLayers = [NodePath("../Margin/Root/Foreground1"), NodePath("../Margin/Root/CenterArea/Foreground2")]
+
+[node name="Inbox" parent="." unique_id=873650772 instance=ExtResource("4_h06ym")]
+position = Vector2i(237, 0)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1446429141]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -10.0
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1, 0.95)
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="Control" parent="Margin" unique_id=1127039987]
+layout_mode = 2
+
+[node name="Foreground1" type="CanvasLayer" parent="Margin/Root" unique_id=221378369]
+
+[node name="Background" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=951600345]
+material = SubResource("ShaderMaterial_xb240")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -21.0
+offset_top = -680.1
+offset_right = 15.0
+offset_bottom = 133.80005
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+
+[node name="TopBar2" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=2107773891]
+material = SubResource("ShaderMaterial_c58cc")
+custom_minimum_size = Vector2(1186, 0)
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -16.0
+offset_top = -24.400011
+offset_right = 54.0
+offset_bottom = 55.59999
+grow_horizontal = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root/Foreground1" unique_id=927708304]
+offset_left = 18.0
+offset_top = 7.1000004
+offset_right = 1134.0
+offset_bottom = 47.1
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/Foreground1/TopBar" unique_id=13951956]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+tooltip_text = "Back"
+text = " "
+icon = ExtResource("4_fupj7")
+icon_alignment = 1
+expand_icon = true
+
+[node name="TopSpacer" type="Control" parent="Margin/Root/Foreground1/TopBar" unique_id=143457840]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="TopIcons" type="HBoxContainer" parent="Margin/Root/Foreground1/TopBar" unique_id=1519889055]
+layout_mode = 2
+
+[node name="BtnGame" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1367671140]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Game Selection"
+icon = ExtResource("8_jpbjf")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnInbox" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1605134573]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Inbox
+Hotkey: I"
+icon = ExtResource("6_c58cc")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnChat" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=2136396140]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Chat"
+icon = ExtResource("6_h06ym")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnSettings" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1473282169]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Settings"
+icon = ExtResource("7_c58cc")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnFriends" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1856926597]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Profile"
+icon = ExtResource("5_rlxaj")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnHelp" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1994266962]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Help"
+icon = ExtResource("8_gqrw3")
+icon_alignment = 1
+expand_icon = true
+
+[node name="CenterArea" type="Control" parent="Margin/Root" unique_id=1272124519]
+anchors_preset = 0
+offset_top = 44.0
+offset_right = 1116.0
+offset_bottom = 624.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Mid1" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=2017882977]
+
+[node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea/Mid1" unique_id=1065911846]
+custom_minimum_size = Vector2(1040, 580)
+layout_mode = 3
+anchors_preset = 0
+offset_left = -7.0
+offset_top = 56.0
+offset_right = 1155.0
+offset_bottom = 657.2
+
+[node name="LineEdit" type="LineEdit" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=830702412]
+layout_mode = 0
+offset_left = 445.0
+offset_top = 189.5
+offset_right = 725.0
+offset_bottom = 309.5
+
+[node name="Cards" type="Control" parent="Margin/Root/CenterArea/Mid1/CarouselArea" unique_id=1058513954]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = -2.0000038
+offset_right = 3.0
+offset_bottom = -10.200012
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Mid1" unique_id=1838883227]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -172.5
+offset_top = 12.0
+offset_right = 172.5
+offset_bottom = 44.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="Friend1" type="ColorRect" parent="Margin/Root/CenterArea/Mid1/FriendsRow" unique_id=1631607136]
+visible = false
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+color = Color(0.1882353, 0.1882353, 0.1882353, 1)
+
+[node name="Friend2" type="ColorRect" parent="Margin/Root/CenterArea/Mid1/FriendsRow" unique_id=598423986]
+visible = false
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+color = Color(0.6901961, 0.3529412, 0.6509804, 1)
+
+[node name="Friend3" type="ColorRect" parent="Margin/Root/CenterArea/Mid1/FriendsRow" unique_id=80111398]
+visible = false
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+color = Color(0.33333334, 0.7137255, 0.9098039, 1)
+
+[node name="MoreFriends" type="Label" parent="Margin/Root/CenterArea/Mid1/FriendsRow" unique_id=129680077]
+visible = false
+layout_mode = 2
+text = "+2 more"
+
+[node name="CollectionPrompt" type="Button" parent="Margin/Root/CenterArea/Mid1/FriendsRow" unique_id=1748749444]
+layout_mode = 2
+theme = ExtResource("1_c58cc")
+text = "New Collection"
+
+[node name="Foreground2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=1743036273]
+
+[node name="BtnPrev" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=282720221]
+offset_left = 20.0
+offset_top = 165.0
+offset_right = 162.0
+offset_bottom = 461.0
+icon_alignment = 1
+expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnPrev" unique_id=2128529275]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 25.0
+offset_top = -64.0
+offset_right = 89.0
+offset_bottom = 64.0
+grow_vertical = 2
+texture = ExtResource("9_fupj7")
+expand_mode = 1
+
+[node name="BtnNext" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=2002502344]
+offset_left = 993.0
+offset_top = 165.0
+offset_right = 1135.0
+offset_bottom = 461.0
+icon_alignment = 1
+expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnNext" unique_id=961330174]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -64.0
+offset_right = -20.0
+offset_bottom = 64.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("10_rlxaj")
+expand_mode = 1
+
+[node name="Mid2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=814785068]
+
+[node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea/Mid2" unique_id=1310809794]
+offset_left = 18.0
+offset_top = 507.75
+offset_right = 1134.0
+offset_bottom = 538.75
+theme_override_colors/font_color = Color(1, 1, 1, 0.9019608)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Mid2" unique_id=1707678650]
+offset_left = 18.0
+offset_top = 539.1
+offset_right = 1134.0
+offset_bottom = 583.1
+alignment = 1
+
+[node name="BtnSelect" type="Button" parent="Margin/Root/CenterArea/Mid2/BottomRow" unique_id=142713295]
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+text = "Select"
+
+[node name="Status" type="Label" parent="Margin/Root/CenterArea/Mid2" unique_id=1635369167]
+visible = false
+offset_left = 576.0
+offset_top = 589.0
+offset_right = 577.0
+offset_bottom = 612.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+horizontal_alignment = 1
+
+[connection signal="text_submitted" from="Margin/Root/CenterArea/Mid1/CarouselArea/LineEdit" to="." method="MakeNewCollection"]
+[connection signal="pressed" from="Margin/Root/CenterArea/Mid1/FriendsRow/CollectionPrompt" to="." method="OnCollectionPressed"]

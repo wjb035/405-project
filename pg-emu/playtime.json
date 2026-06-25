@@ -1,0 +1,72 @@
+[
+  {
+    "Key": "dolphin",
+    "Value": [
+      {
+        "Name": "Super Monkey Ball (USA)",
+        "Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball (USA).ciso",
+        "Title": "Super Monkey Ball (USA)",
+        "CoverArtUrl": null,
+        "retroAchievementsGameId": 9510,
+        "platform": null,
+        "TimePlayed": 160,
+        "LastPlayedUnixTime": 0,
+        "AchievementNum": "8/77"
+      },
+      {
+        "Name": "Metroid Prime 2 - Echoes (USA)",
+        "Path": "D:\\PGEmu Games\\games\\GameCube\\Metroid Prime 2 - Echoes (USA).rvz",
+        "Title": "Metroid Prime 2 - Echoes (USA)",
+        "CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Metroid%20Prime%202%20-%20Echoes%20%28USA%29.png",
+        "retroAchievementsGameId": 7683,
+        "platform": null,
+        "TimePlayed": 70,
+        "LastPlayedUnixTime": 0,
+        "AchievementNum": "7/68"
+      }
+    ]
+  },
+  {
+    "Key": "pcsx2",
+    "Value": [
+      {
+        "Name": "Ape Escape 3 (USA)",
+        "Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+        "Title": "Ape Escape 3 (USA)",
+        "CoverArtUrl": null,
+        "retroAchievementsGameId": 2689,
+        "platform": null,
+        "TimePlayed": 310,
+        "LastPlayedUnixTime": 0,
+        "AchievementNum": "31/145"
+      },
+      {
+        "Name": "Shin Megami Tensei - Nocturne (USA)",
+        "Path": "D:/PGEmu Games\\games\\PS2\\Shin Megami Tensei - Nocturne (USA).iso",
+        "Title": "Shin Megami Tensei - Nocturne (USA)",
+        "CoverArtUrl": null,
+        "retroAchievementsGameId": 2655,
+        "platform": null,
+        "TimePlayed": 20,
+        "LastPlayedUnixTime": 0,
+        "AchievementNum": "0/150"
+      }
+    ]
+  },
+  {
+    "Key": "duckstation",
+    "Value": [
+      {
+        "Name": "Spyro the Dragon (USA)",
+        "Path": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS1/Spyro the Dragon (USA).cue",
+        "Title": "Spyro the Dragon (USA)",
+        "CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spyro%20the%20Dragon%20%28USA%29.png",
+        "retroAchievementsGameId": 11279,
+        "platform": null,
+        "TimePlayed": 130,
+        "LastPlayedUnixTime": 1777996462,
+        "AchievementNum": "2/65"
+      }
+    ]
+  }
+]

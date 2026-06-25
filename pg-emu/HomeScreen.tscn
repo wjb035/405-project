@@ -1,0 +1,412 @@
+[gd_scene format=3 uid="uid://brh20eurum1p6"]
+
+[ext_resource type="Script" uid="uid://bpfpo7cj41l4p" path="res://HomeScreen.cs" id="1"]
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_iw72c"]
+[ext_resource type="PackedScene" uid="uid://bmbmtxgib04m" path="res://inbox.tscn" id="3_16mhu"]
+[ext_resource type="Shader" uid="uid://dkcxfuwtinckq" path="res://ShaderSlop/TopBar.gdshader" id="3_iw72c"]
+[ext_resource type="Script" uid="uid://n41dqiu2m3wl" path="res://UI/ParallaxUi.cs" id="4_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="5_iw72c"]
+[ext_resource type="Shader" uid="uid://bfcm670vc52xu" path="res://ShaderSlop/BottomBar.gdshader" id="5_kf1hi"]
+[ext_resource type="FontFile" uid="uid://dg302o2lufd8r" path="res://Fonts/DM_Mono/DMMono-Italic.ttf" id="7_1lj82"]
+[ext_resource type="Texture2D" uid="uid://bylme1dbrsw3x" path="res://Images/inbox icon thin.png" id="7_iw72c"]
+[ext_resource type="Texture2D" uid="uid://b3x0d5xxdxg5b" path="res://Images/search icon thin.png" id="7_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://bq07ny6383rl0" path="res://Images/folders icon thin.png" id="8_1lj82"]
+[ext_resource type="Texture2D" uid="uid://5v7pvjfws8vk" path="res://Images/music icon.png" id="9_3gr8a"]
+[ext_resource type="Texture2D" uid="uid://cea4j6pfksho4" path="res://Images/profile icon thin.png" id="9_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://ducayqnlovgt5" path="res://Images/chat icon  thin.png" id="10_iw72c"]
+[ext_resource type="Texture2D" uid="uid://bpb2sqs5odkwo" path="res://Images/settings icon thin.png" id="11_1lj82"]
+[ext_resource type="Texture2D" uid="uid://dlgdsw4vktmmm" path="res://Images/game-cartridge.png" id="11_t52sk"]
+[ext_resource type="Texture2D" uid="uid://bw2c6jtmtq24d" path="res://Images/question icon thin.png" id="12_oy6yd"]
+[ext_resource type="Texture2D" uid="uid://dn38eweg4lta0" path="res://Images/CenterLeftArrow.png" id="14_1lj82"]
+[ext_resource type="Texture2D" uid="uid://bx53mbedkjbf1" path="res://Images/CenterRightArrow.png" id="15_oy6yd"]
+[ext_resource type="StyleBox" uid="uid://dpuvjs4e3ei5o" path="res://button icon.tres" id="21_d6nnr"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_26m5w"]
+shader = ExtResource("5_kf1hi")
+shader_parameter/blur_amount = 3.0
+shader_parameter/tint = Color(0.53506005, 0.44640002, 0.93, 0.20392157)
+shader_parameter/highlight_color = Color(0.8007701, 0.58153355, 1, 0.42745098)
+shader_parameter/fade_strength = 0.47200002242
+shader_parameter/highlight_thickness = 0.02
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oy6yd"]
+shader = ExtResource("3_iw72c")
+shader_parameter/blur_amount = 3.0000001425
+shader_parameter/tint = Color(0.101960786, 0.09019608, 0.16862746, 0.9254902)
+shader_parameter/highlight_color = Color(0.64, 0.54, 0.82, 0.7)
+shader_parameter/fade_strength = 0.0
+shader_parameter/highlight_thickness = 0.0150000007125
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kf1hi"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t52sk"]
+
+[node name="HomeScreen" type="Control" unique_id=1782667529 node_paths=PackedStringArray("FriendInboxPopup")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_iw72c")
+script = ExtResource("1")
+SearchBarText = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/SearchPanel/UserSearchBar")
+SearchBarButton = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/UserSearchButton")
+PrevPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnPrev2")
+NextPath = NodePath("Margin/Root/CenterArea/Foreground2/BtnNext2")
+SelectedTitlePath = NodePath("Margin/Root/CenterArea/Mid2/SelectedTitle")
+StatusPath = NodePath("Margin/Root/CenterArea/Mid2/Status")
+SelectPlatformPath = NodePath("Margin/Root/CenterArea/Mid2/BottomRow/BtnSelect")
+LogoutPath = NodePath("Margin/Root/Foreground1/TopBar/BtnLogout")
+FriendsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnFriends")
+InboxPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnInbox")
+MusicPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnMusic")
+ChatPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnChat")
+SettingsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnSettings")
+HelpPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnHelp")
+CollectionsPath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnCollections")
+CarouselAreaPath = NodePath("Margin/Root/CenterArea/Mid1/CarouselArea")
+SearchFilterPath = NodePath("Margin/Root/Foreground1/TopBar/HBoxContainer/SearchFilter")
+CartridgePath = NodePath("Margin/Root/Foreground1/TopBar/TopIcons/BtnCartridge")
+FriendInboxPopup = NodePath("Inbox")
+
+[node name="Inbox" parent="." unique_id=1890857274 instance=ExtResource("3_16mhu")]
+position = Vector2i(237, 0)
+visible = false
+
+[node name="Bg" type="ColorRect" parent="." unique_id=581845523]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06666667, 0.047058824, 0.12156863, 1)
+
+[node name="ParallaxUi" type="Node" parent="." unique_id=58257262 node_paths=PackedStringArray("MidLayers", "ForegroundLayers")]
+script = ExtResource("4_oy6yd")
+MidLayers = [NodePath("../Margin/Root/CenterArea/Mid1"), NodePath("../Margin/Root/CenterArea/Mid2")]
+ForegroundLayers = [NodePath("../Margin/Root/Foreground1"), NodePath("../Margin/Root/CenterArea/Foreground2")]
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=57637584]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -10.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1, 0.95)
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="Control" parent="Margin" unique_id=1494182602]
+layout_mode = 2
+
+[node name="Foreground1" type="CanvasLayer" parent="Margin/Root" unique_id=1689607992]
+
+[node name="Background" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=1693764385]
+material = SubResource("ShaderMaterial_26m5w")
+custom_minimum_size = Vector2(0, 200)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -747.0
+offset_right = 16.0
+offset_bottom = 66.900024
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.043137256, 0.043137256, 0.078431375, 0.72156864)
+
+[node name="TopBar2" type="ColorRect" parent="Margin/Root/Foreground1" unique_id=2060178397]
+material = SubResource("ShaderMaterial_oy6yd")
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -19.0
+offset_top = -23.600002
+offset_right = 51.0
+offset_bottom = 56.399998
+grow_horizontal = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root/Foreground1" unique_id=726243702]
+offset_left = 18.0
+offset_top = 7.1000004
+offset_right = 1134.0
+offset_bottom = 47.1
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnLogout" type="Button" parent="Margin/Root/Foreground1/TopBar" unique_id=1639146064]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+tooltip_text = "Logout"
+icon = ExtResource("5_iw72c")
+icon_alignment = 1
+expand_icon = true
+
+[node name="TopSpacer" type="Control" parent="Margin/Root/Foreground1/TopBar" unique_id=969686858]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin/Root/Foreground1/TopBar" unique_id=1757671387]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SearchPanel" type="Panel" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=1712921906]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_kf1hi")
+
+[node name="UserSearchBar" type="TextEdit" parent="Margin/Root/Foreground1/TopBar/HBoxContainer/SearchPanel" unique_id=1821935292]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_1lj82")
+placeholder_text = "Search Games"
+
+[node name="UserSearchButton" type="Button" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=1909408829]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Search"
+icon = ExtResource("7_oy6yd")
+icon_alignment = 1
+expand_icon = true
+
+[node name="SearchFilter" type="Button" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=100235555]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+tooltip_text = "Search Filter"
+text = "Games"
+
+[node name="TopSpacer" type="Control" parent="Margin/Root/Foreground1/TopBar/HBoxContainer" unique_id=929982402]
+custom_minimum_size = Vector2(25, 0)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TopIcons" type="HBoxContainer" parent="Margin/Root/Foreground1/TopBar" unique_id=1808037778]
+layout_mode = 2
+
+[node name="BtnCartridge" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1802032209]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Read Cartridge"
+theme_override_constants/icon_max_width = 31
+icon = ExtResource("11_t52sk")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnMusic" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1136499750]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Jukebox"
+icon = ExtResource("9_3gr8a")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnCollections" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1554411540]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Collections"
+icon = ExtResource("8_1lj82")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnInbox" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=401324041]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Notification Inbox 
+Hotkey: I"
+icon = ExtResource("7_iw72c")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnChat" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1562664367]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Chat
+Hotkey: C"
+icon = ExtResource("10_iw72c")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnSettings" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=1055238928]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Settings"
+icon = ExtResource("11_1lj82")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnFriends" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=794538155]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Profile"
+icon = ExtResource("9_oy6yd")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnHelp" type="Button" parent="Margin/Root/Foreground1/TopBar/TopIcons" unique_id=804603786]
+custom_minimum_size = Vector2(44, 36)
+layout_mode = 2
+tooltip_text = "Help and FAQ"
+icon = ExtResource("12_oy6yd")
+icon_alignment = 1
+expand_icon = true
+
+[node name="CenterArea" type="Control" parent="Margin/Root" unique_id=272406048]
+anchors_preset = 0
+offset_top = 44.0
+offset_right = 1116.0
+offset_bottom = 644.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Mid1" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=584233039]
+
+[node name="CarouselArea" type="Control" parent="Margin/Root/CenterArea/Mid1" unique_id=567589945]
+custom_minimum_size = Vector2(1040, 460)
+layout_mode = 3
+anchors_preset = 0
+offset_top = 51.0
+offset_right = 1155.0
+offset_bottom = 681.2635
+
+[node name="Foreground2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=185503270]
+
+[node name="BtnPrev2" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=1708621407]
+offset_left = 20.0
+offset_top = 165.0
+offset_right = 162.0
+offset_bottom = 461.0
+icon_alignment = 1
+expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnPrev2" unique_id=1193160107]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 25.0
+offset_top = -64.0
+offset_right = 89.0
+offset_bottom = 64.0
+grow_vertical = 2
+texture = ExtResource("14_1lj82")
+expand_mode = 1
+
+[node name="BtnNext2" type="Button" parent="Margin/Root/CenterArea/Foreground2" unique_id=2070620974]
+offset_left = 993.0
+offset_top = 165.0
+offset_right = 1135.0
+offset_bottom = 461.0
+icon_alignment = 1
+expand_icon = true
+
+[node name="TextureRect" type="TextureRect" parent="Margin/Root/CenterArea/Foreground2/BtnNext2" unique_id=1684957540]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -64.0
+offset_right = -20.0
+offset_bottom = 64.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("15_oy6yd")
+expand_mode = 1
+
+[node name="FriendsRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Foreground2" unique_id=942896159]
+offset_left = 110.0
+offset_top = 11.0
+offset_right = 332.0
+offset_bottom = 43.0
+alignment = 1
+
+[node name="Friend1" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=1455478848]
+visible = false
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
+
+[node name="Friend2" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=284851846]
+visible = false
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
+
+[node name="Friend3" type="Button" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=213527195]
+visible = false
+material = SubResource("ShaderMaterial_t52sk")
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/normal = ExtResource("21_d6nnr")
+theme_override_styles/pressed = ExtResource("21_d6nnr")
+theme_override_styles/hover = ExtResource("21_d6nnr")
+theme_override_styles/hover_pressed = ExtResource("21_d6nnr")
+theme_override_styles/focus = ExtResource("21_d6nnr")
+
+[node name="MoreFriends" type="Label" parent="Margin/Root/CenterArea/Foreground2/FriendsRow" unique_id=463979683]
+visible = false
+layout_mode = 2
+theme = ExtResource("1_iw72c")
+text = " +2 more"
+
+[node name="Mid2" type="CanvasLayer" parent="Margin/Root/CenterArea" unique_id=34568176]
+
+[node name="SelectedTitle" type="Label" parent="Margin/Root/CenterArea/Mid2" unique_id=153168735]
+offset_left = 18.0
+offset_top = 519.15
+offset_right = 1134.0
+offset_bottom = 550.15
+theme_override_colors/font_color = Color(1, 1, 1, 0.9019608)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/Root/CenterArea/Mid2" unique_id=2077679956]
+offset_left = 18.0
+offset_top = 550.5
+offset_right = 1134.0
+offset_bottom = 594.5
+mouse_filter = 2
+alignment = 1
+
+[node name="BtnSelect" type="Button" parent="Margin/Root/CenterArea/Mid2/BottomRow" unique_id=1457697774]
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+text = "Select"
+
+[node name="Status" type="Label" parent="Margin/Root/CenterArea/Mid2" unique_id=1247734097]
+visible = false
+offset_left = 18.0
+offset_top = 7.1000004
+offset_right = 19.0
+offset_bottom = 30.1
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+horizontal_alignment = 1
+
+[node name="PostProcessing" type="CanvasLayer" parent="." unique_id=2107908696]
+
+[connection signal="pressed" from="Margin/Root/Foreground1/TopBar/TopIcons/BtnCollections" to="." method="OnCollectionsPressed"]

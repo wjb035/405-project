@@ -1,0 +1,213 @@
+[
+  {
+	"Key": "Monkey Games",
+	"Value": [
+	  {
+		"Name": "Super Monkey Ball (USA)",
+		"Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball (USA).ciso",
+		"Title": "Super Monkey Ball (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Monkey%20Ball%20%28USA%29.png",
+		"retroAchievementsGameId": 9510,
+		"platform": {
+		  "Id": "gc",
+		  "Name": "Nintendo GameCube",
+		  "RomPath": "games/GameCube",
+		  "Extensions": [
+			".iso",
+			".gcm",
+			".gcz",
+			".ciso",
+			".rvz",
+			".wia",
+            ".wbfs"
+		  ],
+		  "DefaultEmulatorId": "dolphin",
+		  "retroachievementsPlatformID": 16
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "8/77"
+	  },
+	  {
+		"Name": "Ape Escape 3 (USA)",
+		"Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+		"Title": "Ape Escape 3 (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Ape%20Escape%203%20%28USA%29.png",
+		"retroAchievementsGameId": 2689,
+		"platform": null,
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "31/145"
+	  },
+	  {
+		"Name": "Ape Escape 3 (USA)",
+		"Path": "D:/PGEmu Games\\games\\PS2\\Ape Escape 3 (USA).iso",
+		"Title": "Ape Escape 3 (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Ape%20Escape%203%20%28USA%29.png",
+		"retroAchievementsGameId": 2689,
+		"platform": null,
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "31/145"
+	  }
+	]
+  },
+  {
+	"Key": "Racing Games",
+	"Value": [
+	  {
+		"Name": "Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It)",
+		"Path": "D:/PGEmu Games\\games\\PSP\\Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It).iso",
+		"Title": "Ridge Racer 2 (Europe, Australia) (En,Fr,De,Es,It)",
+		"CoverArtUrl": null,
+		"retroAchievementsGameId": 18080,
+		"platform": {
+		  "Id": "psp",
+		  "Name": "Playstation Portable",
+		  "RomPath": "games/PSP",
+		  "Extensions": [
+            ".iso"
+		  ],
+		  "DefaultEmulatorId": "ppsspp",
+		  "retroachievementsPlatformID": 41
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "14/88"
+	  }
+	]
+  },
+  {
+	"Key": "Favorites",
+	"Value": [
+	  {
+		"Name": "Super Monkey Ball 2 (USA)",
+		"Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+		"Title": "Super Monkey Ball 2 (USA)",
+		"CoverArtUrl": null,
+		"retroAchievementsGameId": 6253,
+		"platform": {
+		  "Id": "gc",
+		  "Name": "Nintendo GameCube",
+		  "RomPath": "games/GameCube",
+		  "Extensions": [
+			".iso",
+			".gcm",
+			".gcz",
+			".ciso",
+			".rvz",
+			".wia",
+            ".wbfs"
+		  ],
+		  "DefaultEmulatorId": "dolphin",
+		  "retroachievementsPlatformID": 16
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "46/158"
+	  },
+	  {
+		"Name": "Finding Nemo (USA, Europe)",
+		"Path": "D:\\Games\\PGEMU\\Finding Nemo (USA, Europe).gba",
+		"Title": "Finding Nemo (USA, Europe)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Finding%20Nemo%20%28USA%2C%20Europe%29.png",
+		"retroAchievementsGameId": -1,
+		"platform": {
+		  "Id": "gba",
+		  "Name": "Game Boy Advance",
+		  "RomPath": "D:/Games/PGEMU",
+		  "Extensions": [
+            ".gba"
+		  ],
+		  "DefaultEmulatorId": "ravba",
+		  "retroachievementsPlatformID": -1
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "0/0"
+	  }
+	]
+  },
+  {
+	"Key": "Collection 4",
+	"Value": [
+	  {
+		"Name": "Super Monkey Ball 2 (USA)",
+		"Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+		"Title": "Super Monkey Ball 2 (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Monkey%20Ball%202%20%28USA%29.png",
+		"retroAchievementsGameId": 6253,
+		"platform": {
+		  "Id": "gc",
+		  "Name": "Nintendo GameCube",
+		  "RomPath": "games/GameCube",
+		  "Extensions": [
+			".iso",
+			".gcm",
+			".gcz",
+			".ciso",
+			".rvz",
+			".wia",
+            ".wbfs"
+		  ],
+		  "DefaultEmulatorId": "dolphin",
+		  "retroachievementsPlatformID": 16
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "46/158"
+	  },
+	  {
+		"Name": "Super Monkey Ball 2 (USA)",
+		"Path": "D:/PGEmu Games\\games\\GameCube\\Super Monkey Ball 2 (USA).rvz",
+		"Title": "Super Monkey Ball 2 (USA)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Monkey%20Ball%202%20%28USA%29.png",
+		"retroAchievementsGameId": 6253,
+		"platform": {
+		  "Id": "gc",
+		  "Name": "Nintendo GameCube",
+		  "RomPath": "games/GameCube",
+		  "Extensions": [
+			".iso",
+			".gcm",
+			".gcz",
+			".ciso",
+			".rvz",
+			".wia",
+            ".wbfs"
+		  ],
+		  "DefaultEmulatorId": "dolphin",
+		  "retroachievementsPlatformID": 16
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "46/158"
+	  }
+	]
+  },
+  {
+	"Key": "goonergame",
+	"Value": [
+	  {
+		"Name": "Finding Nemo (USA, Europe)",
+		"Path": "D:\\Games\\PGEMU\\Finding Nemo (USA, Europe).gba",
+		"Title": "Finding Nemo (USA, Europe)",
+		"CoverArtUrl": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Finding%20Nemo%20%28USA%2C%20Europe%29.png",
+		"retroAchievementsGameId": -1,
+		"platform": {
+		  "Id": "gba",
+		  "Name": "Game Boy Advance",
+		  "RomPath": "D:/Games/PGEMU",
+		  "Extensions": [
+            ".gba"
+		  ],
+		  "DefaultEmulatorId": "ravba",
+		  "retroachievementsPlatformID": -1
+		},
+		"TimePlayed": 0,
+		"LastPlayedUnixTime": 0,
+		"AchievementNum": "0/0"
+	  }
+	]
+  }
+]

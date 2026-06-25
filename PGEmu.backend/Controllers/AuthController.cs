@@ -39,6 +39,7 @@ public class AuthController : ControllerBase
     protected string CurrentUserId => User.FindFirst("sub")?.Value ?? "";
     protected string CurrentUsername => User.FindFirst("unique_name")?.Value ?? "";
     
+    
     // Registration endpoint
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -63,12 +64,30 @@ public class AuthController : ControllerBase
         await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
 
+        // Generate tokens immediately
+        var accessToken = _jwtService.GenerateAccessToken(user);
+        var refreshTokenRaw = _jwtService.GenerateRefreshToken();
+        var refreshTokenHash = _jwtService.HashToken(refreshTokenRaw);
+        
+        var refreshToken = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_config["JwtSettings:RefreshTokenExpirationDays"]))
+        };
+
+        await _db.RefreshTokens.AddAsync(refreshToken);
+        await _db.SaveChangesAsync();
+        
         return Ok(new
         {
+            accessToken,
+            refreshToken = refreshTokenRaw,
             message = "User registered successfully",
             userId = user.Id,
             username = user.Username
         });
+        
     }
 
     
@@ -78,9 +97,9 @@ public class AuthController : ControllerBase
     {
         // User lookup and check for null
         var user =  await _db.Users
-            .FirstOrDefaultAsync(u => u.Username == request.Username);
+            .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Username);
         if (user == null)
-            return Unauthorized("Invalid username or password");
+            return Unauthorized("Invalid credentials");
 
         // Password verification
         var result = _passwordHasher.VerifyHashedPassword(
@@ -91,6 +110,10 @@ public class AuthController : ControllerBase
         
         if (result != PasswordVerificationResult.Success)
             return Unauthorized("Invalid username or password");
+        
+        var existingTokens = _db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.RevokedAt == null);
+        await existingTokens.ForEachAsync(t => t.RevokedAt = DateTime.UtcNow);
         
         // Generate tokens
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -111,10 +134,76 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             accessToken,
-            refreshToken = refreshTokenRaw
+            refreshToken = refreshTokenRaw,
+            username = user.Username 
         });
     }
     
+    
+    // Forgot password endpoint
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        [FromServices] EmailService emailService)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null)
+            return Ok(new { message = "If that email is registered, a code has been sent." });
+        
+        // Invalidate old codes
+        var oldCodes = _db.PasswordResetCodes.Where(c => c.UserId == user.Id && !c.Used);
+        _db.PasswordResetCodes.RemoveRange(oldCodes);
+
+        // Generate hashed code
+        var code = Random.Shared.Next(100000, 999999).ToString();
+        var codeHash = _jwtService.HashToken(code); 
+
+        _db.PasswordResetCodes.Add(new PasswordResetCode
+        {
+            UserId = user.Id,
+            CodeHash = codeHash,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+        });
+        
+        await _db.SaveChangesAsync();
+        await emailService.SendPasswordResetCodeAsync(user.Email, code);
+        
+        return Ok(new { message = "If that email is registered, a code has been sent." });
+    }
+        
+    // Reset password endpoint
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null)
+            return BadRequest("Invalid request");
+        
+        // Get the reset code and check it
+        var codeHash = _jwtService.HashToken(request.Code);
+        var resetCode = await _db.PasswordResetCodes.FirstOrDefaultAsync(c =>
+            c.UserId == user.Id &&
+            c.CodeHash == codeHash &&
+            !c.Used &&
+            c.ExpiresAt > DateTime.UtcNow);
+        
+        if (resetCode == null)
+            return BadRequest("Invalid or expired code");
+        
+        resetCode.Used = true;
+        
+        // Update the password
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        
+        // Force log out every instance
+        var tokens = _db.RefreshTokens.Where(t => t.UserId == user.Id && t.RevokedAt == null);
+        await tokens.ForEachAsync(t => t.RevokedAt = DateTime.UtcNow);
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password reset successfully" });
+    }
+
     // Logout endpoint
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
@@ -129,6 +218,7 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "Logged out successfully" });
     }
+    
     
     // Refresh endpoint
     [HttpPost("refresh")]
@@ -168,11 +258,12 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             accessToken = newAccessToken,
-            refreshToken = newRefreshToken,
+            refreshToken = newRefreshTokenRaw,
         });
 
     }
 
+    
     // Check if user is logged in and debug auth issue
     [Authorize]
     [HttpGet("me")]

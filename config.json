@@ -1,44 +1,132 @@
 {
-  "libraryRoot": "~/",
+  "libraryRoot": "",
   "platforms": [
     {
       "id": "gc",
       "name": "Nintendo GameCube",
-      "romPath": "C:/Fun Stuff/Dolphin Games",
-      "extensions": [".iso", ".gcm", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs"],
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/GameCube",
+      "extensions": [
+        ".iso",
+        ".gcm",
+        ".gcz",
+        ".ciso",
+        ".rvz",
+        ".wia",
+        ".wbfs"
+      ],
       "defaultEmulatorId": "dolphin",
-      "retroAchievementsPlatformID": 16
+      "retroachievementsPlatformID": 16
+    },
+    {
+      "id": "gba",
+      "name": "Game Boy Advance",
+      "romPath": "D:/Games/PGEMU",
+      "extensions": [
+        ".gba"
+      ],
+      "defaultEmulatorId": "ravba",
+      "retroachievementsPlatformID": -1
+    },
+    {
+      "id": "ds",
+      "name": "Nintendo DS",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/DS",
+      "extensions": [
+        ".nds"
+      ],
+      "defaultEmulatorId": "melonds",
+      "retroachievementsPlatformID": 18
+    },
+    {
+      "id": "n64",
+      "name": "Nintendo 64",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/N64",
+      "extensions": [
+        ".z64",
+        ".n64",
+        ".v64",
+        ".zip"
+      ],
+      "defaultEmulatorId": "project64",
+      "retroachievementsPlatformID": 2
+    },
+    {
+      "id": "snes",
+      "name": "Super Nintendo",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/SNES",
+      "extensions": [
+        ".sfc",
+        ".smc",
+        ".fig",
+        ".swc",
+        ".zip"
+      ],
+      "defaultEmulatorId": "snes9x",
+      "retroachievementsPlatformID": 3
+    },
+    {
+      "id": "nes",
+      "name": "Nintendo Entertainment System",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/NES",
+      "extensions": [
+        ".nes",
+        ".fds",
+        ".unf",
+        ".unif",
+        ".zip"
+      ],
+      "defaultEmulatorId": "ranes",
+      "retroachievementsPlatformID": 7
     },
     {
       "id": "wii",
       "name": "Nintendo Wii",
-      "romPath": "C:/Fun Stuff/Wii",
-      "extensions": [".iso", ".gcz", ".ciso", ".rvz", ".wia", ".wbfs", ".nfs"],
-      "defaultEmulatorId": "dolphin"
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games//Wii",
+      "extensions": [
+        ".iso",
+        ".gcz",
+        ".ciso",
+        ".rvz",
+        ".wia",
+        ".wbfs",
+        ".nfs"
+      ],
+      "defaultEmulatorId": "dolphin",
+      "retroachievementsPlatformID": 19
+    },
+    {
+      "id": "ps1",
+      "name": "Sony PlayStation",
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS1",
+      "extensions": [
+        ".cue",
+        ".iso",
+        ".chd",
+        ".pbp",
+        ".m3u"
+      ],
+      "defaultEmulatorId": "duckstation",
+      "retroachievementsPlatformID": 12
     },
     {
       "id": "ps2",
       "name": "Playstation 2",
-      "romPath": "D:/Fun Stuff/PS2 Emulation/Games",
-      "extensions": [".iso", ".chd"],
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PS2",
+      "extensions": [
+        ".iso"
+      ],
       "defaultEmulatorId": "pcsx2",
-      "retroAchievementsPlatformID": 21
+      "retroachievementsPlatformID": 21
     },
     {
       "id": "psp",
       "name": "Playstation Portable",
-      "romPath": "D:/Fun Stuff/PSP Emulation/Games",
-      "extensions": [".iso", ".chd"],
-      "defaultEmulatorId": "psp",
-      "retroAchievementsPlatformID": 41
-    },
-    {
-      "id": "snes",
-      "name": "Super Nintendo (SNES)",
-      "romPath": "D:/Fun Stuff/SNES Emulation/Games",
-      "extensions": [".sfc", ".smc", ".fig", ".swc"],
-      "defaultEmulatorId": "snes9x",
-      "retroAchievementsPlatformID": 3
+      "romPath": "/Users/journeyharris/Projects/405-project/PGEmu/games/PSP",
+      "extensions": [
+        ".iso"
+      ],
+      "defaultEmulatorId": "ppsspp",
+      "retroachievementsPlatformID": 41
     }
   ],
   "emulators": [
@@ -46,31 +134,144 @@
       "id": "dolphin",
       "name": "Dolphin",
       "exePath": "C:/Fun Stuff/Dolphin Emulator/dolphin-2509-x64/Dolphin-x64/Dolphin.exe",
-      "argsTemplate": "--exec \"{ROM}\" --batch"
+      "argsTemplate": "--exec \u0022{ROM}\u0022 --batch",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": "cores/dolphin_libretro.dll",
+      "corePathMac": "cores/dolphin_libretro.dylib",
+      "corePathLinux": "cores/dolphin_libretro.so"
+    },
+    {
+      "id": "swanstation",
+      "name": "SwanStation",
+      "exePath": "",
+      "argsTemplate": null,
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": "cores/swanstation_libretro.dll",
+      "corePathMac": "cores/swanstation_libretro.dylib",
+      "corePathLinux": "cores/swanstation_libretro.so"
     },
     {
       "id": "pcsx2",
       "name": "PCSX2",
       "exePath": "C:/Program Files/PCSX2/pcsx2-qt.exe",
-      "argsTemplate": "\"{ROM}\""
+      "argsTemplate": "  \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": null,
+      "corePathLinux": null
     },
     {
-      "id": "psp",
+      "id": "ppsspp",
       "name": "PPSSPP",
       "exePath": "C:/Program Files/PPSSPP/PPSSPPWindows.exe",
-      "argsTemplate": "\"{ROM}\""
+      "argsTemplate": "  \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": null,
+      "corePathLinux": null
+    },
+    {
+      "id": "mgba",
+      "name": "mGBA",
+      "exePath": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\mGBA.lnk",
+      "argsTemplate": null,
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "cores/mgba_libretro.dylib",
+      "corePathLinux": null
+    },
+    {
+      "id": "melonds",
+      "name": "MelonDS",
+      "exePath": "C:/Fun Stuff/MelonDS/melonDS.exe",
+      "argsTemplate": " -f \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "duckstation",
+      "name": "DuckStation",
+      "exePath": "C:/Users/howto/AppData/Local/Programs/DuckStation/duckstation-qt-x64-ReleaseLTCG.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "project64",
+      "name": "Project64",
+      "exePath": "C:/Program Files (x86)/Project64 3.0/Project64.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
     },
     {
       "id": "snes9x",
-      "name": "Snes9x",
-      "exePath": "C:/Program Files/Snes9x/snes9x-x64.exe",
-      "argsTemplate": "\"{ROM}\""
+      "name": "SNES9X",
+      "exePath": "C:/Fun Stuff/RASnes9x-x64/RASnes9x.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
     },
     {
-      "id": "bsnes",
-      "name": "bsnes",
-      "exePath": "C:/Program Files/bsnes/bsnes.exe",
-      "argsTemplate": "\"{ROM}\""
+      "id": "ranes",
+      "name": "RANes",
+      "exePath": "C:/Fun Stuff/NES Emulator/RANes.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
+    },
+    {
+      "id": "ravba",
+      "name": "RAVBA",
+      "exePath": "C:/Fun Stuff/RAVBA/RAVisualBoyAdvance-M.exe",
+      "argsTemplate": " \u0022{ROM}\u0022",
+      "exePathWindows": null,
+      "exePathMac": null,
+      "exePathLinux": null,
+      "corePath": null,
+      "corePathWindows": null,
+      "corePathMac": "",
+      "corePathLinux": null
     }
   ]
 }

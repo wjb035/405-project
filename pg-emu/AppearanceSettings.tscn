@@ -1,0 +1,175 @@
+[gd_scene format=3 uid="uid://5s7f8el1wpuq"]
+
+[ext_resource type="Script" uid="uid://emu61kksnyb" path="res://AppearanceSettings.cs" id="1"]
+
+[node name="AppearanceSettings" type="Control" unique_id=434181989]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+CarouselButtonPath = NodePath("Margin/Root/Modes/CarouselButton")
+ThreeDButtonPath = NodePath("Margin/Root/Modes/3DCarouselButton")
+ListButtonPath = NodePath("Margin/Root/Modes/ListButton")
+GridButtonPath = NodePath("Margin/Root/Modes/GridButton")
+DescriptionTitlePath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentLayout")
+DescriptionBodyPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/CurrentDescription")
+StatusPath = NodePath("Margin/Root/Status")
+CarouselPreviewPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/CarouselPreview")
+ThreeDPreviewPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ThreeDPreview")
+ListPreviewPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ListPreview")
+GridPreviewPath = NodePath("Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/GridPreview")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=995043538]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=595528702]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1000864255]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Margin/Root" unique_id=175639303]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Appearance"
+
+[node name="Hint" type="Label" parent="Margin/Root" unique_id=2124697753]
+layout_mode = 2
+text = "Choose how the game library is presented when you open a platform."
+
+[node name="Modes" type="HBoxContainer" parent="Margin/Root" unique_id=403764606]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CarouselButton" type="Button" parent="Margin/Root/Modes" unique_id=81668965]
+visible = false
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Carousel"
+
+[node name="3DCarouselButton" type="Button" parent="Margin/Root/Modes" unique_id=1511596883]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "3D Carousel"
+
+[node name="ListButton" type="Button" parent="Margin/Root/Modes" unique_id=1424019837]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "List"
+
+[node name="GridButton" type="Button" parent="Margin/Root/Modes" unique_id=2036859825]
+custom_minimum_size = Vector2(180, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Grid"
+
+[node name="Preview" type="PanelContainer" parent="Margin/Root" unique_id=1757765341]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="Margin/Root/Preview" unique_id=961957307]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="PreviewRoot" type="VBoxContainer" parent="Margin/Root/Preview/Margin" unique_id=1550424250]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewEyebrow" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=32987112]
+layout_mode = 2
+text = "Live Preview"
+
+[node name="CurrentLayout" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=1387000004]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "3D View"
+
+[node name="CurrentDescription" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=2012465321]
+layout_mode = 2
+text = "A 3D shelf of animated game cases."
+autowrap_mode = 3
+
+[node name="PreviewSamples" type="HBoxContainer" parent="Margin/Root/Preview/Margin/PreviewRoot" unique_id=1363402111]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="CarouselPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=460855523]
+visible = false
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/CarouselPreview" unique_id=426881166]
+layout_mode = 2
+text = "Cards"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ThreeDPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=503622564]
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ThreeDPreview" unique_id=1044587422]
+layout_mode = 2
+text = "3D Cases"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ListPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=750117651]
+visible = false
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/ListPreview" unique_id=731273286]
+layout_mode = 2
+text = "Rows"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GridPreview" type="PanelContainer" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples" unique_id=1104758459]
+visible = false
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Margin/Root/Preview/Margin/PreviewRoot/PreviewSamples/GridPreview" unique_id=1447503352]
+layout_mode = 2
+text = "Tiles"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="Label" parent="Margin/Root" unique_id=1851641132]
+layout_mode = 2
+horizontal_alignment = 1

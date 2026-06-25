@@ -1,0 +1,181 @@
+[gd_scene format=3 uid="uid://b5q1hxlb6srh4"]
+
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_lgy4w"]
+[ext_resource type="Script" uid="uid://crotbndk3td0j" path="res://WelcomeScreen.cs" id="1_tto14"]
+[ext_resource type="VideoStream" uid="uid://cj02tm65wto52" path="res://Videos/sh2 background larger.ogv" id="2_7kx2i"]
+[ext_resource type="Texture2D" uid="uid://c2xn26rk444xl" path="res://Images/pgemu outline (pink).png" id="3_7kx2i"]
+[ext_resource type="Texture2D" uid="uid://cbe6jiv4kkuip" path="res://Images/pretty good emulator thumbs up pink.png" id="4_xrt5d"]
+[ext_resource type="Shader" uid="uid://buq1ti2e1ebm5" path="res://ShaderSlop/CRT.gdshader" id="5_xrt5d"]
+[ext_resource type="AudioStream" uid="uid://dw6agtn2tva2h" path="res://audio/KeygenMain.mp3" id="7_keygen"]
+[ext_resource type="FontFile" uid="uid://betvu5isk3p5j" path="res://Fonts/DM_Mono/DMMono-Medium.ttf" id="7_wiyec"]
+[ext_resource type="FontFile" uid="uid://w48nwldillr6" path="res://Fonts/SpaceMono/SpaceMono-Italic.ttf" id="8_oyh7t"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_qlnan"]
+font_size = 70
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ruaje"]
+shader = ExtResource("5_xrt5d")
+shader_parameter/overlay = true
+shader_parameter/scanlines_opacity = 0.13200000627
+shader_parameter/scanlines_width = 0.378000017955
+shader_parameter/grille_opacity = 0.0800000038
+shader_parameter/resolution = Vector2(640, 480)
+shader_parameter/pixelate = false
+shader_parameter/roll = true
+shader_parameter/roll_speed = 2.21
+shader_parameter/roll_size = 21.978001043955
+shader_parameter/roll_variation = 0.36400001403012
+shader_parameter/distort_intensity = 0.00800000038
+shader_parameter/noise_opacity = 0.0550000026125
+shader_parameter/noise_speed = 5.0
+shader_parameter/static_noise_intensity = 0.0
+shader_parameter/aberration = 0.00600004778499996
+shader_parameter/brightness = 1.1
+shader_parameter/discolor = false
+shader_parameter/warp_amount = 0.714000033915
+shader_parameter/clip_warp = false
+shader_parameter/vignette_intensity = 0.175
+shader_parameter/vignette_opacity = 0.1370000065075
+
+[node name="Control" type="Control" unique_id=1420036040]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_lgy4w")
+script = ExtResource("1_tto14")
+ContinueButtonPath = NodePath("ContinueButton")
+WelcomeLabelPath = NodePath("VBoxContainer/Welcome")
+ContinueLabelPath = NodePath("VBoxContainer/Continue")
+FadeRectPath = NodePath("CanvasLayer/ColorRect")
+LogoPath = NodePath("CanvasLayer/TextureRect")
+ShadowPath = NodePath("CanvasLayer/Shadow")
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1711280579]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -24.0
+offset_right = 728.0
+offset_bottom = 408.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.65, 0.65)
+mouse_filter = 2
+stream = ExtResource("2_7kx2i")
+volume_db = -80.0
+autoplay = true
+expand = true
+loop = true
+
+[node name="WelcomeMusic" type="AudioStreamPlayer" parent="." unique_id=1932635665]
+stream = ExtResource("7_keygen")
+volume_db = -12.34
+autoplay = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2070983030]
+
+[node name="Shadow" type="TextureRect" parent="CanvasLayer" unique_id=289370850]
+self_modulate = Color(0, 0, 0, 1)
+offset_left = 201.0
+offset_top = -4.0
+offset_right = 1073.0
+offset_bottom = 476.0
+scale = Vector2(0.9, 0.9)
+mouse_filter = 2
+texture = ExtResource("3_7kx2i")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=595385632]
+offset_left = 176.0
+offset_top = -32.0
+offset_right = 1048.0
+offset_bottom = 448.0
+scale = Vector2(0.9, 0.9)
+mouse_filter = 2
+texture = ExtResource("4_xrt5d")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=525613543]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 136.88892
+offset_bottom = 134.22229
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.9, 0.9)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=833691928]
+visible = false
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 656.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+color = Color(0.2882, 0.23759998, 0.44, 1)
+
+[node name="ContinueButton" type="Button" parent="." unique_id=520508495]
+top_level = true
+visibility_layer = 0
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 640.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=569787518]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -276.0
+offset_top = 76.0
+offset_right = 324.0
+offset_bottom = 298.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Welcome" type="Label" parent="VBoxContainer" unique_id=833738248]
+custom_minimum_size = Vector2(600, 195)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("7_wiyec")
+text = "Welcome
+"
+label_settings = SubResource("LabelSettings_qlnan")
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Continue" type="Label" parent="VBoxContainer" unique_id=167350901]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("8_oyh7t")
+text = "Click anywhere to continue..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PostProcessing" type="CanvasLayer" parent="." unique_id=109108821]
+
+[node name="ColorRect" type="ColorRect" parent="PostProcessing" unique_id=22674962]
+material = SubResource("ShaderMaterial_ruaje")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -96.0
+offset_top = -96.0
+offset_right = 96.0
+offset_bottom = 88.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

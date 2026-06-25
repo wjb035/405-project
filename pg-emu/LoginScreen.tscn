@@ -1,0 +1,165 @@
+[gd_scene format=3 uid="uid://c3ga1lnpr85ea"]
+
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_6hyr3"]
+[ext_resource type="Script" uid="uid://5meg1c2i140w" path="res://Login.cs" id="1_aidc3"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="3_gbykt"]
+[ext_resource type="FontFile" uid="uid://vsua2ixj7a42" path="res://Fonts/Rajdhani/Rajdhani-SemiBold.ttf" id="3_p8x2n"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_aidc3"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6hyr3"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_p8x2n"]
+
+[node name="Login" type="Control" unique_id=1908899228]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_6hyr3")
+script = ExtResource("1_aidc3")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+UsernamePath = NodePath("Margin/Root/Body/GridContainer/UserInput")
+PasswordPath = NodePath("Margin/Root/Body/GridContainer/PassInput")
+LoginButtonPath = NodePath("Margin/Root/Body/BtnLogin")
+RegisterButtonPath = NodePath("Margin/Root/Body/BtnRegister")
+ErrorLabelPath = NodePath("Margin/Root/Body/ErrorLabel")
+ForgotButtonPath = NodePath("Margin/Root/Body/BtnForgot")
+ForgotPanelPath = NodePath("Margin/Root/Body/ForgotPanel")
+ForgotEmailPath = NodePath("Margin/Root/Body/ForgotPanel/EmailInput")
+ForgotSubmitPath = NodePath("Margin/Root/Body/ForgotPanel/BtnSubmitEmail")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1927231088]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1584235986]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=111455457]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=1303200612]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=480669133]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+icon = ExtResource("3_gbykt")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=954672764]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.94, 1, 0.98)
+theme_override_fonts/font = ExtResource("3_p8x2n")
+theme_override_font_sizes/font_size = 40
+text = "Sign In"
+horizontal_alignment = 1
+
+[node name="TopBarRightPad" type="Control" parent="Margin/Root/TopBar" unique_id=463052768]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=2002907798]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="Margin/Root/Body" unique_id=1639753810]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="UserLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=1822217709]
+layout_mode = 2
+text = "Username"
+horizontal_alignment = 2
+
+[node name="UserInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=649763371]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+placeholder_text = "Username/Email"
+
+[node name="PassLabel" type="Label" parent="Margin/Root/Body/GridContainer" unique_id=860256306]
+layout_mode = 2
+text = "Password"
+horizontal_alignment = 2
+
+[node name="PassInput" type="LineEdit" parent="Margin/Root/Body/GridContainer" unique_id=1342472013]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+placeholder_text = "Password"
+secret = true
+
+[node name="BtnLogin" type="Button" parent="Margin/Root/Body" unique_id=1321126992]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Sign In"
+
+[node name="BtnRegister" type="Button" parent="Margin/Root/Body" unique_id=1366978636]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Create Account"
+
+[node name="BtnForgot" type="Button" parent="Margin/Root/Body" unique_id=2092969255]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.72515434, 0.64352614, 1, 1)
+theme_override_colors/font_hover_color = Color(0.24539709, 0.46857798, 1, 1)
+theme_override_font_sizes/font_size = 11
+theme_override_styles/normal = SubResource("StyleBoxEmpty_aidc3")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_6hyr3")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_p8x2n")
+text = "Forgot Password?"
+
+[node name="ForgotPanel" type="VBoxContainer" parent="Margin/Root/Body" unique_id=1493347131]
+layout_mode = 2
+
+[node name="EmailInput" type="LineEdit" parent="Margin/Root/Body/ForgotPanel" unique_id=349431062]
+custom_minimum_size = Vector2(360, 36)
+layout_mode = 2
+placeholder_text = "Enter email to get a reset code"
+
+[node name="BtnSubmitEmail" type="Button" parent="Margin/Root/Body/ForgotPanel" unique_id=504965597]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Submit
+"
+
+[node name="ErrorLabel" type="Label" parent="Margin/Root/Body" unique_id=456385696]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.53, 0.62, 0.95)
+horizontal_alignment = 1

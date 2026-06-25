@@ -1,0 +1,251 @@
+[gd_scene format=3 uid="uid://ht73q5hq63an"]
+
+[ext_resource type="Theme" uid="uid://0gawd0gdtota" path="res://MainTheme.tres" id="1_dydam"]
+[ext_resource type="Script" uid="uid://dt84s428syeu" path="res://ProfileSettings.cs" id="1_vlvp3"]
+
+[node name="ProfileSettings" type="Control" unique_id=1173785683]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dydam")
+script = ExtResource("1_vlvp3")
+UsernameEditPath = NodePath("Margin/Root/SetUsernameContainer/UsernameEditBox")
+UsernameSaveButtonPath = NodePath("Margin/Root/SetUsernameContainer/SaveNewUsername")
+BioEditPath = NodePath("Margin/Root/SetBioContainer/BioEditBox")
+BioSaveButtonPath = NodePath("Margin/Root/SetBioContainer/SaveNewBio")
+AvatarSaveButtonPath = NodePath("Margin/Root/SetAvatarBox/SaveNewAvatar")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=583479706]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_top = -32.099976
+offset_right = 4.0
+offset_bottom = 18.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=577387793]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=831605332]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Root" unique_id=477975615]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.94, 1, 0.98)
+theme_override_font_sizes/font_size = 24
+text = "Profile Settings"
+
+[node name="ChangeUsernameLabel" type="Label" parent="Margin/Root" unique_id=1212293978]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Change Username"
+
+[node name="SetUsernameContainer" type="HBoxContainer" parent="Margin/Root" unique_id=1749174258]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UsernameEditBox" type="LineEdit" parent="Margin/Root/SetUsernameContainer" unique_id=771369260]
+custom_minimum_size = Vector2(320, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 32
+
+[node name="SaveNewUsername" type="Button" parent="Margin/Root/SetUsernameContainer" unique_id=324563748]
+custom_minimum_size = Vector2(92, 36)
+layout_mode = 2
+text = "Save"
+
+[node name="ChangeBioLabel3" type="Label" parent="Margin/Root" unique_id=1974151205]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Change Bio"
+
+[node name="SetBioContainer" type="HBoxContainer" parent="Margin/Root" unique_id=2059867360]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BioEditBox" type="LineEdit" parent="Margin/Root/SetBioContainer" unique_id=1418994839]
+custom_minimum_size = Vector2(320, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 250
+
+[node name="SaveNewBio" type="Button" parent="Margin/Root/SetBioContainer" unique_id=1292055418]
+custom_minimum_size = Vector2(92, 36)
+layout_mode = 2
+text = "Save"
+
+[node name="ChangeAvatarLabel2" type="Label" parent="Margin/Root" unique_id=783123582]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Change Avatar"
+
+[node name="SetAvatarBox" type="HBoxContainer" parent="Margin/Root" unique_id=886303166]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SaveNewAvatar" type="Button" parent="Margin/Root/SetAvatarBox" unique_id=957509475]
+custom_minimum_size = Vector2(92, 36)
+layout_mode = 2
+text = "Open Files
+"
+
+[node name="VisualStyleLabel" type="Label" parent="Margin/Root" unique_id=1075124650]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Profile Theme"
+
+[node name="VisualStylePanel" type="PanelContainer" parent="Margin/Root" unique_id=1777334098]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/Root/VisualStylePanel" unique_id=1593842397]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer" unique_id=2042053]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PreviewCard" type="PanelContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=462209938]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PreviewMargin" type="MarginContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard" unique_id=2078972327]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="PreviewRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin" unique_id=1456913655]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PreviewAvatar" type="PanelContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow" unique_id=1741514338]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="PreviewText" type="VBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow" unique_id=280303196]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="PreviewName" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow/PreviewText" unique_id=368532072]
+layout_mode = 2
+text = "Player"
+
+[node name="PreviewBio" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/PreviewCard/PreviewMargin/PreviewRow/PreviewText" unique_id=1877284678]
+layout_mode = 2
+text = "No bio yet."
+
+[node name="AccentLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=440719322]
+visible = false
+layout_mode = 2
+text = "Accent"
+
+[node name="AccentSwatches" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=1063897678]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AccentSky" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches" unique_id=1807438361]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Sky"
+
+[node name="AccentMint" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches" unique_id=1589289899]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Mint"
+
+[node name="AccentRose" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches" unique_id=271947229]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Rose"
+
+[node name="AccentGold" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches" unique_id=373702428]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Gold"
+
+[node name="AccentViolet" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/AccentSwatches" unique_id=1832052102]
+custom_minimum_size = Vector2(72, 34)
+layout_mode = 2
+text = "Violet"
+
+[node name="BackgroundRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=768427220]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BackgroundLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/BackgroundRow" unique_id=1481731991]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Theme"
+vertical_alignment = 1
+
+[node name="BackgroundOption" type="OptionButton" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/BackgroundRow" unique_id=1937779817]
+custom_minimum_size = Vector2(190, 30)
+layout_mode = 2
+
+[node name="FrameRow" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=1566108829]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FrameLabel" type="Label" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/FrameRow" unique_id=646188098]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Avatar Frame"
+vertical_alignment = 1
+
+[node name="FrameOption" type="OptionButton" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/FrameRow" unique_id=112999833]
+custom_minimum_size = Vector2(190, 30)
+layout_mode = 2
+
+[node name="StyleActions" type="HBoxContainer" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer" unique_id=984297190]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SaveStyle" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/StyleActions" unique_id=601322518]
+custom_minimum_size = Vector2(104, 36)
+layout_mode = 2
+text = "Save Theme"
+
+[node name="ResetStyle" type="Button" parent="Margin/Root/VisualStylePanel/MarginContainer/VBoxContainer/StyleActions" unique_id=1047989036]
+custom_minimum_size = Vector2(120, 36)
+layout_mode = 2
+text = "Reset Theme"
+
+[node name="Status" type="Label" parent="Margin/Root" unique_id=1264118236]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.88, 0.96, 0.95)
+horizontal_alignment = 1

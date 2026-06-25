@@ -1,0 +1,921 @@
+[gd_scene load_steps=30 format=3 uid="uid://cv86qo3xh51w1"]
+
+[ext_resource type="Script" uid="uid://dw06s4s4pak7m" path="res://src/screens/library/library.gd" id="1_inq21"]
+[ext_resource type="Script" uid="uid://cvg77ofyt25be" path="res://src/screens/library/LibraryContainer.gd" id="2_gb0ym"]
+[ext_resource type="PackedScene" uid="uid://q160q13jgqqw" path="res://src/components/emulator_icon.tscn" id="3_gb0ym"]
+[ext_resource type="Texture2D" uid="uid://b2najb2qxyqfr" path="res://assets/emu_covers/cover_snes.png" id="4_plk58"]
+[ext_resource type="Texture2D" uid="uid://dka7nkrccvhy2" path="res://assets/icons/achievm.png" id="4_skc3n"]
+[ext_resource type="Texture2D" uid="uid://8ggsdr4od171" path="res://assets/images/catui/logoDEV.png" id="5_ha4ni"]
+[ext_resource type="Texture2D" uid="uid://d1l5350bvm7e5" path="res://assets/emu_covers/cover_gba.png" id="5_mb8d5"]
+[ext_resource type="Script" uid="uid://dx0vjevcg088s" path="res://src/api/retroachievement/retro_achievement.gd" id="6_je3wp"]
+[ext_resource type="Texture2D" uid="uid://ccyiarufwuwyf" path="res://assets/icons/joystick/xbox/x.png" id="6_skc3n"]
+[ext_resource type="FontFile" uid="uid://l2nuxykino4m" path="res://assets/fonts/Nunito-Black.ttf" id="6_ynodw"]
+[ext_resource type="Texture2D" uid="uid://c1ey1o7u50hgr" path="res://assets/icons/games.png" id="7_gg5mp"]
+[ext_resource type="Texture2D" uid="uid://dikch3ms7fuiy" path="res://assets/icons/time.png" id="9_gg5mp"]
+[ext_resource type="Texture2D" uid="uid://c7u170jq1ru13" path="res://assets/icons/joystick/xbox/a.png" id="9_nyrj5"]
+[ext_resource type="Texture2D" uid="uid://cciwvhcqw4dnq" path="res://assets/icons/joystick/xbox/y.png" id="10_plk58"]
+[ext_resource type="Texture2D" uid="uid://d00k85ldqyilb" path="res://assets/icons/joystick/xbox/b.png" id="12_r4qhl"]
+[ext_resource type="Script" uid="uid://dsygprgvjdjam" path="res://src/components/buttons_layout.gd" id="13_iclof"]
+[ext_resource type="Shader" uid="uid://btqooupsrdvmq" path="res://src/shaders/focus.gdshader" id="15_ergmd"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_etr18"]
+bg_color = Color(0.83033526, 0.83033514, 0.83033514, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18x"]
+bg_color = Color(0.9166399, 0.91663986, 0.9166398, 1)
+border_width_left = 305
+border_color = Color(0.8, 0.8, 0.8, 0)
+border_blend = true
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r4qhl"]
+bg_color = Color(0.99215686, 1, 0.5647059, 1)
+border_width_left = 1
+border_width_top = 12
+border_width_right = 1
+border_width_bottom = 12
+border_color = Color(0.99358624, 1, 0.48305106, 1)
+border_blend = true
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ergmd"]
+bg_color = Color(1, 1, 1, 0.27058825)
+border_width_left = 2
+border_width_top = 12
+border_width_right = 2
+border_width_bottom = 12
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ll83s"]
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mb8d5"]
+draw_center = false
+corner_radius_top_left = 32
+corner_radius_top_right = 32
+corner_radius_bottom_right = 32
+corner_radius_bottom_left = 32
+shadow_color = Color(0, 0, 0, 0.09411765)
+shadow_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gg5mp"]
+bg_color = Color(1, 1, 1, 0.5294118)
+border_width_left = 12
+border_width_top = 12
+border_width_right = 12
+border_width_bottom = 12
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 32
+corner_radius_top_right = 32
+corner_radius_bottom_right = 32
+corner_radius_bottom_left = 32
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skc3n"]
+draw_center = false
+corner_radius_top_left = 50
+corner_radius_top_right = 50
+corner_radius_bottom_right = 50
+corner_radius_bottom_left = 50
+shadow_color = Color(0, 0, 0, 0.17254902)
+shadow_size = 70
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_iclof"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgg8g"]
+bg_color = Color(1, 1, 1, 0.3372549)
+border_width_left = 15
+border_width_top = 15
+border_width_right = 15
+border_width_bottom = 15
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_skc3n"]
+shader = ExtResource("15_ergmd")
+shader_parameter/speed = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iclof"]
+bg_color = Color(0, 0.972549, 0, 1)
+draw_center = false
+border_width_left = 32
+border_width_top = 32
+border_width_right = 32
+border_width_bottom = 32
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 55
+corner_radius_top_right = 55
+corner_radius_bottom_right = 55
+corner_radius_bottom_left = 55
+
+[node name="library" type="Control" node_paths=PackedStringArray("rooms_options")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_inq21")
+rooms_options = NodePath("Menus/rooms_options")
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="background_color" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_etr18")
+
+[node name="background_image" type="TextureRect" parent="style"]
+self_modulate = Color(1, 1, 1, 0.16078432)
+texture_filter = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="background_image2" type="TextureRect" parent="style"]
+self_modulate = Color(1, 1, 1, 0.16078432)
+texture_filter = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 65
+alignment = 2
+
+[node name="LibraryContainer" type="Container" parent="MarginContainer/VBoxContainer" node_paths=PackedStringArray("emulator_only_elements", "room_only_elements")]
+custom_minimum_size = Vector2(0, 204.11)
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("2_gb0ym")
+emulator_only_elements = [NodePath("../../../info/HBoxContainer/TotalRooms")]
+room_only_elements = [NodePath("../../../info/HBoxContainer/GameHours"), NodePath("../../../info/GameAchievements"), NodePath("../../../screenshots")]
+item_spacing = 227.445
+vertical_center = 0.4
+normal_scale = 1.1
+fade_distance = 350.0
+
+[node name="emulator_icon" parent="MarginContainer/VBoxContainer/LibraryContainer" instance=ExtResource("3_gb0ym")]
+visible = false
+layout_mode = 2
+emulator_type = 2
+use_debug_rooms = false
+Title = "Snes"
+rooms_folder = "C:\\MyGames\\ROOMS\\SNES"
+libretro_core = "C:\\Users\\arthi\\OneDrive\\Documentos\\snes9x_libretro.dll"
+custom_texture = ExtResource("4_plk58")
+
+[node name="emulator_icon2" parent="MarginContainer/VBoxContainer/LibraryContainer" instance=ExtResource("3_gb0ym")]
+visible = false
+layout_mode = 2
+emulator_type = 1
+use_debug_rooms = false
+Title = "Gba"
+rooms_folder = "C:\\MyGames\\ROOMS\\GBA"
+libretro_core = "C:\\Users\\arthi\\OneDrive\\Documentos\\mgba_libretro.dll"
+custom_texture = ExtResource("5_mb8d5")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -440.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3e18x")
+
+[node name="info" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 45.0
+offset_top = 99.0
+offset_right = -45.0
+offset_bottom = -506.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 10
+
+[node name="GameAchievements" type="Control" parent="info"]
+custom_minimum_size = Vector2(198.21, 60.06)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Panel" type="Panel" parent="info/GameAchievements"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_r4qhl")
+
+[node name="Label" type="Label" parent="info/GameAchievements"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 65.45996
+offset_top = 14.0
+offset_right = -14.300003
+offset_bottom = -34.324997
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6431373)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "Achievements"
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="icon" type="TextureRect" parent="info/GameAchievements"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 11.459961
+offset_top = -20.662506
+offset_right = 58.379883
+offset_bottom = 21.012482
+grow_vertical = 2
+texture = ExtResource("4_skc3n")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="icon2" type="TextureRect" parent="info/GameAchievements"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 62.45996
+offset_top = 4.337494
+offset_right = 83.83927
+offset_bottom = 24.337494
+grow_vertical = 2
+texture = ExtResource("6_skc3n")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label2" type="Label" parent="info/GameAchievements"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 86.45996
+offset_top = 41.0
+offset_right = 6.6999817
+offset_bottom = -13.324997
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6431373)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "12/32"
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="info"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+alignment = 2
+
+[node name="TotalRooms" type="Control" parent="info/HBoxContainer"]
+custom_minimum_size = Vector2(77.745, 45)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Panel" type="Panel" parent="info/HBoxContainer/TotalRooms"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ergmd")
+
+[node name="Label" type="Label" parent="info/HBoxContainer/TotalRooms"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 42.0
+offset_right = -4.9349976
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6431373)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "12"
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="TextureRect" type="TextureRect" parent="info/HBoxContainer/TotalRooms"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 16.0
+offset_top = -11.5
+offset_right = 36.0
+offset_bottom = 10.5
+grow_vertical = 2
+texture = ExtResource("7_gg5mp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GameHours" type="Control" parent="info/HBoxContainer"]
+custom_minimum_size = Vector2(85.935, 43.165)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Panel" type="Panel" parent="info/HBoxContainer/GameHours"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ergmd")
+
+[node name="Label" type="Label" parent="info/HBoxContainer/GameHours"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 42.0
+offset_right = -4.9349976
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6431373)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "12h"
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="TextureRect" type="TextureRect" parent="info/HBoxContainer/GameHours"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 16.0
+offset_top = -11.5
+offset_right = 36.0
+offset_bottom = 10.5
+grow_vertical = 2
+texture = ExtResource("9_gg5mp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FocusTitle" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1229.0
+offset_top = 23.0
+offset_right = -47.0
+offset_bottom = 62.0
+grow_horizontal = 0
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0, 0, 0, 0.5254902)
+theme_override_fonts/font = ExtResource("6_ynodw")
+theme_override_font_sizes/font_size = 28
+text = "GameTitle"
+horizontal_alignment = 2
+
+[node name="screenshots" type="Control" parent="."]
+custom_minimum_size = Vector2(360, 170)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -409.0
+offset_top = -267.0
+offset_right = -49.0
+offset_bottom = -97.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="screenshot2" type="Control" parent="screenshots"]
+custom_minimum_size = Vector2(180, 100)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -172.0
+offset_top = -73.0
+offset_right = 8.0
+offset_bottom = 27.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Image" type="Panel" parent="screenshots/screenshot2"]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ll83s")
+
+[node name="TextureRect" type="TextureRect" parent="screenshots/screenshot2/Image"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_ha4ni")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="screenshot1" type="Control" parent="screenshots"]
+custom_minimum_size = Vector2(180, 100)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -186.0
+offset_top = -51.0
+offset_right = -6.0
+offset_bottom = 49.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Image" type="Panel" parent="screenshots/screenshot1"]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ll83s")
+
+[node name="TextureRect" type="TextureRect" parent="screenshots/screenshot1/Image"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_ha4ni")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="buttons" type="Control" parent="."]
+custom_minimum_size = Vector2(216.405, 0)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -89.0
+offset_right = -22.59497
+offset_bottom = -25.0
+grow_horizontal = 0
+grow_vertical = 0
+pivot_offset = Vector2(144, 87)
+
+[node name="style" type="Control" parent="buttons"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -11.9999695
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="buttons/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mb8d5")
+
+[node name="color" type="Panel" parent="buttons/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gg5mp")
+
+[node name="MarginContainer" type="MarginContainer" parent="buttons"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="HBoxContainer" parent="buttons/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="1" type="Control" parent="buttons/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(90, 35)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="buttons/MarginContainer/VBoxContainer/1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="button_0" type="TextureRect" parent="buttons/MarginContainer/VBoxContainer/1/HBoxContainer"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+texture = ExtResource("9_nyrj5")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("13_iclof")
+
+[node name="Label" type="Label" parent="buttons/MarginContainer/VBoxContainer/1/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.4627451)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "Select"
+
+[node name="2" type="Control" parent="buttons/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(90, 35)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="buttons/MarginContainer/VBoxContainer/2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="button_3" type="TextureRect" parent="buttons/MarginContainer/VBoxContainer/2/HBoxContainer"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+texture = ExtResource("10_plk58")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("13_iclof")
+
+[node name="Label" type="Label" parent="buttons/MarginContainer/VBoxContainer/2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.4627451)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "Menu"
+
+[node name="buttons2" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -369.0
+offset_top = -89.0
+offset_right = -253.0
+offset_bottom = -25.0
+grow_horizontal = 0
+grow_vertical = 0
+pivot_offset = Vector2(144, 87)
+
+[node name="style" type="Control" parent="buttons2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -11.9999695
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="buttons2/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mb8d5")
+
+[node name="color" type="Panel" parent="buttons2/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gg5mp")
+
+[node name="MarginContainer" type="MarginContainer" parent="buttons2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="HBoxContainer" parent="buttons2/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="2" type="Control" parent="buttons2/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(90, 35)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="buttons2/MarginContainer/VBoxContainer/2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="button_1" type="TextureRect" parent="buttons2/MarginContainer/VBoxContainer/2/HBoxContainer"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+texture = ExtResource("12_r4qhl")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="buttons2/MarginContainer/VBoxContainer/2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.4627451)
+theme_override_fonts/font = ExtResource("6_ynodw")
+text = "Back"
+
+[node name="retro_achievement" type="Node" parent="."]
+script = ExtResource("6_je3wp")
+api_key = "S4XZer3nf9lAQ3jsjAWvRn1vuCkqPLrh"
+username = "arthiee4"
+max_concurrent_downloads = 10
+min_match_score = 0.1
+
+[node name="Menus" type="Node" parent="."]
+
+[node name="rooms_options" type="Control" parent="Menus"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Control" type="Control" parent="Menus/rooms_options"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -163.0
+offset_top = -100.0
+offset_right = 171.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="style" type="Control" parent="Menus/rooms_options/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="Menus/rooms_options/Control/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skc3n")
+
+[node name="border" type="Panel" parent="Menus/rooms_options/Control/style"]
+material = SubResource("ShaderMaterial_iclof")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wgg8g")
+
+[node name="Panel" type="Panel" parent="Menus/rooms_options/Control/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wgg8g")
+
+[node name="MarginContainer" type="MarginContainer" parent="Menus/rooms_options/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menus/rooms_options/Control/MarginContainer"]
+layout_mode = 2
+
+[node name="add" type="Control" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 68.09)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/add"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("6_ynodw")
+theme_override_font_sizes/font_size = 18
+text = "Add to home"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="style" type="Control" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/add"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/add/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skc3n")
+
+[node name="border" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/add/style"]
+material = SubResource("ShaderMaterial_iclof")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wgg8g")
+
+[node name="focus" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/add/style"]
+material = SubResource("ShaderMaterial_skc3n")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.015, 1.015)
+pivot_offset = Vector2(100, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_iclof")
+
+[node name="edit" type="Control" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 68.09)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/edit"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("6_ynodw")
+theme_override_font_sizes/font_size = 18
+text = "Edit"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="style" type="Control" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/edit"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="shadow" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/edit/style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skc3n")
+
+[node name="border" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/edit/style"]
+material = SubResource("ShaderMaterial_iclof")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wgg8g")
+
+[node name="focus" type="Panel" parent="Menus/rooms_options/Control/MarginContainer/VBoxContainer/edit/style"]
+visible = false
+material = SubResource("ShaderMaterial_skc3n")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.015, 1.015)
+pivot_offset = Vector2(100, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_iclof")

@@ -1,0 +1,273 @@
+using Godot;
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using PGEmu.Services.Models;
+
+namespace PGEmu.Services;
+
+public partial class FriendService : Node
+{
+	public static FriendService Instance { get; private set; }
+	private AuthService Auth => AuthService.Instance;	
+
+
+	private System.Net.Http.HttpClient httpClient;
+	private string baseUrl = "http://localhost:5276/api/friends";
+	
+	public override void _Ready()
+	{
+		Instance = this;
+		httpClient = new System.Net.Http.HttpClient();
+		
+	}
+	
+	private void ApplyAuthHeader()
+	{
+		var token = AuthService.Instance.AccessToken;
+
+		httpClient.DefaultRequestHeaders.Authorization =
+			new AuthenticationHeaderValue("Bearer", token);
+	}
+	
+	public async Task<List<FriendRequestDto>> GetPendingRequests()
+	{
+		ApplyAuthHeader();
+		GD.Print("authththththth");
+
+		var response = await httpClient.GetAsync($"{baseUrl}/pending");
+		GD.Print($"HTTP GET /pending status: {response.StatusCode}");
+		
+		if (!response.IsSuccessStatusCode)
+		{
+			var text = await response.Content.ReadAsStringAsync();
+			GD.Print($"Response body: {text}");
+			return new List<FriendRequestDto>();
+		}
+
+		var json = await response.Content.ReadAsStringAsync();
+		GD.Print($"Response JSON: {json}");
+		return JsonSerializer.Deserialize<List<FriendRequestDto>>(json, new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true
+		});
+	}
+
+	public async Task<bool> RespondToRequest(string userId, bool accept)
+	{
+		ApplyAuthHeader();
+		
+		var action = accept ? "accept" : "decline";
+		var response = await httpClient.PostAsync($"{baseUrl}/{action}/{userId}", null);
+		
+		return response.IsSuccessStatusCode;
+	}
+
+	
+	public async Task<bool> SendFriendRequest(string? userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return false;
+
+		var response = await Auth.SendAuthorizedRequest(
+			$"{baseUrl}/request/{targetUserId}",
+			method: HttpMethod.Post);
+
+		return response != null;
+	}
+
+	public async Task<FriendRelationshipDto> GetRelationship(string? userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return new FriendRelationshipDto();
+
+		var response = await Auth.SendAuthorizedRequest($"{baseUrl}/relationship/{targetUserId}");
+		if (response == null)
+			return new FriendRelationshipDto();
+
+		var relationship = JsonSerializer.Deserialize<FriendRelationshipDto>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+		return relationship ?? new FriendRelationshipDto();
+	}
+
+	public async Task<bool> RemoveFriend(string? userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var targetUserId))
+			return false;
+
+		var response = await Auth.SendAuthorizedRequest(
+			$"{baseUrl}/{targetUserId}",
+			method: HttpMethod.Delete);
+
+		return response != null;
+	}
+	
+	public async void Block(string userId)
+	{
+		var response = await Auth.SendAuthorizedRequest(
+			$"{baseUrl}/block/{userId}",
+			HttpMethod.Post);
+
+		if (response == null)
+		{
+			GD.Print("Error: Block failed");
+			return;
+		}
+	}
+		
+	public async void Unblock(string userId)
+	{
+		var response = await Auth.SendAuthorizedRequest(
+			$"{baseUrl}/unblock/{userId}",
+			HttpMethod.Post);
+
+		if (response == null)
+		{
+			GD.Print("Error: Unblock failed");
+			return;
+		}
+	}
+	
+		public async Task<List<FriendRequestDto>> GetBlockedUsers()
+	{
+		//var response = await Auth.SendAuthorizedRequest(
+			//$"{baseUrl}/blocked-users",
+			//HttpMethod.Get);
+//
+		//if (response == null)
+		//{
+			//GD.Print("Error: GetBlockedUsers failed or no blocked users");
+			//var rawJson = response.Value.GetRawText();
+			//GD.Print($"RAW JSON: {rawJson}");
+			//return null;
+		//}
+				//
+		//var blocked = JsonSerializer.Deserialize<List<FriendRequestDto>>(response.Value.GetRawText(),
+		//new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+			//
+		//return blocked;
+		//
+	//}
+		//ApplyAuthHeader();
+//
+		////var response = await Auth.SendAuthorizedRequest(
+			////$"{baseUrl}/blocked-users",
+			////HttpMethod.Get);
+//////
+		ApplyAuthHeader();
+		GD.Print("authththththth");
+
+		var response = await httpClient.GetAsync($"{baseUrl}/blocked-users");
+		GD.Print($"HTTP GET /pending status: {response.StatusCode}");
+		
+		if (!response.IsSuccessStatusCode)
+		{
+			var text = await response.Content.ReadAsStringAsync();
+			GD.Print($"Response body: {text}");
+			return new List<FriendRequestDto>();
+		}
+
+		var json = await response.Content.ReadAsStringAsync();
+		GD.Print($"Response JSON: {json}");
+		return JsonSerializer.Deserialize<List<FriendRequestDto>>(json, new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true
+		});
+	}
+	
+	public async Task<bool> GetIsBlocked(string userId)
+	{
+		var response = await Auth.SendAuthorizedRequest($"http://localhost:5276/api/friends/blocked/{userId}");
+		if (response == null)
+		{
+			GD.Print("Error: GetIsBlocked failed or session expired");
+			return false;
+		}
+		
+		var isBlocked = JsonSerializer.Deserialize<FriendRequestDto>(
+			response.Value.GetRawText(),
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+		
+		GD.Print("Username: " + isBlocked.blocked);
+		return isBlocked.blocked;
+	}
+	
+	public async Task<List<string>> GetFriendUsernames()
+	{
+		try
+		{
+			ApplyAuthHeader();
+			var response = await httpClient.GetAsync("http://localhost:5276/api/friends");
+		
+			if (!response.IsSuccessStatusCode)
+			{
+				GD.PrintErr($"GetFriendUsernames failed: {response.StatusCode}");
+				return new List<string>();
+			}
+
+			var json = await response.Content.ReadAsStringAsync();
+			
+			List<FriendRequestDto> friends;
+			var result = JsonSerializer.Deserialize<List<FriendRequestDto>>(json, new JsonSerializerOptions
+			{
+				PropertyNameCaseInsensitive = true
+			});
+
+			if (result != null)
+			{
+				friends = result;
+			}
+			else
+				friends = new List<FriendRequestDto>();
+			
+			return friends
+				.Select(f => f.Username)
+				.Where(u => !string.IsNullOrWhiteSpace(u))
+				.OrderBy(u => u, StringComparer.OrdinalIgnoreCase)
+				.ToList();
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr($"GetFriendUsernames failed: {e.Message}");
+			return new List<string>();
+		}
+	}
+	
+}
+
+
+
+
+public class FriendRequestDto
+{
+	[JsonPropertyName("id")]
+	public string Id { get; set; }
+	[JsonPropertyName("username")]
+	public string Username { get; set; }
+	[JsonPropertyName("status")]
+	public FriendStatus Status { get; set; }
+	public bool blocked { get; set; }
+}
+
+public class FriendRelationshipDto
+{
+	[JsonPropertyName("status")]
+	public FriendStatus? Status { get; set; }
+
+	[JsonPropertyName("outgoing")]
+	public bool Outgoing { get; set; }
+}
+
+public enum FriendStatus
+{
+	Pending,
+	Accepted,
+	Blocked
+}

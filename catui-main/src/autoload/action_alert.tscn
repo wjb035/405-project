@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3 uid="uid://di4qewmy0h6bw"]
+
+[ext_resource type="PackedScene" uid="uid://dm4yc4igowagp" path="res://src/autoload/alert_pop.tscn" id="2_tspl1"]
+
+[node name="action_alert" type="Control"]
+custom_minimum_size = Vector2(233, 503)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 45.0
+offset_top = 40.0
+offset_right = 278.0
+offset_bottom = 543.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.5
+offset_right = 8.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="alert_pop" parent="VBoxContainer" instance=ExtResource("2_tspl1")]
+layout_mode = 2

@@ -1,0 +1,134 @@
+[gd_scene format=3 uid="uid://bdq73fdyj3msu"]
+
+[ext_resource type="Script" uid="uid://bu1a7yapn2wxg" path="res://Settings.cs" id="1_bvb5x"]
+[ext_resource type="PackedScene" uid="uid://cim753lbasxqg" path="res://vault.tscn" id="2_2fv1l"]
+[ext_resource type="Texture2D" uid="uid://b58lvxxg2c764" path="res://Images/arrow left icon thin.png" id="2_71mvm"]
+[ext_resource type="PackedScene" uid="uid://ht73q5hq63an" path="res://ProfileSettings.tscn" id="2_mx4kw"]
+[ext_resource type="PackedScene" uid="uid://5s7f8el1wpuq" path="res://AppearanceSettings.tscn" id="3_appr"]
+[ext_resource type="PackedScene" uid="uid://bruwiv0hm7l0k" path="res://AchievementSettings.tscn" id="5_sfvul"]
+[ext_resource type="PackedScene" uid="uid://biscwj6xfkpvb" path="res://EmulatorScreen.tscn" id="6_blqn1"]
+[ext_resource type="PackedScene" uid="uid://bshrwbw01sykj" path="res://GamePathScreen.tscn" id="7_71mvm"]
+
+[node name="Settings" type="Control" unique_id=166812288]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_bvb5x")
+BackPath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/MarginContainer/BtnBack")
+ProfileChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/ProfileChoice")
+ProfileScreenPath = NodePath("Margin/HBoxContainer/ProfileSettings")
+VaultChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/VaultChoice")
+VaultScreenPath = NodePath("Margin/HBoxContainer/Vault")
+AppearanceChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/AppearanceChoice")
+AppearanceScreenPath = NodePath("Margin/HBoxContainer/AppearanceSettings")
+AchievementChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/AchievementChoice")
+AchievementScreenPath = NodePath("Margin/HBoxContainer/AchievementSettings")
+EmulatorChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/EmulatorChoice")
+EmulatorScreenPath = NodePath("Margin/HBoxContainer/EmulatorConfig")
+GameChoicePath = NodePath("Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/GamePathButton")
+GameScreenPathPath = NodePath("Margin/HBoxContainer/GamePathScreen")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=365426328]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9019608, 0.827451, 0.91764706, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=538849793]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Margin" unique_id=1589249704]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/HBoxContainer" unique_id=1954892276]
+layout_mode = 2
+
+[node name="Bg" type="ColorRect" parent="Margin/HBoxContainer/Margin" unique_id=1938634757]
+layout_mode = 2
+color = Color(0.8217291, 0.6932336, 0.8486782, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/HBoxContainer/Margin" unique_id=1667887512]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Margin/HBoxContainer/Margin/MarginContainer" unique_id=717297257]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=2086858166]
+layout_mode = 2
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 15
+
+[node name="BtnBack" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer/MarginContainer" unique_id=315120136]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+icon = ExtResource("2_71mvm")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ProfileChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=1422748368]
+layout_mode = 2
+text = "Profile Settings"
+
+[node name="VaultChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=1601826346]
+visible = false
+layout_mode = 2
+text = "Vault"
+
+[node name="AppearanceChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=467182349]
+layout_mode = 2
+text = "Appearance"
+
+[node name="AchievementChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=766062803]
+layout_mode = 2
+text = "Achievements"
+
+[node name="EmulatorChoice" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=715596139]
+layout_mode = 2
+text = "Emulators"
+
+[node name="GamePathButton" type="Button" parent="Margin/HBoxContainer/Margin/MarginContainer/VBoxContainer" unique_id=1706453522]
+layout_mode = 2
+text = "Game Paths"
+
+[node name="ProfileSettings" parent="Margin/HBoxContainer" unique_id=1173785683 instance=ExtResource("2_mx4kw")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Vault" parent="Margin/HBoxContainer" unique_id=71697526 instance=ExtResource("2_2fv1l")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AppearanceSettings" parent="Margin/HBoxContainer" unique_id=2023894246 instance=ExtResource("3_appr")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EmulatorConfig" parent="Margin/HBoxContainer" unique_id=714302454 instance=ExtResource("6_blqn1")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GamePathScreen" parent="Margin/HBoxContainer" unique_id=1701391428 instance=ExtResource("7_71mvm")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AchievementSettings" parent="Margin/HBoxContainer" unique_id=713750978 instance=ExtResource("5_sfvul")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3

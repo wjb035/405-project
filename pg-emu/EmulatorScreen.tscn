@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://biscwj6xfkpvb"]
+
+[ext_resource type="Script" uid="uid://d2fcmrl3dxi4" path="res://EmulatorScreen.cs" id="1_qmlo6"]
+
+[node name="EmulatorScreen" type="Control" unique_id=714302454]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qmlo6")
+BackPath = NodePath("Margin/Root/TopBar/BtnBack")
+FileDialogPath = NodePath("FileDialog")
+
+[node name="Bg" type="ColorRect" parent="." unique_id=1896155243]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = 1134.0
+offset_bottom = 630.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06801925, 0.047571667, 0.12111964, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=761551743]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1351263400]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root" unique_id=259012475]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="BtnBack" type="Button" parent="Margin/Root/TopBar" unique_id=1559226021]
+custom_minimum_size = Vector2(56, 40)
+layout_mode = 2
+text = "←"
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar" unique_id=949909261]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 0.9)
+theme_override_font_sizes/font_size = 28
+text = "Vault"
+horizontal_alignment = 1
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root" unique_id=1579322931]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Hint" type="Label" parent="Margin/Root/Body" unique_id=516142901]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.87, 0.86, 0.96, 0.9)
+text = "Go to Emulator Settings"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Margin/Root/Body" unique_id=175609495]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ButtonContainer" type="VBoxContainer" parent="Margin/Root/Body/ScrollContainer" unique_id=396938353]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="Margin/Root" unique_id=584729488]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.88, 0.96, 0.95)
+horizontal_alignment = 1
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=973211005]
+title = "Open a File"
+file_mode = 0
+access = 2

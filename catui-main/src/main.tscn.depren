@@ -1,0 +1,93 @@
+[gd_scene load_steps=11 format=3 uid="uid://bv56lsy0gne0m"]
+
+[ext_resource type="Script" uid="uid://6e0op3tksgwm" path="res://src/main.gd" id="1_mlv6i"]
+[ext_resource type="PackedScene" uid="uid://dn5effpwdotxf" path="res://src/screens/home/home.tscn" id="2_mlv6i"]
+[ext_resource type="PackedScene" uid="uid://di4qewmy0h6bw" path="res://src/autoload/action_alert.tscn" id="9_kf8lf"]
+[ext_resource type="PackedScene" uid="uid://dcexivrck2fda" path="res://src/screens/settings/settings.tscn" id="11_uewes"]
+[ext_resource type="PackedScene" uid="uid://b1b23vparqf1j" path="res://src/screens/game_screen/game_screen.tscn" id="12_okx7f"]
+[ext_resource type="PackedScene" uid="uid://bpe3d3vppqna" path="res://src/screens/home_menu/home_menu.tscn" id="13_d3u4l"]
+[ext_resource type="PackedScene" uid="uid://bhdr0pe1qqxfw" path="res://src/screens/saves/saves.tscn" id="13_sif16"]
+[ext_resource type="PackedScene" uid="uid://cv86qo3xh51w1" path="res://src/screens/library/library.tscn" id="17_okx7f"]
+[ext_resource type="Script" uid="uid://06w613twanam" path="res://src/autoload/SFX.gd" id="20_sif16"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kf8lf"]
+bg_color = Color(0.9384497, 0.9384497, 0.93844944, 1)
+
+[node name="main" type="Control" node_paths=PackedStringArray("home_menu", "home", "settings", "game_screen", "library", "saves")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mlv6i")
+home_menu = NodePath("Menus/home_menu")
+home = NodePath("Menus/home")
+settings = NodePath("Menus/settings")
+game_screen = NodePath("Menus/game_screen")
+library = NodePath("Menus/library")
+saves = NodePath("Menus/saves")
+
+[node name="style" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="style"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kf8lf")
+
+[node name="Menus" type="Node" parent="."]
+
+[node name="home" parent="Menus" instance=ExtResource("2_mlv6i")]
+
+[node name="settings" parent="Menus" instance=ExtResource("11_uewes")]
+visible = false
+
+[node name="game_screen" parent="Menus" instance=ExtResource("12_okx7f")]
+visible = false
+
+[node name="library" parent="Menus" instance=ExtResource("17_okx7f")]
+visible = false
+
+[node name="screenshots" parent="Menus/library" index="5"]
+visible = false
+
+[node name="home_menu" parent="Menus" instance=ExtResource("13_d3u4l")]
+visible = false
+
+[node name="saves" parent="Menus" instance=ExtResource("13_sif16")]
+visible = false
+
+[node name="sfx" type="Node" parent="."]
+script = ExtResource("20_sif16")
+nav_volume_db = -6.0
+select_volume_db = 10.0
+notification_volume_db = -5.0
+home_volume_db = -4.0
+back_volume_db = -4.0
+
+[node name="UI" type="AudioStreamPlayer" parent="sfx"]
+
+[node name="ALERT" type="AudioStreamPlayer" parent="sfx"]
+
+[node name="ui" type="Node" parent="."]
+
+[node name="action_alert" parent="ui" instance=ExtResource("9_kf8lf")]
+visible = false
+top_level = true
+offset_left = 77.0
+offset_top = 63.0
+offset_right = 310.0
+offset_bottom = 566.0
+size_flags_horizontal = 4
+
+[editable path="Menus/library"]

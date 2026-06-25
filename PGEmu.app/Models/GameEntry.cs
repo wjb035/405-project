@@ -8,9 +8,19 @@ public partial class GameEntry : ObservableObject
     public string Name { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public string Title => Name;
+    public string? CoverArtUrl { get; set; }
 
     [ObservableProperty]
     public string achievementNum = "Loading...";
 
+    public int retroAchievementsGameId { get; set; } = -1;
+
     public override string ToString() => Title;
+    public PlatformConfig? platform { get; set; } = null;
+    
+    
+    
+    // time a game has been played in seconds
+    public int TimePlayed {get; set;} = 0;
+    public long LastPlayedUnixTime { get; set; } = 0;
 }

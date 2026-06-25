@@ -19,6 +19,11 @@ public class AppDbContext : DbContext
     public DbSet<CollectionGame> CollectionGames => Set<CollectionGame>();
     public DbSet<UserGame> UserGames => Set<UserGame>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatGroup> ChatGroups => Set<ChatGroup>();
+    public DbSet<ChatGroupMember> ChatGroupMembers => Set<ChatGroupMember>();
+    public DbSet<ChatReadState> ChatReadStates => Set<ChatReadState>();
     
     // Fluent API for database migration
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -149,5 +154,37 @@ public class AppDbContext : DbContext
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+        
+        // Password resets
+        modelBuilder.Entity<PasswordResetCode>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        // Chat Messages
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => new { m.FromUser, m.ToUser });
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => m.GroupId);
+        
+        modelBuilder.Entity<ChatReadState>()
+            .HasIndex(r => new { r.Username, r.OtherUser })
+            .IsUnique();
+        
+        // Group chats
+        modelBuilder.Entity<ChatGroupMember>()
+            .HasOne(m => m.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(m => m.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChatGroupMember>()
+            .HasIndex(m => new { m.GroupId, m.Username })
+            .IsUnique();
+        
+
     }
+    
 }
